@@ -4,6 +4,7 @@ import type {
   Cell,
   CellId,
   Diagnostic,
+  EventOf,
   Execution,
   ExecStatus,
   NotebookState,
@@ -38,6 +39,9 @@ export type Mirror = {
   /** The language service's diagnostics per code cell (notebook.diagnostics, then cell.diagnostics); a cell
    * absent here has no list from the service yet. */
   readonly diagnostics: ReadonlyMap<CellId, readonly Diagnostic[]>;
+  /** The last edit made to the file outside nimbo that the daemon merged, or found unreadable or in conflict
+   * (notebook.reconciled, 07-file-format §5), with its event's seq; null until one comes. */
+  readonly external: (EventOf<"notebook.reconciled">["data"] & { readonly seq: number }) | null;
 };
 
 export const emptyMirror: Mirror = {
@@ -50,6 +54,7 @@ export const emptyMirror: Mirror = {
   saveError: null,
   closed: false,
   diagnostics: new Map(),
+  external: null,
 };
 
 /** The mirror after a (re)hydrate: the full state replaces the cells; executions, graph and routes of cells that still

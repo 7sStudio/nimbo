@@ -63,5 +63,5 @@ export function rowOf(change: GitChange): ScmRow {
 }
 
 /** The diff tab's title, as VS Code's: `demo.jsnb (Working Tree)`, `(Index)` for a staged change. */
-export const diffTitle = (path: string, staged: boolean): string =>
-  `${path.slice(path.lastIndexOf("/") + 1)} (${staged ? "Index" : "Working Tree"})`;
+export const diffTitle = (path: string, staged: boolean, disk = false): string =>
+  `${path.slice(path.lastIndexOf("/") + 1)} (${disk ? "On Disk ↔ Yours" : staged ? "Index" : "Working Tree"})`;

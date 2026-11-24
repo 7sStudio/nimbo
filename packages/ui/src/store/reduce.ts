@@ -113,6 +113,8 @@ function reduceNotebook(mirror: Mirror, event: EventEnvelope): Mirror {
       return { ...mirror, saveState: "failed", saveError: event.data.error };
     case "notebook.conflict":
       return { ...mirror, saveState: "conflict" };
+    case "notebook.reconciled":
+      return { ...mirror, external: { ...event.data, seq: event.seq } };
     case "notebook.closed":
       return { ...mirror, closed: true };
     case "notebook.opened":

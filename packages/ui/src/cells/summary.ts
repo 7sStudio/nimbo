@@ -89,10 +89,12 @@ function requestsOf(requests: Inside["requests"]): string | null {
   return `${plural(requests.count, "request")}${last}`;
 }
 
-/** "edited by claude-code" for a cell an agent edited last and someone reviewed since. */
+/** "edited by claude-code" for a cell an agent edited last and someone reviewed since; "edited on disk" for the
+ * file's edit. */
 function editorOf(meta: CellMeta): string | null {
   const edit = meta.lastEdit;
-  if (edit?.by !== "agent" || edit.review !== undefined) return null;
+  if (edit === undefined || edit.by === "user" || edit.review !== undefined) return null;
+  if (edit.by === "external") return "edited on disk";
   return `edited by ${edit.agent ?? `an agent ${overOf(edit)}`}`;
 }
 

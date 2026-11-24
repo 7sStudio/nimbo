@@ -57,16 +57,17 @@ const saveFailed = (error: string | null): BannerModel => ({
   actions: [{ label: "Retry", command: "notebook.save" }],
 });
 
-const conflict: BannerModel = {
+const conflict = (notebook: string): BannerModel => ({
   id: "conflict",
   tone: "warn",
   title: "Changed on disk",
-  text: "The file changed outside nimbo since it was last saved.",
+  text: "The file and this page both changed.",
   actions: [
     { label: "Reload from disk", command: "notebook.reload", primary: true },
     { label: "Overwrite with mine", command: "notebook.save", args: { force: true } },
+    { label: "Compare", command: "ui.diff.open", args: { path: notebook, disk: true } },
   ],
-};
+});
 
 const noPage = (error: string | null): BannerModel => ({
   id: "noPage",
@@ -160,7 +161,7 @@ export function bannersOf(facts: BannerFacts): readonly BannerModel[] {
     ...connectionBanners(facts),
     facts.kernelExit === null || facts.closed ? null : kernelExited(facts.kernelExit),
     facts.save === "failed" ? saveFailed(facts.saveError) : null,
-    facts.save === "conflict" ? conflict : null,
+    facts.save === "conflict" ? conflict(facts.notebook) : null,
     pageMissing(facts) ? noPage(facts.attachError) : null,
     facts.connection === "viewOnly" ? viewOnly(facts.takenOver === true) : null,
     facts.installing === null ? null : installing(facts.installing),

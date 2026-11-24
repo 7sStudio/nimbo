@@ -58,6 +58,9 @@ const writes = (
   },
   diff: (path: string, staged: boolean) =>
     attempt(() => client().git.diff({ path, staged, content: true })),
+  /** An open notebook's file on disk against its session (a conflict's Compare). */
+  compareDisk: (notebook: string) =>
+    attempt(() => client().notebook.compareDisk({ notebook, content: true })),
 });
 
 export const useGitStore = defineStore("git", () => {

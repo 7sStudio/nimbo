@@ -60,8 +60,11 @@ function settingsDrafts() {
 
 /** The diff page's state. */
 const diffState = () => ({
-  /** The file the diff editor shows: its path and whether it is the index's side (Staged). */
-  diff: ref<{ readonly path: string; readonly staged: boolean } | null>(null),
+  /** The file the diff editor shows: its path and whether it is the index's side (Staged), or, with `disk`, an open
+   * notebook's file on disk against the page's state (a conflict's Compare). */
+  diff: ref<{ readonly path: string; readonly staged: boolean; readonly disk?: boolean } | null>(
+    null,
+  ),
   /** A step asked of the diff editor (Next or Previous Change); `at` tells a repeat apart. */
   diffStep: ref<{ readonly by: 1 | -1; readonly at: number } | null>(null),
 });

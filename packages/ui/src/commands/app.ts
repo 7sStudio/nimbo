@@ -143,6 +143,22 @@ export function appCommands(): readonly Command[] {
   ];
 }
 
+/** Opens the diff page on `args.path`: the index's side with `staged`, the file on disk against the page with `disk`. */
+function openDiff(
+  store: ReturnType<typeof useUiStore>,
+  args: Readonly<Record<string, unknown>> | undefined,
+): void {
+  const path = stringArg(args, "path");
+  if (path === undefined) return;
+  store.closePalette();
+  store.overlay = null;
+  store.diff =
+    args?.disk === true
+      ? { path, staged: false, disk: true }
+      : { path, staged: args?.staged === true };
+  store.page = "diff";
+}
+
 /** The diff editor: a changed file's diff in the main area, as VS Code opens one in an
  * editor tab, and the keys that step from change to change in it (Alt F5, Shift Alt F5). */
 function diffCommands(store: ReturnType<typeof useUiStore>): readonly Command[] {
@@ -152,12 +168,7 @@ function diffCommands(store: ReturnType<typeof useUiStore>): readonly Command[] 
       "ui.diff.open",
       "Open Changes",
       (args) => {
-        const path = stringArg(args, "path");
-        if (path === undefined) return;
-        store.closePalette();
-        store.overlay = null;
-        store.diff = { path, staged: args?.staged === true };
-        store.page = "diff";
+        openDiff(store, args);
       },
       (args) => typeof args?.path === "string",
     ),

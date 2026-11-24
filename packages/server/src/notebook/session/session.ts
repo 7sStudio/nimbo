@@ -274,6 +274,7 @@ export function createSession(options: SessionOptions): Session {
     compareDisk: (content) => compareDisk(options, context, content),
     reload: async () => {
       await context.autosave.exclusive(() => reloadSession(context)); // after the write under way
+      typed.clear(); // the page's text gave way to the file's: nothing is under its caret any more
       return stateOf(context, realm.status(), debug.state());
     },
     ...readers(options, context, query),

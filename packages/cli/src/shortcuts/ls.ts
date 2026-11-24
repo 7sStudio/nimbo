@@ -1,5 +1,6 @@
 // `nimbo ls` (03-api §8): a notebook's cells from notebook.get, one line each: id, type, status, stale, who
-// edited it last (`you` for the page, `agent` for the CLI, MCP and the file watcher, with the agent's name), its title
+// edited it last (`you` for the page, `agent` for the CLI and MCP with the agent's name, `disk` for an edit of the file
+// outside nimbo that the daemon merged, 07-file-format §5), its title
 // (meta.title, set with `nimbo cell update --meta`) and the first line of its source.
 import type { Cell } from "@jsnb/core";
 import { notebookGet } from "@jsnb/core";
@@ -14,8 +15,9 @@ import { notebookFlagHelp, notebookOption, readShortcut, withNotebook } from "./
 
 const help = `nimbo ls [-n <notebook>]: the cells of a notebook
 
-One line per cell: id, type, status, stale, edited by (you: the page; agent: the CLI, MCP or the file, with the
-agent's name when it gave one), its title when it has one, and the first line of its source.
+One line per cell: id, type, status, stale, edited by (you: the page; agent: the CLI or MCP, with the agent's name
+when it gave one; disk: an edit of the file outside nimbo), its title when it has one, and the first line of its
+source.
 Set a title: nimbo cell update --cell <id> --meta '{"title":"Get a user"}' (null removes it).
 
 Flags:
@@ -23,13 +25,18 @@ ${notebookFlagHelp}
   --json                  print { notebook, cells: [{ id, type, status, stale, editedBy, agent, title, firstLine }] }
 `;
 
-type EditedBy = { readonly editedBy: "you" | "agent" | null; readonly agent: string | null };
+type EditedBy = {
+  readonly editedBy: "you" | "agent" | "disk" | null;
+  readonly agent: string | null;
+};
 
-/** Who made the cell's last edit: the page is you, everything else an agent. */
+const byWords = { user: "you", agent: "agent", external: "disk" } as const;
+
+/** Who made the cell's last edit: the page is you, the file on disk is disk, everything else an agent. */
 function editedBy(cell: Cell): EditedBy {
   const edit = cell.meta.lastEdit;
   if (edit === undefined) return { editedBy: null, agent: null };
-  return { editedBy: edit.by === "user" ? "you" : "agent", agent: edit.agent ?? null };
+  return { editedBy: byWords[edit.by], agent: edit.agent ?? null };
 }
 
 const editedText = ({ editedBy: by, agent }: EditedBy): string => {
@@ -80,7 +87,8 @@ async function run(argv: readonly string[], io: Io): Promise<ExitCode> {
 export const lsShortcut: Shortcut = {
   name: "ls",
   usage: "ls",
-  summary: "cells: id, type, status, stale, edited by (you / agent), title, first line of source",
+  summary:
+    "cells: id, type, status, stale, edited by (you / agent / disk), title, first line of source",
   help,
   run,
 };
