@@ -19,6 +19,7 @@ import type { RequestContext, World } from "../io/world.js";
 import { listResources, readResource, resourceTemplates } from "../resources/resources.js";
 import { callTool } from "../tools/call.js";
 import { tools } from "../tools/tools.js";
+import { listingDescription, listingTitle, listingWebsite } from "./listing.js";
 
 /** How much of the agent's name the daemon keeps (its declaration's limit). */
 const agentLength = 200;
@@ -70,7 +71,16 @@ export function createMcpServer(
   version: string,
   options: McpOptions = {},
 ): McpServer {
-  const mcp = new McpServer({ name: productName, version }, { instructions });
+  const mcp = new McpServer(
+    {
+      name: productName,
+      version,
+      title: listingTitle,
+      description: listingDescription,
+      websiteUrl: listingWebsite,
+    },
+    { instructions },
+  );
   const { server } = mcp;
   server.registerCapabilities({ tools: {}, resources: {} });
   const agent = (): string | undefined => agentName(server.getClientVersion()?.name);
