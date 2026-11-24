@@ -144,6 +144,7 @@ export function contextOf(options: SessionOptions, hooks: FileHooks = {}): Owned
     debuggerLines: () => [],
     debugPause: () => Promise.resolve({ reason: "pause" }),
     debugResumed: () => Promise.resolve(),
+    edited: () => undefined,
   };
   const cells = createCellStore(options.loaded.records);
   const kernelLog = followingKernelLog(options.logsDir, options.ref, log);

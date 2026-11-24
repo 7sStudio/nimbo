@@ -13,11 +13,13 @@ import type {
 import type { SessionContext } from "./context.js";
 import type { ExecutionRecord } from "./records.js";
 import { toExecution } from "./records.js";
-import type { NotebookRun, NotebookRunAnswer, Waiting } from "./runs/control.js";
+import type { CellRunAnswer, NotebookRun, NotebookRunAnswer, Waiting } from "./runs/control.js";
 import { runCell, runNotebook } from "./runs/control.js";
 import type { ClientRunner } from "./runs/execute.js";
 import { clearOutputs } from "./runs/clear.js";
 import { executeRun } from "./runs/execute.js";
+import type { AutoRun } from "./runs/autoRun.js";
+import { createAutoRun } from "./runs/autoRun.js";
 import { addOutput, findExecution, finish } from "./runs/executions.js";
 import {
   cellRunsDropper,
@@ -56,6 +58,8 @@ export type SessionRuns = {
   /** Whether a page is attached to run client cells. */
   readonly realmAttached: () => boolean;
   readonly run: (cell: CellId, waiting: Waiting) => Promise<Execution>;
+  /** cell.run's answer: the run and, with execution.autoRunDependents, the dependents it started. */
+  readonly runWithDependents: (cell: CellId, waiting: Waiting) => Promise<CellRunAnswer>;
   readonly runAll: (input: NotebookRun) => Promise<NotebookRunAnswer>;
   readonly outputs: (cell: CellId) => Execution | null;
   /** A read of a value waits for the retained values' measures under way, so it sees the budget applied. */
@@ -119,8 +123,14 @@ function views(context: SessionContext, realm: RealmPart) {
 }
 
 /** kernel.restart (with `all`, the page's full reset first) and realm.restart over `queue` and `realm`. */
-const restarts = (context: SessionContext, queue: RunQueue, realm: RealmPart) => ({
+const restarts = (
+  context: SessionContext,
+  queue: RunQueue,
+  realm: RealmPart,
+  autoRun: AutoRun,
+) => ({
   restart: async (all: boolean) => {
+    autoRun.stop();
     clearQueue(context, queue);
     if (all) await realm.reset(true); // the page drops its client run first, as runtime-web reports it
     await restartKernel(context, queue, realm.runs);
@@ -132,10 +142,17 @@ const restarts = (context: SessionContext, queue: RunQueue, realm: RealmPart) =>
   },
 });
 
-/** The session's queue and run commands over `realm`. */
-export function createRuns(context: SessionContext, realm: RealmPart): SessionRuns {
+/** The session's queue, whose runs each end through the cascade of execution.autoRunDependents. */
+function queueOf(context: SessionContext, realm: RealmPart) {
+  const cascade: { current?: AutoRun } = {};
   const queue = createRunQueue(
-    (run) => executeRun(context, run, realm.run),
+    async (run) => {
+      try {
+        await executeRun(context, run, realm.run);
+      } finally {
+        cascade.current?.ended(run);
+      }
+    },
     (run, error) => {
       context.log.error(
         { err: error, execution: run.execution.id },
@@ -147,20 +164,35 @@ export function createRuns(context: SessionContext, realm: RealmPart): SessionRu
         error: runError(error, run.execution.cell),
       });
     },
+    () => cascade.current?.idle(),
   );
+  cascade.current = createAutoRun(context, queue, realm.attached);
+  return { queue, autoRun: cascade.current };
+}
+
+/** The session's queue and run commands over `realm`. */
+export function createRuns(context: SessionContext, realm: RealmPart): SessionRuns {
+  const { queue, autoRun: cascade } = queueOf(context, realm);
+  context.hooks.edited = cascade.edited;
   lateOutputs(context);
-  const runs = { queue, realmAttached: realm.attached };
+  const runs = { queue, realmAttached: realm.attached, autoRun: cascade };
   return {
     ...views(context, realm),
     queue,
     realmAttached: realm.attached,
-    run: (cell, waiting) => runCell(context, runs, cell, waiting),
+    run: async (cell, waiting) =>
+      (await runCell(context, runs, cell, { ...waiting, trigger: false })).execution,
+    runWithDependents: (cell, waiting) => runCell(context, runs, cell, waiting),
     runAll: (input) => runNotebook(context, runs, input),
-    interrupt: () => interruptRuns(context, queue, realm),
+    interrupt: () => {
+      cascade.stop();
+      return interruptRuns(context, queue, realm);
+    },
     clearOutputs: (cells) => clearOutputs(context, cells),
     dropRuns: cellRunsDropper(context, queue, realm),
-    ...restarts(context, queue, realm),
+    ...restarts(context, queue, realm, cascade),
     stop: async () => {
+      cascade.stop();
       clearQueue(context, queue);
       context.runs.ending = true;
       await context.kernel.stop();

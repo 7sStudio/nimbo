@@ -1,6 +1,6 @@
 // What a generated command prints (03-api §8): its output verbatim as one JSON document under --json, else a reading
 // of it: runs as the page shows them, a cell as a line, anything else as an outline; and exit 1 when a run failed.
-import { Cell, Execution } from "@jsnb/core";
+import { AutoRunReport, Cell, Execution } from "@jsnb/core";
 import { z } from "zod";
 
 import type { ExitCode } from "../errors/exit.js";
@@ -27,6 +27,40 @@ function executionsOf(output: unknown): readonly Execution[] {
     return parsed.success ? [parsed.data] : [];
   });
 }
+
+const skipWords: Readonly<Record<AutoRunReport["skipped"][number]["reason"], string>> = {
+  manual: "manual",
+  notRun: "not run yet",
+  cycle: "in a cycle",
+  noPage: "no page attached",
+  upstream: "held back",
+  edited: "edited meanwhile",
+  ran: "ran meanwhile",
+  deleted: "deleted",
+  stopped: "stopped",
+};
+
+/** The dependents a cell.run started (execution.autoRunDependents): their runs, then what waits and what was left. */
+export function autoRunText(output: unknown, lineLimit?: number): string {
+  const report = isRecord(output) ? AutoRunReport.safeParse(output.autoRun) : undefined;
+  if (report?.success !== true) return "";
+  const { executions, pending, skipped } = report.data;
+  return [
+    "auto-run:\n",
+    ...executions.map((execution) => executionText(execution, lineLimit)),
+    ...pending.map((cell) => `${cell} pending\n`),
+    ...skipped.map(
+      (each) =>
+        `${each.cell} skipped: ${skipWords[each.reason]}${each.by === undefined ? "" : ` (${each.by})`}\n`,
+    ),
+  ].join("");
+}
+
+/** The runs a cell.run's dependents made. */
+const autoRunsOf = (output: unknown): readonly Execution[] => {
+  const report = isRecord(output) ? AutoRunReport.safeParse(output.autoRun) : undefined;
+  return report?.success === true ? report.data.executions : [];
+};
 
 /** `c_a1b2c3 server ok · export const n = 41`. */
 const cellLine = (cell: Cell): string =>
@@ -75,7 +109,12 @@ function readable(name: string, output: unknown): string {
   if (runs.length === 0 && head === "" && notes === undefined) return outlined(output);
   // a run prints the first lines of each output; reading them (cell.outputs) prints them all
   const limit = runCommands.has(name) ? runLineLimit : undefined;
-  const text = [head, ...runs.map((run) => executionText(run, limit)), ...(notes ?? [])].join("");
+  const text = [
+    head,
+    ...runs.map((run) => executionText(run, limit)),
+    autoRunText(output, limit),
+    ...(notes ?? []),
+  ].join("");
   return text === "" ? "Done.\n" : text; // notebook.run of a selection with no cell in it
 }
 
@@ -83,8 +122,9 @@ function readable(name: string, output: unknown): string {
 export const resultText = (name: string, output: unknown, asJson: boolean): string =>
   asJson ? `${JSON.stringify(output)}\n` : readable(name, output);
 
-/** 1 when a run the command made ended in error (03-api §8), else 0; reading a failed run (cell.outputs) is 0. */
+/** 1 when a run the command made (a dependent it started included) ended in error (03-api §8), else 0; reading a failed run (cell.outputs) is 0. */
 export const resultExit = (name: string, output: unknown): ExitCode =>
-  runCommands.has(name) && executionsOf(output).some((execution) => execution.status === "error")
+  runCommands.has(name) &&
+  [...executionsOf(output), ...autoRunsOf(output)].some((execution) => execution.status === "error")
     ? exitCodes.runError
     : exitCodes.ok;

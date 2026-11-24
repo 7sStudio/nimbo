@@ -36,6 +36,8 @@ export type SessionHooks = {
   debugPause: () => Promise<DebugPause>;
   /** Settles once the debugger saw the kernel resume (a second at most): an interrupt resumes a paused kernel itself. */
   debugResumed: () => Promise<void>;
+  /** A cell's code or type changed (an edit, a revert, a reload): it leaves an auto-run cascade (04-kernel §4.1). */
+  edited: (cell: CellId) => void;
 };
 
 /** What the runs share: the retained full values and whether the daemon itself is ending the kernel. */

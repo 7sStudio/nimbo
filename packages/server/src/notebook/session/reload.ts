@@ -91,6 +91,7 @@ export async function reloadSession(context: SessionContext): Promise<void> {
   for (const id of [...done.changed, ...done.added])
     stale = afterEdit(context.cells.graph(), stale, id);
   restale(context, stale);
+  for (const id of done.changed) context.hooks.edited(id);
   // a server cell the file removed or made a client or markdown cell: its routes and timers end in the kernel
   for (const id of served) void disposeUnserved(context, id);
   context.autosave.reloaded(read.text, loaded.dirty);

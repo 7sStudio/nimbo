@@ -32,11 +32,40 @@ export const Execution = z
       .object({ client: z.enum(["ui", "cli", "mcp", "file"]), agent: z.string().optional() })
       .readonly()
       .optional(),
+    /** Started by execution.autoRunDependents after that run of that cell ended well (04-kernel §4.1). */
+    autoRun: z.object({ cell: CellId, execution: ExecutionId }).readonly().optional(),
     /** Read from the notebook file's saved outputs (07-file-format §2): a run of an earlier session, not this kernel's. */
     restored: z.literal(true).optional(),
   })
   .readonly();
 export type Execution = z.infer<typeof Execution>;
+
+/** Why execution.autoRunDependents left a dependent alone (04-kernel §4.1). */
+export const AutoRunSkip = z.enum([
+  "manual",
+  "notRun",
+  "cycle",
+  "noPage",
+  "upstream",
+  "edited",
+  "ran",
+  "deleted",
+  "stopped",
+]);
+export type AutoRunSkip = z.infer<typeof AutoRunSkip>;
+
+/** The dependents a cell.run started automatically: their runs, those still waiting, and those left alone (`by`, the
+ * cell whose failure or skip held an `upstream` one back). */
+export const AutoRunReport = z
+  .object({
+    executions: z.array(Execution).readonly(),
+    pending: z.array(CellId).readonly(),
+    skipped: z
+      .array(z.object({ cell: CellId, reason: AutoRunSkip, by: CellId.optional() }).readonly())
+      .readonly(),
+  })
+  .readonly();
+export type AutoRunReport = z.infer<typeof AutoRunReport>;
 
 export const ExecutionSummary = z
   .object({

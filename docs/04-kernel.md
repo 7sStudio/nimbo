@@ -172,6 +172,24 @@ A separate `vm` context breaks `instanceof` and `Promise` identity for package o
 5. Outputs stream as they happen (§5). On settle: the return value as a `value` output, then `status: "ok"`; on throw: `status: "error"` with `ErrorInfo`.
 6. Kernel → daemon `exports`.
 
+### 4.1 Auto-run of dependents
+
+With `execution.autoRunDependents` on (03-api §4.10; off by default), a `cell.run` that ends `ok` runs the cell's stale dependents, reactively as marimo, Observable and Pluto do. The daemon's side (`server/src/notebook/session/runs/autoRun.ts`), over core's graph (`core/src/analysis/autoRun.ts`):
+
+| | |
+|---|---|
+| Trigger | a `cell.run` (the page, the CLI, MCP) that ends `ok`. `notebook.run` (Run All, Run Above, Run Stale, with dependents), `cell.add { run }`, an edit and a reload never start one: a selection already names what runs. |
+| Set | the cell's transitive dependents that are stale, each once (a diamond's join once), after any started earlier in the same cascade. |
+| Order | dependencies first, ties in notebook order; one at a time on the notebook's queue. |
+| Left alone | `meta.manual` cells (`manual`); cells with no run since their realm started (`notRun`: auto-run re-runs what already ran, it never runs code for the first time unseen); cells on a cycle of the graph (`cycle`); client cells with no page attached (`noPage`, left stale: client runs need a tab); cells run by anyone else since the cascade planned them (`ran`); cells deleted meanwhile. |
+| Held back | a dependent of a cell that failed, was interrupted or was left alone (`upstream`, with `by`); a failure stops its own descendants only. |
+| Precedence | the next dependent is queued only when the queue is empty, so every run anyone asks for meanwhile (a cell, Run All) goes first; only the dependent already running is waited for. |
+| Edit | a waiting dependent whose code or type changes leaves the cascade (`edited`) with what depends on it; one already running finishes with the code it started with, and what depends on it is held back. |
+| Stop | `kernel.interrupt`, `kernel.restart`, closing the notebook and turning the setting off end the cascade; what is left stays stale (`stopped`). |
+| Debugging | a dependent with a breakpoint pauses as any run; no dependent starts while the kernel is paused. |
+
+Each run it starts records `autoRun { cell, execution }`, the run that started it, and that run's `requestedBy`; outputs and execution counts are as for any run. `cells.autoRun` (03-api §6) says which dependent runs and which wait, in order, emitted only when that changes. `cell.run`'s answer carries `autoRun`: the runs it started, the dependents still waiting and those left alone with the reason (03-api §4.3). With the setting off, nothing is computed after a run beyond the stale flags.
+
 **Browser realm**: indirect eval `(0, eval)(code)` of the same wrapper expression with the same `//# sourceURL` (not `new Function`, which would take the expression as a body). Outputs go over the WebSocket as `realm.report`. With no `AsyncLocalStorage`, attribution is lexical: one record per realm, and each run gets its own **scope view**, a Proxy with that run's bridge layer (05-bridge §3.2) and builtins (`console`, `display`, `dispose`, wrapped timers and listeners, its `window` and `document` views). Whatever the cell causes later lands on the run that defined it; a function from cell A called from cell B logs under A. A run's `defines` are the names its view assigned. When the cell re-runs or the realm resets, the old view goes stale: its outputs are dropped and a run still in progress is `interrupted`. Errors escaping every wrapped callback reach the page's `error`/`unhandledrejection` events; one whose first cell frame names a cell becomes an `error` output on that cell's current execution.
 
 ## 5. Outputs
