@@ -49,7 +49,7 @@ This table is the authority on packages and dependencies. `core` is the shared v
 | `language` | the daemon, in a worker thread | the TypeScript language service of a notebook's cells: one virtual project per notebook and realm, cross-cell and bridge types, diagnostics filtered for notebook semantics, completions, hover, signature help, definition, rename (13) | `core` |
 | `kernel-node` | Node child process | the server realm: `__scope`, execution, outputs, disposers, built-ins (`route`, `env`, `display`), interrupt via the inspector, redaction (04) | `core` (the daemon transforms; the kernel receives code) |
 | `runtime-web` | the page | the client realm: scope, execution, `display`, containers, the bridge client (stubs, snapshots), disposers (04 §4, 05) | `core` |
-| `server` | the daemon | HTTP and WebSocket, auth, command handlers, notebook sessions, the queue, events, autosave and conflicts (07 §5), kernel supervision, the `/npm` bundler, routes, logs, `cell.outputQuery`, git (14) | `core`, `transform`, `language`, `kernel-node`, `query-json`, `query-sql` |
+| `server` | the daemon | HTTP and WebSocket, auth, command handlers, notebook sessions, the queue, events, autosave, external edits and conflicts (07 §5), kernel supervision, the `/npm` bundler, routes, logs, `cell.outputQuery`, git (14) | `core`, `transform`, `language`, `kernel-node`, `query-json`, `query-sql` |
 | `client` | anywhere | the typed client generated from the registry; transport, retries, event subscription | `core` |
 | `output-view` | page and Node (model) | the viewer: detection, tree, grid, raw, streams, errors, search, chips, export, full screen, renderer registry | `core` types, `tokens` (bundled into its build) |
 | `query-json` | page and Node | JSONPath and jq behind `QueryEngine`; chips → JSONPath (11) | — |
@@ -110,7 +110,7 @@ Calls are not queued behind cell runs; timeout `bridge.rpcTimeoutMs` (05 §4).
 
 ### 4.4 Autosave
 
-Mutating command → session marks the document dirty → 100 ms coalesce → serialize (deterministic) → temp file, `fsync`, rename → `notebook.saved`. Before writing, the hash of the file on disk is compared with the hash of the last write; a mismatch suspends saving and emits `notebook.conflict` (07 §5).
+Mutating command → session marks the document dirty → 100 ms coalesce → serialize (deterministic) → temp file, `fsync`, rename → `notebook.saved`. Before writing, the hash of the file on disk is compared with the hash of the last write; a mismatch suspends saving and emits `notebook.conflict` (07 §5). The other direction: a watch on each open notebook's file merges another program's edits into the session by cell id against the last text written or read, writing back only for unsaved edits that stay on top; the same cell changed on both sides is that conflict (07 §5).
 
 ## 5. The life of a run
 

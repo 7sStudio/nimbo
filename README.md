@@ -467,7 +467,6 @@ components (the built kernel, jq, DuckDB in Node and in Chromium). Expect rough 
 Known limits today:
 
 - Client cells need the notebook open in a browser tab; an agent alone cannot run them yet.
-- A `.jsnb` file edited outside nimbo while it is open is not merged into the session.
 - Breakpoints in client cells go to the browser's DevTools, not to nimbo's debugger.
 - Vue works with `template` strings or `h()`; no `.vue` files and no JSX.
 

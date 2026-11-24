@@ -15,7 +15,6 @@ Constraint on every UI item: the page's first load stays within its 500 KB budge
 - **Headless client realm** (L): client cells run without a tab, in the system's Chrome driven through `puppeteer-core`, opt-in by a setting; a human's tab always takes the realm over.
 - **Push events** (S to M): the server's `emit(name, data)` and a client cell's `on(name, handler)`, delivered over the realm's socket.
 - **`cell.snapshot`** (S, M with images): a client cell's rendered DOM as data for agents, and as an image.
-- **File watcher** (M): external edits of an open `.jsnb` file are noticed and offered as a reload or a merge instead of a conflict at the next save.
 - **Auto re-run of dependents** (M): `execution.autoRunDependents` re-runs the stale cells below a cell that ran, in order, stopping at the first failure.
 - **`/npm/` bundler on large packages** (M): a client cell importing a package with hundreds of subpath modules (`date-fns`) times out while every subpath is bundled; bundle on demand or pre-bundle the package once.
 - **Vue single-file components** (M or L): today client cells use Vue's full build with template strings or `h()`; `.vue` imports compiled on the daemon, and JSX later.

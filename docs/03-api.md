@@ -11,6 +11,7 @@ The source of truth is `packages/core/src/commands/*.ts` (Zod schemas); this doc
 5. **Internal commands** (page-to-server plumbing: realm attach, bridge calls, the LSP tunnel) live in the same registry, tagged `internal`, and are neither CLI subcommands nor MCP tools.
 6. **Mutating commands are tagged**, so MCP advertises hints and the CLI confirms destructive ones on a TTY.
 7. **Versioned.** `workspace.info` returns `apiVersion`; additive changes keep it, renames and removals bump it.
+8. **The file is an interface too.** An agent (or an editor, or git) may write an open notebook's `.jsnb` file directly: the daemon merges the edit into the session by cell id (07-file-format §5), stamps the cells it changed `lastEdit { by: "external", client: "file" }` and emits `notebook.reconciled`; `notebook.get`, `nimbo ls`, `nimbo diff` and `git.status` read the merged state at once. The commands remain the better path: they keep outputs and run cells, and never conflict with the page.
 
 Domains: `workspace`, `notebook`, `cell`, `kernel`, `realm`, `packages`, `secrets`, `events`, `debug`, `settings`, `examples`, `feedback`, `language`, `bridge`. The API always requires `notebook`; defaulting it is a CLI concern (§8).
 
@@ -78,6 +79,7 @@ Path rules for `path` and `to`: inside the workspace, no `..`, a `.jsnb` file. A
 | `notebook.get` | `{ notebook }` | `{ notebook: NotebookState }` | Full state with each cell's last execution. |
 | `notebook.save` | `{ notebook, force? = false }` | `{ savedAt }` | mutating. Forces a write (autosave per `files.autoSave`). A file changed on disk is `NOTEBOOK_CONFLICT` unless `force` (07-file-format §5). |
 | `notebook.reload` | `{ notebook }` | `{ notebook: NotebookState }` | mutating. Re-reads the file (after any queued write) and reconciles by cell id: kept ids keep outputs and status (a cell this session never ran takes the file's saved run), new cells idle, removed cells go; a server cell removed or retyped is disposed in the kernel. Emits the cell events, then `notebook.saved`. |
+| `notebook.compareDisk` | `{ notebook, content? }` | as `git.diff` (§4.15), `from: "disk"`, `to: "session"` | The open notebook's file against its session (unsaved edits included), cell by cell; a file that does not parse is diffed as text. What a conflict's **Compare** shows (07-file-format §5). |
 | `notebook.close` | `{ notebook }` | `{}` | destructive. Stops the kernel, detaches the realm. Concurrent closes join; an open or create of a closing file waits. |
 | `notebook.delete` | `{ path }` | `{}` | destructive. Deletes a closed notebook's file and its kernel log (open: `NOTEBOOK_OPEN`; missing: `NOTEBOOK_NOT_FOUND`; any symbolic link on the path: `INVALID_PARAMS`). |
 | `notebook.rename` | `{ path, to }` | `{}` | mutating. Moves the notebook's file and its kernel log, creating folders. An open notebook stays open under `to`, its kernel running on: the move waits for a save under way, then `notebook.moved { path, to }` (07-file-format §5). `to` must not exist (`NOTEBOOK_EXISTS`) nor be open (`NOTEBOOK_OPEN`, also for a notebook open under a case variant of `path`): hard link then unlink, never replacing a file; case-only renames allowed. |
@@ -207,6 +209,7 @@ Files: user `$XDG_CONFIG_HOME/nimbo/settings.json` (default `~/.config/nimbo/`, 
 | `files.autoSave` | `"afterDelay"` | `afterDelay`, `onFocusChange`, `interval`, `off` |
 | `files.autoSaveDelay` / `files.autoSaveMaxWait` | `1000` / `10000` | ms |
 | `files.autoSaveInterval` | `120000` | ms |
+| `files.mergeExternalChanges` | `true` | merge edits of an open notebook's file made outside nimbo into its session (07-file-format §5); `false`: the next save finds a conflict |
 | `kernel.nodePath` | `null` | `null` = the daemon's Node |
 | `packages.manager` | `"auto"` | `auto` (lockfile), `pnpm`, `npm`, `yarn`, `bun` |
 | `outputs.maxValueBytes` / `outputs.maxStreamBytes` | `262144` / `1048576` | truncation limits |
@@ -317,7 +320,7 @@ type Cell = {
 };
 
 type EditInfo = {
-  by: "user" | "agent";                                // ui → user; cli, mcp, file → agent
+  by: "user" | "agent" | "external";                   // ui → user; cli, mcp → agent; file → external
   client: "ui" | "cli" | "mcp" | "file";               // §7.1
   agent?: string;                                      // the MCP client's name
   at: string;
@@ -378,7 +381,8 @@ Envelope: `{ notebook, seq, ts, type, data }`; workspace-level events carry `not
 | `notebook.opened` / `notebook.closed` / `notebook.saved` | `{ path }` / `{ path }` / `{ savedAt }` | |
 | `notebook.moved` | `{ path, to }` | an open notebook's file moved (`notebook.rename`, or a move outside nimbo the daemon followed, 07-file-format §5); last event under `path`: each subscriber of `path` now receives `to`, whose `seq` never steps back below `path`'s |
 | `notebook.saveFailed` | `{ path, error: { code, message } }` | a write failed; state kept, retried (07-file-format §5) |
-| `notebook.conflict` | `{ path }` | the file changed on disk; autosave suspended until reload or forced save |
+| `notebook.conflict` | `{ path, cells? }` | the file changed on disk and the session too: autosave suspended until reload or forced save; `cells` both sides changed, when an external edit's merge found them (07-file-format §5) |
+| `notebook.reconciled` | `{ path, outcome, changed, added, removed, kept, error? }` | an edit of the open notebook's file made outside nimbo: `merged` into the session (the cells it changed, added, removed; `kept`: unsaved edits stay on top and a save follows), `conflict` (its cells in `changed`; `notebook.conflict` too), or `unreadable` (the file does not parse, `error`; the session keeps its cells) |
 | `cell.added` / `cell.updated` | `{ cell: Cell }` | `updated`: source, type, meta or review changed |
 | `cell.moved` | `{ order: CellId[] }` | |
 | `cell.deleted` | `{ cell: CellId }` | |
@@ -397,7 +401,7 @@ Envelope: `{ notebook, seq, ts, type, data }`; workspace-level events carry `not
 | `settings.changed` | `{ key, value, source, user?, workspace? }` | `settings.set` or a hand edit (workspace-level) |
 | `keybindings.changed` | `{ user: Rule[], workspace: Rule[] }` | either keybindings file's rules changed: `keybindings.set`, `reset`, `writeFile` or a hand edit (workspace-level) |
 | `git.changed` | `{ branch, counts }` | the repository's status may have changed: a git command of the daemon's, a notebook save, or the git directory's `index`, `HEAD`, `ORIG_HEAD` or `MERGE_HEAD` changing (workspace-level) |
-| `notebooks.changed` | `{ notebooks }` (as `workspace.info`) | a create, first open, close, delete, rename, followed move or `examples.copy` changed the list, before the command answers (workspace-level); no file watcher |
+| `notebooks.changed` | `{ notebooks }` (as `workspace.info`) | a create, first open, close, delete, rename, followed move or `examples.copy` changed the list, before the command answers; or a notebook file created, deleted, renamed or changed outside nimbo (the workspace watch, 07-file-format §5) (workspace-level) |
 
 The UI store is a pure reducer over these events plus `notebook.get`.
 
@@ -409,7 +413,7 @@ The UI store is a pure reducer over these events plus `notebook.get`.
 - **Token**: `Authorization: Bearer <token>` on HTTP, `?token=` on the upgrade. `nimbo open` opens `/ui/<name>?token=…`; the page keeps it in `sessionStorage` and strips the URL. Bad token: 401, or the socket is accepted then closed 4401 (a refused upgrade would look like a drop).
 - **Page cookie**: the first `/ui/<name>?token=` load sets `nimbo-<port>=<page key>; HttpOnly; SameSite=Strict` for `Path=/ui/` and `Path=/npm/` (32 random bytes per start, never the token, never stored). `/ui/` and `/npm/` take bearer or cookie (cookie-only requests need `Sec-Fetch-Site: same-origin|none`); `/outputs/` and `/schema/settings.json` bearer only; `/rpc` never the cookie.
 - **`/npm/`** (04-kernel §8.1): module source of the workspace and linked packages, and packages Node resolves from it; never a hidden file or folder of the workspace or below a package's real folder (pnpm's `.pnpm` packages are served as themselves), never workspace data files; `/npm/_/<key>/…` only for recorded keys that still resolve; the cache is never read through a link. Cookies are per host, not port, so other local servers receive the page key under `/ui/` and `/npm/`.
-- **Client declaration**: `?client=ui|cli|mcp|file&agent=<name>` on the upgrade, `X-Jsnb-Client`/`X-Jsnb-Agent` on HTTP; stamps `meta.lastEdit` and `requestedBy`. Undeclared counts as `cli`.
+- **Client declaration**: `?client=ui|cli|mcp|file&agent=<name>` on the upgrade, `X-Jsnb-Client`/`X-Jsnb-Agent` on HTTP; stamps `meta.lastEdit` and `requestedBy`. Undeclared counts as `cli`; `file` is what the daemon stamps on an edit it merged from disk.
 - **User routes** `/n/<notebook-name>/…` (04-kernel §8) are unauthenticated by design. The daemon strips its credentials from what it forwards (the `nimbo-<port>` cookie and the token anywhere, raw or escaped) and drops CORS, hop-by-hop and `nimbo-<port>` cookies from answers. No notebook or kernel: 404; no answer in 30 s: 504; kernel failure: 502.
 
 ### 7.2 JSON-RPC 2.0 over WebSocket
