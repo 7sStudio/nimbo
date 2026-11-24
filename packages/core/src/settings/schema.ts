@@ -26,6 +26,7 @@ export const settingsShape = {
   "files.autoSaveDelay": int("files.autoSaveDelay", 1000),
   "files.autoSaveMaxWait": int("files.autoSaveMaxWait", 10_000),
   "files.autoSaveInterval": int("files.autoSaveInterval", 120_000),
+  "files.mergeExternalChanges": flag("files.mergeExternalChanges", true),
   "kernel.nodePath": describe("kernel.nodePath", z.string().nullable().default(null)),
   "packages.manager": describe(
     "packages.manager",

@@ -56,6 +56,7 @@ export * from "./format/lines.js";
 export * from "./format/parse.js";
 export * from "./format/serialize.js";
 export * from "./format/migrate.js";
+export * from "./format/merge.js";
 
 // analysis (the graph, staleness and selection over CellAnalysis, the line diff of an edit; transform owns the analyser)
 export * from "./analysis/graph.js";

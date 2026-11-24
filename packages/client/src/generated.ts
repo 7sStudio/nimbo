@@ -51,6 +51,7 @@ import {
   notebookBridge,
   notebookClearOutputs,
   notebookClose,
+  notebookCompareDisk,
   notebookCreate,
   notebookDelete,
   notebookDiagnostics,
@@ -113,6 +114,8 @@ const notebook = (call: Caller) =>
     save: bind(call, notebookSave),
     /** Re-read the file and reconcile by cell id: same ids keep their outputs, new cells start idle, removed cells disappear. */
     reload: bind(call, notebookReload),
+    /** An open notebook's file on disk against its session (the page's state, unsaved edits included), cell by cell as git.diff answers: what Reload from disk would take and Overwrite with mine would write. A file that does not parse is diffed as text. */
+    compareDisk: bind(call, notebookCompareDisk),
     /** Stop the kernel and detach the realm. */
     close: bind(call, notebookClose),
     /** Delete the file of a notebook that is not open (close it first). Nothing else in its folder is touched. */

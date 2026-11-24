@@ -8,7 +8,7 @@ import { CellType, LineRange } from "./cell.js";
  * one reviewed yet (none once reviewed, or for a person's edit). */
 export const EditSummary = z
   .object({
-    by: z.enum(["user", "agent"]),
+    by: z.enum(["user", "agent", "external"]),
     client: z.enum(["ui", "cli", "mcp", "file"]),
     agent: z.string().optional(),
     at: z.string(),
