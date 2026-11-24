@@ -60,7 +60,6 @@ place to run code, a typed bridge between the two, and a plain-text file that di
 ## Contents
 
 - [Why nimbo](#why-nimbo)
-- [Coming from Jupyter?](#coming-from-jupyter)
 - [Install](#install)
 - [Your first notebook](#your-first-notebook)
 - [Features](#features)
@@ -96,36 +95,6 @@ place to run code, a typed bridge between the two, and a plain-text file that di
   at.
 - **Built for agents too.** Everything the page does is a CLI command and an MCP tool, and an agent's edits are marked
   for you to review or revert.
-
-## Coming from Jupyter?
-
-nimbo is a Jupyter-style notebook for JavaScript and TypeScript, so most of what you know carries over:
-
-| In Jupyter                                      | In nimbo                                                                                         |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Code cells and Markdown cells                   | The same, with two kinds of code cell: server (Node.js) and client (the browser page)            |
-| A kernel per notebook that keeps its state      | A Node.js kernel per notebook, plus the page's realm for client cells, joined by a typed bridge  |
-| Shift+Enter, Ctrl+Enter, command-mode A, B, D D | The same keys (Cmd on macOS), and VS Code's for the rest                                         |
-| Execution counts such as `[3]`                  | The same, in each cell's header                                                                  |
-| Interrupt, Restart, Run All, Clear outputs      | The same, plus Run Stale for the cells whose inputs changed                                      |
-| Rich outputs                                    | HTML, images, tables, and a viewer for any value: tree, grid, raw, JSONPath, jq and SQL          |
-| A table of contents from the headings           | An outline in the Explorer, and heading sections that fold                                       |
-| Python, or another language's kernel            | JavaScript and TypeScript, with a language service across cells                                  |
-| `.ipynb`, with the outputs in the file          | `.jsnb`, plain JSON with each cell's source as lines; outputs only if you turn on `outputs.save` |
-
-What nimbo adds: a built-in debugger for server cells, HTTP routes from a cell, secrets from `.env` redacted from
-outputs, a CLI and an MCP server so coding agents work in the same notebook, and a local-only daemon on 127.0.0.1.
-What Jupyter has that nimbo does not: kernels for many languages, a large extension ecosystem, and hosted servers such
-as JupyterHub.
-
-If you know these tools:
-
-- **tslab, IJavascript or Deno's kernel (`deno jupyter`)** run JavaScript or TypeScript inside Jupyter. nimbo is a
-  separate app with its own Node.js kernel, a browser realm beside it and its own file format.
-- **Observable** notebooks run JavaScript in the browser. nimbo's client cells do too, beside server cells in Node.js,
-  in a local file.
-- **marimo** is a reactive notebook for Python. nimbo is for JavaScript and TypeScript, and never re-runs a cell on its
-  own: a changed input marks the cells that depend on it stale.
 
 ## Install
 
@@ -371,6 +340,24 @@ nimbo mcp install
 It adds nimbo to Claude Code (user scope) and VS Code when they are installed, and prints the JSON entry for Claude
 Desktop, Cursor and other MCP clients. The server works on the workspace of the folder the agent runs in, and starts
 nimbo when a tool needs it. Agents that prefer a shell can use the `nimbo` CLI directly: every command takes `--json`.
+
+To add it by hand instead, the server is the command `nimbo mcp` over stdio:
+
+```sh
+claude mcp add --scope user nimbo -- nimbo mcp     # Claude Code
+```
+
+```json
+{
+  "mcpServers": {
+    "nimbo": { "command": "nimbo", "args": ["mcp"] }
+  }
+}
+```
+
+The JSON form goes in Claude Desktop's `claude_desktop_config.json`, Cursor's `~/.cursor/mcp.json` or any client that
+reads `mcpServers`. `nimbo mcp install --print` prints these with the full path of your install, and
+`nimbo uninstall` removes the entries it added.
 
 nimbo is also listed in the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.7sStudio/nimbo`,
 as an MCP bundle, `nimbo-mcp-<version>.mcpb`, attached to each release: a client that installs from the registry, or
