@@ -24,7 +24,7 @@ import { compareCell, exportNotebook } from "./exported.js";
 import { reconcileExternal } from "./external.js";
 import { savesOutputs, textOf } from "./fileForm.js";
 import { readNotebook } from "../../files/notebooks/notebookFile.js";
-import { diffDisk } from "../git/diff.js";
+import { diffDisk } from "../git/bodies.js";
 import { reloadSession } from "./reload.js";
 import { disposeDeleted } from "./runs/disposeDeleted.js";
 import type { SessionRuns } from "./runApi.js";

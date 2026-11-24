@@ -3,13 +3,14 @@
 // named, not diffed. An agent's answer leaves the cells' full sources out: the hunks say what changed.
 import type { z } from "zod";
 
-import type { DiffCellSide, gitDiff, NotebookDiff, NotebookDocument } from "@jsnb/core";
-import { CellNotFound, diffNotebooks, InvalidParams, parse, randomIds, textDiff } from "@jsnb/core";
+import type { gitDiff } from "@jsnb/core";
+import { InvalidParams } from "@jsnb/core";
 
 import type { Side } from "./content.js";
 import { blob, isBinary, textOfSide } from "./content.js";
 import type { GitContext } from "./context.js";
 import { required, workingSide } from "./context.js";
+import { bodyOf, fullOf } from "./bodies.js";
 import { checkPath, checkRevision } from "./paths.js";
 import type { RepoLocation } from "./status.js";
 import { statusOf } from "./status.js";
@@ -68,69 +69,10 @@ async function sidesOf(
   return { from: "index", before: await show(`:0:${at}`), to: "worktree", after: await working() };
 }
 
-const strip = (side: DiffCellSide | undefined): DiffCellSide | undefined =>
-  side === undefined
-    ? undefined
-    : { id: side.id, index: side.index, type: side.type, meta: side.meta };
-
-/** A notebook diff for a reader that did not ask for the content (an agent): the changed rows only, without the sides'
- * full sources; `stats` still counts the unchanged cells. */
-function withoutSources(diff: NotebookDiff): NotebookDiff {
-  return {
-    ...diff,
-    rows: diff.rows.flatMap((row) => {
-      if (row.status === "unchanged" && row.moved === undefined) return [];
-      const before = strip(row.before);
-      const after = strip(row.after);
-      return [{ ...row, ...(before ? { before } : {}), ...(after ? { after } : {}) }];
-    }),
-  };
-}
-
-/** A side's notebook: null for no side, undefined when it does not parse. */
-function documentOf(text: string | null, path: string): NotebookDocument | null | undefined {
-  if (text === null) return null;
-  const parsed = parse(text, { ids: randomIds(), path });
-  return parsed.ok ? parsed.value.doc : undefined;
-}
-
-/** The rows about `cell` only; CellNotFound when the diff has none. */
-function narrowed(diff: NotebookDiff, cell: string): NotebookDiff {
-  const rows = diff.rows.filter((row) => row.before?.id === cell || row.after?.id === cell);
-  if (rows.length === 0) throw new CellNotFound({ cell });
-  return { ...diff, rows };
-}
-
 /** What the two sides are not diffed for: one too large, or one binary. */
 function undiffable(sides: Sides): "tooLarge" | "binary" | undefined {
   if (sides.before.kind === "tooLarge" || sides.after.kind === "tooLarge") return "tooLarge";
   return isBinary(sides.before) || isBinary(sides.after) ? "binary" : undefined;
-}
-
-/** Both sides' full text, when the input asks for it. */
-const fullOf = (input: Pick<DiffInput, "content">, a: string | null, b: string | null) =>
-  input.content
-    ? { ...(a === null ? {} : { before: a }), ...(b === null ? {} : { after: b }) }
-    : {};
-
-/** A text file's diff, or a notebook's when both its sides parse. */
-function bodyOf(
-  input: Pick<DiffInput, "content" | "cell">,
-  path: string,
-  a: string | null,
-  b: string | null,
-) {
-  if (!path.endsWith(".jsnb")) return { kind: "text" as const, text: textDiff(a, b) };
-  const left = documentOf(a, path);
-  const right = documentOf(b, path);
-  if (left === undefined || right === undefined)
-    return { kind: "text" as const, reason: "notebookUnreadable" as const, text: textDiff(a, b) };
-  const whole = diffNotebooks(left, right);
-  const notebook = input.cell === undefined ? whole : narrowed(whole, input.cell);
-  return {
-    kind: "notebook" as const,
-    notebook: input.content ? notebook : withoutSources(notebook),
-  };
 }
 
 /** A path git has never seen (not in HEAD, the index or the working tree) is a mistyped one, not an empty diff. */
@@ -161,15 +103,4 @@ export async function diffFile(context: GitContext, input: DiffInput): Promise<D
   const a = textOfSide(sides.before);
   const b = textOfSide(sides.after);
   return { ...head, ...bodyOf(input, path, a, b), ...fullOf(input, a, b) };
-}
-
-/** notebook.compareDisk: an open notebook's file (`disk`, null when gone) against its session's text, in git.diff's
- * form, `from` "disk" and `to` "session". */
-export function diffDisk(
-  input: { readonly path: string; readonly content: boolean },
-  disk: string | null,
-  session: string,
-): DiffOutput {
-  const head = { path: input.path, from: disk === null ? "none" : "disk", to: "session" };
-  return { ...head, ...bodyOf(input, input.path, disk, session), ...fullOf(input, disk, session) };
 }
