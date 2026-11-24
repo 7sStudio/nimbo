@@ -55,6 +55,33 @@ If you are looking for a Jupyter notebook for JavaScript, TypeScript or Node.js,
 cells, a kernel that keeps its state, rich outputs, Markdown, Shift+Enter to run. It adds the browser as a second
 place to run code, a typed bridge between the two, and a plain-text file that diffs well.
 
+## Contents
+
+- [Why nimbo](#why-nimbo)
+- [Coming from Jupyter?](#coming-from-jupyter)
+- [Install](#install)
+- [Your first notebook](#your-first-notebook)
+- [Features](#features)
+  - [Write](#write)
+  - [Run](#run)
+  - [Explore data](#explore-data)
+  - [Build UIs](#build-uis)
+  - [Debug](#debug)
+  - [Work with agents](#work-with-agents)
+  - [Version control](#version-control)
+  - [Keyboard and workspace](#keyboard-and-workspace)
+- [Use it with your coding agent](#use-it-with-your-coding-agent)
+- [Examples](#examples)
+- [CLI at a glance](#cli-at-a-glance)
+- [How it works](#how-it-works)
+- [Security and privacy](#security-and-privacy)
+- [Status and roadmap](#status-and-roadmap)
+- [Update and uninstall](#update-and-uninstall)
+- [Requirements](#requirements)
+- [Building from source](#building-from-source)
+- [Contributing](#contributing)
+- [Licence](#licence)
+
 ## Why nimbo
 
 - **Backend and frontend in one file.** Export a function from a server cell and call it from a client cell; the call
