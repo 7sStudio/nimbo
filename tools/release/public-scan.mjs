@@ -39,8 +39,9 @@ function names() {
 const esc = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const personal = names().map((n) => new RegExp(`\\b${esc(n)}\\b`, "i"));
 
-// Placeholders a document may use for a home folder.
-const placeholderHome = /^\/(Users|home)\/(me|you|user|name|<[^>]+>|\$USER|runner|alice|bob)(\/|$)/;
+// Placeholders a document may use for a home folder, and Homebrew's prefix on Linux.
+const placeholderHome =
+  /^\/(Users|home)\/(me|you|user|name|<[^>]+>|\$USER|runner|alice|bob|linuxbrew)(\/|$)/;
 const checks = [
   ["home path", /(?<![\w.~/-])\/(?:Users|home)\/[A-Za-z][\w.-]*/g, (m) => !placeholderHome.test(m)],
   ["process word", /\b(?:JUDGE|HANDOFF|Judge's|the Judge|Coder|Reviewer's|Reviewer)\b/g],
