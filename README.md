@@ -23,10 +23,28 @@
 
 </div>
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/hero-dark.png">
-  <img alt="A nimbo notebook, a Jupyter-style notebook for TypeScript, in the browser: a server cell exports totalsByRegion, a client cell below calls it and draws a bar chart of sales by region; the Inspector on the right lists the server's variables and shows that cell 4 calls totalsByRegion over the bridge." src="docs/assets/readme/hero-light.png">
-</picture>
+<img alt="nimbo at a glance, a Jupyter-style notebook for JavaScript and TypeScript, in fourteen cards. Server and browser, one notebook: client cells in the page call what server cells in Node export, with their types. Ask your data: tree, grid or raw, and a query bar for JSONPath, jq and SQL on DuckDB. A cell is an endpoint: route() answers real HTTP. Typed across cells: hover, completion, rename. Step through server cells: breakpoints, conditions, logpoints, variables and watch, from the page, the CLI or MCP. Dark and light themes. Secrets stay secret: from .env, shown as ***. One line to install: brings its own Node 26, with upgrade, doctor and uninstall. Built for agents: every action is a CLI command and an MCP tool, and their edits wait for your review. Keyboard first: VS Code and Jupyter keys, and a shortcuts editor. Stale, never re-run: Run Stale catches up. Any npm package: a missing import offers to install it. Diffs cell by cell: .jsnb is plain text, export to HTML. Local, no telemetry: a token per workspace, no account, Apache-2.0." src="docs/assets/readme/bento-dark.png">
+
+<details>
+<summary>The cards as text</summary>
+
+- **Server and browser. One notebook.** Client cells in the page call what server cells in Node export, with their
+  types.
+- **Ask your data.** Tree, grid or raw, and a query bar for JSONPath, jq and SQL on DuckDB.
+- **A cell is an endpoint.** `route()` answers real HTTP.
+- **Typed across cells.** Hover, completion, rename.
+- **Step through server cells.** Breakpoints, conditions, logpoints, variables and watch, from the page, the CLI or MCP.
+- **Dark. Light.** Both themes, and several code colour themes.
+- **Secrets stay secret.** From `.env`, shown as `***`.
+- **One line to install.** Brings its own Node 26. `upgrade`, `doctor` and `uninstall` built in.
+- **Built for agents.** Every action is a CLI command and an MCP tool. Their edits wait for your review.
+- **Keyboard first.** VS Code and Jupyter keys, and a shortcuts editor.
+- **Stale, never re-run.** Run Stale catches up.
+- **Any npm package.** A missing import offers to install it.
+- **Diffs cell by cell.** `.jsnb` is plain text. Export to HTML.
+- **Local. No telemetry.** A token per workspace, no account. Apache-2.0.
+
+</details>
 
 nimbo is a local notebook. **Server cells** run in a Node kernel, **client cells** run in the browser page and draw
 UI, and a client cell calls any function a server cell exports as if it were local, with its TypeScript types. The
@@ -226,28 +244,10 @@ Where next: run `nimbo` with no arguments to open Home, then open one of the [ex
 
 ## Features
 
-<img alt="nimbo at a glance, a Jupyter-style notebook for JavaScript and TypeScript, in fourteen cards. Server and browser, one notebook: client cells in the page call what server cells in Node export, with their types. Ask your data: tree, grid or raw, and a query bar for JSONPath, jq and SQL on DuckDB. A cell is an endpoint: route() answers real HTTP. Typed across cells: hover, completion, rename. Step through server cells: breakpoints, conditions, logpoints, variables and watch, from the page, the CLI or MCP. Dark and light themes. Secrets stay secret: from .env, shown as ***. One line to install: brings its own Node 26, with upgrade, doctor and uninstall. Built for agents: every action is a CLI command and an MCP tool, and their edits wait for your review. Keyboard first: VS Code and Jupyter keys, and a shortcuts editor. Stale, never re-run: Run Stale catches up. Any npm package: a missing import offers to install it. Diffs cell by cell: .jsnb is plain text, export to HTML. Local, no telemetry: a token per workspace, no account, Apache-2.0." src="docs/assets/readme/bento-dark.png">
-
-<details>
-<summary>The cards as text</summary>
-
-- **Server and browser. One notebook.** Client cells in the page call what server cells in Node export, with their
-  types.
-- **Ask your data.** Tree, grid or raw, and a query bar for JSONPath, jq and SQL on DuckDB.
-- **A cell is an endpoint.** `route()` answers real HTTP.
-- **Typed across cells.** Hover, completion, rename.
-- **Step through server cells.** Breakpoints, conditions, logpoints, variables and watch, from the page, the CLI or MCP.
-- **Dark. Light.** Both themes, and several code colour themes.
-- **Secrets stay secret.** From `.env`, shown as `***`.
-- **One line to install.** Brings its own Node 26. `upgrade`, `doctor` and `uninstall` built in.
-- **Built for agents.** Every action is a CLI command and an MCP tool. Their edits wait for your review.
-- **Keyboard first.** VS Code and Jupyter keys, and a shortcuts editor.
-- **Stale, never re-run.** Run Stale catches up.
-- **Any npm package.** A missing import offers to install it.
-- **Diffs cell by cell.** `.jsnb` is plain text. Export to HTML.
-- **Local. No telemetry.** A token per workspace, no account. Apache-2.0.
-
-</details>
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/hero-dark.png">
+  <img alt="A nimbo notebook, a Jupyter-style notebook for TypeScript, in the browser: a server cell exports totalsByRegion, a client cell below calls it and draws a bar chart of sales by region; the Inspector on the right lists the server's variables and shows that cell 4 calls totalsByRegion over the bridge." src="docs/assets/readme/hero-light.png">
+</picture>
 
 ### Write
 
