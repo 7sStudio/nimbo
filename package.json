@@ -9,7 +9,7 @@
     "node": ">=26"
   },
   "scripts": {
-    "build": "tsc -b tsconfig.build.json && pnpm --filter @jsnb/output-view build && pnpm --filter @jsnb/ui build",
+    "build": "tsc -b tsconfig.build.json && node tools/fetch-js-debug.mjs && pnpm --filter @jsnb/output-view build && pnpm --filter @jsnb/ui build",
     "typecheck": "tsc -b && vue-tsc --noEmit -p packages/ui/tsconfig.json && vue-tsc --noEmit -p packages/output-view/tsconfig.json && vue-tsc --noEmit -p tests/output-view/tsconfig.json",
     "lint": "eslint . --max-warnings 0 --cache --cache-strategy content --cache-location node_modules/.cache/eslint/ && stylelint \"packages/**/*.{css,vue}\" && node tools/check-disables.mjs",
     "lint:full": "eslint . --max-warnings 0 && stylelint \"packages/**/*.{css,vue}\" && node tools/check-disables.mjs",

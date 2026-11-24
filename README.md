@@ -422,7 +422,6 @@ For contributors. You need Node 26 (`.nvmrc`) and pnpm 12.10.1.
 ```sh
 pnpm install
 pnpm build
-node tools/fetch-js-debug.mjs     # js-debug for the debugger, at its pinned version
 alias nimbo="node $PWD/packages/cli/dist/main.js"
 ```
 

@@ -20,7 +20,7 @@ failed=0
 
 commands_of() {
   case "$1" in
-    install)     echo "pnpm install --frozen-lockfile" ;;
+    install)     echo "pnpm install --frozen-lockfile && node tools/fetch-js-debug.mjs" ;;
     lint)        printf '%s\n' "pnpm lint" "pnpm format:check" "pnpm knip" "pnpm depcruise" ;;
     typecheck)   echo "pnpm typecheck" ;;
     test)        echo "pnpm test:coverage" ;;
