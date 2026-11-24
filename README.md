@@ -104,7 +104,13 @@ nimbo sql install   # DuckDB for SQL from the CLI and agents, about 40 MB
 `mcp install` sets up Claude Code and VS Code when it finds them and prints the entry for other agents. SQL in the
 page needs no install.
 
-Homebrew (`brew install 7sStudio/nimbo/nimbo`) is coming. Windows is not supported yet.
+With Homebrew instead:
+
+```sh
+brew install 7sStudio/nimbo/nimbo
+```
+
+Windows is not supported yet.
 
 ## Your first notebook
 
@@ -452,7 +458,6 @@ Planned, not yet available:
 - Add-ons, starting with a Stripe add-on (webhook forwarding, signature checks, a request log)
 - A desktop app
 - Windows support
-- Homebrew formula
 
 The full list is in [docs/12-roadmap.md](docs/12-roadmap.md).
 
