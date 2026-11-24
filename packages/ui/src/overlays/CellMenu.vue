@@ -20,6 +20,7 @@ const items = computed(() => {
         values: cell.meta.showBindings === true,
         collapsed: isFolded(cell, ui.foldAll, ui.opened),
         pinned: ui.pinned === cell.id,
+        manual: cell.meta.manual === true,
       });
 });
 </script>

@@ -74,6 +74,8 @@ function reduceCell(mirror: Mirror, event: EventEnvelope): Mirror {
     }
     case "cell.diagnostics":
       return withDiagnostics(mirror, [event.data]);
+    case "cells.autoRun":
+      return { ...mirror, autoRun: event.data };
     case "cells.stale": {
       const stale = new Set(event.data.cells);
       return withNotebook(mirror, (notebook) => ({

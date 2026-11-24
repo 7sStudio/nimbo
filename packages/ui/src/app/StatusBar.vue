@@ -1,5 +1,6 @@
-<!-- StatusBar: information only, as VS Code's and Jupyter's: on the left the git branch (inside a repository; a click opens Source Control), the kernel's state (a click opens the restart menu), its Node, the page's state while it is not attached, the errors and warnings, as VS Code counts them (a click opens the Problems tab, or hides it while it shows) and the routes listening; on the right the keyboard mode, the selected cell, "Folded" while Fold All folds every cell, the caret's line and column while a cell is edited, the cell's language and, last, the panel toggle: it shows or hides the bottom panel (Cmd J, View > Panel) and is pressed while the panel shows, so a hidden panel always has a way back. The status region announces state changes only; the ticking elapsed time is hidden from it. -->
+<!-- StatusBar: information only, as VS Code's and Jupyter's: on the left the git branch (inside a repository; a click opens Source Control), the kernel's state (a click opens the restart menu), its Node, the page's state while it is not attached, the errors and warnings, as VS Code counts them (a click opens the Problems tab, or hides it while it shows), the routes listening and, while execution.autoRunDependents runs dependents, how many are left (a click interrupts); on the right the keyboard mode, the selected cell, "Folded" while Fold All folds every cell, the caret's line and column while a cell is edited, the cell's language and, last, the panel toggle: it shows or hides the bottom panel (Cmd J, View > Panel) and is pressed while the panel shows, so a hidden panel always has a way back. The status region announces state changes only; the ticking elapsed time is hidden from it. -->
 <script setup lang="ts">
+import { Square } from "@lucide/vue";
 import { computed } from "vue";
 
 import Tooltip from "../primitives/tooltip/Tooltip.vue";
@@ -152,6 +153,17 @@ const word = "ui:font-medium ui:text-fg-2";
       @click="emit('command', 'ui.panel.open', { which: 'routes' })"
     >
       {{ plural(props.model.routes, "route") }}
+    </button>
+    <button
+      v-if="props.model.autoRun > 0"
+      type="button"
+      :class="item"
+      data-testid="status-auto-run"
+      title="Stop auto-run: interrupt"
+      @click="emit('command', 'kernel.interrupt')"
+    >
+      Auto-run <span :class="[word, 'ui:text-hot']">{{ props.model.autoRun }}</span>
+      <Square class="ui:block-2.5 ui:inline-2.5" aria-hidden="true" />
     </button>
     <span class="ui:flex-1" />
     <span data-testid="mode" :data-mode="props.model.mode" class="ui:font-medium ui:text-fg-2">{{

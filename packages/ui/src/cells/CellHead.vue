@@ -1,4 +1,4 @@
-<!-- CellHead: the row every cell block starts with, as Jupyter's and VS Code's notebooks have it: the run control (play; stop while running; a clock while queued), the cell number (in a blue square on a selected cell), where it runs (server, client or markdown with its icon; a click changes the type), its name with a few words about it (CellName: a double click on it edits the title), a spinner with the running time while it runs and nothing otherwise, and its actions (move up, move down, more, and the arrow that folds the cell to this row; a markdown cell has Edit or Render there too). After the name, "Enter switches it to client" on a server cell that failed for a name a client cell defines. A selected cell's name is bold. A right click opens the cell menu. While the page scrolls through an expanded result the row sticks to the top, saying which lines of the result are in view, with Fold result (O) and Next cell (J). -->
+<!-- CellHead: the row every cell block starts with, as Jupyter's and VS Code's notebooks have it: the run control (play; stop while running; a clock while queued), the cell number (in a blue square on a selected cell), where it runs (server, client or markdown with its icon; a click changes the type), its name with a few words about it (CellName: a double click on it edits the title), a spinner with the running time while it runs and nothing otherwise ("auto" before it while execution.autoRunDependents runs it or is to, or started its last run), and its actions (move up, move down, more, and the arrow that folds the cell to this row; a markdown cell has Edit or Render there too). After the name, "Enter switches it to client" on a server cell that failed for a name a client cell defines. A selected cell's name is bold. A right click opens the cell menu. While the page scrolls through an expanded result the row sticks to the top, saying which lines of the result are in view, with Fold result (O) and Next cell (J). -->
 <script setup lang="ts">
 import { Ban, Check, Clock, LoaderCircle, Play, Square, X } from "@lucide/vue";
 import { computed } from "vue";
@@ -87,6 +87,17 @@ const outcome = computed(() => {
     } as const;
   if (run.kind === "notRun") return { tone: "muted", time: "", words: "Not run", at: "" } as const;
   return null;
+});
+/** The quiet mark of execution.autoRunDependents: what it says, and its tooltip. */
+const auto = computed(() => {
+  const part = props.cell.autoRun;
+  if (part === null) return null;
+  if (part.state === "pending") return { words: "auto", title: "Waiting to auto-run" };
+  if (part.state === "running") return { words: "auto", title: "Auto-running" };
+  return {
+    words: "auto",
+    title: part.after > 0 ? `Auto-run after cell ${String(part.after)}` : "Auto-run",
+  };
 });
 /** What a key does on this cell now, after its name: null when there is nothing to say. */
 const note = computed(() => {
@@ -205,6 +216,14 @@ function fold(event: MouseEvent): void {
       :data-kind="props.cell.run.kind"
       class="ui:flex ui:items-center ui:justify-end ui:gap-1.5 ui:overflow-clip ui:pe-1.5 ui:font-mono ui:text-[0.71875rem] ui:whitespace-nowrap ui:text-hot"
     >
+      <span
+        v-if="auto !== null"
+        data-testid="auto-run-mark"
+        :data-state="props.cell.autoRun?.state"
+        :title="auto.title"
+        class="ui:font-sans ui:text-muted"
+        >{{ auto.words }}</span
+      >
       <template v-if="running">
         <LoaderCircle
           class="ui:shrink-0 ui:block-3.25 ui:inline-3.25 ui:motion-safe:animate-spin"
