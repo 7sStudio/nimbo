@@ -5,6 +5,8 @@
 <p><strong>Server code and browser code live in the same notebook: server cells run in Node.js, client cells run in the page, and a client cell calls a server cell's functions with their types.</strong></p>
 
 <p>
+<a href="https://github.com/7sStudio/nimbo/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/7sStudio/nimbo?label=release&amp;color=2ea44f"></a>
+<a href="https://github.com/7sStudio/nimbo/actions/workflows/release.yml"><img alt="Release pipeline status" src="https://github.com/7sStudio/nimbo/actions/workflows/release.yml/badge.svg"></a>
 <a href="LICENSE"><img alt="Licence: Apache 2.0" src="https://img.shields.io/badge/licence-Apache%202.0-blue"></a>
 <img alt="Platforms: macOS and Linux" src="https://img.shields.io/badge/platform-macOS%20%7C%20Linux-lightgrey">
 <img alt="Node 26 bundled" src="https://img.shields.io/badge/Node%2026-bundled-339933?logo=nodedotjs&amp;logoColor=white">
