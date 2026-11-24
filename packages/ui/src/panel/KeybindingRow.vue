@@ -1,6 +1,7 @@
 <!-- KeybindingRow: one row of Keyboard Shortcuts (Command, Keybinding, When, Source). While `recording`, the Keybinding cell takes the keys pressed (a chord is two presses, a third starts again): Enter saves, Escape cancels, and it says how many other commands have those keys. While `editingWhen`, the When cell is a field: Enter saves the clause once it reads, Escape cancels. A conflict's warning names the commands and shows them. -->
 <script setup lang="ts">
 import type { Keybinding } from "@jsnb/core";
+import { whenContextKeys } from "@jsnb/core";
 import { TriangleAlert } from "@lucide/vue";
 import { computed, nextTick, onMounted, ref, watch } from "vue";
 
@@ -138,9 +139,7 @@ const field =
         data-keys="capture"
         spellcheck="false"
         autocomplete="off"
-        :title="
-          whenProblem ?? 'home, notebook, commandMode, editMode, markdownEditing, joined by &&'
-        "
+        :title="whenProblem ?? `${whenContextKeys.join(', ')}, joined by &&`"
         :class="[
           field,
           'ui:font-mono ui:text-tiny ui:text-fg',

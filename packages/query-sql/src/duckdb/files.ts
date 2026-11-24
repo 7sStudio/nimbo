@@ -9,7 +9,7 @@ import type { Instance } from "./instance.ts";
 
 let sequence = 0;
 
-/** A fresh internal name (`__jsnb_<kind>_<n>`), never a name a caller may use. */
+/** A fresh internal name (`__nimbo_<kind>_<n>`), never a name a caller may use. */
 export const internalName = (kind: string): string => {
   sequence += 1;
   return `${internalPrefix}${kind}_${String(sequence)}`;

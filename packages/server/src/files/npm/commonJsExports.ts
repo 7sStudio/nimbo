@@ -46,7 +46,7 @@ export async function commonJsNames(file: string): Promise<string[]> {
     await (ready ??= init());
     const names = new Set<string>();
     await collect(file, names, new Set());
-    return [...names].filter((name) => !["default", "module.exports", "__jsnbCjs"].includes(name));
+    return [...names].filter((name) => !["default", "module.exports", "__nimboCjs"].includes(name));
   } catch {
     return []; // the lexer failed: the module keeps its default and its namespace
   }
@@ -63,10 +63,10 @@ export function withNamedExports(text: string, names: readonly string[]): string
   if (ending?.[1] === undefined) return text;
   const values = names.map(
     (name, at) =>
-      `var __jsnbNamed${String(at)} = __jsnbModule == null ? void 0 : __jsnbModule[${JSON.stringify(name)}];\n`,
+      `var __nimboNamed${String(at)} = __nimboModule == null ? void 0 : __nimboModule[${JSON.stringify(name)}];\n`,
   );
-  const exported = names.map((name, at) => `__jsnbNamed${String(at)} as ${JSON.stringify(name)}`);
-  const exports = ["__jsnbModule as default", '__jsnbModule as "module.exports"', ...exported];
-  const statement = `var __jsnbModule = ${ending[1]}();\n${values.join("")}export { ${exports.join(", ")} };`;
+  const exported = names.map((name, at) => `__nimboNamed${String(at)} as ${JSON.stringify(name)}`);
+  const exports = ["__nimboModule as default", '__nimboModule as "module.exports"', ...exported];
+  const statement = `var __nimboModule = ${ending[1]}();\n${values.join("")}export { ${exports.join(", ")} };`;
   return `${text.slice(0, ending.index)}${statement}${text.slice(ending.index + ending[0].length)}`;
 }

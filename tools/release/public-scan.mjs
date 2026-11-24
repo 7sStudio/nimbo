@@ -27,7 +27,10 @@ function names() {
     const local = git("config", "user.email")
       .split("@")[0]
       .replace(/^\d+\+/, "");
-    if (local.length > 3 && !/noreply/i.test(local)) out.push(local);
+    // an identity named after the repository's own owner is the public one, not a personal handle
+    const owner = /[:/]([^/:]+)\/[^/]+$/.exec(git("remote", "get-url", "origin"))?.[1] ?? "";
+    const isOwner = local.toLowerCase() === owner.toLowerCase();
+    if (local.length > 3 && !/noreply/i.test(local) && !isOwner) out.push(local);
   } catch {
     // no git identity: the name from $HOME only
   }

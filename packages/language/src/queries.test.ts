@@ -70,7 +70,7 @@ test("a global list carries no details, and hides the generated names", async ()
       sortText: "11",
     });
     expect(
-      entries.filter((e) => /^(__jsnb|__scope|__import|__export|jsnb:)/u.test(e.label)),
+      entries.filter((e) => /^(__nimbo|__scope|__import|__export|nimbo:)/u.test(e.label)),
     ).toEqual([]);
     expect(entries.some((e) => e.label === "__dirname")).toBe(true);
   });

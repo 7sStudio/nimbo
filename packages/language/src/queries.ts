@@ -23,7 +23,7 @@ function cleanSignature(signature: string, kinds: ReadonlyMap<string, string>): 
 
 /** A completion row the generated lines or the transform's names put there, which the user must not see. */
 const hidden = (name: string): boolean =>
-  name.startsWith("__jsnb_") || name.startsWith("jsnb:") || isReservedName(name);
+  name.startsWith("__nimbo_") || name.startsWith("nimbo:") || isReservedName(name);
 
 /** An entry that brings its own text (`?.amount` on a possibly undefined value, `["a-b"]`): the page replaces the `.`
  * before the word with it (editor/language/client.ts). */
@@ -144,7 +144,7 @@ function resolveTarget(
     const next = service.getDefinitionAtPosition(cell.fileName, link.target) ?? [];
     return next.flatMap((target) => resolveTarget(lookup, target, service, depth + 1));
   }
-  if (fileName.includes("/__jsnb_")) return [];
+  if (fileName.includes("/__nimbo_")) return [];
   const file = service.getProgram()?.getSourceFile(fileName);
   if (!file) return [];
   const start = file.getLineAndCharacterOfPosition(textSpan.start);
@@ -153,7 +153,7 @@ function resolveTarget(
 }
 
 /** Where a documentation link to a symbol goes, as the page follows it (editor/language/links.ts):
- * `#jsnb-cell=<cell>:<line>:<character>` for a cell, `#jsnb-file=<path>:<line>` for a file outside the cells. */
+ * `#nimbo-cell=<cell>:<line>:<character>` for a cell, `#nimbo-file=<path>:<line>` for a file outside the cells. */
 function hrefOf(lookup: Lookup, at: At): Href {
   const service = lookup.service(at.cell.realm);
   return (target) => {
@@ -161,8 +161,8 @@ function hrefOf(lookup: Lookup, at: At): Href {
     if (place === undefined) return undefined;
     const { line, character } = place.range.start;
     return "cell" in place
-      ? `#jsnb-cell=${place.cell}:${String(line)}:${String(character)}`
-      : `#jsnb-file=${encodeURIComponent(place.file)}:${String(line)}`;
+      ? `#nimbo-cell=${place.cell}:${String(line)}:${String(character)}`
+      : `#nimbo-file=${encodeURIComponent(place.file)}:${String(line)}`;
   };
 }
 

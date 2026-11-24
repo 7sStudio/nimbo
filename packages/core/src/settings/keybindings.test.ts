@@ -167,3 +167,23 @@ describe("chords, conflicts and live bindings", () => {
     expect(bindingFor(entries, "A", at("home", "commandMode"))?.command).toBe("my.a");
   });
 });
+
+describe("the debugger's keys", () => {
+  it("acts with the debugger's keys only in their debug state, and a user's rebinding keeps its clause", () => {
+    const paused = at("notebook", "commandMode", "inDebugMode", "debugPaused");
+    const running = at("notebook", "commandMode", "inDebugMode", "debugRunning");
+    const { entries } = resolve([
+      { key: "f5", command: "-ui.debug.continue" },
+      { key: "f8", command: "ui.debug.continue", when: "notebook && debugPaused" },
+    ]);
+    expect(bindingFor(entries, "F5", at("notebook", "commandMode"))).toBeUndefined();
+    expect(bindingFor(entries, "F5", paused)).toBeUndefined();
+    expect(bindingFor(entries, "F8", paused)?.command).toBe("ui.debug.continue");
+    expect(bindingFor(entries, "F8", running)).toBeUndefined();
+    expect(bindingFor(entries, "F6", running)?.command).toBe("ui.debug.pause");
+    expect(
+      bindingFor(entries, "F6", at("notebook", "fieldFocus", "inDebugMode", "debugRunning")),
+    ).toBe(undefined);
+    expect(liveKeybindings(entries, "notebook").map((each) => each.key)).toContain("F8");
+  });
+});

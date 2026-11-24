@@ -14,11 +14,11 @@
 export type Required = { readonly url: string; readonly spec: string; readonly found: boolean };
 
 /** The export that tells a requiring bundle to take this bundle's default (module.exports). */
-export const commonJsMark = "export const __jsnbCjs = true;\n";
+export const commonJsMark = "export const __nimboCjs = true;\n";
 
 /** The module-scoped `require` of a bundle, as JavaScript that runs in the page. */
 const requireOf = `((found, missing, from) => {
-  const valueOf = (ns) => (ns.__jsnbCjs === true && "default" in ns ? ns.default : ns);
+  const valueOf = (ns) => (ns.__nimboCjs === true && "default" in ns ? ns.default : ns);
   const exportsOf = (ns) => {
     try {
       return valueOf(ns);
@@ -52,10 +52,10 @@ export function requirePrelude(requires: readonly Required[], from: string, text
   if (requires.length === 0 && !callsRequire(text)) return "";
   const urls = [...new Set(requires.filter((required) => required.found).map(({ url }) => url))];
   const imports = urls.map(
-    (url, at) => `import * as __jsnbRequired${String(at)} from ${JSON.stringify(url)};\n`,
+    (url, at) => `import * as __nimboRequired${String(at)} from ${JSON.stringify(url)};\n`,
   );
   const found = urls
-    .map((url, at) => `[${JSON.stringify(url)}, __jsnbRequired${String(at)}]`)
+    .map((url, at) => `[${JSON.stringify(url)}, __nimboRequired${String(at)}]`)
     .join(", ");
   const missing = requires
     .filter((required) => !required.found)

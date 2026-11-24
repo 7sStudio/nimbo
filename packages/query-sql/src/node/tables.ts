@@ -15,7 +15,7 @@ import type { NodeInstance } from "./instance.ts";
 import { toColumn } from "./result.ts";
 import { execute, inTransaction, stream, unbounded, withConnection } from "./run.ts";
 
-/** A path for one of the engine's files in `directory`: `__jsnb_<random>.<extension>`. */
+/** A path for one of the engine's files in `directory`: `__nimbo_<random>.<extension>`. */
 export const internalPath = (directory: string, extension: string): string =>
   join(directory, `${internalPrefix}${randomUUID()}.${extension}`);
 

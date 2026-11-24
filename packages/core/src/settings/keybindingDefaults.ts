@@ -53,14 +53,17 @@ export const defaultKeybindings: readonly DefaultBinding[] = [
   ...row(["Mod+Shift+E"], "ui.home.view.open", "home", { view: "explorer" }),
   ...row(["Alt+F5"], "ui.diff.next"),
   ...row(["Alt+Shift+F5"], "ui.diff.previous"),
-  // the debugger, VS Code's keys (each key does nothing while its command cannot act)
-  ...row(["F5"], "ui.debug.continue", nb),
-  ...row(["F6"], "ui.debug.pause", nb),
-  ...row(["F10"], "ui.debug.stepOver", nb),
-  ...row(["F11"], "ui.debug.stepInto", nb),
-  ...row(["Shift+F11"], "ui.debug.stepOut", nb),
-  ...row(["Shift+F5"], "ui.debug.stop", nb),
-  ...row(["F9"], "ui.debug.toggleBreakpoint", nb),
+  // the debugger, VS Code's keys, each only where it acts, so the browser keeps F5 (reload), F6 (address bar), F11
+  // (full screen) and Shift F5 the rest of the time; Ctrl Shift F5 starts, as Ctrl F5 is the browsers' hard reload on
+  // Linux and macOS's toolbar focus
+  ...row(["Ctrl+Shift+F5"], "ui.debug.start", "notebook && !fieldFocus"),
+  ...row(["F5"], "ui.debug.continue", "notebook && debugPaused"),
+  ...row(["F6"], "ui.debug.pause", "notebook && debugRunning && !fieldFocus"),
+  ...row(["F10"], "ui.debug.stepOver", "notebook && debugPaused"),
+  ...row(["F11"], "ui.debug.stepInto", "notebook && debugPaused"),
+  ...row(["Shift+F11"], "ui.debug.stepOut", "notebook && debugPaused"),
+  ...row(["Shift+F5"], "ui.debug.stop", "notebook && inDebugMode && !fieldFocus"),
+  ...row(["F9"], "ui.debug.toggleBreakpoint", "notebook && editMode"),
   ...row(["Mod+Shift+D"], "ui.panel.open", nb, { which: "debug" }),
   // the context menu key, as VS Code opens a focused item's menu
   ...row(["Shift+F10"], "ui.cellMenu.open", nbCommand),

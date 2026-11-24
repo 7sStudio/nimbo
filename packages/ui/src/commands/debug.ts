@@ -1,6 +1,6 @@
-// The debugger's page commands, as VS Code's keys run them: F5 continues (runs the selected cell when nothing is
-// paused), F6 pauses, F10, F11 and Shift F11 step, Shift F5 stops the run, F9 toggles a breakpoint on the caret's line.
-// Each holds only while it can act, so its key does nothing otherwise.
+// The debugger's page commands, as VS Code's keys run them: Ctrl Shift F5 runs the selected cell under the debugger,
+// F5 continues, F6 pauses, F10, F11 and Shift F11 step, Shift F5 stops the run, F9 toggles a breakpoint on the caret's
+// line. Their keys' when clauses name the debug context keys (debugSession), so each key is the browser's elsewhere.
 import type { CellId } from "@jsnb/core";
 
 import type { Control } from "../store/debug.js";
@@ -19,6 +19,17 @@ type Stores = {
 
 const writing = (command: Command): Command => ({ ...command, writes: true });
 
+/** "paused" while the kernel is paused in the debugger, "running" while a run goes with the debugger attached. */
+export type DebugSession = "paused" | "running";
+
+export function debugSession(
+  debug: Pick<Stores["debug"], "state">,
+  notebook: Pick<Stores["notebook"], "runningCell">,
+): DebugSession | undefined {
+  if (debug.state.state === "paused") return "paused";
+  return debug.state.state === "running" && notebook.runningCell !== null ? "running" : undefined;
+}
+
 /** The caret's cell and line in the edited code cell. */
 function caretPlace({ ui, notebook }: Stores): Place | undefined {
   const at = ui.caretAt;
@@ -34,26 +45,31 @@ function placeOf(args: Args | undefined, stores: Stores): Place | undefined {
   return typeof cell === "string" && typeof line === "number" ? { cell, line } : caretPlace(stores);
 }
 
-/** Continue, pause, the steps and stop. */
-function controls({ debug, ui, notebook }: Stores): Command[] {
-  const isPaused = () => debug.state.state === "paused";
-  const step = (id: string, title: string, verb: Control) =>
-    writing(uiCommand(id, title, () => debug.control(verb), isPaused));
+/** Start Debugging: the selected code cell's run, which pauses on its breakpoints. */
+function start({ ui, notebook }: Stores): Command {
   const runSelected = () => {
     const cell = notebook.selectedCell;
     return cell === undefined || cell.type === "markdown"
       ? undefined
       : notebook.run(cell.id, ui.draftOf(cell.id));
   };
-  return [
-    writing(
-      uiCommand(
-        "ui.debug.continue",
-        "Continue, or run the selected cell",
-        () => (isPaused() ? debug.control("resume") : runSelected()),
-        () => isPaused() || (notebook.selectedCell?.type ?? "markdown") !== "markdown",
-      ),
+  return writing(
+    uiCommand(
+      "ui.debug.start",
+      "Run the selected cell under the debugger",
+      runSelected,
+      () => (notebook.selectedCell?.type ?? "markdown") !== "markdown",
     ),
+  );
+}
+
+/** Continue, pause, the steps and stop. */
+function controls({ debug, notebook }: Stores): Command[] {
+  const isPaused = () => debug.state.state === "paused";
+  const step = (id: string, title: string, verb: Control) =>
+    writing(uiCommand(id, title, () => debug.control(verb), isPaused));
+  return [
+    writing(uiCommand("ui.debug.continue", "Continue", () => debug.control("resume"), isPaused)),
     writing(
       uiCommand(
         "ui.debug.pause",
@@ -70,7 +86,7 @@ function controls({ debug, ui, notebook }: Stores): Command[] {
         "ui.debug.stop",
         "Stop the run",
         () => notebook.interrupt(),
-        () => isPaused() || (debug.state.state === "running" && notebook.runningCell !== null),
+        () => debugSession(debug, notebook) !== undefined,
       ),
     ),
   ];
@@ -111,5 +127,5 @@ function breakpointCommands(stores: Stores): Command[] {
 
 export function debugCommands(): readonly Command[] {
   const stores = { debug: useDebugStore(), ui: useUiStore(), notebook: useNotebookStore() };
-  return [...controls(stores), ...breakpointCommands(stores)];
+  return [start(stores), ...controls(stores), ...breakpointCommands(stores)];
 }

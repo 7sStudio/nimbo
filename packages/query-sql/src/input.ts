@@ -5,7 +5,7 @@ import type { Outcome } from "./errors.ts";
 import { QueryError, messages } from "./errors.ts";
 
 /** Names starting with this are the engine's own (load files, staging tables, exports). */
-export const internalPrefix = "__jsnb_";
+export const internalPrefix = "__nimbo_";
 
 const maxNameLength = 128;
 

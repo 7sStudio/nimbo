@@ -11,8 +11,10 @@ import { DispatcherMissing } from "../store/startOrder.js";
 import type { NewToast } from "../store/toasts.js";
 import { useUiStore } from "../store/ui.js";
 import type { Mode } from "../store/ui.js";
+import { useDebugStore } from "../store/debug.js";
 import { cellCommands } from "./cells.js";
-import { debugCommands } from "./debug.js";
+import type { DebugSession } from "./debug.js";
+import { debugCommands, debugSession } from "./debug.js";
 import type { Args, Command } from "./command.js";
 import { registryCommands } from "./registry.js";
 import { uiCommands } from "./ui.js";
@@ -27,6 +29,8 @@ export type KeyContext = {
   readonly overlay: boolean;
   /** An editor such as Settings covers the notebook or the list: only the window's keys act. */
   readonly page?: boolean;
+  /** A run going under the debugger, or the kernel paused in it (the debug context keys); none otherwise. */
+  readonly debug?: DebugSession;
 };
 
 export type Dispatcher = {
@@ -106,6 +110,7 @@ const canRun = (
 export function createDispatcher(): Dispatcher {
   const ui = useUiStore();
   const notebook = useNotebookStore();
+  const debug = useDebugStore();
   const commands = [
     ...registryCommands(),
     ...uiCommands(),
@@ -137,6 +142,7 @@ export function createDispatcher(): Dispatcher {
       cellType: notebook.selectedCell?.type ?? null,
       overlay: ui.palette.open || ui.overlay !== null || ui.fullscreen !== null,
       page: ui.page !== null,
+      debug: debugSession(debug, notebook),
     }),
   };
 }

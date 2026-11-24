@@ -194,3 +194,66 @@ describe("createShortcuts on an output", () => {
     output.remove();
   });
 });
+
+const debugging = (debug: "paused" | "running" | undefined) =>
+  createShortcuts(
+    { ...dispatcher, context: () => ({ ...dispatcher.context(), ...(debug && { debug }) }) },
+    // the table is read off macOS here, so Ctrl is the command key
+    { mac: false, now: () => time },
+  );
+const at = (handler: ReturnType<typeof createShortcuts>, init: Init) => {
+  const event = new KeyboardEvent("keydown", { ...init, cancelable: true });
+  Object.defineProperty(event, "target", { value: init.target ?? document.body });
+  return handler(event);
+};
+const element = (tag: string, className = "") => {
+  const made = document.createElement(tag);
+  made.className = className;
+  document.body.append(made);
+  return made;
+};
+
+describe("the debugger's keys while nothing is debugged", () => {
+  it("leaves F5, F6, F10, F11 and Shift F5 to the browser while nothing is debugged", () => {
+    const idle = debugging(undefined);
+    for (const init of [
+      { code: "F5", key: "F5" },
+      { code: "F6", key: "F6" },
+      { code: "F10", key: "F10" },
+      { code: "F11", key: "F11" },
+      { code: "F5", key: "F5", shiftKey: true },
+    ])
+      expect(at(idle, init)).toBe(false);
+    expect(at(idle, { code: "F5", key: "F5", ctrlKey: true, shiftKey: true })).toBe(true);
+  });
+
+  it("takes F9 in a cell's editor only", () => {
+    const idle = debugging(undefined);
+    expect(at(idle, { code: "F9", key: "F9" })).toBe(false);
+    expect(at(idle, { code: "F9", key: "F9", target: element("input") })).toBe(false);
+    expect(at(idle, { code: "F9", key: "F9", target: element("div", "cm-editor") })).toBe(true);
+  });
+});
+
+describe("the debugger's keys during a debugged run", () => {
+  it("takes F5 and the steps while paused, from a text field too", () => {
+    const paused = debugging("paused");
+    const field = element("input");
+    expect(at(paused, { code: "F5", key: "F5" })).toBe(true);
+    expect(at(paused, { code: "F5", key: "F5", target: field })).toBe(true);
+    expect(at(paused, { code: "F11", key: "F11", shiftKey: true, target: field })).toBe(true);
+    expect(at(paused, { code: "F6", key: "F6" })).toBe(false);
+  });
+
+  it("takes F6 and Shift F5 during a debugged run, never from a text field", () => {
+    const running = debugging("running");
+    const field = element("input");
+    expect(at(running, { code: "F6", key: "F6" })).toBe(true);
+    expect(at(running, { code: "F5", key: "F5", shiftKey: true })).toBe(true);
+    expect(at(running, { code: "F6", key: "F6", target: field })).toBe(false);
+    expect(
+      at(running, { code: "F5", key: "F5", ctrlKey: true, shiftKey: true, target: field }),
+    ).toBe(false);
+    expect(at(running, { code: "F10", key: "F10" })).toBe(false);
+  });
+});

@@ -2,7 +2,7 @@
 // per realm, from the real signatures in kernel-node's builtinsLayer.ts and runtime-web's realm/builtins.ts.
 // console and the timers are the realm's own globals, so they are not declared here.
 
-/** The server built-ins a cell file imports from `jsnb:server` (kernel-node's layer, less console and the timers). */
+/** The server built-ins a cell file imports from `nimbo:server` (kernel-node's layer, less console and the timers). */
 export const serverBuiltinNames = [
   "env",
   "display",
@@ -13,7 +13,7 @@ export const serverBuiltinNames = [
   "require",
 ] as const;
 
-/** The client built-ins a cell file imports from `jsnb:client` (runtime-web's layer, less the globals it wraps). */
+/** The client built-ins a cell file imports from `nimbo:client` (runtime-web's layer, less the globals it wraps). */
 export const clientBuiltinNames = ["env", "display", "dispose", "on"] as const;
 
 /** A property key as TypeScript accepts it: an identifier as it is, anything else quoted. */
@@ -47,7 +47,7 @@ interface Body {
 interface Response {
   json(): Promise<any>;
 }
-declare module "jsnb:server" {
+declare module "nimbo:server" {
   /** The workspace .env, re-read per run. Reading a name .env does not set throws EnvNotSet. */
   export const env: ${envType(env)};
 ${serverDisplay}
@@ -76,7 +76,7 @@ ${serverDisplay}
 
 /** The declaration file of the client realm's built-ins and of the bridge's types. */
 export function clientBuiltins(env: readonly string[]): string {
-  return `declare module "jsnb:client" {
+  return `declare module "nimbo:client" {
   /** The public env: PUBLIC_* and *_PUBLISHABLE_KEY names only. */
   export const env: ${envType(env)};
   export const display: {
@@ -92,7 +92,7 @@ export function clientBuiltins(env: readonly string[]): string {
   /** Listens to a server cell's \`emit(name, data)\` (v1.x). */
   export function on(name: string, callback: (data: unknown) => void): void;
 }
-declare module "jsnb:bridge" {
+declare module "nimbo:bridge" {
   /** A server export as a client cell receives it: a function answers through a promise, data crosses as it is. */
   export type Remote<T> = T extends (...args: infer A) => infer R ? (...args: A) => Promise<Awaited<R>> : T;
 }

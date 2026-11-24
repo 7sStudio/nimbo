@@ -44,7 +44,7 @@ describe("messages", () => {
 describe("input messages", () => {
   it("describe each bad input with the value given", () => {
     expect(messages.name("alias", "")).toMatchInlineSnapshot(
-      `"The alias name "" is not valid. Use 1 to 128 characters, no NUL character and no __jsnb_ prefix."`,
+      `"The alias name "" is not valid. Use 1 to 128 characters, no NUL character and no __nimbo_ prefix."`,
     );
     expect(messages.taken("events", "t")).toMatchInlineSnapshot(
       `"The name "events" is already used by the table "t". Pick another name, or drop "t" first."`,
