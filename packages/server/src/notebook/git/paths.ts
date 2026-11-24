@@ -64,3 +64,35 @@ export async function checkRevision(
   if (run.code !== 0) throw refused(field, revision, "no such commit in this repository");
   return run.stdout.toString("utf8").trim();
 }
+
+// eslint-disable-next-line no-control-regex -- the control characters are what this refuses
+const controls = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u;
+
+/** A branch name git accepts (`git check-ref-format --branch`), never an option, with no control character. */
+export async function checkBranchName(root: string, name: string, field = "name"): Promise<string> {
+  if (name.startsWith("-")) throw refused(field, name, "a branch name cannot start with -");
+  if (controls.test(name) || /\s/u.test(name))
+    throw refused(field, name, "a branch name cannot hold spaces or control characters");
+  const run = await git(root, ["check-ref-format", "--branch", name], {
+    read: true,
+    allowFailure: true,
+  });
+  if (run.code !== 0 || name === "HEAD") throw refused(field, name, "not a valid branch name");
+  return name;
+}
+
+const remotePattern = /^[A-Za-z0-9][A-Za-z0-9._-]*$/u;
+
+/** A remote's name, one of the repository's remotes. */
+export function checkRemote(name: string, remotes: readonly string[], field = "remote"): string {
+  if (!remotePattern.test(name)) throw refused(field, name, "not a remote name");
+  if (!remotes.includes(name)) throw refused(field, name, "no such remote in this repository");
+  return name;
+}
+
+/** A commit or stash message: any text but control characters other than tab and line ends. */
+export function checkMessage(message: string, field = "message"): string {
+  if (controls.test(message))
+    throw refused(field, message.slice(0, 40), "a message cannot hold control characters");
+  return message;
+}

@@ -54,6 +54,8 @@ export type Autosaver = {
   readonly state: () => {
     readonly savedAt: string | null;
     readonly dirty: boolean;
+    /** Changed by an edit since the load or the last save, not only by the load's normalization (07 §4). */
+    readonly mutated: boolean;
     readonly conflict: boolean;
   };
   /** Closing: writes the changes made since the load or the last save, unless a conflict suspends autosave. */

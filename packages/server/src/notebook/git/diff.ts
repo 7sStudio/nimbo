@@ -3,7 +3,7 @@
 // named, not diffed. An agent's answer leaves the cells' full sources out: the hunks say what changed.
 import type { z } from "zod";
 
-import type { DiffCellSide, gitDiff, NotebookDiff, NotebookDocument } from "@jsnb/core";
+import type { DiffCellSide, gitDiff, GitRepo, NotebookDiff, NotebookDocument } from "@jsnb/core";
 import { CellNotFound, diffNotebooks, InvalidParams, parse, randomIds, textDiff } from "@jsnb/core";
 
 import type { Side } from "./content.js";
@@ -25,8 +25,50 @@ type Sides = {
   readonly after: Side;
 };
 
+/** A commit's side of a file against its first parent's (none for a root commit). */
+async function commitSides(
+  context: GitContext,
+  found: RepoLocation,
+  input: DiffInput,
+  at: string,
+): Promise<Sides> {
+  if (input.base !== undefined || input.staged)
+    throw new InvalidParams({
+      issues: [{ path: ["commit"], message: "commit cannot go with base or staged" }],
+    });
+  const oid = await checkRevision(context.root, input.commit ?? "", "commit");
+  const parent = await context.run(found.top, ["rev-parse", "--verify", "--quiet", `${oid}^1`], {
+    read: true,
+    allowFailure: true,
+  });
+  const short = oid.slice(0, 7);
+  const parentOid = parent.code === 0 ? parent.stdout.toString("utf8").trim() : null;
+  return {
+    from: parentOid === null ? "none" : `${short}^`,
+    before: parentOid === null ? { kind: "none" } : await blob(found.top, `${parentOid}:${at}`),
+    to: short,
+    after: await blob(found.top, `${oid}:${at}`),
+  };
+}
+
+/** HEAD against the index; a staged rename's old side is read at its old path. */
+async function stagedSides(found: RepoLocation, repo: GitRepo, path: string): Promise<Sides> {
+  const at = `${found.prefix}${path}`;
+  const show = (spec: string) => blob(found.top, spec);
+  const renamed = repo.staged.find((change) => change.path === path)?.from;
+  const old = renamed === undefined || renamed.startsWith("../") ? at : `${found.prefix}${renamed}`;
+  return {
+    ...(renamed === undefined || renamed.startsWith("../") ? {} : { renamedFrom: renamed }),
+    from: "HEAD",
+    before: await show(`HEAD:${old}`),
+    to: "index",
+    after: await show(`:0:${at}`),
+  };
+}
+
 /** The two sides the input compares: base against the working tree, HEAD against the index, a conflict's HEAD
- * against the working tree, else the index against the working tree. A staged rename's old side is its old path. */
+ * against the working tree, else the index against the working tree; a commit against its parent. A staged rename's
+ * old side is its old path. */
 async function sidesOf(
   context: GitContext,
   found: RepoLocation,
@@ -37,6 +79,7 @@ async function sidesOf(
   const repo = await statusOf(found, context.options);
   const show = (spec: string) => blob(found.top, spec);
   const working = () => workingSide(context, path);
+  if (input.commit !== undefined) return commitSides(context, found, input, at);
   if (input.base !== undefined) {
     const oid = await checkRevision(context.root, input.base);
     return {
@@ -46,26 +89,10 @@ async function sidesOf(
       after: await working(),
     };
   }
-  if (input.staged) {
-    const renamed = repo.staged.find((change) => change.path === path)?.from;
-    const old =
-      renamed === undefined || renamed.startsWith("../") ? at : `${found.prefix}${renamed}`;
-    return {
-      ...(renamed === undefined || renamed.startsWith("../") ? {} : { renamedFrom: renamed }),
-      from: "HEAD",
-      before: await show(`HEAD:${old}`),
-      to: "index",
-      after: await show(`:0:${at}`),
-    };
-  }
-  if (repo.conflicts.some((change) => change.path === path))
-    return {
-      from: "HEAD",
-      before: await show(`HEAD:${at}`),
-      to: "worktree",
-      after: await working(),
-    };
-  return { from: "index", before: await show(`:0:${at}`), to: "worktree", after: await working() };
+  if (input.staged) return stagedSides(found, repo, path);
+  const conflicted = repo.conflicts.some((change) => change.path === path);
+  const before = await show(conflicted ? `HEAD:${at}` : `:0:${at}`);
+  return { from: conflicted ? "HEAD" : "index", before, to: "worktree", after: await working() };
 }
 
 const strip = (side: DiffCellSide | undefined): DiffCellSide | undefined =>
@@ -143,7 +170,13 @@ export async function diffFile(context: GitContext, input: DiffInput): Promise<D
   const found = await required(context);
   const path = await checkPath(context.root, input.path);
   const sides = await sidesOf(context, found, input, path);
-  if (sides.before.kind === "none" && sides.after.kind === "none") await mustBeKnown(found, path);
+  if (sides.before.kind === "none" && sides.after.kind === "none") {
+    if (input.commit !== undefined)
+      throw new InvalidParams({
+        issues: [{ path: ["path"], message: `${path}: not in that commit or its parent` }],
+      });
+    await mustBeKnown(found, path);
+  }
   const label = (side: Side, name: string) => (side.kind === "none" ? "none" : name);
   const head = {
     path,

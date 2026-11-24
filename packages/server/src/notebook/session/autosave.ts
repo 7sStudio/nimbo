@@ -221,7 +221,12 @@ export function createAutosaver(
       saver.savedAt = options.now().toISOString();
       options.events.saved(saver.savedAt);
     },
-    state: () => ({ savedAt: saver.savedAt, dirty: saver.dirty, conflict: saver.conflict }),
+    state: () => ({
+      savedAt: saver.savedAt,
+      dirty: saver.dirty,
+      mutated: saver.mutated,
+      conflict: saver.conflict,
+    }),
     flush: () => flush(saver),
     close: () => {
       clearTimeout(saver.timer);
