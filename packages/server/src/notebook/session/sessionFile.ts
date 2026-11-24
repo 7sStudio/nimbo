@@ -73,8 +73,8 @@ export function autosaverOf(
         failed: (error: { readonly code: string; readonly message: string }) => {
           emit("notebook.saveFailed", { path: place.ref, error });
         },
-        conflict: () => {
-          emit("notebook.conflict", { path: place.ref });
+        conflict: (cells?: readonly string[]) => {
+          emit("notebook.conflict", { path: place.ref, ...(cells === undefined ? {} : { cells }) });
         },
       },
     }),

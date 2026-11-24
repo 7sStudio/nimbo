@@ -2,6 +2,7 @@
 // a conflict when the file changed on disk, reload by cell id, a forced save, and a failed write retried.
 import { chmod, readFile, readdir, writeFile } from "node:fs/promises";
 
+import type { Daemon } from "../../fixtures/daemon.js";
 import { withDaemon } from "../../fixtures/daemon.js";
 import { describe, expect, it } from "vitest";
 
@@ -36,9 +37,15 @@ describe("autosave", () => {
   });
 });
 
+// With files.mergeExternalChanges off, an external edit is found by the next save (external.integration.test.ts
+// has the merge).
+const mergeOff = (daemon: Daemon) =>
+  daemon.client.settings.set({ key: "files.mergeExternalChanges", value: false });
+
 describe("a conflict", () => {
   it("suspends autosave when the file changed on disk, until a forced save", async () => {
     await withDaemon(async (daemon, ws) => {
+      await mergeOff(daemon);
       await daemon.client.notebook.create({ path: "a.jsnb" });
       await writeFile(ws.path("a.jsnb"), '{ "version": 1, "cells": [] }\n');
       await daemon.client.cell.add({ notebook: "a.jsnb", type: "markdown", source: "mine" });
@@ -56,6 +63,7 @@ describe("a conflict", () => {
 describe("notebook.reload", () => {
   it("resolves a conflict, reconciling by cell id", async () => {
     await withDaemon(async (daemon, ws) => {
+      await mergeOff(daemon);
       await daemon.client.notebook.create({ path: "a.jsnb" });
       const kept = (
         await daemon.client.cell.add({ notebook: "a.jsnb", type: "markdown", source: "k" })

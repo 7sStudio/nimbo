@@ -38,8 +38,8 @@ type Saver = {
 
 const later = (run: () => void, ms: number) => setTimeout(run, ms).unref();
 
-function enterConflict(saver: Saver): Outcome {
-  if (!saver.conflict) saver.options.events.conflict();
+function enterConflict(saver: Saver, cells?: readonly string[]): Outcome {
+  if (!saver.conflict || cells !== undefined) saver.options.events.conflict(cells);
   saver.conflict = true;
   return "conflict";
 }
@@ -89,6 +89,11 @@ async function writeFile(options: AutosaveOptions, text: string): Promise<void> 
   options.written?.(identity); // a statement of its own: `?.` would skip the write with it
 }
 
+/** The file holds the state: the same text, or nothing changed since it was read or written (the text may differ
+ * only by the stamps of external edits, 07 §5). */
+const holds = (saver: Saver, text: string, disk: string | undefined): boolean =>
+  disk === saver.hash && (text === saver.text || (!saver.dirty && !saver.mutated));
+
 /** One write; never rejects: whatever fails (the serializer included) is the save's failure, reported and retried. */
 async function write(saver: Saver, force: boolean): Promise<Outcome> {
   if (saver.conflict && !force) return "conflict";
@@ -98,7 +103,7 @@ async function write(saver: Saver, force: boolean): Promise<Outcome> {
     text = saver.options.text();
     const disk = await diskHash(saver.options);
     if (!force && disk !== undefined && disk !== saver.hash) return enterConflict(saver);
-    if (!force && text === saver.text && disk === saver.hash) {
+    if (!force && holds(saver, text, disk)) {
       caughtUp(saver, version);
       return "unchanged";
     }
@@ -220,6 +225,12 @@ export function createAutosaver(
       Object.assign(saver, { text, hash: hashOf(text), conflict: false, dirty, mutated: false });
       saver.savedAt = options.now().toISOString();
       options.events.saved(saver.savedAt);
+    },
+    base: () => ({ text: saver.text, hash: saver.hash }),
+    conflicted: (cells) => {
+      clearTimeout(saver.timer);
+      saver.timer = undefined;
+      enterConflict(saver, cells);
     },
     state: () => ({ savedAt: saver.savedAt, dirty: saver.dirty, conflict: saver.conflict }),
     flush: () => flush(saver),

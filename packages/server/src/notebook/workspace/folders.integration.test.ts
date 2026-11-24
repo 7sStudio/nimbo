@@ -169,6 +169,8 @@ describe("workspace.open refuses before anything changes", () => {
     await withWorkspace(async (ws) => {
       const { home, projects, daemon } = await world(ws);
       const { client } = daemon;
+      // the conflict a save finds, as an external edit makes it with merging off (07 §5)
+      await client.settings.set({ key: "files.mergeExternalChanges", value: false });
       await client.notebook.open({ path: "first.jsnb" });
       await writeFile(home.path("first.jsnb"), '{ "version": 1, "cells": [] }\n\n');
       await client.cell.add({ notebook: "first.jsnb", type: "markdown", source: "mine" });

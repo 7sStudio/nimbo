@@ -21,12 +21,18 @@ import { addCell, deleteCell, markReviewed, moveCell, revertCell, updateCell } f
 import type { Editor } from "./provenance.js";
 import type { ExportRequest } from "./exported.js";
 import { compareCell, exportNotebook } from "./exported.js";
+import { reconcileExternal } from "./external.js";
+import { savesOutputs, textOf } from "./fileForm.js";
+import { readNotebook } from "../../files/notebooks/notebookFile.js";
+import { diffDisk } from "../git/diff.js";
 import { reloadSession } from "./reload.js";
 import { disposeDeleted } from "./runs/disposeDeleted.js";
 import type { SessionRuns } from "./runApi.js";
 import { createRuns } from "./runApi.js";
 import type { ErrorsView, GraphView } from "./views.js";
 import { errorsOf, graphOf, stateOf } from "./views.js";
+import type { FileWatch } from "./watch.js";
+import { watchFile } from "./watch.js";
 
 export type { SessionOptions } from "./assemble.js";
 
@@ -46,6 +52,8 @@ export type Session = SessionRuns & {
   readonly move: (cell: CellId, after: CellId | null) => readonly CellId[];
   readonly remove: (cell: CellId) => void;
   readonly save: (force: boolean) => Promise<string>;
+  /** notebook.compareDisk: the file on disk against the text a save would write now. */
+  readonly compareDisk: (content: boolean) => Promise<ReturnType<typeof diffDisk>>;
   readonly reload: () => Promise<NotebookState>;
   readonly graph: () => GraphView;
   readonly errors: () => ErrorsView;
@@ -90,14 +98,23 @@ function removeCell(
   void disposeDeleted(context, cell, ended);
 }
 
-/** The cell edits of the session, each answered in the API's form. */
-function edits(context: SessionContext) {
+/** How long after the page's last edit of a cell a change of it on disk counts as one under the user's caret: a
+ * conflict, not a replacement (07 §5). */
+const editingMs = 3000;
+
+/** The cell edits of the session, each answered in the API's form; `typed` hears the cells the page edits. */
+function edits(context: SessionContext, typed: Map<CellId, number>) {
   const api = (record: Parameters<typeof context.cells.api>[0]) => context.cells.api(record);
+  const noted = <T extends { readonly id: CellId }>(editor: Editor, record: T): T => {
+    if (editor.client === "ui") typed.set(record.id, Date.now());
+    return record;
+  };
   return {
     cell: (cell: CellId) => api(context.cells.require(cell)),
-    add: (input: AddCell, editor: Editor) => api(addCell(context, input, editor)),
-    update: (input: UpdateCell, editor: Editor) => api(updateCell(context, input, editor)),
-    revert: (cell: CellId, editor: Editor) => api(revertCell(context, cell, editor)),
+    add: (input: AddCell, editor: Editor) => api(noted(editor, addCell(context, input, editor))),
+    update: (input: UpdateCell, editor: Editor) =>
+      api(noted(editor, updateCell(context, input, editor))),
+    revert: (cell: CellId, editor: Editor) => api(noted(editor, revertCell(context, cell, editor))),
     markReviewed: (cell: CellId) => api(markReviewed(context, cell)),
     move: (cell: CellId, after: CellId | null) => moveCell(context, cell, after),
   };
@@ -170,6 +187,64 @@ function debuggerOf(options: SessionOptions, context: SessionContext): DebugSess
   return debug;
 }
 
+/** The watch on the notebook's file that merges another program's edits into the session (07 §5), unless
+ * files.mergeExternalChanges is off. */
+function externalWatch(
+  options: SessionOptions,
+  context: SessionContext,
+  parts: { readonly runs: SessionRuns; readonly typed: ReadonlyMap<CellId, number> },
+): FileWatch {
+  const hooks = {
+    busy: (cell: CellId) => Date.now() - (parts.typed.get(cell) ?? -Infinity) < editingMs,
+    removing: (cell: CellId) => void parts.runs.dropRuns(cell),
+  };
+  return watchFile({
+    path: () => context.path,
+    log: context.log,
+    debounceMs: options.watchDebounceMs ?? 100,
+    everyMs: options.fileCheckMs ?? 2000,
+    check: async () => {
+      if (!context.settings()["files.mergeExternalChanges"]) return;
+      await context.autosave.exclusive(() => reconcileExternal(context, hooks));
+    },
+  });
+}
+
+/** notebook.compareDisk: the notebook's file against the text a save would write now. */
+async function compareDisk(
+  options: SessionOptions,
+  context: SessionContext,
+  content: boolean,
+): Promise<ReturnType<typeof diffDisk>> {
+  const read = await readNotebook(context.path);
+  const save = savesOutputs(context.settings(), context.header);
+  const text = textOf(context.header, context.cells.list(), { save, redact: options.realm.redact });
+  return diffDisk({ path: context.ref, content }, read.kind === "read" ? read.text : null, text);
+}
+
+/** The session's close: the watch, the debugger, the last write, the page, the runs, the engines, the log. */
+async function closeSession(
+  context: ReturnType<typeof contextOf>,
+  parts: {
+    readonly watch: FileWatch;
+    readonly debug: DebugSession;
+    readonly realm: SessionRealm;
+    readonly runs: SessionRuns;
+    readonly query: QueryParts;
+  },
+): Promise<void> {
+  parts.watch.close();
+  await parts.debug.close();
+  await context.autosave.flush();
+  context.autosave.close();
+  parts.realm.close();
+  await parts.runs.stop();
+  context.runs.retained.clear(); // what the JSON engines hold of this notebook goes with it
+  await parts.query.sql.dispose();
+  context.closeLog();
+  context.emit("notebook.closed", { path: context.ref });
+}
+
 /** The session of an opened notebook; its kernel starts now, without waiting for `ready`. */
 export function createSession(options: SessionOptions): Session {
   const context = identifiedContext(options);
@@ -178,19 +253,25 @@ export function createSession(options: SessionOptions): Session {
   const runs = createRuns(context, realm);
   const query = queryParts(options, context);
   const debug = debuggerOf(options, context);
+  const typed = new Map<CellId, number>();
+  const watch = externalWatch(options, context, { runs, typed });
   return {
     ...runs,
     get ref() {
       return context.ref;
     },
-    moveTo: (to, path) => moveSession(options, context, to, path),
+    moveTo: async (to, path) => {
+      await moveSession(options, context, to, path);
+      watch.rearm();
+    },
     context,
     state: () => stateOf(context, realm.status(), debug.state()),
-    ...edits(context),
+    ...edits(context, typed),
     remove: (cell) => {
       removeCell(context, runs, cell);
     },
     save: (force) => context.autosave.save(force),
+    compareDisk: (content) => compareDisk(options, context, content),
     reload: async () => {
       await context.autosave.exclusive(() => reloadSession(context)); // after the write under way
       return stateOf(context, realm.status(), debug.state());
@@ -198,16 +279,6 @@ export function createSession(options: SessionOptions): Session {
     ...readers(options, context, query),
     realm: { ...realm, restart: runs.restartRealm },
     debug,
-    close: async () => {
-      await debug.close();
-      await context.autosave.flush();
-      context.autosave.close();
-      realm.close();
-      await runs.stop();
-      context.runs.retained.clear(); // what the JSON engines hold of this notebook goes with it
-      await query.sql.dispose();
-      context.closeLog();
-      context.emit("notebook.closed", { path: context.ref });
-    },
+    close: () => closeSession(context, { watch, debug, realm, runs, query }),
   };
 }

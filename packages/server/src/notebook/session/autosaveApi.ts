@@ -6,7 +6,7 @@ import type { FileIdentity } from "../../files/atomicWrite.js";
 type AutosaveEvents = {
   readonly saved: (savedAt: string) => void;
   readonly failed: (error: { readonly code: string; readonly message: string }) => void;
-  readonly conflict: () => void;
+  readonly conflict: (cells?: readonly string[]) => void;
 };
 
 /** VS Code's files.autoSave: after a pause in the changes (capped by a max wait while they go on), at a fixed interval,
@@ -51,6 +51,10 @@ export type Autosaver = {
    * way, before any later one, so a reload never reads a file a write is about to replace.
    */
   readonly exclusive: <T>(work: () => Promise<T>) => Promise<T>;
+  /** The text the file held at the last read or write: the base of an external edit's merge (07 §5). */
+  readonly base: () => { readonly text: string | undefined; readonly hash: string | undefined };
+  /** An external edit changed `cells` on both sides: autosave stops until a reload or a forced save. */
+  readonly conflicted: (cells: readonly string[]) => void;
   readonly state: () => {
     readonly savedAt: string | null;
     readonly dirty: boolean;

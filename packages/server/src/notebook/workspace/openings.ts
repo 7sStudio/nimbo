@@ -37,7 +37,8 @@ export type NotebooksOptions = {
   readonly debugAdapter: Adapter;
   /** Announces the workspace's notebook list after a command changed it (notebooks.changed); never rejects. */
   readonly listChanged: () => Promise<void>;
-  /** How often each open notebook's file is checked for a move (moves.ts, 07 §5); 2 s by default, 0 for never. */
+  /** How often each open notebook's file is checked for a move (moves.ts, 07 §5) and stat'ed for an external edit
+   * (watch.ts); 2 s by default, 0 for never. */
   readonly moveCheckMs?: number;
   /** Follows a session's file that left its path (set by createNotebooks for the sessions it opens). */
   readonly follow?: (session: Session) => Promise<void>;
@@ -60,6 +61,7 @@ function start(options: NotebooksOptions, ref: string, path: string, text: strin
     loaded,
     fileText: text,
     missing,
+    ...(options.moveCheckMs === undefined ? {} : { fileCheckMs: options.moveCheckMs }),
   });
   options.bus.emit(ref, "notebook.opened", { path: ref });
   return session;

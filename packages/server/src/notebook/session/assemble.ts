@@ -45,6 +45,10 @@ export type SessionOptions = {
   readonly debugAdapter: Adapter;
   /** A save found nothing at the notebook's path: the workspace looks for where the file moved (moves.ts, 07 §5). */
   readonly missing?: () => Promise<void>;
+  /** How often the file is stat'ed for an external edit the folder's events missed (watch.ts); 2 s by default. */
+  readonly fileCheckMs?: number;
+  /** The quiet time after a file event before the check; 100 ms by default. */
+  readonly watchDebounceMs?: number;
 };
 
 const kernelConfig = (settings: Settings) => ({

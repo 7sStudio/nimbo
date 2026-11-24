@@ -108,13 +108,18 @@ function undiffable(sides: Sides): "tooLarge" | "binary" | undefined {
 }
 
 /** Both sides' full text, when the input asks for it. */
-const fullOf = (input: DiffInput, a: string | null, b: string | null) =>
+const fullOf = (input: Pick<DiffInput, "content">, a: string | null, b: string | null) =>
   input.content
     ? { ...(a === null ? {} : { before: a }), ...(b === null ? {} : { after: b }) }
     : {};
 
 /** A text file's diff, or a notebook's when both its sides parse. */
-function bodyOf(input: DiffInput, path: string, a: string | null, b: string | null) {
+function bodyOf(
+  input: Pick<DiffInput, "content" | "cell">,
+  path: string,
+  a: string | null,
+  b: string | null,
+) {
   if (!path.endsWith(".jsnb")) return { kind: "text" as const, text: textDiff(a, b) };
   const left = documentOf(a, path);
   const right = documentOf(b, path);
@@ -156,4 +161,15 @@ export async function diffFile(context: GitContext, input: DiffInput): Promise<D
   const a = textOfSide(sides.before);
   const b = textOfSide(sides.after);
   return { ...head, ...bodyOf(input, path, a, b), ...fullOf(input, a, b) };
+}
+
+/** notebook.compareDisk: an open notebook's file (`disk`, null when gone) against its session's text, in git.diff's
+ * form, `from` "disk" and `to` "session". */
+export function diffDisk(
+  input: { readonly path: string; readonly content: boolean },
+  disk: string | null,
+  session: string,
+): DiffOutput {
+  const head = { path: input.path, from: disk === null ? "none" : "disk", to: "session" };
+  return { ...head, ...bodyOf(input, input.path, disk, session), ...fullOf(input, disk, session) };
 }

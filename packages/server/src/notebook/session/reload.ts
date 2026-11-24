@@ -17,7 +17,7 @@ const sameCell = (a: CellRecord, b: CellRecord): boolean =>
   JSON.stringify(a.meta) === JSON.stringify(b.meta) &&
   JSON.stringify(a.extra) === JSON.stringify(b.extra);
 
-type Plan = {
+export type Plan = {
   readonly next: readonly CellRecord[];
   readonly removed: readonly CellId[];
   readonly changed: readonly CellId[];
@@ -25,18 +25,11 @@ type Plan = {
 };
 
 /** The reconciled cells: the file's, each keeping the status and runs of the cell it replaces. */
-function plan(current: readonly CellRecord[], fromFile: readonly CellRecord[]): Plan {
+function plan(current: readonly CellRecord[], fromFile: readonly CellRecord[]): CellRecord[] {
   const byId = new Map(current.map((record) => [record.id, record]));
-  const ids = new Set(fromFile.map((record) => record.id));
-  const changed: CellId[] = [];
-  const added: CellId[] = [];
-  const next = fromFile.map((record): CellRecord => {
+  return fromFile.map((record): CellRecord => {
     const old = byId.get(record.id);
-    if (!old) {
-      added.push(record.id);
-      return record;
-    }
-    if (!sameCell(old, record)) changed.push(record.id);
+    if (!old) return record;
     // a cell this session ran keeps its runs; one it never ran shows the file's saved run
     return {
       ...record,
@@ -45,8 +38,6 @@ function plan(current: readonly CellRecord[], fromFile: readonly CellRecord[]): 
       previous: old.last ? old.previous : undefined,
     };
   });
-  const removed = current.filter((record) => !ids.has(record.id)).map((record) => record.id);
-  return { next, removed, changed, added };
 }
 
 /** The events of the reconcile; cell.moved with the final order whenever cells were added or kept ones reordered. */
@@ -69,21 +60,33 @@ const serverCells = (context: SessionContext): readonly CellId[] =>
     .filter((record) => record.type === "server")
     .map((record) => record.id);
 
-/** Re-reads the file and reconciles; NOTEBOOK_NOT_FOUND when the file is gone. */
-export async function reloadSession(context: SessionContext): Promise<void> {
-  const read = await readNotebook(context.path);
-  if (read.kind === "missing") throw new NotebookNotFound({ path: context.ref });
-  const loaded = loadDocument(read.text, context.ref, context.ids);
-  for (const warning of loaded.warnings) context.log.warn({ notebook: context.ref }, warning);
+/** Puts `next` in place of the session's cells: the events, the stale flags, the kernel's disposals; `removing` hears
+ * each cell that goes before it does. */
+export function applyRecords(
+  context: SessionContext,
+  next: readonly CellRecord[],
+  removing: (cell: CellId) => void = () => undefined,
+): Plan {
+  const current = context.cells.list();
+  const byId = new Map(current.map((record) => [record.id, record]));
+  const ids = new Set(next.map((record) => record.id));
+  const done: Plan = {
+    next,
+    removed: current.filter((record) => !ids.has(record.id)).map((record) => record.id),
+    changed: next.flatMap((record) => {
+      const old = byId.get(record.id);
+      return old !== undefined && !sameCell(old, record) ? [record.id] : [];
+    }),
+    added: next.filter((record) => !byId.has(record.id)).map((record) => record.id),
+  };
   const before = context.cells.graph();
-  const done = plan(context.cells.list(), loaded.records);
   const kept = context.cells.order().filter((id) => !done.removed.includes(id));
   const served = serverCells(context);
   for (const id of done.removed) {
+    removing(id);
     const last = context.cells.get(id)?.last;
     if (last) context.runs.retained.drop(last.id); // a removed cell's run goes with it
   }
-  context.header = loaded.header;
   context.cells.replaceAll(done.next);
   emitChanges(context, done, kept);
   let stale: StaleMap = context.cells.stale();
@@ -93,5 +96,16 @@ export async function reloadSession(context: SessionContext): Promise<void> {
   restale(context, stale);
   // a server cell the file removed or made a client or markdown cell: its routes and timers end in the kernel
   for (const id of served) void disposeUnserved(context, id);
+  return done;
+}
+
+/** Re-reads the file and reconciles; NOTEBOOK_NOT_FOUND when the file is gone. */
+export async function reloadSession(context: SessionContext): Promise<void> {
+  const read = await readNotebook(context.path);
+  if (read.kind === "missing") throw new NotebookNotFound({ path: context.ref });
+  const loaded = loadDocument(read.text, context.ref, context.ids);
+  for (const warning of loaded.warnings) context.log.warn({ notebook: context.ref }, warning);
+  context.header = loaded.header;
+  applyRecords(context, plan(context.cells.list(), loaded.records));
   context.autosave.reloaded(read.text, loaded.dirty);
 }
