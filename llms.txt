@@ -1,0 +1,27 @@
+# nimbo
+
+> nimbo is a local, Jupyter-style notebook for JavaScript and TypeScript (Apache-2.0, macOS and Linux). Server cells run in a Node.js kernel that keeps its state, client cells run in the browser page, and a client cell calls the functions a server cell exports through a typed bridge.
+
+A notebook is a `.jsnb` file, plain JSON that diffs well, mixing server cells, client cells and Markdown. nimbo has TypeScript completion, diagnostics and rename across cells; an output viewer with tree, grid and raw views and a query bar for JSONPath, jq and SQL (DuckDB); HTTP routes defined in a cell; secrets from `.env`, redacted in outputs; npm packages installed from the notebook; a debugger for server cells (breakpoints, conditions, logpoints, stepping, variables, watch); stale-cell tracking; source control with a cell-by-cell notebook diff; and HTML export. Every action is a `nimbo` CLI command and an MCP tool, so coding agents can read, edit, run and debug notebooks, with their edits marked for review. Everything runs on 127.0.0.1, with no account and no telemetry.
+
+Install:
+
+```sh
+curl -fsSL https://github.com/7sStudio/nimbo/releases/latest/download/install.sh | sh
+```
+
+Then `nimbo open` in a folder, `nimbo mcp install` to register the MCP server with coding agents, `nimbo upgrade` and `nimbo uninstall`.
+
+nimbo is not affiliated with Project Jupyter.
+
+## Docs
+
+- [README](README.md): what it is, install, a first notebook, features, the CLI at a glance
+- [Overview](docs/00-overview.md): the concepts and which document owns what
+- [Architecture](docs/02-architecture.md): packages, processes, build and distribution
+- [API](docs/03-api.md): the command registry, the CLI and the MCP server
+- [Kernel](docs/04-kernel.md): server cells, built-ins, routes, secrets
+- [Bridge](docs/05-bridge.md): how client cells call server cells
+- [File format](docs/07-file-format.md): the `.jsnb` file
+- [Queries](docs/11-query.md): JSONPath, jq and SQL on outputs
+- [Roadmap](docs/12-roadmap.md): what is planned and not built yet
