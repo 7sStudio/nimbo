@@ -4,6 +4,8 @@ import { homedir, userInfo } from "node:os";
 import { relative } from "node:path";
 
 const wordChar = String.raw`[\p{L}\p{N}_]`;
+// a CI runner's or a container's account names nobody, and is a common word in third-party code
+const genericAccount = /^(?:runner|root|ubuntu|user|node|admin|build|ci)$/iu;
 const capitalise = (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
 
 /**
@@ -34,7 +36,9 @@ export function checkPrivacy(dir, files, root) {
       alone: word.length < 3,
       binary: word.length >= 3 && word !== ciHome,
     })),
-    ...(user.length >= 4 ? [{ word: user, alone: true, binary: false }] : []),
+    ...(user.length >= 4 && !genericAccount.test(user)
+      ? [{ word: user, alone: true, binary: false }]
+      : []),
   ].map(({ word, alone, binary }) => {
     const escaped = word.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
     const spellings = [word, word.toLowerCase(), word.toUpperCase(), capitalise(word)];
