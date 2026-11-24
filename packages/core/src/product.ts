@@ -8,7 +8,7 @@ export const productName = "nimbo";
 
 /** What a release build stamps: the version, and the release's short commit ("" when this is not one). */
 const stamped: { readonly version: string; readonly commit: string } = {
-  version: "0.1.0",
+  version: "0.1.1",
   commit: "",
 };
 

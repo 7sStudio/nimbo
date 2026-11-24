@@ -16,7 +16,7 @@ const browser = await chromium.launch();
 try {
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 }, deviceScaleFactor: 2 });
   await page.goto(pathToFileURL(join(here, "bento.html")).href);
-  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => globalThis.document.fonts.ready);
   await page.waitForLoadState("networkidle");
   // transparent outside the rounded canvas, so the image reads as one dark panel on a light page
   await page.screenshot({ path: out, omitBackground: true });
