@@ -41,7 +41,7 @@ export function notebookKey(ref: string): string {
 }
 
 export const cellFileName = (root: string, key: string, cell: CellId): string =>
-  `${root}/__jsnb_${key}_${cell}.ts`;
+  `${root}/__nimbo_${key}_${cell}.ts`;
 
 const baseName = (fileName: string): string => fileName.slice(fileName.lastIndexOf("/") + 1);
 
@@ -83,7 +83,7 @@ function prefixLine(inputs: Inputs): { text: string; links: BridgeLink[] } {
   for (const [cell, names] of seen.imports)
     text += `import { ${names.join(", ")} } from ${spec(cell)};`;
   if (seen.builtins.length > 0)
-    text += `import { ${seen.builtins.join(", ")} } from "jsnb:${inputs.realm}";`;
+    text += `import { ${seen.builtins.join(", ")} } from "nimbo:${inputs.realm}";`;
   const links: BridgeLink[] = [];
   /** Appends `head name middle name tail`, linking the first name to the second. */
   const declare = (
@@ -99,7 +99,7 @@ function prefixLine(inputs: Inputs): { text: string; links: BridgeLink[] } {
     const target = `import(${spec(provider)}).`;
     if (kind !== "type")
       declare(
-        ["declare const ", `: import("jsnb:bridge").Remote<typeof ${target}`, ">;"],
+        ["declare const ", `: import("nimbo:bridge").Remote<typeof ${target}`, ">;"],
         name,
         provider,
       );

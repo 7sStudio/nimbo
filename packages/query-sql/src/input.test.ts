@@ -14,7 +14,7 @@ describe("checkName", () => {
   });
 
   it("rejects empty, too long, NUL, the internal prefix and non-strings as input", () => {
-    for (const name of ["", "x".repeat(129), "a\0b", "__jsnb_load_1", 42]) {
+    for (const name of ["", "x".repeat(129), "a\0b", "__nimbo_load_1", 42]) {
       expect(reason(checkName("table", name))).toBe("input");
     }
   });

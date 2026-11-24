@@ -26,8 +26,8 @@ describe("withoutTrailingSemicolons", () => {
 
 describe("statements", () => {
   it("quote every name and path", () => {
-    expect(statements.fromJson("t", "__jsnb_load_1.json")).toBe(
-      `CREATE OR REPLACE TABLE "t" AS SELECT * FROM read_json_auto('__jsnb_load_1.json', sample_size = -1, dateformat = 'iso', timestampformat = 'iso')`,
+    expect(statements.fromJson("t", "__nimbo_load_1.json")).toBe(
+      `CREATE OR REPLACE TABLE "t" AS SELECT * FROM read_json_auto('__nimbo_load_1.json', sample_size = -1, dateformat = 'iso', timestampformat = 'iso')`,
     );
     expect(statements.fromJson("t", "f.json", ["u", 'a"b'])).toBe(
       `CREATE OR REPLACE TABLE "t" AS SELECT * REPLACE (CAST("u" AS UBIGINT) AS "u", CAST("a""b" AS UBIGINT) AS "a""b") FROM read_json_auto('f.json', sample_size = -1, dateformat = 'iso', timestampformat = 'iso')`,

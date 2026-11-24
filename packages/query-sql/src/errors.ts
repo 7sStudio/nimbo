@@ -41,7 +41,7 @@ export const messages = {
   closed: () =>
     "The SQL engine was closed while this call was running. Run it again to start a new engine.",
   name: (kind: "table" | "alias", name: unknown) =>
-    `The ${kind} name ${show(name)} is not valid. Use 1 to 128 characters, no NUL character and no __jsnb_ prefix.`,
+    `The ${kind} name ${show(name)} is not valid. Use 1 to 128 characters, no NUL character and no __nimbo_ prefix.`,
   taken: (name: string, owner: string) =>
     `The name "${name}" is already used by the table "${owner}". Pick another name, or drop "${owner}" first.`,
   limit: (limit: unknown) =>

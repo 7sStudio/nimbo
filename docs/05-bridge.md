@@ -125,7 +125,7 @@ Encoding everywhere: the output serializer's JSON form (`devalue`-style), decode
 
 The language service declares in each client cell every server export it reaches, typed through `Remote<T>`:
 ```ts
-declare const createIntent: import("jsnb:bridge").Remote<typeof import("./__jsnb_k_c1.ts").createIntent>;
+declare const createIntent: import("nimbo:bridge").Remote<typeof import("./__nimbo_k_c1.ts").createIntent>;
 // Remote<T> = T extends (...args: infer A) => infer R ? (...args: A) => Promise<Awaited<R>> : T
 ```
 Hover reads `const createIntent: (amount: number) => Promise<{ clientSecret: string }>`; values keep their type; an exported type is an alias of the server's. Non-transferable exports keep their type (what crosses is decided at run time, `NotTransferable`). A server name used without `export` is the diagnostic "x is defined in a server cell but not exported."

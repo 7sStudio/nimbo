@@ -64,7 +64,7 @@ async function targetOf(
  */
 function externals(resolver: Resolver, seen: Seen): Plugin {
   return {
-    name: "jsnb-npm-externals",
+    name: "nimbo-npm-externals",
     setup(builder) {
       builder.onResolve({ filter: /.*/ }, async (args) => {
         if (args.kind === "entry-point") return undefined;

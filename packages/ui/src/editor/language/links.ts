@@ -1,6 +1,6 @@
 // The links in the language popups and the hint dialog: a JSDoc `{@link}` to a symbol
-// goes to its definition as F12 does (the daemon writes `#jsnb-cell=<cell>:<line>:<character>` or
-// `#jsnb-file=<path>:<line>`, language/src/queries.ts), a web address opens in a new tab. Small and outside the lazy
+// goes to its definition as F12 does (the daemon writes `#nimbo-cell=<cell>:<line>:<character>` or
+// `#nimbo-file=<path>:<line>`, language/src/queries.ts), a web address opens in a new tab. Small and outside the lazy
 // chunk, so the dialog can follow a link too; the chunk gives the way to a definition once it is loaded.
 
 /** A definition a link names: a place in a cell, or a line in a file outside the cells. */
@@ -10,9 +10,9 @@ export type LinkPlace =
 
 /** The place `href` names, or undefined for a web address or anything else. */
 function placeOf(href: string): LinkPlace | undefined {
-  const cell = /^#jsnb-cell=(c_[0-9a-z]+):(\d+):(\d+)$/u.exec(href);
+  const cell = /^#nimbo-cell=(c_[0-9a-z]+):(\d+):(\d+)$/u.exec(href);
   if (cell) return { cell: cell[1] ?? "", line: Number(cell[2]), character: Number(cell[3]) };
-  const file = /^#jsnb-file=(.+):(\d+)$/u.exec(href);
+  const file = /^#nimbo-file=(.+):(\d+)$/u.exec(href);
   return file ? { file: decodeURIComponent(file[1] ?? ""), line: Number(file[2]) } : undefined;
 }
 

@@ -50,7 +50,7 @@ describe("register on Node", () => {
         },
       ],
     });
-    expect(await readdir(directory, { recursive: true })).toEqual(["__jsnb_temp"]); // its spill folder, empty
+    expect(await readdir(directory, { recursive: true })).toEqual(["__nimbo_temp"]); // its spill folder, empty
   });
 
   it("loads a Blob and an Arrow table", async () => {
@@ -67,7 +67,7 @@ describe("register on Node", () => {
       { s: "x" },
       { s: "y" },
     ]);
-    expect(await readdir(directory, { recursive: true })).toEqual(["__jsnb_temp"]); // its spill folder, empty
+    expect(await readdir(directory, { recursive: true })).toEqual(["__nimbo_temp"]); // its spill folder, empty
   });
 });
 
@@ -173,6 +173,6 @@ describe("exportAll on Node", () => {
       .exportAll("SELECT * FORM export_t", { format: "csv" })
       .catch((caught: unknown) => caught);
     expect(error).toMatchObject({ data: { reason: "query" }, position: 14 });
-    expect(await readdir(directory, { recursive: true })).toEqual(["__jsnb_temp"]); // its spill folder, empty
+    expect(await readdir(directory, { recursive: true })).toEqual(["__nimbo_temp"]); // its spill folder, empty
   });
 });

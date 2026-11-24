@@ -117,7 +117,7 @@ A workspace is a folder containing `.jsnb/` (03-api §2); the daemon creates it 
                              <bundle>.imports.json, <bundle>.inputs.json (linked packages)
       npm/_/<key>/           bundles for /npm/_/<key>/..., folders reached from a bundle's imports
       npm/_index.json        { entries: { <key>: { name, version, folder, from } } }
-      sql/                   the daemon SQL engine's transient load/export files and DuckDB's spill folder __jsnb_temp/ (11-query §3)
+      sql/                   the daemon SQL engine's transient load/export files and DuckDB's spill folder __nimbo_temp/ (11-query §3)
     logs/
       daemon.log             JSON lines, rotated at 5 x 1 MB
       kernel-<notebook>.log  the kernel's stderr and crash reports, read by kernel.log (03-api §4.4); <notebook> is the ref

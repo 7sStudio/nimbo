@@ -49,7 +49,7 @@ describe("register sources", () => {
     expect(types.rows.map((row) => row.type)).toEqual(["charge", "refund", "charge"]);
     const tables = await engine.query("SELECT table_name FROM duckdb_tables()");
     expect(tables.rows.map((row) => row.table_name)).not.toContainEqual(
-      expect.stringMatching(/^__jsnb_/u),
+      expect.stringMatching(/^__nimbo_/u),
     );
   });
 
@@ -145,7 +145,7 @@ describe("register input", () => {
       () => engine.register("input_t", [{ big: 2n }]),
       () => engine.register("input_t", [cycle]),
       () => engine.register("input_t", new Map() as unknown as Blob),
-      () => engine.schema("__jsnb_load_1"),
+      () => engine.schema("__nimbo_load_1"),
       () => engine.drop("a".repeat(129)),
     ];
     for (const failure of failures) {

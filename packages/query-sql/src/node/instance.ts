@@ -77,10 +77,10 @@ function tracker(): Tracker {
 }
 
 /** Where DuckDB spills, below `directory`. */
-const tempFolderOf = (directory: string): string => join(directory, "__jsnb_temp");
+const tempFolderOf = (directory: string): string => join(directory, "__nimbo_temp");
 
 /**
- * The spill folder made a real folder of its own before DuckDB opens, on every open: a cloned workspace may carry `__jsnb_temp` as a symbolic link, which would send DuckDB's spill
+ * The spill folder made a real folder of its own before DuckDB opens, on every open: a cloned workspace may carry `__nimbo_temp` as a symbolic link, which would send DuckDB's spill
  * files, the user's query data, to its target. A link, or anything else that is not a folder, is removed itself (never
  * followed) and the folder made again, mode 0700; a folder already there is kept.
  */

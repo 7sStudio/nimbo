@@ -102,7 +102,7 @@ function refusal(lookup: Lookup, at: At, to: string): { refused: string } | { ki
   });
   if (!info.canRename) return no(info.localizedErrorMessage);
   const definitions = service.getDefinitionAtPosition(at.cell.fileName, at.offset) ?? [];
-  if (definitions.some((d) => /\/__jsnb_[^/]*\.d\.ts$/u.test(d.fileName)))
+  if (definitions.some((d) => /\/__nimbo_[^/]*\.d\.ts$/u.test(d.fileName)))
     return no(`${info.displayName} is a built-in of the notebook and cannot be renamed.`);
   return { kind: info.kind };
 }

@@ -116,7 +116,7 @@ function onRelative(builder: PluginBuild, pkg: Bundling, seen: Seen) {
 /** The plugin of one package build. */
 export function packagePlugin(resolver: Resolver, pkg: Bundling, seen: Seen): Plugin {
   return {
-    name: "jsnb-npm-package",
+    name: "nimbo-npm-package",
     setup(builder) {
       builder.onResolve({ filter: /^[^./]/ }, onBare(resolver, seen));
       builder.onResolve({ filter: /^\.\.?(?:\/|$)/ }, onRelative(builder, pkg, seen));

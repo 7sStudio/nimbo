@@ -115,7 +115,7 @@ export function createNotebookFiles(options: {
 }): NotebookFiles {
   const root = options.root.replace(/\\/gu, "/").replace(/\/+$/u, "");
   const key = notebookKey(options.notebook);
-  const builtinFile = (realm: Realm): string => `${root}/__jsnb_${key}_${realm}.d.ts`;
+  const builtinFile = (realm: Realm): string => `${root}/__nimbo_${key}_${realm}.d.ts`;
   const memory = createMemoryFiles();
   const scans = declarationCache();
   let cells: VirtualCell[] = [];
