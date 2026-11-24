@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>nimbo bento</title>
+    <!--
+      The source of docs/assets/readme/bento-dark.png; render.mjs renders it at 1280 x 900 CSS pixels, scale 2.
+      Grid: 12 columns, 12 px gutters, 24 px margin, 18 px card corners, 20 px card padding.
+      Colours: the app's dark tokens (packages/tokens/src/palette.ts), one accent per card headline.
+      shots/: crops of the running app at scale 2 (the debugger crops come from ../debugger-paused-at-breakpoint.png).
+    -->
+    <style>
+      @font-face {
+        font-family: "Geist";
+        src: url("../../../../packages/ui/src/theme/fonts/geist-variable.woff2") format("woff2");
+        font-weight: 100 900;
+      }
+      @font-face {
+        font-family: "JetBrains Mono";
+        src: url("../../../../packages/ui/src/theme/fonts/jetbrains-mono-variable.woff2") format("woff2");
+        font-weight: 100 800;
+      }
+
+      :root {
+        --canvas: #08090a;
+        --card: #111215;
+        --card-2: #16171b;
+        --edge: rgb(255 255 255 / 7%);
+        --fg: #ececee;
+        --fg-2: #bcbfc6;
+        --muted: #a3a7af;
+        --faint: #828690;
+        --server: #4fc9b4;
+        --client: #84abff;
+        --md: #d9ac4a;
+        --agent: #ad92ff;
+        --ok: #5fd09a;
+        --err: #ff8f85;
+        --hot: #ff7a40;
+        --ctl: #d68be0;
+        --err-light: #b3261e;
+        --k: 0.36; /* canvas px per screenshot px (the screenshots are at scale 2) */
+        --pad: 20px;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+
+      html,
+      body {
+        width: 1280px;
+        height: 900px;
+        overflow: hidden;
+      }
+      /* the canvas is drawn by body::before, so the page outside its rounded corners stays transparent */
+      body::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 28px;
+        background: var(--canvas);
+      }
+
+      body {
+        font-family: "Geist", system-ui, sans-serif;
+        color: var(--fg);
+        -webkit-font-smoothing: antialiased;
+      }
+
+      .grid {
+        position: absolute;
+        inset: 24px;
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        grid-template-rows: 240px 196px 240px 140px;
+        gap: 12px;
+      }
+
+      .card {
+        --accent: var(--fg);
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        border-radius: 18px;
+        padding: 18px var(--pad) 0;
+        background:
+          radial-gradient(110% 80% at 0% 0%, color-mix(in oklch, var(--accent) 8%, transparent), transparent 62%),
+          linear-gradient(180deg, var(--card-2), var(--card));
+        box-shadow: inset 0 0 0 1px var(--edge);
+      }
+
+      h2,
+      h3 {
+        color: var(--accent);
+        font-weight: 680;
+        letter-spacing: -0.03em;
+        line-height: 1.06;
+        text-wrap: balance;
+      }
+      h3 {
+        font-size: 22px;
+      }
+      .big h3 {
+        font-size: 27px;
+      }
+      p {
+        margin-top: 6px;
+        font-size: 14px;
+        line-height: 1.38;
+        color: var(--muted);
+        text-wrap: balance;
+      }
+      .big p {
+        font-size: 15px;
+      }
+      code {
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 0.88em;
+        letter-spacing: -0.02em;
+        color: var(--fg-2);
+      }
+
+      /* a fragment of the product follows the text and bleeds off the card's right and bottom edges */
+      .frag {
+        flex: none;
+        margin-top: 14px;
+      }
+      .frag.end {
+        margin-top: auto;
+        padding-bottom: 18px;
+      }
+      .shot {
+        display: block;
+        width: calc(var(--w) * var(--k) * 1px);
+        max-width: none;
+        border-radius: 8px;
+        box-shadow:
+          0 0 0 1px rgb(255 255 255 / 9%),
+          0 12px 30px rgb(0 0 0 / 45%);
+      }
+      .fade-b {
+        mask-image: linear-gradient(180deg, #000 55%, transparent);
+      }
+
+      /* the hero */
+      .hero {
+        grid-column: 5 / 9;
+        grid-row: 1 / 3;
+        align-items: center;
+        text-align: center;
+        padding-top: 26px;
+        background:
+          radial-gradient(80% 40% at 50% 0%, rgb(132 171 255 / 14%), transparent 70%),
+          radial-gradient(70% 40% at 50% 100%, rgb(79 201 180 / 9%), transparent 70%),
+          linear-gradient(180deg, #18191e, #111215);
+      }
+      .wordmark {
+        font-size: 16px;
+        font-weight: 650;
+        letter-spacing: -0.02em;
+        color: var(--fg-2);
+      }
+      .hero h2 {
+        margin-top: 10px;
+        font-size: 37px;
+        font-weight: 720;
+        letter-spacing: -0.045em;
+        line-height: 1.04;
+        color: var(--fg);
+      }
+      .hero h2 span {
+        background: linear-gradient(90deg, var(--server), var(--client));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .hero p {
+        margin-top: 10px;
+        max-width: 320px;
+        font-size: 14.5px;
+      }
+      .stack {
+        --k: 0.3;
+        align-self: stretch;
+        display: grid;
+        gap: 6px;
+        margin-top: 16px;
+      }
+
+      /* the light card */
+      .light {
+        --accent: var(--err-light);
+        background: linear-gradient(180deg, #f7f6f3, #ebe9e4);
+        box-shadow: inset 0 0 0 1px rgb(0 0 0 / 6%);
+      }
+      .light p {
+        color: #5f636b;
+      }
+      .light .shot {
+        box-shadow:
+          0 0 0 1px rgb(0 0 0 / 9%),
+          0 10px 24px rgb(0 0 0 / 10%);
+      }
+
+      /* dark and light */
+      .themes {
+        grid-column: 9 / 11;
+        grid-row: 2;
+        padding: 0;
+        background: #0e0f11;
+      }
+      .themes .half {
+        position: absolute;
+        inset: 0;
+      }
+      .themes .half.l {
+        background: #e7e5e0;
+        clip-path: polygon(56% 0, 100% 0, 100% 100%, 26% 100%);
+      }
+      .themes h3 {
+        position: absolute;
+        top: 18px;
+        font-size: 24px;
+      }
+      .themes .d h3 {
+        left: var(--pad);
+        color: var(--fg);
+      }
+      .themes .l h3 {
+        right: var(--pad);
+        color: #15161a;
+      }
+      .themes .shot {
+        position: absolute;
+        left: var(--pad);
+        top: 66px;
+        --k: 0.34;
+      }
+
+      /* terminal */
+      .term {
+        margin-right: calc(-1 * var(--pad) + 20px);
+        border-radius: 10px;
+        background: #0a0b0d;
+        box-shadow:
+          0 0 0 1px rgb(255 255 255 / 9%),
+          0 12px 30px rgb(0 0 0 / 40%);
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 10.6px;
+        line-height: 1.55;
+        color: var(--fg-2);
+        overflow: hidden;
+      }
+      .term .bar {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        height: 20px;
+        padding: 0 10px;
+        background: #141518;
+        font-family: "Geist", sans-serif;
+        font-size: 10px;
+        color: var(--faint);
+      }
+      .term .bar i {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #2e3036;
+      }
+      .term .bar span {
+        flex: 1;
+        text-align: center;
+        margin-right: 36px;
+      }
+      .term pre {
+        margin: 0;
+        padding: 8px 12px 10px;
+        font: inherit;
+        white-space: pre;
+      }
+      .g {
+        color: var(--ok);
+      }
+      .dim {
+        color: var(--faint);
+      }
+      .b {
+        color: var(--fg);
+        font-weight: 700;
+      }
+      .r {
+        color: var(--err);
+      }
+
+      /* typeset code */
+      .panel {
+        border-radius: 8px;
+        background: #0a0b0d;
+        box-shadow: 0 0 0 1px rgb(255 255 255 / 9%);
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 10.6px;
+        line-height: 1.6;
+        color: var(--fg);
+        width: max-content;
+        padding: 8px 12px;
+        white-space: pre;
+      }
+      .k {
+        color: #7aa2ff;
+      }
+      .s {
+        color: #f0a27a;
+      }
+      .f {
+        color: #e2c56c;
+      }
+      .p {
+        color: var(--fg-2);
+      }
+
+      /* keycaps and pills */
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+      }
+      kbd {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 30px;
+        height: 28px;
+        padding: 0 8px;
+        border-radius: 7px;
+        background: linear-gradient(180deg, #25272c, #1b1c20);
+        box-shadow:
+          inset 0 0 0 1px rgb(255 255 255 / 10%),
+          inset 0 -2px 0 rgb(0 0 0 / 35%);
+        font-family: "Geist", sans-serif;
+        font-size: 13px;
+        font-weight: 560;
+        color: var(--fg);
+        word-spacing: 2px;
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        height: 26px;
+        padding: 0 9px;
+        border-radius: 7px;
+        background: #1b1c20;
+        box-shadow: inset 0 0 0 1px rgb(255 255 255 / 9%);
+        font-family: "JetBrains Mono", ui-monospace, monospace;
+        font-size: 11.5px;
+        color: var(--fg-2);
+      }
+      .pill .dot {
+        width: 6px;
+        height: 6px;
+        margin-right: 7px;
+        border-radius: 50%;
+        background: var(--ok);
+      }
+    </style>
+  </head>
+  <body>
+    <main class="grid">
+      <section class="card big" style="grid-column: 1 / 5; grid-row: 1; --accent: var(--md)">
+        <h3>Ask your data.</h3>
+        <p>Tree, grid or raw, and a query bar for JSONPath, jq and SQL on DuckDB.</p>
+        <div class="frag"><img class="shot" style="--w: 1730; --k: 0.33" src="shots/viewer.png" alt="" /></div>
+      </section>
+
+      <section class="card" style="grid-column: 1 / 3; grid-row: 2; --accent: var(--server)">
+        <h3>A cell is an endpoint.</h3>
+        <p><code>route()</code> answers real HTTP.</p>
+        <pre class="frag panel code"><span class="f">route</span><span class="p">(</span><span class="s">"POST /orders"</span><span class="p">, </span><span class="k">async</span><span class="p"> (req) =&gt; {</span>
+<span class="dim">$</span> curl -sd '{"customer":"Alan","total":30}' \
+    127.0.0.1:59916/n/api/orders
+<span class="g">{"id":4,"status":"pending",…</span></pre>
+      </section>
+
+      <section class="card" style="grid-column: 3 / 5; grid-row: 2; --accent: var(--client)">
+        <h3>Typed across cells.</h3>
+        <p>Hover, completion, rename.</p>
+        <div class="frag" style="position: relative; --k: 0.34">
+          <img class="shot" style="--w: 574; margin-left: 35px" src="shots/types-tip.png" alt="" />
+          <img class="shot" style="--w: 390; margin-top: 1px; border-radius: 4px; box-shadow: none" src="shots/types-line.png" alt="" />
+        </div>
+      </section>
+
+      <section class="card hero">
+        <div class="wordmark">nimbo</div>
+        <h2><span>Server and browser.</span><br />One notebook.</h2>
+        <p>Client cells in the page call what server cells in Node export, with their types.</p>
+        <div class="stack">
+          <img class="shot fade-b" style="--w: 1200; height: 100px; object-fit: cover; object-position: top" src="shots/hero-server.png" alt="" />
+          <img class="shot" style="--w: 1200" src="shots/hero-client.png" alt="" />
+          <img class="shot" style="--w: 1200" src="shots/hero-chart.png" alt="" />
+        </div>
+      </section>
+
+      <section class="card big light" style="grid-column: 9 / 13; grid-row: 1">
+        <h3>Step through server cells.</h3>
+        <p>Breakpoints, conditions, logpoints, variables and watch, from the page, the CLI or MCP.</p>
+        <div class="frag" style="position: relative; margin-top: 22px">
+          <img class="shot" style="--w: 987; --k: 0.4" src="shots/debug-code.png" alt="" />
+          <img class="shot" style="--w: 234; --k: 0.4; position: absolute; left: 150px; top: -14px" src="shots/debug-toolbar.png" alt="" />
+        </div>
+      </section>
+
+      <section class="card themes">
+        <div class="half d">
+          <h3>Dark.</h3>
+          <img class="shot" style="--w: 1200" src="shots/theme-dark.png" alt="" />
+        </div>
+        <div class="half l">
+          <h3>Light.</h3>
+          <img class="shot" style="--w: 1200" src="shots/theme-light.png" alt="" />
+        </div>
+      </section>
+
+      <section class="card" style="grid-column: 11 / 13; grid-row: 2; --accent: var(--ok)">
+        <h3>Secrets stay secret.</h3>
+        <p>From <code>.env</code>, shown as <code>***</code>.</p>
+        <div class="frag"><img class="shot" style="--w: 640; --k: 0.38" src="shots/secret.png" alt="" /></div>
+      </section>
+
+      <section class="card big" style="grid-column: 1 / 7; grid-row: 3">
+        <h3>One line to install.</h3>
+        <p>Brings its own Node 26. <code>upgrade</code>, <code>doctor</code> and <code>uninstall</code> built in.</p>
+        <div class="frag term">
+          <div class="bar"><i></i><i></i><i></i><span>Terminal</span></div>
+          <pre><span class="dim">$</span> curl -fsSL https://github.com/7sStudio/nimbo/releases/latest/download/install.sh | sh
+  <span class="dim">…</span>
+  <span class="g">✓</span> Checksum verified  <span class="dim">SHA-256 and size match the release</span>
+  <span class="g">✓</span> Unpacked  <span class="dim">~/.local/share/nimbo/versions/0.1.0</span>
+  <span class="g">✓</span> Linked  <span class="dim">~/.local/bin/nimbo → 0.1.0</span>
+
+<span class="g">✓</span> <span class="b">nimbo 0.1.0 is installed.</span></pre>
+        </div>
+      </section>
+
+      <section class="card big" style="grid-column: 7 / 11; grid-row: 3; --accent: var(--agent)">
+        <h3>Built for agents.</h3>
+        <p>Every action is a CLI command and an MCP tool. Their edits wait for your review.</p>
+        <div class="frag" style="position: relative">
+          <img class="shot" style="--w: 1400; position: absolute; left: 186px; top: 0" src="shots/agent-cell.png" alt="" />
+          <img class="shot" style="--w: 518; position: relative" src="shots/agent-panel.png" alt="" />
+        </div>
+      </section>
+
+      <section class="card" style="grid-column: 11 / 13; grid-row: 3">
+        <h3>Keyboard first.</h3>
+        <p>VS Code and Jupyter keys, and a shortcuts editor.</p>
+        <div class="frag end row"><kbd>⇧ ↵</kbd><kbd>⌘ ⇧ P</kbd><kbd>F9</kbd><kbd>A</kbd><kbd>B</kbd><kbd>D D</kbd><kbd>⌘K ⌘S</kbd></div>
+      </section>
+
+      <section class="card" style="grid-column: 1 / 4; grid-row: 4; --accent: var(--hot)">
+        <h3>Stale, never re-run.</h3>
+        <p>Run Stale catches up.</p>
+        <pre class="frag panel" style="margin-top: 12px; line-height: 1.5"><span class="dim">$</span> nimbo ls
+c_i000t1  server    ok           agent
+c_x3wbk9  client    ok    <span style="color: var(--hot)">stale</span>  agent</pre>
+      </section>
+
+      <section class="card" style="grid-column: 4 / 7; grid-row: 4; --accent: var(--ctl)">
+        <h3>Any npm package.</h3>
+        <p>A missing import offers to install it.</p>
+        <div class="frag"><img class="shot" style="--w: 980; --k: 0.33" src="shots/npm.png" alt="" /></div>
+      </section>
+
+      <section class="card" style="grid-column: 7 / 10; grid-row: 4">
+        <h3>Diffs cell by cell.</h3>
+        <p><code>.jsnb</code> is plain text. Export to HTML.</p>
+        <pre class="frag panel code"><span class="dim">cell 3  c_i000t1  server  modified, meta lastEdit  +5 -3</span>
+<span class="r">-export function totalsByRegion() {</span>
+<span class="g">+export function totalsByRegion(product?: string) {</span></pre>
+      </section>
+
+      <section class="card" style="grid-column: 10 / 13; grid-row: 4; --accent: var(--client)">
+        <h3>Local. No telemetry.</h3>
+        <p>A token per workspace, no account.</p>
+        <div class="frag end row"><span class="pill"><i class="dot"></i>127.0.0.1</span><span class="pill">Apache-2.0</span></div>
+      </section>
+    </main>
+  </body>
+</html>

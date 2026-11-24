@@ -1,8 +1,8 @@
 <div align="center">
 
-<h1>nimbo</h1>
+<h1>nimbo: a Jupyter-style notebook for JavaScript and TypeScript</h1>
 
-<p><strong>A notebook for JavaScript and TypeScript where server code and browser code live in the same document and call each other.</strong></p>
+<p><strong>Server code and browser code live in the same notebook: server cells run in Node.js, client cells run in the page, and a client cell calls a server cell's functions with their types.</strong></p>
 
 <p>
 <a href="LICENSE"><img alt="Licence: Apache 2.0" src="https://img.shields.io/badge/licence-Apache%202.0-blue"></a>
@@ -25,13 +25,17 @@
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/assets/readme/hero-dark.png">
-  <img alt="A nimbo notebook in the browser: a server cell exports totalsByRegion, a client cell below calls it and draws a bar chart of sales by region; the Inspector on the right lists the server's variables and shows that cell 4 calls totalsByRegion over the bridge." src="docs/assets/readme/hero-light.png">
+  <img alt="A nimbo notebook, a Jupyter-style notebook for TypeScript, in the browser: a server cell exports totalsByRegion, a client cell below calls it and draws a bar chart of sales by region; the Inspector on the right lists the server's variables and shows that cell 4 calls totalsByRegion over the bridge." src="docs/assets/readme/hero-light.png">
 </picture>
 
 nimbo is a local notebook. **Server cells** run in a Node kernel, **client cells** run in the browser page and draw
 UI, and a client cell calls any function a server cell exports as if it were local, with its TypeScript types. The
 same notebook is driven from the page, from the `nimbo` command line and from an MCP server, so your coding agent can
 work in it beside you.
+
+If you are looking for a Jupyter notebook for JavaScript, TypeScript or Node.js, nimbo works the way you expect:
+cells, a kernel that keeps its state, rich outputs, Markdown, Shift+Enter to run. It adds the browser as a second
+place to run code, a typed bridge between the two, and a plain-text file that diffs well.
 
 ## Why nimbo
 
@@ -45,6 +49,36 @@ work in it beside you.
   at.
 - **Built for agents too.** Everything the page does is a CLI command and an MCP tool, and an agent's edits are marked
   for you to review or revert.
+
+## Coming from Jupyter?
+
+nimbo is a Jupyter-style notebook for JavaScript and TypeScript, so most of what you know carries over:
+
+| In Jupyter                                      | In nimbo                                                                                         |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| Code cells and Markdown cells                   | The same, with two kinds of code cell: server (Node.js) and client (the browser page)            |
+| A kernel per notebook that keeps its state      | A Node.js kernel per notebook, plus the page's realm for client cells, joined by a typed bridge  |
+| Shift+Enter, Ctrl+Enter, command-mode A, B, D D | The same keys (Cmd on macOS), and VS Code's for the rest                                         |
+| Execution counts such as `[3]`                  | The same, in each cell's header                                                                  |
+| Interrupt, Restart, Run All, Clear outputs      | The same, plus Run Stale for the cells whose inputs changed                                      |
+| Rich outputs                                    | HTML, images, tables, and a viewer for any value: tree, grid, raw, JSONPath, jq and SQL          |
+| A table of contents from the headings           | An outline in the Explorer, and heading sections that fold                                       |
+| Python, or another language's kernel            | JavaScript and TypeScript, with a language service across cells                                  |
+| `.ipynb`, with the outputs in the file          | `.jsnb`, plain JSON with each cell's source as lines; outputs only if you turn on `outputs.save` |
+
+What nimbo adds: a built-in debugger for server cells, HTTP routes from a cell, secrets from `.env` redacted from
+outputs, a CLI and an MCP server so coding agents work in the same notebook, and a local-only daemon on 127.0.0.1.
+What Jupyter has that nimbo does not: kernels for many languages, a large extension ecosystem, and hosted servers such
+as JupyterHub.
+
+If you know these tools:
+
+- **tslab, IJavascript or Deno's kernel (`deno jupyter`)** run JavaScript or TypeScript inside Jupyter. nimbo is a
+  separate app with its own Node.js kernel, a browser realm beside it and its own file format.
+- **Observable** notebooks run JavaScript in the browser. nimbo's client cells do too, beside server cells in Node.js,
+  in a local file.
+- **marimo** is a reactive notebook for Python. nimbo is for JavaScript and TypeScript, and never re-runs a cell on its
+  own: a changed input marks the cells that depend on it stale.
 
 ## Install
 
@@ -185,6 +219,29 @@ time; a body that fails the schema answers 500 with zod's message. The route and
 Where next: run `nimbo` with no arguments to open Home, then open one of the [examples](#examples).
 
 ## Features
+
+<img alt="nimbo at a glance, a Jupyter-style notebook for JavaScript and TypeScript, in fourteen cards. Server and browser, one notebook: client cells in the page call what server cells in Node export, with their types. Ask your data: tree, grid or raw, and a query bar for JSONPath, jq and SQL on DuckDB. A cell is an endpoint: route() answers real HTTP. Typed across cells: hover, completion, rename. Step through server cells: breakpoints, conditions, logpoints, variables and watch, from the page, the CLI or MCP. Dark and light themes. Secrets stay secret: from .env, shown as ***. One line to install: brings its own Node 26, with upgrade, doctor and uninstall. Built for agents: every action is a CLI command and an MCP tool, and their edits wait for your review. Keyboard first: VS Code and Jupyter keys, and a shortcuts editor. Stale, never re-run: Run Stale catches up. Any npm package: a missing import offers to install it. Diffs cell by cell: .jsnb is plain text, export to HTML. Local, no telemetry: a token per workspace, no account, Apache-2.0." src="docs/assets/readme/bento-dark.png">
+
+<details>
+<summary>The cards as text</summary>
+
+- **Server and browser. One notebook.** Client cells in the page call what server cells in Node export, with their
+  types.
+- **Ask your data.** Tree, grid or raw, and a query bar for JSONPath, jq and SQL on DuckDB.
+- **A cell is an endpoint.** `route()` answers real HTTP.
+- **Typed across cells.** Hover, completion, rename.
+- **Step through server cells.** Breakpoints, conditions, logpoints, variables and watch, from the page, the CLI or MCP.
+- **Dark. Light.** Both themes, and several code colour themes.
+- **Secrets stay secret.** From `.env`, shown as `***`.
+- **One line to install.** Brings its own Node 26. `upgrade`, `doctor` and `uninstall` built in.
+- **Built for agents.** Every action is a CLI command and an MCP tool. Their edits wait for your review.
+- **Keyboard first.** VS Code and Jupyter keys, and a shortcuts editor.
+- **Stale, never re-run.** Run Stale catches up.
+- **Any npm package.** A missing import offers to install it.
+- **Diffs cell by cell.** `.jsnb` is plain text. Export to HTML.
+- **Local. No telemetry.** A token per workspace, no account. Apache-2.0.
+
+</details>
 
 ### Write
 
@@ -437,3 +494,5 @@ change, open an issue first so we can agree on the shape. See [CONTRIBUTING.md](
 ## Licence
 
 Apache License 2.0. Copyright 2026 7sStudio. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+
+Jupyter is a trademark of LF Charities; nimbo is not affiliated with Project Jupyter.
