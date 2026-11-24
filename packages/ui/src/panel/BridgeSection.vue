@@ -100,14 +100,13 @@ const readEvents = async () => {
   if (answer !== null) events.value = answer;
 };
 const dropWords = { noPage: "no page", noListener: "no listener", overflow: "too fast" } as const;
-const eventLine = (row: NonNullable<EventRow>[number]): string => {
-  const when = timeOf(row.lastAt).slice(0, 8);
-  const dropped =
-    row.dropped === 0 || row.lastDrop === null
-      ? ""
-      : `, ${String(row.dropped)} dropped (${dropWords[row.lastDrop]})`;
-  return `${String(row.emitted)} · ${when}${dropped}`;
-};
+/** "28 · 23:14:58"; the drops go on a line of their own. */
+const countLine = (row: NonNullable<EventRow>[number]): string =>
+  `${String(row.emitted)} · ${timeOf(row.lastAt).slice(0, 8)}`;
+const dropLine = (row: NonNullable<EventRow>[number]): string =>
+  row.dropped === 0 || row.lastDrop === null
+    ? ""
+    : `${String(row.dropped)} dropped, last: ${dropWords[row.lastDrop]}`;
 // Side effect: the counts are read once the notebook is here, then a second after a client cell gets an event output.
 watch(
   () =>
@@ -217,20 +216,26 @@ const lastCalls = computed(() => {
     <ul
       v-if="events.length > 0"
       aria-label="Events"
-      class="ui:m-0 ui:mbs-2 ui:flex ui:list-none ui:flex-col ui:gap-0.5 ui:p-0"
+      class="ui:m-0 ui:mbs-2 ui:flex ui:list-none ui:flex-col ui:gap-1 ui:p-0"
     >
-      <li
-        v-for="row in events"
-        :key="row.name"
-        class="ui:grid ui:grid-cols-[minmax(0,1fr)_auto] ui:items-center ui:gap-x-2 ui:px-1.75 ui:text-tiny"
-      >
-        <span class="ui:ellipsis ui:font-mono ui:text-fg" data-part="event">{{ row.name }}</span>
-        <span
-          class="ui:font-mono ui:text-muted"
-          data-part="event-counts"
-          :title="`${String(row.delivered)} delivered`"
-          >{{ eventLine(row) }}</span
-        >
+      <li v-for="row in events" :key="row.name" class="ui:flex ui:flex-col ui:px-1.75 ui:text-tiny">
+        <span class="ui:flex ui:items-center ui:gap-2">
+          <span
+            class="ui:flex-1 ui:ellipsis ui:font-mono ui:text-fg ui:min-inline-0"
+            data-part="event"
+            :title="row.name"
+            >{{ row.name }}</span
+          >
+          <span
+            class="ui:shrink-0 ui:font-mono ui:text-muted"
+            data-part="event-counts"
+            :title="`${String(row.delivered)} delivered`"
+            >{{ countLine(row) }}</span
+          >
+        </span>
+        <span v-if="dropLine(row) !== ''" class="ui:text-muted" data-part="event-drops">{{
+          dropLine(row)
+        }}</span>
       </li>
     </ul>
   </Section>

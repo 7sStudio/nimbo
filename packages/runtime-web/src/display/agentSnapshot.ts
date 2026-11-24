@@ -29,24 +29,27 @@ function isBlock(element: Element): boolean {
     const display = getComputedStyle(element).display;
     if (display !== "" && !display.startsWith("inline") && display !== "contents") return true;
   }
-  return blocks.has(element.tagName);
+  // a chart's SVG labels read one per line
+  return blocks.has(element.tagName) || element instanceof SVGTextElement;
 }
 
 /** What an input says: its value (its placeholder in brackets when empty), a box's state; nothing for a secret. */
 function inputText(input: HTMLInputElement): string {
   if (input.type === "hidden" || input.type === "password") return "";
   if (input.type === "checkbox" || input.type === "radio") return `[${input.checked ? "x" : " "}]`;
-  if (input.value === "" && input.type !== "button" && input.type !== "submit")
-    return `[${input.placeholder}]`;
-  return input.value;
+  const empty = input.value === "" && input.type !== "button" && input.type !== "submit";
+  return empty && input.placeholder !== "" ? `[${input.placeholder}]` : input.value;
 }
 
-/** What a form control or an image says: its value, a select's chosen options, an image's alt text. */
+/** What a form control, a progress bar, a meter or an image says: its value, a select's chosen options, a bar's
+ * `value/max`, an image's alt text. */
 function controlText(element: Element): string | undefined {
   if (element instanceof HTMLInputElement) return inputText(element);
   if (element instanceof HTMLTextAreaElement) return element.value;
   if (element instanceof HTMLSelectElement)
     return [...element.selectedOptions].map((option) => option.text).join(", ");
+  if (element instanceof HTMLProgressElement || element instanceof HTMLMeterElement)
+    return `[${String(element.value)}/${String(element.max)}]`;
   return element instanceof HTMLImageElement ? element.alt : undefined;
 }
 

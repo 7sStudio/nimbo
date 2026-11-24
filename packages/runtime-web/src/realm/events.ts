@@ -76,10 +76,12 @@ export function createEventListeners(): EventListeners {
       if (run.disposers.closed()) return () => undefined;
       listeners.add(listener);
       const undispose = run.disposers.add(() => listeners.delete(listener));
-      return () => {
+      const dispose = (): void => {
         listeners.delete(listener);
         undispose();
       };
+      // named as route()'s disposer is, which the page hides as a cell's last value; a bundler may rename the const
+      return Object.defineProperty(dispose, "name", { value: "dispose" });
     },
     deliver: ({ events }) => {
       const heard: Record<string, number> = {};

@@ -49,8 +49,9 @@ export function routeHits(
   };
 }
 
-/** Whether `output` is the disposer a `route(...)` call returns, the last value of a cell that registers a route. */
+/** Whether `output` is the disposer a `route(...)` or `on(...)` call returns, the last value of a cell that registers a
+ * route or a listener. */
 export function isRouteDisposer(output: Output, source: string): boolean {
   if (output.kind !== "value" || field(output.json, "$type") !== "function") return false;
-  return field(output.json, "name") === "dispose" && /\broute\s*\(/u.test(source);
+  return field(output.json, "name") === "dispose" && /\b(?:route|on)\s*\(/u.test(source);
 }
