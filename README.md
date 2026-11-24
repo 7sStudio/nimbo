@@ -372,6 +372,11 @@ It adds nimbo to Claude Code (user scope) and VS Code when they are installed, a
 Desktop, Cursor and other MCP clients. The server works on the workspace of the folder the agent runs in, and starts
 nimbo when a tool needs it. Agents that prefer a shell can use the `nimbo` CLI directly: every command takes `--json`.
 
+nimbo is also listed in the [MCP Registry](https://registry.modelcontextprotocol.io) as `io.github.7sStudio/nimbo`,
+as an MCP bundle, `nimbo-mcp-<version>.mcpb`, attached to each release: a client that installs from the registry, or
+Claude Desktop when you open the file, sets it up in one step. The bundle runs the nimbo installed on your machine, in
+the workspace folder you choose when you add it; it does not install nimbo itself, so install nimbo first.
+
 Then ask, for example:
 
 > Open `sales.jsnb`, add a server cell that groups the orders by month, and show me the three best months with SQL.

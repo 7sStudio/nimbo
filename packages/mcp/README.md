@@ -11,6 +11,13 @@ claude mcp add nimbo -- nimbo mcp           # once per project (or the equivalen
 node packages/mcp/dist/main.js            # the same server, run directly; stdin and stdout carry the protocol
 ```
 
+From the MCP Registry, the listing `io.github.7sStudio/nimbo` installs the MCP bundle `nimbo-mcp-<version>.mcpb` of a
+release (`tools/release/mcpb.mjs`, 02-architecture §10): the client asks for a workspace folder (the home folder by
+default) and runs the bundle's launcher with its own Node, which runs the installed `nimbo mcp` in that folder. Without
+nimbo on the machine (on PATH, in the installer's bin folder or Homebrew's), the bundle's server has a single tool,
+`nimbo_setup`, that says so and gives the install commands; it never installs anything. `serverInfo` carries the
+listing's title, description and website (`src/server/listing.ts`).
+
 It serves the workspace of the folder it runs in (the nearest folder up that holds `.jsnb/`): an MCP client that
 starts its servers elsewhere (Claude Desktop starts them in `/`) runs `sh -c 'cd /path/to/project && exec nimbo mcp'`.
 Once its input ends it answers the requests it already read, then exits 0, so `printf … | nimbo mcp` works; an agent

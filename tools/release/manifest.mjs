@@ -1,14 +1,16 @@
 // A release folder's index (02-architecture §10): manifest.json (version, commit, and per target its tarball's name,
-// size and SHA-256), SHA256SUMS for every file published, install.sh, and the Homebrew formula. build.mjs calls it for
+// size and SHA-256), SHA256SUMS for every file published (the MCP bundle and server.json too, which mcpb.mjs wrote),
+// install.sh, and the Homebrew formula. build.mjs calls it for
 // the targets it built; the release workflow calls it once more over the tarballs every runner built.
 //
 //   node tools/release/manifest.mjs <release folder>
 import { createHash } from "node:crypto";
-import { copyFileSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { formula } from "./homebrew/formula.mjs";
+import { bundleName } from "./mcpb.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const sha256 = (file) => createHash("sha256").update(readFileSync(file)).digest("hex");
@@ -40,10 +42,22 @@ export function writeManifest(dir, meta) {
   }
   copyFileSync(join(root, "tools/release/install.sh"), join(dir, "install.sh"));
   writeFileSync(join(dir, `${meta.name}.rb`), formula(manifest, config));
+  const mcp = [bundleName(meta.version), "server.json"];
+  const absent = mcp.filter((name) => !existsSync(join(dir, name)));
+  if (absent.length > 0)
+    throw new Error(`${dir} holds no ${absent.join(" or ")} (tools/release/mcpb.mjs)`);
+  const listing = JSON.parse(readFileSync(join(dir, "server.json"), "utf8"));
+  if (
+    listing.version !== meta.version ||
+    listing.packages[0]?.fileSha256 !== sha256(join(dir, mcp[0]))
+  ) {
+    throw new Error(`server.json does not describe ${mcp[0]}`);
+  }
   const published = [
     "manifest.json",
     "install.sh",
     `${meta.name}.rb`,
+    ...mcp,
     ...Object.values(targets).map((t) => t.file),
   ];
   const sums = published.sort().map((name) => `${sha256(join(dir, name))}  ${name}`);

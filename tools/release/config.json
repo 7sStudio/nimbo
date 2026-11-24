@@ -1,6 +1,8 @@
 {
   "// releases": "The releases page every artefact points at: <releases>/latest/download/<file>, <releases>/download/v<version>/<file>. install.sh carries the same default; NIMBO_INSTALL_BASE overrides it at install and upgrade time.",
   "releases": "https://github.com/7sStudio/nimbo/releases",
+  "// mcpb": "The official MCP bundle CLI that validates and packs the MCP bundle (tools/release/mcpb.mjs), run with npm exec at this exact version.",
+  "mcpb": "@anthropic-ai/mcpb@2.1.2",
   "copyright": "Copyright 2026 7sStudio",
   "license": "Apache-2.0",
   "node": {

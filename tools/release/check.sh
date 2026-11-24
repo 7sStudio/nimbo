@@ -5,7 +5,8 @@
 #   tools/release/check.sh smoke <release root> <version>       install with curl | sh from a local server, doctor,
 #                                                                 a notebook run headless, the installer's flags and
 #                                                                 refusals (bad versions, a forged manifest, a wrong
-#                                                                 checksum, a second installer at once), uninstall
+#                                                                 checksum, a second installer at once), the MCP
+#                                                                 bundle without and with nimbo, uninstall
 #   tools/release/check.sh full <release root> <v1> <v2>         the whole flow: idempotent installs, a notebook
 #                                                                 package, SQL without and with DuckDB (command and page),
 #                                                                 the page with Playwright, upgrade under a running daemon,
@@ -81,6 +82,17 @@ one_json() {
     { cat "$work/json.out"; fail "stdout is not one JSON document: $*"; }
 }
 
+bundle="$root/download/v$v1/nimbo-mcp-$v1.mcpb"
+# The MCP bundle as a desktop client runs it (tools/release/mcpb-check.mjs): the client's own Node, the scratch HOME, and
+# the system PATH alone, without ~/.local/bin, so the launcher must find nimbo where the installer put it.
+bundle_check() {
+  "${clean_env[@]/PORT/$port}" PATH=/usr/bin:/bin:/usr/sbin:/sbin "$outer_node" "$repo/tools/release/mcpb-check.mjs" "$bundle" "$ws" "$@" </dev/null
+}
+say "the MCP bundle before nimbo is installed"
+[ -f "$bundle" ] || fail "no MCP bundle at $bundle"
+system_nimbo=$(ls /opt/homebrew/bin/nimbo /usr/local/bin/nimbo /home/linuxbrew/.linuxbrew/bin/nimbo 2>/dev/null | head -1 || true)
+if [ -z "$system_nimbo" ]; then bundle_check missing; else echo "skipped: this machine has $system_nimbo, which the bundle finds"; fi
+
 say "install with curl | sh"
 install | tee "$work/install.log"
 [ -L "$launcher" ] || fail "no launcher at $launcher"
@@ -107,6 +119,9 @@ n notebook create --path smoke.jsnb >/dev/null
 n cell add -n smoke.jsnb --type server --id c_a1b2c3 --source 'const answer = 6 * 7; answer' --run >/dev/null
 n outputs c_a1b2c3 -n smoke.jsnb --format json | tee "$work/answer"
 grep -q 42 "$work/answer" || fail "the server cell did not answer 42"
+
+say "the MCP bundle with nimbo installed"
+bundle_check installed "$v1"
 
 say "the installer's refusals: nothing is changed"
 target_link=$(readlink "$launcher")

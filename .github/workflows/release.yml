@@ -1,6 +1,8 @@
-# Release: on a tag v<version>, build the tarball of every target on its own runner, smoke-test each (install with
-# curl | sh from a local server, nimbo doctor, a notebook run headless, uninstall), then attach the tarballs with
-# manifest.json, SHA256SUMS, install.sh and the Homebrew formula to a draft GitHub release, which the owner publishes.
+# Release: on a tag v<version>, build the tarball of every target on its own runner, with the MCP bundle validated by the
+# official MCPB CLI, smoke-test each (install with curl | sh from a local server, nimbo doctor, a notebook run headless,
+# the MCP bundle without and with nimbo, uninstall), then attach the tarballs with the MCP bundle and its server.json
+# (the linux-x64 runner's), manifest.json, SHA256SUMS, install.sh and the Homebrew formula to a draft GitHub release,
+# which the owner publishes; publishing it lists it in the MCP Registry (mcp-registry.yml).
 name: release
 
 on:
@@ -52,6 +54,15 @@ jobs:
             .release/download/v${{ steps.version.outputs.version }}/nimbo-*-${{ matrix.target }}.tar.gz
             .release/download/v${{ steps.version.outputs.version }}/nimbo-*-${{ matrix.target }}.json
           if-no-files-found: error
+      # The bundle is the same on every platform: one runner's copy is published, with the server.json of its SHA-256.
+      - if: matrix.target == 'linux-x64'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: nimbo-mcpb
+          path: |
+            .release/download/v${{ steps.version.outputs.version }}/nimbo-mcp-*.mcpb
+            .release/download/v${{ steps.version.outputs.version }}/server.json
+          if-no-files-found: error
 
   release:
     needs: build
@@ -82,4 +93,4 @@ jobs:
           cd assets
           gh release create "${GITHUB_REF_NAME}" --draft --title "nimbo ${GITHUB_REF_NAME#v}" \
             --notes "Install: curl -fsSL https://github.com/7sStudio/nimbo/releases/latest/download/install.sh | sh" \
-            nimbo-*.tar.gz manifest.json SHA256SUMS install.sh nimbo.rb
+            nimbo-*.tar.gz nimbo-mcp-*.mcpb server.json manifest.json SHA256SUMS install.sh nimbo.rb

@@ -2,7 +2,8 @@
 // private Node (the official build, pinned by SHA-256, downloaded once into the cache), the app as a production install
 // of the CLI package with a flat node_modules of real package folders (pnpm deploy, hoisted, with only that target's
 // platform packages), the UI built for the release, the server's vendor/ folder when there is one, LICENSE, NOTICE,
-// THIRD-PARTY-NOTICES.txt, and bin/nimbo. Beside the tarballs: manifest.json and SHA256SUMS (tools/release/manifest.mjs).
+// THIRD-PARTY-NOTICES.txt, and bin/nimbo. Beside the tarballs: the MCP bundle and its registry entry server.json
+// (tools/release/mcpb.mjs), manifest.json and SHA256SUMS (tools/release/manifest.mjs).
 //
 //   node tools/release/build.mjs [--target host|all|darwin-arm64,...] [--out .release] [--version <v>] [--skip-build]
 //
@@ -30,6 +31,7 @@ import { parseArgs } from "node:util";
 
 import { productName, productVersion } from "../../packages/core/src/product.ts";
 import { writeManifest } from "./manifest.mjs";
+import { writeBundle } from "./mcpb.mjs";
 import { thirdPartyNotices } from "./notices.mjs";
 import { checkPrivacy } from "./privacy.mjs";
 import { packageOf, packagesIn, resolveFrom, walk, walkDirs } from "./tree.mjs";
@@ -405,5 +407,7 @@ if (!values["skip-build"]) {
 }
 const ui = buildUi();
 for (const target of targets) await buildTarget(target, ui);
+log("the MCP bundle and its registry entry");
+writeBundle(releaseDir, version);
 writeManifest(releaseDir, { name: productName, version, commit });
 log(`release in ${releaseDir}`);

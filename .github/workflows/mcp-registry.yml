@@ -1,0 +1,83 @@
+# MCP Registry: once a release is published (never while it is a draft, since the registry fetches the bundle's URL),
+# list its server.json in the official MCP Registry with mcp-publisher, signed in through GitHub OIDC. The server.json
+# and the MCP bundle are the release's own assets, checked against each other first. A version the registry already
+# lists is left as it is, so a re-run is safe; workflow_dispatch re-runs it for a tag.
+name: mcp-registry
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to list (v<version>)"
+        required: true
+
+permissions: {}
+
+concurrency:
+  group: mcp-registry
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    if: github.event_name == 'workflow_dispatch' || !github.event.release.prerelease
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read # the release's assets
+      id-token: write # mcp-publisher login github-oidc
+    env:
+      MCP_PUBLISHER_VERSION: 1.8.16
+      MCP_PUBLISHER_SHA256: 6e2f799550cf843c6fd3350498d56cc49be3dc0af1e6237eb0e6435c7a9d5c05 # mcp-publisher_linux_amd64.tar.gz
+      REGISTRY: https://registry.modelcontextprotocol.io
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ github.event.release.tag_name || inputs.tag }}
+    steps:
+      - name: The release's server.json and bundle
+        run: |
+          case "$TAG" in v[0-9]*) ;; *) echo "::error::$TAG is not a release tag v<version>"; exit 1 ;; esac
+          mkdir assets && cd assets
+          gh release download "$TAG" --pattern server.json --pattern 'nimbo-mcp-*.mcpb'
+          version=${TAG#v}
+          jq -e --arg v "$version" '.version == $v and all(.packages[]; .version == $v)' server.json >/dev/null ||
+            { echo "::error::server.json does not list version $version"; exit 1; }
+          jq -r '.packages[] | "\(.fileSha256)  \(.identifier | split("/") | last)"' server.json > bundle.sha256
+          sha256sum -c bundle.sha256
+          jq -r '.packages[].identifier' server.json | while read -r url; do
+            case "$url" in "https://github.com/${GH_REPO}/releases/download/${TAG}/"*) ;; *) echo "::error::$url is not an asset of $TAG"; exit 1 ;; esac
+            curl -fsSIL -o /dev/null "$url" || { echo "::error::$url does not answer"; exit 1; }
+          done
+          echo "NAME=$(jq -r .name server.json)" >> "$GITHUB_ENV"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+      - name: Already listed?
+        id: listed
+        run: |
+          code=$(curl -s -o /dev/null -w '%{http_code}' "$REGISTRY/v0.1/servers/$(jq -rn --arg n "$NAME" '$n | @uri')/versions/$VERSION")
+          case "$code" in
+            200) echo "$NAME $VERSION is already in the registry: nothing to do"; echo "done=true" >> "$GITHUB_OUTPUT" ;;
+            404) echo "done=false" >> "$GITHUB_OUTPUT" ;;
+            *) echo "::error::the registry answered $code for $NAME $VERSION"; exit 1 ;;
+          esac
+      - name: mcp-publisher ${{ env.MCP_PUBLISHER_VERSION }}
+        if: steps.listed.outputs.done == 'false'
+        run: |
+          archive=mcp-publisher_linux_amd64.tar.gz
+          curl -fsSL -o "$archive" "https://github.com/modelcontextprotocol/registry/releases/download/v${MCP_PUBLISHER_VERSION}/$archive"
+          echo "${MCP_PUBLISHER_SHA256}  $archive" | sha256sum -c
+          tar xzf "$archive" mcp-publisher
+          ./mcp-publisher --version
+      - name: Validate, sign in and publish
+        if: steps.listed.outputs.done == 'false'
+        run: |
+          ./mcp-publisher validate assets/server.json
+          ./mcp-publisher login github-oidc
+          if ./mcp-publisher publish assets/server.json 2>&1 | tee publish.log; then
+            exit 0
+          fi
+          if grep -q "cannot publish duplicate version" publish.log; then
+            echo "$NAME $VERSION was listed meanwhile: nothing to do"
+            exit 0
+          fi
+          echo "::error::the MCP Registry rejected $NAME $VERSION (see the log above)"
+          exit 1
