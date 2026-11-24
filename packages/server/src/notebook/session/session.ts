@@ -83,11 +83,11 @@ function removeCell(
   runs: Pick<SessionRuns, "dropRuns">,
   cell: CellId,
 ): void {
-  const last = context.cells.require(cell).last;
+  const { last, type } = context.cells.require(cell);
   const ended = runs.dropRuns(cell);
   deleteCell(context, cell);
   if (last) context.runs.retained.drop(last.id);
-  void disposeDeleted(context, cell, ended);
+  void disposeDeleted(context, { cell, type }, ended);
 }
 
 /** The cell edits of the session, each answered in the API's form. */

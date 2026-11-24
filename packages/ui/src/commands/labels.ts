@@ -36,6 +36,7 @@ export const registryTitles: Readonly<Record<string, string>> = {
   "cell.bindings": "Read Cell Names",
   "cell.outputQuery": "Query Value",
   "cell.snapshot": "Read Cell Page",
+  "bridge.events": "Bridge Events",
   "kernel.status": "Kernel Status",
   "kernel.interrupt": "Interrupt Kernel",
   "kernel.restart": "Restart Kernel",

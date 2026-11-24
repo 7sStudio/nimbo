@@ -79,11 +79,42 @@ export const RealmReset = z
   .readonly();
 export type RealmReset = z.infer<typeof RealmReset>;
 
-export const RealmSnapshot = z.object({ cell: CellId }).readonly();
+/** realm.snapshot: a cell's container as an agent reads it, `html` and `text` each cut to `maxBytes` (UTF-8). */
+export const RealmSnapshot = z.object({ cell: CellId, maxBytes: limit.optional() }).readonly();
 export type RealmSnapshot = z.infer<typeof RealmSnapshot>;
 
-export const BridgeEvent = z.object({ name: z.string(), data: z.unknown() }).readonly();
+/** The page's answer: `rendered` false when the cell has no container in this page (not run here, or it never used
+ * `display` or `document`); `truncated` when either part was cut. */
+export const RealmSnapshotAnswer = z
+  .object({
+    html: z.string(),
+    text: z.string(),
+    rendered: z.boolean(),
+    truncated: z.boolean(),
+  })
+  .readonly();
+export type RealmSnapshotAnswer = z.infer<typeof RealmSnapshotAnswer>;
+
+/** realm.dispose: a client cell was deleted; the page runs its cleanups (timers, listeners, `on`, `dispose`) and drops
+ * its container. */
+export const RealmDispose = z.object({ cell: CellId }).readonly();
+export type RealmDispose = z.infer<typeof RealmDispose>;
+
+/** One server `emit(name, data)` (05-bridge §6): `data` in strict wire form, redacted; `at` when it was emitted. */
+export const BridgeEvent = z
+  .object({ name: z.string(), data: z.unknown(), at: z.string(), cell: CellId.optional() })
+  .readonly();
 export type BridgeEvent = z.infer<typeof BridgeEvent>;
+
+/** realm.event: the events the daemon holds for the page, in the order they were emitted. */
+export const RealmEvent = z.object({ events: z.array(BridgeEvent).readonly() }).readonly();
+export type RealmEvent = z.infer<typeof RealmEvent>;
+
+/** The page's answer: per name, how many of the events had at least one listener (the rest found none). */
+export const RealmEventAnswer = z
+  .object({ heard: z.record(z.string(), z.number().int().nonnegative()) })
+  .readonly();
+export type RealmEventAnswer = z.infer<typeof RealmEventAnswer>;
 
 /** The shape behind RealmReport; `realm.report` takes it as its input object. */
 export const realmReportShape = {

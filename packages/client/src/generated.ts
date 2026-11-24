@@ -1,6 +1,7 @@
 // Generated from the @jsnb/core registry by scripts/generate.ts; edit the registry, not this file.
 
 import {
+  bridgeEvents,
   cacheClear,
   cellAdd,
   cellBindings,
@@ -137,6 +138,12 @@ const notebook = (call: Caller) =>
     bridge: bind(call, notebookBridge),
   }) as const;
 
+const bridge = (call: Caller) =>
+  ({
+    /** The events server cells emitted with emit(name, data) since the notebook opened, by name: how many, how many reached a client cell's on(name) listener in the attached page, how many were dropped (no page attached, no listener, or a burst past the queue) and the last time. The events themselves are event outputs on the listening client cells. */
+    events: bind(call, bridgeEvents),
+  }) as const;
+
 const cell = (call: Caller) =>
   ({
     /** Add a cell after another (or at the end); with run, run it and wait. An explicit id must be unused. */
@@ -165,7 +172,7 @@ const cell = (call: Caller) =>
     bindings: bind(call, cellBindings),
     /** Run a filter, JSONPath, jq or SQL query against one value output on the daemon: the last run's last value output unless execution or index says another. SQL reads the value as table t (an array's items as rows; a list of plain values is one column, value). */
     outputQuery: bind(call, cellOutputQuery),
-    /** The live container of a client cell (needs an attached realm). v1.x. */
+    /** Read a client cell's rendered container from the attached page: its accessible text in reading order, and with html its HTML without scripts, styles or event handlers (form values as attributes), each cut to maxBytes. Needs a page holding the client realm (REALM_NOT_ATTACHED otherwise). image is not available yet. */
     snapshot: bind(call, cellSnapshot),
   }) as const;
 
@@ -318,6 +325,7 @@ export const bindCommands = (call: Caller) =>
   ({
     workspace: workspace(call),
     notebook: notebook(call),
+    bridge: bridge(call),
     cell: cell(call),
     kernel: kernel(call),
     realm: realm(call),

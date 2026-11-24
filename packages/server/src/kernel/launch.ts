@@ -3,6 +3,7 @@
 // supervisor's current kernel, so a replaced kernel's late messages reach nobody.
 import type { KernelStatus, Route } from "@jsnb/core";
 import type {
+  EventBatch,
   Exit,
   ExportEntry,
   KernelEntry,
@@ -19,6 +20,7 @@ type KernelSink = {
   readonly output: (late: LateOutput) => void;
   readonly exports: (names: readonly ExportEntry[]) => void;
   readonly routes: (routes: readonly Route[]) => void;
+  readonly events: (batch: EventBatch) => void;
   /** The kernel is gone (it died, or a restart killed it): its exports and routes with it. */
   readonly ended: () => void;
   readonly log: (line: string) => void;
@@ -60,6 +62,7 @@ export function launchKernel(options: SupervisorOptions, hooks: LaunchHooks): No
     onOutput: whileCurrent(sink.output),
     onExports: whileCurrent(sink.exports),
     onRoutes: whileCurrent(sink.routes),
+    onEvents: whileCurrent(sink.events),
     onPause: whileCurrent(hooks.paused),
     onExit: hooks.exit,
     onLog: sink.log,

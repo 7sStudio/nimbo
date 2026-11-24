@@ -21,7 +21,7 @@ import { StdioTransport } from "./server/stdio.js";
 
 /** One tool per public command the registry does not mark planned. */
 // Every public command that is not planned, pinned as a number so a tool that silently goes missing fails here.
-const toolCount = 80;
+const toolCount = 82;
 
 const entry = fileURLToPath(new URL("../dist/main.js", import.meta.url));
 

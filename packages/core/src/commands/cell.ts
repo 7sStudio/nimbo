@@ -190,8 +190,21 @@ export const cellOutputQuery = defineCommand({
 
 export const cellSnapshot = defineCommand({
   name: "cell.snapshot",
-  description: "The live container of a client cell (needs an attached realm). v1.x.",
-  input: z.object(ref),
-  output: z.object({ html: z.string(), text: z.string() }),
-  tags: { planned: true },
+  description:
+    "Read a client cell's rendered container from the attached page: its accessible text in reading order, and with html its HTML without scripts, styles or event handlers (form values as attributes), each cut to maxBytes. Needs a page holding the client realm (REALM_NOT_ATTACHED otherwise). image is not available yet.",
+  input: z.object({
+    ...ref,
+    /** Also answer the container's sanitised HTML. */
+    html: z.boolean().optional(),
+    maxBytes: z.number().int().positive().default(65_536),
+    /** An image of the container: needs a headless browser realm, not available yet (NOT_AVAILABLE). */
+    image: z.boolean().optional(),
+  }),
+  output: z.object({
+    text: z.string(),
+    html: z.string().optional(),
+    /** False when the cell has no container in the page: not run there, or it never used `display` or `document`. */
+    rendered: z.boolean(),
+    truncated: z.boolean(),
+  }),
 });

@@ -43,6 +43,8 @@ describe("every output of a run", () => {
     expect(await world.realm.handle("realm.snapshot", { cell: run.cell })).toEqual({
       html: "***",
       text: "***",
+      rendered: true,
+      truncated: false,
     });
   });
 });

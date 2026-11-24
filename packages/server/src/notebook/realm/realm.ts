@@ -1,7 +1,13 @@
 // A session's client realm (02-architecture §2, 03-api §4.5, 05-bridge): the attached page, the client runs it runs,
 // its reports, the bridge calls into the kernel and the resets; what the runs need of it (RealmPart) and what the
 // realm commands call. The kernel's exports reach it through the session's hooks.
-import type { BindingValue, CellId, RealmReport, RealmStatus } from "@jsnb/core";
+import type {
+  BindingValue,
+  CellId,
+  RealmReport,
+  RealmSnapshotAnswer,
+  RealmStatus,
+} from "@jsnb/core";
 import { undefinedMarker } from "@jsnb/core";
 import type { ExportEntry } from "@jsnb/kernel-node";
 
@@ -11,6 +17,9 @@ import type { RealmPart } from "../session/runApi.js";
 import { attach, detach } from "./attach.js";
 import type { CallAnswer } from "./bridgeCall.js";
 import { bridgeCall } from "./bridgeCall.js";
+import type { EventChannel, EventStat } from "./events.js";
+import { createEventChannel } from "./events.js";
+import { snapshotCell } from "./snapshot.js";
 import { runClientCell } from "./clientRun.js";
 import { interruptClientRun } from "./interrupt.js";
 import { applyReport } from "./reports.js";
@@ -25,6 +34,10 @@ export type SessionRealm = RealmPart & {
   readonly owns: (realmId: string) => boolean;
   readonly report: (report: RealmReport) => void;
   readonly bridgeCall: (fn: string, args: readonly unknown[]) => Promise<CallAnswer>;
+  /** bridge.events: each event name's counts. */
+  readonly events: () => readonly EventStat[];
+  /** cell.snapshot: the client cell's container as the attached page renders it. */
+  readonly snapshot: (cell: CellId, maxBytes: number) => Promise<RealmSnapshotAnswer>;
   /** The notebook closes: the page is detached. */
   readonly close: () => void;
 };
@@ -61,9 +74,42 @@ function hookExports(context: SessionContext, state: RealmState): void {
   };
 }
 
+/** Attaches the page; a reset it missed while away goes out once the attach is answered (realm.reset is the daemon's
+ * request). */
+function attachOwing(
+  context: SessionContext,
+  state: RealmState,
+  {
+    page,
+    kind,
+    takeover,
+  }: { page: PageSocket; kind: "tab" | "headless"; takeover?: boolean | undefined },
+): string {
+  const realmId = attach(context, state, page, { kind, takeover });
+  const owed = state.owed;
+  if (owed !== undefined)
+    setImmediate(() => {
+      if (state.attachment?.realmId === realmId) void resetRealm(context, state, owed === "all");
+    });
+  return realmId;
+}
+
+/** The kernel's push events to the page, and a deleted client cell's cleanups in the page. */
+function hookEvents(context: SessionContext, state: RealmState): EventChannel {
+  const events = createEventChannel(context, state);
+  context.hooks.events = events.take;
+  context.hooks.disposeClient = (cell) => {
+    state.attachment?.page.request("realm.dispose", { cell }).catch((error: unknown) => {
+      context.log.debug({ err: error, cell }, "the page did not take realm.dispose");
+    });
+  };
+  return events;
+}
+
 export function createRealm(context: SessionContext, deps: RealmDeps): SessionRealm {
   const state = createRealmState();
   hookExports(context, state);
+  const events = hookEvents(context, state);
   return {
     attached: () => state.attachment !== undefined,
     run: (execution) => runClientCell(context, state, deps, execution),
@@ -80,23 +126,15 @@ export function createRealm(context: SessionContext, deps: RealmDeps): SessionRe
     runs: (execution) => state.running.has(execution),
     interrupt: (execution) => interruptClientRun(context, state, deps, execution),
     status: () => realmStatusOf(state),
-    attach: (page, kind, takeover) => {
-      const realmId = attach(context, state, page, { kind, takeover });
-      // a reset the page missed while away goes out once the attach is answered (realm.reset is the daemon's request)
-      const owed = state.owed;
-      if (owed !== undefined)
-        setImmediate(() => {
-          if (state.attachment?.realmId === realmId)
-            void resetRealm(context, state, owed === "all");
-        });
-      return realmId;
-    },
+    attach: (page, kind, takeover) => attachOwing(context, state, { page, kind, takeover }),
     detach: (realmId) => detach(context, state, realmId),
     owns: (realmId) => state.attachment?.realmId === realmId,
     report: (report) => {
       applyReport(context, state, deps, report);
     },
     bridgeCall: (fn, args) => bridgeCall(context, state, fn, args),
+    events: events.stats,
+    snapshot: (cell, maxBytes) => snapshotCell(context, state, deps, { cell, maxBytes }),
     close: () => {
       if (state.attachment) detach(context, state, state.attachment.realmId);
     },

@@ -268,6 +268,8 @@ Where next: run `nimbo` with no arguments to open Home, then open one of the [ex
 - A dependency graph marks the cells whose inputs changed as **stale**; nothing re-runs behind your back.
 - The **bridge**: exported functions become async calls from client cells, exported values arrive as copies, and
   anything that cannot cross (a class instance, a live client) is refused with an error naming it.
+- **Push events**: `emit("progress", data)` in a server cell reaches `on("progress", (data) => …)` in a client
+  cell, live, for progress bars and dashboards fed by a loop or a timer.
 - **HTTP routes** with standard `Request` and `Response`, served at `/n/<notebook>/<path>`; every request is logged
   under its cell and in the Activity log.
 - Reload or leave the page and come back: the kernel keeps its state and client cells run again. Notebooks autosave.
@@ -310,6 +312,8 @@ Where next: run `nimbo` with no arguments to open Home, then open one of the [ex
 - Each cell records who edited it last. An agent's edit that you have not reviewed keeps the code it replaced, marks
   the changed lines and offers **Mark reviewed**, **Revert** and **Full diff**; the Agent view lists them all.
 - You watch the agent's cells appear and run live in the page.
+- An agent reads what a client cell renders without a screenshot: `nimbo cell snapshot <cell>` (MCP
+  `cell_snapshot`) answers its visible text, and its sanitised HTML with `--html`.
 
 <img alt="The Agent view lists one edit to review: cell 3, orderTotal, lines 1, 4 to 5 and 7 changed by claude-code over MCP, with Mark reviewed, Revert and Full diff; in the notebook those lines carry a purple bar." src="docs/assets/readme/agent-edit-review.png">
 
@@ -474,7 +478,6 @@ Known limits today:
 Planned, not yet available:
 
 - A headless browser page, so agents can run client cells and take screenshots on their own
-- Server-to-page push events (`emit` and `on`)
 - A tutorial mode that walks a new user through the concepts
 - Add-ons, starting with a Stripe add-on (webhook forwarding, signature checks, a request log)
 - A desktop app

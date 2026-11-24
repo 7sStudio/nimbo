@@ -21,6 +21,7 @@ export const expected: readonly string[] = [
   "notebook.export",
   "notebook.diagnostics",
   "notebook.bridge",
+  "bridge.events",
   "cell.add",
   "cell.get",
   "cell.update",

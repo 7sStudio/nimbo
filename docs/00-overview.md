@@ -88,7 +88,7 @@ Two runtimes, no shared memory: shared scope within a kind, a **bridge** across 
 
 ### 3.2 Not built yet
 
-Server-to-client push events (`emit`/`on`), a file watcher for external `.jsnb` edits, a headless client realm for agent-only sessions, debugging client cells in the page, add-ons. Open work is in [12-roadmap.md](12-roadmap.md).
+A file watcher for external `.jsnb` edits, a headless client realm for agent-only sessions, debugging client cells in the page, add-ons. Open work is in [12-roadmap.md](12-roadmap.md).
 
 ### 3.3 Out of scope
 

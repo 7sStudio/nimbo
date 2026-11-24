@@ -3232,6 +3232,93 @@
     }
   },
   {
+    "name": "bridge.events",
+    "description": "The events server cells emitted with emit(name, data) since the notebook opened, by name: how many, how many reached a client cell's on(name) listener in the attached page, how many were dropped (no page attached, no listener, or a burst past the queue) and the last time. The events themselves are event outputs on the listening client cells.",
+    "tags": {
+      "mutating": false,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "notebook": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["notebook"]
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "attached": {
+          "type": "boolean"
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "emitted": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "delivered": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "dropped": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "lastDrop": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": ["noPage", "noListener", "overflow"]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "lastAt": {
+                "type": "string"
+              },
+              "cell": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^c_[0-9a-z]{6}$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": ["name", "emitted", "delivered", "dropped", "lastDrop", "lastAt", "cell"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["attached", "events"],
+      "additionalProperties": false
+    }
+  },
+  {
     "name": "cell.add",
     "description": "Add a cell after another (or at the end); with run, run it and wait. An explicit id must be unused.",
     "tags": {
@@ -6805,14 +6892,14 @@
   },
   {
     "name": "cell.snapshot",
-    "description": "The live container of a client cell (needs an attached realm). v1.x.",
+    "description": "Read a client cell's rendered container from the attached page: its accessible text in reading order, and with html its HTML without scripts, styles or event handlers (form values as attributes), each cut to maxBytes. Needs a page holding the client realm (REALM_NOT_ATTACHED otherwise). image is not available yet.",
     "tags": {
       "mutating": false,
       "destructive": false,
       "internal": false,
       "streaming": false,
       "idempotent": false,
-      "planned": true
+      "planned": false
     },
     "inputSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -6825,6 +6912,18 @@
         "cell": {
           "type": "string",
           "pattern": "^c_[0-9a-z]{6}$"
+        },
+        "html": {
+          "type": "boolean"
+        },
+        "maxBytes": {
+          "default": 65536,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "image": {
+          "type": "boolean"
         }
       },
       "required": ["notebook", "cell"]
@@ -6833,14 +6932,20 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "type": "object",
       "properties": {
+        "text": {
+          "type": "string"
+        },
         "html": {
           "type": "string"
         },
-        "text": {
-          "type": "string"
+        "rendered": {
+          "type": "boolean"
+        },
+        "truncated": {
+          "type": "boolean"
         }
       },
-      "required": ["html", "text"],
+      "required": ["text", "rendered", "truncated"],
       "additionalProperties": false
     }
   },

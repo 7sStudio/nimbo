@@ -34,8 +34,9 @@ that stops reading ends it at once, quietly.
 - The arguments are checked with the command's schema first: a bad call is `InvalidParams` and reaches no daemon.
   Nothing is defaulted: `notebook` is the notebook's path from the workspace root, as the schema requires. A notebook
   that exists but is not open is opened first and the call made again (`openingClosed` of `@jsnb/client`).
-- A planned tool (`cell_snapshot`), called by name, is answered `NotAvailable` (1009) from the registry once its arguments
-  check, and never seeks, starts or asks a daemon.
+- A planned tool (none now), called by name, is answered `NotAvailable` (1009) from the registry once its arguments
+  check, and never seeks, starts or asks a daemon. `cell_snapshot` answers a client cell's visible text (`html: true`
+  adds its sanitised HTML) from the tab holding the notebook; `bridge_events` counts the push events by name.
 - A success is the output as `structuredContent` and the same JSON as text (what `nimbo … --json` prints). A failure is
   `isError: true` with `{ code, name, message, data }` as JSON text, and no `structuredContent`.
 - A result's whole frame (structuredContent and text) carries at most 128 KiB, about 64 KiB of text, under Claude Code's

@@ -112,7 +112,7 @@ it("the tags mark destructive, internal, streaming, idempotent and planned comma
     "cache.clear",
     "sql.install",
   ]);
-  expect(tagged("planned")).toEqual(["cell.snapshot"]);
+  expect(tagged("planned")).toEqual([]);
 });
 
 describe("commandByName and publicCommands", () => {

@@ -1,5 +1,6 @@
 // The daemon ↔ kernel messages of 04-kernel §2.1 as Zod schemas, both directions, and the child's start config.
 import {
+  BridgeEvent,
   CellId,
   ErrorInfo,
   ExecStatus,
@@ -144,5 +145,11 @@ export const KernelMessage = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("exports"), names: z.array(ExportEntry).readonly() }),
   z.object({ type: z.literal("routes"), routes: z.array(Route).readonly() }),
+  /** `emit(name, data)` calls since the last flush, and per name how many a burst dropped (05-bridge §6). */
+  z.object({
+    type: z.literal("events"),
+    events: z.array(BridgeEvent).readonly(),
+    dropped: z.record(z.string(), z.number().int().positive()),
+  }),
 ]);
 export type KernelMessage = z.infer<typeof KernelMessage>;

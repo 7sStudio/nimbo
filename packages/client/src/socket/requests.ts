@@ -1,6 +1,14 @@
 // The daemon's requests to a page on the same socket (03-api §4.5, §7.2; 05-bridge §9): realm.execute, realm.reset,
-// realm.snapshot and realm.interrupt, validated with core's schemas, answered with the handler's result or its error.
-import { InvalidParams, RealmExecute, RealmInterrupt, RealmReset, RealmSnapshot } from "@jsnb/core";
+// realm.snapshot, realm.interrupt, realm.event and realm.dispose, validated with core's schemas, answered with the handler's result or its error.
+import {
+  InvalidParams,
+  RealmDispose,
+  RealmEvent,
+  RealmExecute,
+  RealmInterrupt,
+  RealmReset,
+  RealmSnapshot,
+} from "@jsnb/core";
 import type { z } from "zod";
 
 import { writeError, writeResult } from "../rpc/frames.js";
@@ -14,6 +22,8 @@ export type ServerRequests = {
   readonly "realm.reset": RealmReset;
   readonly "realm.snapshot": RealmSnapshot;
   readonly "realm.interrupt": RealmInterrupt;
+  readonly "realm.event": RealmEvent;
+  readonly "realm.dispose": RealmDispose;
 };
 export type ServerRequestMethod = keyof ServerRequests;
 
@@ -27,6 +37,8 @@ const schemas: { readonly [M in ServerRequestMethod]: z.ZodType<ServerRequests[M
   "realm.reset": RealmReset,
   "realm.snapshot": RealmSnapshot,
   "realm.interrupt": RealmInterrupt,
+  "realm.event": RealmEvent,
+  "realm.dispose": RealmDispose,
 };
 
 export type RequestHandlers = {
