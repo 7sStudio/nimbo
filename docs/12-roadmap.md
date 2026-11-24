@@ -36,7 +36,6 @@ Constraint on every UI item: the page's first load stays within its 500 KB budge
 - **Linux verification** (S): `tools/release/check.sh` on the Linux tarballs in a container.
 - **Signed checksums or provenance** (S to M): a signature over `SHA256SUMS`, or build provenance attested by the release workflow.
 - **Signed MCP bundle** (S): `mcpb sign` with the organisation's certificate, so clients show the bundle as signed rather than unsigned.
-- **Homebrew tap update** (S): the release workflow pushes the generated formula to the tap repository (`7sStudio/homebrew-nimbo`); today it is copied there by hand after a release.
 
 ## 6. Source Control
 
