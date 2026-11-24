@@ -40,9 +40,21 @@ const modeKeys: Readonly<Record<KeyMode, readonly string[]>> = {
   markdown: ["markdownEditing"],
 };
 
-/** The context keys that hold on `page` with `modes` (modesOf's), for the when clauses. */
-const contextOf = (page: KeyPage, modes: readonly KeyMode[]): ReadonlySet<string> =>
-  new Set([page, ...modes.flatMap((mode) => modeKeys[mode])]);
+const debugKeys: Readonly<Record<NonNullable<KeyContext["debug"]>, readonly string[]>> = {
+  running: ["inDebugMode", "debugRunning"],
+  paused: ["inDebugMode", "debugPaused"],
+};
+
+/** The context keys that hold on `page` with `modes` (modesOf's) and the debugger's `debug`, for the when clauses. */
+function contextOf(
+  page: KeyPage,
+  modes: readonly KeyMode[],
+  debug: KeyContext["debug"],
+): ReadonlySet<string> {
+  const keys = modes.flatMap((mode) => modeKeys[mode]);
+  const focus = keys.length === 0 ? ["fieldFocus"] : keys;
+  return new Set([page, ...focus, ...(debug === undefined ? [] : debugKeys[debug])]);
+}
 
 /** The keys an output viewer handles where its tree, grid or toolbar has the focus ('s last row): moving,
  * copying, find, the query bar and full screen; every other key is the page's. */
@@ -76,8 +88,9 @@ function keptByViewer(combo: string, focus: Focus): boolean | undefined {
   return focus === "output" ? viewerKeys.has(combo) : undefined;
 }
 
-/** A ⌘ row, a Control Shift one (VS Code's ⌃⇧G on macOS) or a function key (the debugger's F5, F10): the page's even
- * from a text field, whose own Control keys (⌃A, ⌃E) have no Shift and which has no use for F keys. */
+/** A ⌘ row, a Control Shift one (VS Code's ⌃⇧G on macOS) or a function key: looked up even from a text field, whose own
+ * Control keys (⌃A, ⌃E) have no Shift and which has no use for F keys; the debugger's when clauses (`!fieldFocus`,
+ * `debugPaused`) leave the browser its F keys there. */
 const windowCombo = (combo: string): boolean =>
   combo.includes("Mod+") || combo.startsWith("Ctrl+Shift+") || /(?:^|\+)F\d{1,2}$/u.test(combo);
 
@@ -186,10 +199,11 @@ export function createShortcuts(dispatcher: Dispatcher, options: Options) {
     const first = takePending();
     const early = before(dispatcher, table, { combo, focus, overlay: context.overlay }, event);
     if (early !== undefined) return early === "ran";
-    const where = contextOf(page, context.overlay ? ["any"] : modes);
+    const where = contextOf(page, context.overlay ? ["any"] : modes, context.debug);
     const row = acting(rowFor(table, combo, first, where), context);
     if (row === undefined) {
-      if (startsChord(table, combo, contextOf(page, modes))) pending = { key: combo, at: now() };
+      if (startsChord(table, combo, contextOf(page, modes, context.debug)))
+        pending = { key: combo, at: now() };
       // true makes the listener prevent the browser's default (a chord's first key, Cmd S under Settings)
       return pending !== undefined || swallowsSave(combo, focus, context);
     }

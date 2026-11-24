@@ -23,7 +23,6 @@ Constraint on every UI item: the page's first load stays within its 500 KB budge
 ## 3. Debugging
 
 - **Client-cell debugging** (M): breakpoints and stepping in client cells, through the page's own DevTools protocol, in the same Debug view as server cells.
-- **What F5 does in the page** (S, a decision): today the page always captures F5. Either it is captured only while paused, with Ctrl F5 starting a debug run, or the current behaviour stays.
 
 ## 4. Product and distribution
 

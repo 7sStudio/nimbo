@@ -169,6 +169,7 @@ export const keymapTitles: Readonly<Record<string, string>> = {
   "ui.cell.moveUp": "Move Cell Up",
   "ui.cell.moveDown": "Move Cell Down",
   "ui.cell.toggleOutputs": "Toggle Outputs",
+  "ui.debug.start": "Debug: Start Debugging",
   "ui.debug.continue": "Debug: Continue",
   "ui.debug.pause": "Debug: Pause",
   "ui.debug.stepOver": "Debug: Step Over",

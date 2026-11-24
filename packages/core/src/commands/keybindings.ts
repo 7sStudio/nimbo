@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 import { keybindingFilesSchema, keybindingSourceSchema } from "../model/keybinding.js";
+import { whenContextKeys } from "../settings/keybindingWhen.js";
 import { defineCommand } from "./define.js";
 
 const scope = z.enum(["user", "workspace"]);
@@ -49,7 +50,7 @@ const target = {
     .string()
     .optional()
     .describe(
-      "The when clause (home, notebook, commandMode, editMode, markdownEditing, joined by &&); by default the one the command's bindings have",
+      `The when clause (${whenContextKeys.join(", ")}, each maybe negated with !, joined by &&); by default the one the command's bindings have`,
     ),
 };
 

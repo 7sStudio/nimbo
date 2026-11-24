@@ -137,6 +137,7 @@ const notebookRun = (): AppMenuSpec => ({
     item("Run Cell with Dependents", "ui.run.withDependents"),
     item("Run All Above", "ui.run.above"),
     item("Run Cell and Below", "ui.run.below"),
+    item("Start Debugging", "ui.debug.start"),
     line,
     item("Run All", "notebook.run", { select: "all" }),
     item("Run Stale Cells", "notebook.run", { select: { stale: true } }),

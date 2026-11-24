@@ -1,13 +1,19 @@
 // When clauses: the context keys of the page and the notebook's mode, each maybe negated, joined by &&.
 
-/** The context keys a when clause may name: the page, and the notebook's mode. `commandMode`: no editor
- * or text field has the focus; `editMode`: a cell's editor has it; `markdownEditing`: that cell is a markdown cell. */
+/** The context keys a when clause may name: the page, the notebook's mode and the debugger's state. `commandMode`: no
+ * editor or text field has the focus; `editMode`: a cell's editor has it; `markdownEditing`: that cell is a markdown
+ * cell; `fieldFocus`: neither, a text field outside the cells, a menu or a dialog has it; `inDebugMode`: a run is going
+ * under the debugger or the kernel is paused in it; `debugRunning`: the first, `debugPaused`: the second. */
 export const whenContextKeys = [
   "home",
   "notebook",
   "commandMode",
   "editMode",
   "markdownEditing",
+  "fieldFocus",
+  "inDebugMode",
+  "debugRunning",
+  "debugPaused",
 ] as const;
 export type WhenContextKey = (typeof whenContextKeys)[number];
 
@@ -63,9 +69,12 @@ export function whenHolds(when: string, context: ReadonlySet<string>): boolean {
 }
 
 /** Every place a binding can act: a page with no mode (a text field or a menu has the focus), command mode, edit mode
- * and markdown editing. */
+ * and markdown editing, each with no debugged run, one running and one paused. */
 export const whenContexts: readonly ReadonlySet<string>[] = ["home", "notebook"].flatMap((page) =>
-  [[], ["commandMode"], ["editMode"], ["editMode", "markdownEditing"]].map(
-    (modes) => new Set([page, ...modes]),
+  [["fieldFocus"], ["commandMode"], ["editMode"], ["editMode", "markdownEditing"]].flatMap(
+    (modes) =>
+      [[], ["inDebugMode", "debugRunning"], ["inDebugMode", "debugPaused"]].map(
+        (debug) => new Set([page, ...modes, ...debug]),
+      ),
   ),
 );

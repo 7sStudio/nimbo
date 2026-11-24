@@ -233,7 +233,7 @@ Where next: run `nimbo` with no arguments to open Home, then open one of the [ex
 
 ### Debug
 
-- A debugger for server cells: breakpoints (F9), conditions, hit counts and logpoints; step over, into and out; the
+- A debugger for server cells: breakpoints (F9), Ctrl+Shift+F5 to run a cell under it, conditions, hit counts and logpoints; step over, into and out; the
   call stack, variables, watch expressions and a debug console.
 - The same from the terminal and for agents: `nimbo debug set-breakpoint`, `stack`, `scope`, `evaluate`, `resume`,
   and the matching MCP tools.
@@ -261,7 +261,7 @@ Where next: run `nimbo` with no arguments to open Home, then open one of the [ex
 
 ### Keyboard and workspace
 
-- VS Code's keys (Cmd+Shift+P, Cmd+Enter, Shift+Enter, F9, F5) and Jupyter's command-mode keys (A, B, D D, Shift+S
+- VS Code's keys (Cmd+Shift+P, Cmd+Enter, Shift+Enter, F9, and F5 while paused) and Jupyter's command-mode keys (A, B, D D, Shift+S
   for a server cell, Shift+C for a client cell), with a Keyboard Shortcuts editor (Cmd+K Cmd+S).
 - Drag cells to reorder them, give them titles, fold them, and collapse a heading's whole section.
 - Light and dark themes, several code colour themes, and settings at user and workspace scope, as in VS Code (a

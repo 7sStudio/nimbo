@@ -1,5 +1,5 @@
-// Journey: debugging a server cell as in VS Code: a click left of a line number sets a breakpoint, F5 runs the
-// selected cell and it pauses on that TypeScript line (the yellow band, the debug toolbar, Run and Debug open on the
+// Journey: debugging a server cell as in VS Code: a click left of a line number sets a breakpoint, Ctrl Shift F5 runs
+// the selected cell and it pauses on that TypeScript line (the yellow band, the debug toolbar, Run and Debug open on the
 // paused frame with its names), F11 steps into a function another cell defined (the band moves there, the call stack
 // shows both cells), Shift F11 steps back out, and F5 continues to the cell's value.
 import type { Page } from "@playwright/test";
@@ -45,7 +45,7 @@ test("a breakpoint pauses its cell's run on the TypeScript line; F11 steps into 
 
   await cell(page, 2).locator('[data-part="number"]').click();
   await page.keyboard.press("Escape");
-  await page.keyboard.press("F5");
+  await page.keyboard.press("Control+Shift+F5");
   await expect(pausedLine(page, 2)).toHaveText("const out = twice(start);");
   await expect(page.getByTestId("debug-toolbar")).toBeVisible();
   const view = panel(page, "Run and Debug");
