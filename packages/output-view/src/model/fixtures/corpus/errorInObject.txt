@@ -1,0 +1,24 @@
+view: tree (switch: tree, raw)
+summary: Object, 2 keys, 70 B
+rows:
+▾ Object
+    ok: false
+    error: Error: "nope"
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{
+  "ok": false,
+  "error": {
+    "name": "Error",
+    "message": "nope"
+  }
+}
+--- ndjson
+{"ok":false,"error":{"name":"Error","message":"nope"}}
+--- js
+{
+  ok: false,
+  error: new Error("nope"),
+}

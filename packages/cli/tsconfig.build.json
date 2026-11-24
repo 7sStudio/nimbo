@@ -1,0 +1,23 @@
+{
+  "// owns": "Emitting project of @jsnb/cli: src without tests into dist, in dependency order under tsc -b.",
+  "extends": "../../tsconfig.node.json",
+  "// development": "@jsnb/output-view/model declares its types in dist only after its rollup step; the development condition reads them from its source, which the project reference redirects to the declarations tsc -b emits first.",
+  "compilerOptions": {
+    "customConditions": ["development"],
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/fixtures/**"],
+  "references": [
+    {
+      "path": "../client/tsconfig.build.json"
+    },
+    {
+      "path": "../output-view/tsconfig.build.json"
+    },
+    {
+      "path": "../core/tsconfig.build.json"
+    }
+  ]
+}

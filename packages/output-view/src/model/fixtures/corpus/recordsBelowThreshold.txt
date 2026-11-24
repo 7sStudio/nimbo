@@ -1,0 +1,46 @@
+view: tree (switch: tree, raw)
+summary: Array, 2 items, 43 B
+rows:
+▾ Array(2)
+  ▾ 0: Object
+      id: 1
+      a: 1
+      b: 2
+    }
+  ▾ 1: Object
+      id: 2
+      c: 3
+      d: 4
+    }
+  ]
+hints:
+exports: json, ndjson, js, text, html
+--- json
+[
+  {
+    "id": 1,
+    "a": 1,
+    "b": 2
+  },
+  {
+    "id": 2,
+    "c": 3,
+    "d": 4
+  }
+]
+--- ndjson
+{"id":1,"a":1,"b":2}
+{"id":2,"c":3,"d":4}
+--- js
+[
+  {
+    id: 1,
+    a: 1,
+    b: 2,
+  },
+  {
+    id: 2,
+    c: 3,
+    d: 4,
+  },
+]

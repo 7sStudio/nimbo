@@ -1,0 +1,56 @@
+{
+  "// releases": "The releases page every artefact points at: <releases>/latest/download/<file>, <releases>/download/v<version>/<file>. install.sh carries the same default; NIMBO_INSTALL_BASE overrides it at install and upgrade time.",
+  "releases": "https://github.com/7sStudio/nimbo/releases",
+  "copyright": "Copyright 2026 7sStudio",
+  "license": "Apache-2.0",
+  "node": {
+    "version": "26.7.0",
+    "sha256": {
+      "darwin-arm64": "7ee659a7768e641bbfd5360940660b8e8fd0052f77488f365562bac522fc15d4",
+      "darwin-x64": "f279d1ed28ce57f7788bf23435d2ad7fdd7438904ad5c4d8a1081a7cde3d4b96",
+      "linux-arm64": "925aa6157dd37542d0d7f2e28b7bf61e7b39284411210b0498bc3788db4aef68",
+      "linux-x64": "bd6b6c31e377bad9ad579bed72e5bc11f4c879ac9452ad51d30e646ea3d828df"
+    }
+  },
+  "// prune": "Packages a production install carries that nothing in the app loads: DuckDB-WASM is bundled into the UI build, and the native DuckDB binding is installed on demand (nimbo sql install).",
+  "prune": ["@duckdb/duckdb-wasm", "@duckdb/node-api", "@duckdb/node-bindings"],
+  "// runtime": "Packages of which only a part runs in the app, with the dependencies that part loads: the CLI and the daemon import @jsnb/output-view's model alone, and @jsnb/ui ships its built dist.",
+  "runtime": {
+    "@jsnb/output-view": ["@jsnb/core", "@jsnb/tokens", "zod"],
+    "@jsnb/ui": []
+  },
+  "// typesAtRuntime": "Declaration files the daemon's language service reads at run time: TypeScript's own lib files and Node's types for server cells. Every other .d.ts is left out of a release.",
+  "typesAtRuntime": ["typescript", "@types/node", "undici-types"],
+  "// uiAssets": "Files the UI build copies from a package as they are (no source map names them), by file name: their package's licence goes into THIRD-PARTY-NOTICES.",
+  "uiAssets": {
+    "^duckdb-.*\\.(wasm|js)$": "@duckdb/duckdb-wasm"
+  },
+  "// licences": "The licences a bundled package may have. A package outside them, or without a licence text, fails the build unless declared: `ids` gives the SPDX id of a package whose package.json states none (its licence file says it), `texts` names where a package's licence text is when it carries none: a file under tools/release/, or the package of the same project that holds it.",
+  "licences": {
+    "allowed": [
+      "MIT",
+      "ISC",
+      "BSD-2-Clause",
+      "BSD-3-Clause",
+      "Apache-2.0",
+      "0BSD",
+      "OFL-1.1",
+      "MPL-2.0",
+      "BlueOak-1.0.0",
+      "CC0-1.0",
+      "Unlicense",
+      "Zlib",
+      "Python-2.0"
+    ],
+    "ids": {
+      "json-bignum": "MIT"
+    },
+    "texts": {
+      "@duckdb/duckdb-wasm": "licences/duckdb-wasm.txt",
+      "@esbuild/darwin-arm64": "esbuild",
+      "@esbuild/darwin-x64": "esbuild",
+      "@esbuild/linux-arm64": "esbuild",
+      "@esbuild/linux-x64": "esbuild"
+    }
+  }
+}

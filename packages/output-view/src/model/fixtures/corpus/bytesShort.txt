@@ -1,0 +1,12 @@
+view: bytes (switch: none)
+summary: bytes, 3 B
+rows:
+  bytes(3) [68 69 21]
+hints:
+exports: json, ndjson, js, text, html
+--- json
+"aGkh"
+--- ndjson
+"aGkh"
+--- js
+new Uint8Array([104, 105, 33])

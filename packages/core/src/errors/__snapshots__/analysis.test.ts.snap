@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`DefaultExport > asks for a named export 1`] = `"\`export default\` is not supported: name your export (\`export const result = …\`) so other cells and the bridge can refer to it (line 3)."`;
+
+exports[`ReservedName > names the identifier and asks for a rename 1`] = `"\`__scope\` is reserved by the notebook; rename it (line 1)."`;
+
+exports[`UnsupportedSyntax > names the construct enum and says what to do 1`] = `"Top-level enum is not supported in a cell (line 4); use a const object or a union of literal types."`;
+
+exports[`UnsupportedSyntax > names the construct export * and says what to do 1`] = `"\`export *\` is not supported in a cell (line 4); import the names first, then export them."`;
+
+exports[`UnsupportedSyntax > names the construct export from and says what to do 1`] = `"\`export … from\` is not supported in a cell (line 4); import the names first, then export them."`;
+
+exports[`UnsupportedSyntax > names the construct import require and says what to do 1`] = `"\`import x = require("p")\` is not supported in a cell (line 4); use \`import x from "p"\`."`;
+
+exports[`UnsupportedSyntax > names the construct namespace and says what to do 1`] = `"Top-level namespace is not supported in a cell (line 4); use a plain object or a separate file."`;
+
+exports[`UnsupportedSyntax > names the construct using and says what to do 1`] = `"Top-level \`using\` is not supported in a cell (line 4); call \`[Symbol.dispose]()\` yourself or register \`dispose(() => …)\`."`;

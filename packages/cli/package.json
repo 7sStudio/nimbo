@@ -1,0 +1,40 @@
+{
+  "name": "@jsnb/cli",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "bin": {
+    "nimbo": "./dist/main.js"
+  },
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@jsnb/client": "workspace:*",
+    "@jsnb/core": "workspace:*",
+    "@jsnb/mcp": "workspace:*",
+    "@jsnb/output-view": "workspace:*",
+    "@jsnb/server": "workspace:*",
+    "@jsnb/ui": "workspace:*",
+    "jsonc-parser": "^3.3.1",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@jsnb/test-daemon": "workspace:*",
+    "@jsnb/test-tools": "workspace:*",
+    "typescript": "~5.9.3"
+  }
+}

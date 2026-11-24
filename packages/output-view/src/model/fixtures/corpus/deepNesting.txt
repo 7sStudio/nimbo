@@ -1,0 +1,56 @@
+view: tree (switch: tree, raw)
+summary: Object, 1 key, 121 B, truncated
+rows:
+▾ Object
+  ▾ child: Object
+    ▸ child: Object · 1 key
+    }
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{
+  "child": {
+    "child": {
+      "child": {
+        "child": {
+          "child": {
+            "child": {
+              "child": {
+                "child": {
+                  "child": {
+                    "child": "[truncated]"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+--- ndjson
+{"child":{"child":{"child":{"child":{"child":{"child":{"child":{"child":{"child":{"child":"[truncated]"}}}}}}}}}}
+--- js
+{
+  child: {
+    child: {
+      child: {
+        child: {
+          child: {
+            child: {
+              child: {
+                child: {
+                  child: {
+                    child: undefined /* truncated */,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+}

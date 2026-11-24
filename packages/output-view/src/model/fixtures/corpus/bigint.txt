@@ -1,0 +1,12 @@
+view: primitive (switch: none)
+summary: bigint
+rows:
+  12345678901234567890n
+hints:
+exports: json, ndjson, js, text, html
+--- json
+"12345678901234567890"
+--- ndjson
+"12345678901234567890"
+--- js
+12345678901234567890n

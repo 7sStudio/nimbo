@@ -1,0 +1,14 @@
+{
+  "// owns": "Emitting project of @jsnb/query-json: src without tests into dist, in dependency order under tsc -b.",
+  "// why": "rewriteRelativeImportExtensions turns the .ts import specifiers into .js in dist.",
+  "extends": "../../tsconfig.bundler.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "rewriteRelativeImportExtensions": true,
+    "erasableSyntaxOnly": true
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/fixtures/**"],
+  "references": []
+}

@@ -1,0 +1,89 @@
+// knip: unused files, exports and dependencies per workspace (08-code-standards §1).
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "ignore": [".worktrees/**", ".agents/**", ".claude/**", ".opencode/**"],
+  "workspaces": {
+    ".": {
+      "entry": ["tools/*.mjs", "tools/boundaries.config.js", "tools/ci.sh"],
+      "project": ["tools/*.{js,mjs}", "*.{js,cjs,ts}"],
+    },
+    "packages/*": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts"],
+    },
+    // The worker entries are loaded by URL (new Worker(new URL(...))), which knip cannot follow.
+    "packages/query-json": {
+      "entry": [
+        "src/index.ts",
+        "src/worker/entry-jq-node.ts",
+        "src/worker/entry-jq-web.ts",
+        "src/worker/entry-jsonpath-node.ts",
+        "src/worker/entry-jsonpath-web.ts",
+      ],
+      "project": ["src/**/*.ts"],
+    },
+    // main.ts is the kernel child's fork entry; nothing imports it.
+    "packages/kernel-node": {
+      "entry": ["src/index.ts", "src/main.ts"],
+      "project": ["src/**/*.ts"],
+    },
+    // main.ts is the nimbo bin (package.json's bin names its dist/main.js); nothing imports it.
+    "packages/cli": {
+      "entry": ["src/index.ts", "src/main.ts"],
+      "project": ["src/**/*.ts"],
+    },
+    // main.ts is the MCP server's process entry, which `nimbo mcp` runs (its ./main export); nothing imports it.
+    "packages/mcp": {
+      "entry": ["src/index.ts", "src/main.ts"],
+      "project": ["src/**/*.ts"],
+    },
+    // main.ts, doctor.ts and sqlInstall.ts are process entries the CLI runs (the ./main, ./doctor and ./sql-install
+    // exports); nothing imports them.
+    "packages/server": {
+      "entry": ["src/index.ts", "src/main.ts", "src/doctor.ts", "src/sqlInstall.ts"],
+      "project": ["src/**/*.ts"],
+    },
+    // Entries come from the package's exports ("." and "./model"); the Vue layer's files are part of the project. The
+    // declaration roll-up's config is an entry, which knip's rollup plugin does not match by its name.
+    // zod is core's, bundled into dist with it; tailwindcss is imported from src/vue/utilities.css.
+    "packages/output-view": {
+      "entry": ["rollup.dts.config.mjs"],
+      "ignoreDependencies": ["zod", "tailwindcss"],
+      "project": ["src/**/*.ts", "src/**/*.vue"],
+    },
+    "packages/ui": {
+      "entry": [
+        "index.html",
+        "e2e/**/*.ts",
+        "src/primitives/*/*.vue",
+        "src/primitives/*/variants.ts",
+        "src/primitives/*/context.ts",
+      ],
+      "project": ["src/**/*.ts", "src/**/*.vue", "src/**/*.css", "e2e/**/*.ts", "*.ts"],
+    },
+    // The output-view test host: its tests are entries, and its fixtures and engines are the project.
+    "tests/output-view": {
+      "entry": ["*.test.ts"],
+      "project": ["*.ts", "fixtures/*.ts"],
+    },
+    // fixtures/realmPage/page.ts is the realm test page, an esbuild entry realm.ts names by path.
+    "tools/test": {
+      "entry": ["*.ts", "fixtures/realmPage/page.ts"],
+      "project": ["*.ts", "fixtures/realmPage/*.ts"],
+    },
+    "tools/test-daemon": {
+      "entry": ["index.ts"],
+      "project": ["*.ts"],
+    },
+    "tools/eslint-rules": {
+      "entry": [],
+      "project": ["*.js"],
+    },
+    // The 08 §7 gate on compiled stylesheets (its entry is package.json's export). Its tests name stylelint-use-logical in
+    // the configuration they hand Stylelint, which loads it by name; knip sees no import of it.
+    "tools/style-gate": {
+      "ignoreDependencies": ["stylelint-use-logical"],
+      "project": ["src/**/*.ts"],
+    },
+  },
+}

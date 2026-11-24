@@ -1,0 +1,107 @@
+/* The shared tokens of @jsnb/tokens for a page that owns its document, on :root.
+   Written by scripts/generate.ts from src/palette.ts and src/values.ts: change those, then run
+   `pnpm --filter @jsnb/tokens generate`; a test fails while this file differs. */
+@layer tokens {
+  :root {
+    /* the surfaces, from the ground under the panels up to the code */
+    --ground: light-dark(oklch(92.21% 0.0071 88.6), oklch(16.82% 0.0045 264.4));
+    --side: light-dark(oklch(95.48% 0.0054 95.1), oklch(20.92% 0.0061 271.1));
+    --code: light-dark(oklch(100% 0 0), oklch(25.62% 0.0098 268.3));
+    --code-2: light-dark(oklch(98.53% 0.0029 84.6), oklch(23.14% 0.0078 274.6));
+    --result: light-dark(oklch(96.71% 0.0041 91.4), oklch(21.36% 0.0061 271.1));
+    --head: light-dark(oklch(93.75% 0.0058 84.6), oklch(28.09% 0.0096 268.3));
+    --head-focus: light-dark(oklch(86.73% 0.0101 87.5), oklch(37.17% 0.0143 269.3));
+    --well: light-dark(oklch(90.66% 0.0084 91.5), oklch(30.96% 0.0111 271));
+    --grip: light-dark(oklch(81.13% 0.0103 87.5), oklch(37.93% 0.0142 269.3));
+
+    /* ink, four steps (dark --faint lighter than the design's, to pass 3:1 on --code) */
+    --fg: light-dark(oklch(20.09% 0.0081 274.5), oklch(94.37% 0.0027 286.3));
+    --fg-2: light-dark(oklch(39.81% 0.014 269.3), oklch(80.44% 0.0104 267.3));
+    --muted: light-dark(oklch(49.9% 0.0136 264.4), oklch(69.48% 0.0143 262.4));
+    --faint: light-dark(oklch(60.33% 0.0126 269.5), oklch(62% 0.016 268.4));
+
+    /* orange is the caret, Run all and a running cell: --hot as text, --fill as a surface with --fill-fg on it */
+    --hot: light-dark(oklch(52.99% 0.1713 37.7), oklch(72.61% 0.1773 42.5));
+    --fill: light-dark(oklch(58.82% 0.1928 36.9), oklch(70.25% 0.1956 40.7));
+    --fill-fg: light-dark(oklch(100% 0 0), oklch(20.09% 0.0081 274.5));
+
+    /* where a cell runs, an agent's mark, success, and red for failure alone */
+    --server: light-dark(oklch(50.48% 0.0896 179.5), oklch(76.18% 0.1128 179.8));
+    --client: light-dark(oklch(50.32% 0.204 264.1), oklch(74.73% 0.1293 264.5));
+    --md: light-dark(oklch(48.08% 0.1005 77.2), oklch(76.72% 0.1259 84.1));
+    --agent: light-dark(oklch(49.34% 0.224 287.2), oklch(72.91% 0.1556 293.6));
+    --agent-soft: light-dark(oklch(49.34% 0.224 287.2 / 15%), oklch(72.91% 0.1556 293.6 / 20%));
+    --ok: light-dark(oklch(46.75% 0.104 157.2), oklch(77.73% 0.1305 160.3));
+    --err: light-dark(oklch(50.13% 0.1783 28.7), oklch(76.81% 0.137 26.1));
+    --warn: var(--hot);
+
+    /* the deeper orange, red and green a focused cell's header takes */
+    --hot-deep: light-dark(oklch(47.07% 0.1506 38), oklch(77.23% 0.1421 44.1));
+    --err-deep: light-dark(oklch(46.43% 0.1641 28.6), oklch(76.81% 0.137 26.1));
+    --ok-deep: light-dark(oklch(43.34% 0.0958 157.3), oklch(77.73% 0.1305 160.3));
+
+    /* the floating layer (tooltips, menus' dark cards), the ink square behind a focused cell's number and the shade under a stuck header */
+    --pop: light-dark(oklch(20.09% 0.0081 274.5), oklch(34.96% 0.0141 274.5));
+    --pop-fg: oklch(100% 0 0);
+    --pop-muted: light-dark(oklch(79.2% 0.0074 268.5), oklch(82.33% 0.0073 268.5));
+    --chip: var(--fg);
+    --chip-fg: light-dark(oklch(100% 0 0), oklch(20.09% 0.0081 274.5));
+    --shade: light-dark(oklch(20.09% 0.0081 274.5 / 25%), oklch(0% 0 0 / 60%));
+
+    /* the editor: the current line's band, the indent guides, the warm selection, the find match, the brackets */
+    --line: light-dark(oklch(20.09% 0.0081 274.5 / 7%), oklch(100% 0 0 / 5%));
+    --guide: light-dark(oklch(20.09% 0.0081 274.5 / 11%), oklch(100% 0 0 / 12%));
+    --guide-on: light-dark(oklch(20.09% 0.0081 274.5 / 44%), oklch(100% 0 0 / 44%));
+    --sel: light-dark(oklch(89.89% 0.0579 48.1), oklch(41.57% 0.1073 43.1));
+    --match: light-dark(oklch(90.58% 0.0762 73.7), oklch(42.48% 0.0813 68.5));
+    --bracket-1: light-dark(oklch(47.72% 0.287 264.4), oklch(88.68% 0.1822 95.3));
+    --bracket-2: light-dark(oklch(52.68% 0.1457 143.2), oklch(70.21% 0.1813 328.7));
+    --bracket-3: light-dark(oklch(42.39% 0.1046 45.6), oklch(73.98% 0.1449 244.3));
+    --diff-removed: oklch(32.87% 0.0882 27.7);
+    --diff-added: oklch(33.28% 0.0568 160.3);
+    --diff-removed-fg: oklch(88.11% 0.0631 29.3);
+    --agent-pop: oklch(77.15% 0.1291 293.8);
+    --diff-added-fg: oklch(91.29% 0.0648 158);
+
+    /* syntax, the design's k c s n f p u */
+    --kw: light-dark(oklch(45.63% 0.2246 266.4), oklch(72.32% 0.1429 265.4));
+    --ctl: light-dark(oklch(51.28% 0.2167 325.4), oklch(74.22% 0.1432 322.6));
+    --str: light-dark(oklch(50.16% 0.1398 39), oklch(77.99% 0.1076 47.8));
+    --num: light-dark(oklch(51.27% 0.1133 159.5), oklch(79.22% 0.1204 159.7));
+    --fn: light-dark(oklch(48.23% 0.0952 84.7), oklch(82.98% 0.1138 91.8));
+    --key: light-dark(oklch(43.36% 0.141 256.9), oklch(79.5% 0.0912 250));
+    --cmt: light-dark(oklch(52.36% 0.0135 264.5), oklch(69.48% 0.0143 262.4));
+    --typ: light-dark(oklch(52.04% 0.0864 221.1), oklch(76.04% 0.1152 177.2));
+    --bool: var(--kw);
+    --nul: var(--cmt);
+    --punc: var(--fg-2);
+
+    /* a control's shadow from the ink, and the scrim behind a dialog, which dims the page in both themes */
+    --shadow: 0 1px 2px color-mix(in oklch, var(--fg) 6%, transparent);
+    --scrim: light-dark(color-mix(in oklch, var(--fg) 35%, transparent), oklch(0% 0 0 / 55%));
+
+    /* the page bundles both families (ui's theme/fonts.css); the viewer alone falls back to the system's */
+    --font: "Geist", system-ui, sans-serif;
+    --mono: "JetBrains Mono", ui-monospace, monospace;
+
+    /* type at the 16 px root: 12 px interface, 13 px code and values */
+    --text-ui: 0.75rem;
+    --text-code: 0.8125rem;
+
+    /* square corners: a cell or a card has none, a control a 2 px ease */
+    --radius-card: 0;
+    --radius-control: 0.125rem;
+    --radius-pill: 999rem;
+
+    /* motion: hover and open, the crossfade, one easing */
+    --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+    --dur: 150ms;
+    --dur-fade: 200ms;
+
+    /* the four z-index layers of 08 §7 */
+    --z-toolbar: 10;
+    --z-panel: 20;
+    --z-overlay: 30;
+    --z-toast: 40;
+  }
+}

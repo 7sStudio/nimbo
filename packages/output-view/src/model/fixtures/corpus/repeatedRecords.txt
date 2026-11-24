@@ -1,0 +1,59 @@
+view: grid (switch: tree, grid, raw)
+summary: Array, 3 rows, 2 columns, 75 B
+rows:
+▾ Array(3)
+  ▾ 0: Object
+      id: 1
+      name: "same"
+    }
+    1: [Ref → $[0]]
+  ▾ 2: Object
+      id: 2
+      name: "other"
+    }
+  ]
+grid (records, 0 omitted): id | name
+  0: 1 | "same"
+  1: 1 | "same"
+  2: 2 | "other"
+hints:
+exports: json, ndjson, csv, js, text, html
+--- json
+[
+  {
+    "id": 1,
+    "name": "same"
+  },
+  {
+    "id": 1,
+    "name": "same"
+  },
+  {
+    "id": 2,
+    "name": "other"
+  }
+]
+--- ndjson
+{"id":1,"name":"same"}
+{"id":1,"name":"same"}
+{"id":2,"name":"other"}
+--- csv
+id,name
+1,same
+1,same
+2,other
+--- js
+[
+  {
+    id: 1,
+    name: "same",
+  },
+  {
+    id: 1,
+    name: "same",
+  },
+  {
+    id: 2,
+    name: "other",
+  },
+]

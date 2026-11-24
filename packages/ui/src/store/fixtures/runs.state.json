@@ -1,0 +1,109 @@
+{
+  "start": {
+    "path": "flow.jsnb",
+    "cells": [],
+    "kernel": {
+      "state": "starting",
+      "pid": null,
+      "startedAt": null,
+      "executing": null,
+      "inspectorUrl": null
+    },
+    "realm": {
+      "attached": false,
+      "kind": null,
+      "attachedAt": null
+    },
+    "savedAt": null,
+    "dirty": false
+  },
+  "startSeq": 2,
+  "end": {
+    "path": "flow.jsnb",
+    "cells": [
+      {
+        "id": "c_m0izya",
+        "type": "server",
+        "source": "export const a = 2; a",
+        "index": 0,
+        "meta": {
+          "lastEdit": {
+            "by": "agent",
+            "client": "cli",
+            "at": "2026-11-02T15:47:04.472Z"
+          }
+        },
+        "status": "ok",
+        "stale": false,
+        "lastExecution": {
+          "id": "x_8zpeaoyx",
+          "status": "ok",
+          "startedAt": "2026-11-02T15:47:04.477Z",
+          "durationMs": 0.040582999999969616,
+          "hasError": false,
+          "defines": ["a"]
+        }
+      },
+      {
+        "id": "c_mpfzgh",
+        "type": "server",
+        "source": "a + 1",
+        "index": 1,
+        "meta": {
+          "lastEdit": {
+            "by": "agent",
+            "client": "cli",
+            "at": "2026-11-02T15:47:04.205Z"
+          }
+        },
+        "status": "ok",
+        "stale": false,
+        "lastExecution": {
+          "id": "x_oxux41va",
+          "status": "ok",
+          "startedAt": "2026-11-02T15:47:04.478Z",
+          "durationMs": 0.02237499999995407,
+          "hasError": false,
+          "defines": []
+        }
+      },
+      {
+        "id": "c_njr6pg",
+        "type": "server",
+        "source": "throw new TypeError('boom')",
+        "index": 2,
+        "meta": {
+          "lastEdit": {
+            "by": "agent",
+            "client": "cli",
+            "at": "2026-11-02T15:47:04.467Z"
+          }
+        },
+        "status": "error",
+        "stale": false,
+        "lastExecution": {
+          "id": "x_vixp5oy4",
+          "status": "error",
+          "startedAt": "2026-11-02T15:47:04.478Z",
+          "durationMs": 0.045083000000033735,
+          "hasError": true,
+          "defines": []
+        }
+      }
+    ],
+    "kernel": {
+      "state": "idle",
+      "pid": 98847,
+      "startedAt": "2026-11-02T15:47:04.453Z",
+      "executing": null,
+      "inspectorUrl": "ws://127.0.0.1:54749/4c38254f-efb6-41b9-9bb9-20788d29c2c3"
+    },
+    "realm": {
+      "attached": false,
+      "kind": null,
+      "attachedAt": null
+    },
+    "savedAt": "2026-11-02T15:47:04.313Z",
+    "dirty": true
+  }
+}

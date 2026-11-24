@@ -1,0 +1,39 @@
+{
+  "start": {
+    "path": "flow.jsnb",
+    "cells": [],
+    "kernel": {
+      "state": "starting",
+      "pid": null,
+      "startedAt": null,
+      "executing": null,
+      "inspectorUrl": null
+    },
+    "realm": {
+      "attached": false,
+      "kind": null,
+      "attachedAt": null
+    },
+    "savedAt": null,
+    "dirty": false
+  },
+  "startSeq": 2,
+  "end": {
+    "path": "flow.jsnb",
+    "cells": [],
+    "kernel": {
+      "state": "starting",
+      "pid": null,
+      "startedAt": null,
+      "executing": null,
+      "inspectorUrl": null
+    },
+    "realm": {
+      "attached": false,
+      "kind": null,
+      "attachedAt": null
+    },
+    "savedAt": "2026-11-02T15:47:06.352Z",
+    "dirty": false
+  }
+}

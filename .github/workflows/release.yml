@@ -1,0 +1,83 @@
+# Release: on a tag v<version>, build the tarball of every target on its own runner, smoke-test each (install with
+# curl | sh from a local server, nimbo doctor, a notebook run headless, uninstall), then attach the tarballs with
+# manifest.json, SHA256SUMS, install.sh and the Homebrew formula to a draft GitHub release, which the owner publishes.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: darwin-arm64, runner: macos-15 }
+          - { target: darwin-x64, runner: macos-15-intel }
+          - { target: linux-x64, runner: ubuntu-24.04 }
+          - { target: linux-arm64, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 26.7.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Version
+        id: version
+        run: |
+          version=$(node -e 'import("./packages/core/src/product.ts").then((m) => console.log(m.productVersion))')
+          if [ "${GITHUB_REF_TYPE}" = tag ] && [ "${GITHUB_REF_NAME}" != "v${version}" ]; then
+            echo "tag ${GITHUB_REF_NAME} is not core's version v${version}" >&2
+            exit 1
+          fi
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+      - name: Build
+        run: node tools/release/build.mjs --target ${{ matrix.target }}
+      - name: Smoke test
+        run: bash tools/release/check.sh smoke .release ${{ steps.version.outputs.version }}
+      - uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          name: nimbo-${{ matrix.target }}
+          path: |
+            .release/download/v${{ steps.version.outputs.version }}/nimbo-*-${{ matrix.target }}.tar.gz
+            .release/download/v${{ steps.version.outputs.version }}/nimbo-*-${{ matrix.target }}.json
+          if-no-files-found: error
+
+  release:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5.0.0
+        with:
+          node-version: 26.7.0
+      - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          path: assets
+          merge-multiple: true
+      - name: Manifest, checksums, installer and formula
+        run: node tools/release/manifest.mjs assets
+      - name: Draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          cd assets
+          gh release create "${GITHUB_REF_NAME}" --draft --title "nimbo ${GITHUB_REF_NAME#v}" \
+            --notes "Install: curl -fsSL https://github.com/7sStudio/nimbo/releases/latest/download/install.sh | sh" \
+            nimbo-*.tar.gz manifest.json SHA256SUMS install.sh nimbo.rb

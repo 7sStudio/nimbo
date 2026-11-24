@@ -1,0 +1,12 @@
+view: primitive (switch: none)
+summary: number
+rows:
+  1000000000
+hints:
+exports: json, ndjson, js, text, html
+--- json
+1000000000
+--- ndjson
+1000000000
+--- js
+1000000000

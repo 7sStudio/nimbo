@@ -1,0 +1,6 @@
+{
+  "// owns": "Full project of @jsnb/style-gate (the gate, its rules and their tests) for typecheck, lint and editors; emits nothing.",
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": { "noEmit": true },
+  "include": ["src"]
+}

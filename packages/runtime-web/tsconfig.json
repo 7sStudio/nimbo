@@ -1,0 +1,13 @@
+{
+  "// owns": "Full project of @jsnb/runtime-web (sources and tests) for typecheck, lint and editors; emits nothing.",
+  "extends": "../../tsconfig.bundler.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["src"],
+  "references": [
+    {
+      "path": "../core/tsconfig.build.json"
+    }
+  ]
+}

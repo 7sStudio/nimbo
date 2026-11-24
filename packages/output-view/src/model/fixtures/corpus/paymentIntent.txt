@@ -1,0 +1,71 @@
+view: tree (switch: tree, raw)
+summary: Object, 10 keys, 340 B
+rows:
+▾ Object
+    id: "pi_3Q4fK2Lk9XyT1a0b"
+    object: "payment_intent"
+    amount: 2000
+    currency: "usd"
+    customer: "cus_Nq2vT8"
+    status: "requires_payment_method"
+  ▾ metadata: Object
+      order: "A-1042"
+      source: "notebook"
+    }
+  ▾ payment_method_options: Object
+    ▸ card: Object · 1 key
+      link: null
+      us_bank_account: null
+    }
+    created: 1760105124
+    livemode: false
+  }
+hints:
+  $.created: time (seconds) 2025-10-10 16:05:24 · 1 y ago
+exports: json, ndjson, js, text, html
+--- json
+{
+  "id": "pi_3Q4fK2Lk9XyT1a0b",
+  "object": "payment_intent",
+  "amount": 2000,
+  "currency": "usd",
+  "customer": "cus_Nq2vT8",
+  "status": "requires_payment_method",
+  "metadata": {
+    "order": "A-1042",
+    "source": "notebook"
+  },
+  "payment_method_options": {
+    "card": {
+      "request_three_d_secure": "automatic"
+    },
+    "link": null,
+    "us_bank_account": null
+  },
+  "created": 1760105124,
+  "livemode": false
+}
+--- ndjson
+{"id":"pi_3Q4fK2Lk9XyT1a0b","object":"payment_intent","amount":2000,"currency":"usd","customer":"cus_Nq2vT8","status":"requires_payment_method","metadata":{"order":"A-1042","source":"notebook"},"payment_method_options":{"card":{"request_three_d_secure":"automatic"},"link":null,"us_bank_account":null},"created":1760105124,"livemode":false}
+--- js
+{
+  id: "pi_3Q4fK2Lk9XyT1a0b",
+  object: "payment_intent",
+  amount: 2000,
+  currency: "usd",
+  customer: "cus_Nq2vT8",
+  status: "requires_payment_method",
+  metadata: {
+    order: "A-1042",
+    source: "notebook",
+  },
+  payment_method_options: {
+    card: {
+      request_three_d_secure: "automatic",
+    },
+    link: null,
+    us_bank_account: null,
+  },
+  created: 1760105124,
+  livemode: false,
+}

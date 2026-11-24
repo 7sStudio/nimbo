@@ -1,0 +1,43 @@
+/* Injected into every journey screenshot (world.ts): CodeMirror draws its own blinking cursor, which Playwright's caret
+   option does not hide. */
+[class~="cm-cursorLayer"] {
+  visibility: hidden;
+}
+
+/* Durations and running times are masked (world.ts shot); one width for every figure, the widest ("under 0.1 ms") included,
+   keeps the text around them still. */
+[data-part="duration"],
+[data-part="took"],
+[data-testid="cell-elapsed"] {
+  display: inline-block;
+  min-inline-size: 12ch;
+}
+
+/* The Home page's per-run figures are masked too (home.ts homeShot): a busy kernel's elapsed time grows a digit at ten
+   seconds, so it takes one box whatever it reads, and the mask over it and the text beside it sit where the baseline
+   has them. */
+[data-testid="running-elapsed"] {
+  display: inline-block;
+  min-inline-size: 12ch;
+}
+
+/* The Agent view's rows say when an agent made the edit, which is masked (world.ts shot): one box whatever the date
+   reads, so the mask and the row's height stay where the baseline has them. */
+[data-part="edit"] {
+  display: block;
+  overflow: hidden;
+  inline-size: 9rem;
+  white-space: nowrap;
+}
+
+/* The Bridge's last call says when it was and how long it took, masked (world.ts shot): one box whatever it reads. */
+[data-part="last-call"] {
+  display: block;
+  inline-size: 9rem;
+}
+
+/* The command center's unsaved-changes dot follows autosave's delay (files.autoSave): whether a shot catches it
+   is a matter of timing, so shots never show it; journeys assert it by its test id where it matters. */
+[data-testid="dirty"] {
+  visibility: hidden;
+}

@@ -1,0 +1,139 @@
+view: grid (switch: tree, grid, raw)
+summary: Array, 3 rows, 6 columns, 507 B
+rows:
+▾ Array(3)
+  ▾ 0: Object
+      id: "evt_1"
+      object: "event"
+      type: "charge.succeeded"
+      created: 1760103669
+      livemode: false
+    ▸ data: Object · 1 key
+    }
+  ▾ 1: Object
+      id: "evt_2"
+      object: "event"
+      type: "customer.created"
+      created: 1760101960
+      livemode: false
+    ▸ data: Object · 1 key
+    }
+  ▾ 2: Object
+      id: "evt_3"
+      object: "event"
+      type: "invoice.paid"
+      created: 1760100168
+      livemode: false
+    ▸ data: Object · 1 key
+    }
+  ]
+grid (records, 0 omitted): id | object | type | created | livemode | data
+  0: "evt_1" | "event" | "charge.succeeded" | 1760103669 | false | { object: {…} }
+  1: "evt_2" | "event" | "customer.created" | 1760101960 | false | { object: {…} }
+  2: "evt_3" | "event" | "invoice.paid" | 1760100168 | false | { object: {…} }
+hints:
+  $[0].created: time (seconds) 2025-10-10 15:41:09 · 1 y ago
+  $[1].created: time (seconds) 2025-10-10 15:12:40 · 1 y ago
+  $[2].created: time (seconds) 2025-10-10 14:42:48 · 1 y ago
+exports: json, ndjson, csv, js, text, html
+--- json
+[
+  {
+    "id": "evt_1",
+    "object": "event",
+    "type": "charge.succeeded",
+    "created": 1760103669,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "ch_1",
+        "object": "charge",
+        "amount": 2000,
+        "paid": true
+      }
+    }
+  },
+  {
+    "id": "evt_2",
+    "object": "event",
+    "type": "customer.created",
+    "created": 1760101960,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "cus_1",
+        "object": "customer",
+        "email": "user1@example.com"
+      }
+    }
+  },
+  {
+    "id": "evt_3",
+    "object": "event",
+    "type": "invoice.paid",
+    "created": 1760100168,
+    "livemode": false,
+    "data": {
+      "object": {
+        "id": "in_1",
+        "object": "invoice",
+        "total": 12900
+      }
+    }
+  }
+]
+--- ndjson
+{"id":"evt_1","object":"event","type":"charge.succeeded","created":1760103669,"livemode":false,"data":{"object":{"id":"ch_1","object":"charge","amount":2000,"paid":true}}}
+{"id":"evt_2","object":"event","type":"customer.created","created":1760101960,"livemode":false,"data":{"object":{"id":"cus_1","object":"customer","email":"user1@example.com"}}}
+{"id":"evt_3","object":"event","type":"invoice.paid","created":1760100168,"livemode":false,"data":{"object":{"id":"in_1","object":"invoice","total":12900}}}
+--- csv
+id,object,type,created,livemode,data
+evt_1,event,charge.succeeded,1760103669,false,"{""object"":{""id"":""ch_1"",""object"":""charge"",""amount"":2000,""paid"":true}}"
+evt_2,event,customer.created,1760101960,false,"{""object"":{""id"":""cus_1"",""object"":""customer"",""email"":""user1@example.com""}}"
+evt_3,event,invoice.paid,1760100168,false,"{""object"":{""id"":""in_1"",""object"":""invoice"",""total"":12900}}"
+--- js
+[
+  {
+    id: "evt_1",
+    object: "event",
+    type: "charge.succeeded",
+    created: 1760103669,
+    livemode: false,
+    data: {
+      object: {
+        id: "ch_1",
+        object: "charge",
+        amount: 2000,
+        paid: true,
+      },
+    },
+  },
+  {
+    id: "evt_2",
+    object: "event",
+    type: "customer.created",
+    created: 1760101960,
+    livemode: false,
+    data: {
+      object: {
+        id: "cus_1",
+        object: "customer",
+        email: "user1@example.com",
+      },
+    },
+  },
+  {
+    id: "evt_3",
+    object: "event",
+    type: "invoice.paid",
+    created: 1760100168,
+    livemode: false,
+    data: {
+      object: {
+        id: "in_1",
+        object: "invoice",
+        total: 12900,
+      },
+    },
+  },
+]

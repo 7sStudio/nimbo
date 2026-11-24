@@ -1,0 +1,13 @@
+{
+  "// owns": "Emitting project of @jsnb/query-sql: src without tests and fixtures into dist, in dependency order under tsc -b.",
+  "extends": "../../tsconfig.bundler.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist",
+    "types": ["vite/client", "node"],
+    "rewriteRelativeImportExtensions": true
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/fixtures/**"],
+  "references": []
+}

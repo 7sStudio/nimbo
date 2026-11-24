@@ -1,0 +1,20 @@
+{
+  "// owns": "Full project of @jsnb/server (sources, tests and fixtures) for typecheck, lint and editors; emits nothing.",
+  "extends": "../../tsconfig.node.json",
+  "// development": "@jsnb/output-view/model declares its types in dist only after its rollup step; the development condition reads them from its source, which the project reference redirects to the declarations tsc -b emits first (as cli's).",
+  "compilerOptions": {
+    "customConditions": ["development"],
+    "noEmit": true
+  },
+  "include": ["src"],
+  "references": [
+    { "path": "../core/tsconfig.build.json" },
+    { "path": "../transform/tsconfig.build.json" },
+    { "path": "../language/tsconfig.build.json" },
+    { "path": "../kernel-node/tsconfig.build.json" },
+    { "path": "../query-json/tsconfig.build.json" },
+    { "path": "../query-sql/tsconfig.build.json" },
+    { "path": "../output-view/tsconfig.build.json" },
+    { "path": "../../tools/test/tsconfig.build.json" }
+  ]
+}

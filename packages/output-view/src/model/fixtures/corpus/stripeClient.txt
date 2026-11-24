@@ -1,0 +1,27 @@
+view: tree (switch: tree, raw)
+summary: Stripe, object, 2 keys, 100 B
+rows:
+▾ Stripe
+    apiVersion: "2026-09-30"
+  ▾ resources: Resources
+      paymentIntents: {}
+    }
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{
+  "apiVersion": "2026-09-30",
+  "resources": {
+    "paymentIntents": {}
+  }
+}
+--- ndjson
+{"apiVersion":"2026-09-30","resources":{"paymentIntents":{}}}
+--- js
+/* Stripe */ {
+  apiVersion: "2026-09-30",
+  resources: /* Resources */ {
+    paymentIntents: {},
+  },
+}

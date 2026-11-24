@@ -1,0 +1,12 @@
+{
+  "// owns": "Full project of @jsnb/query-json (sources and tests) for typecheck, lint and editors; emits nothing.",
+  "// why": "Relative imports name the .ts file: the Node worker entry runs from src with Node's type stripping in tests.",
+  "extends": "../../tsconfig.bundler.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "rewriteRelativeImportExtensions": true,
+    "erasableSyntaxOnly": true
+  },
+  "include": ["src"],
+  "references": []
+}

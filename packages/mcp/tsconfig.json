@@ -1,0 +1,22 @@
+{
+  "// owns": "Full project of @jsnb/mcp (sources, tests and fixtures) for typecheck, lint and editors; emits nothing.",
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["src"],
+  "references": [
+    {
+      "path": "../client/tsconfig.build.json"
+    },
+    {
+      "path": "../core/tsconfig.build.json"
+    },
+    {
+      "path": "../../tools/test/tsconfig.build.json"
+    },
+    {
+      "path": "../../tools/test-daemon/tsconfig.build.json"
+    }
+  ]
+}

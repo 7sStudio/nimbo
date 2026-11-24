@@ -1,0 +1,27 @@
+view: tree (switch: tree, raw)
+summary: Array, 1 item, 24 B
+rows:
+▾ Array(1)
+  ▾ 0: Object
+      id: 1
+      name: "only"
+    }
+  ]
+hints:
+exports: json, ndjson, js, text, html
+--- json
+[
+  {
+    "id": 1,
+    "name": "only"
+  }
+]
+--- ndjson
+{"id":1,"name":"only"}
+--- js
+[
+  {
+    id: 1,
+    name: "only",
+  },
+]

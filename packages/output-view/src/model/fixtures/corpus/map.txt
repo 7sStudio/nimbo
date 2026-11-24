@@ -1,0 +1,27 @@
+view: tree (switch: tree, raw)
+summary: Map, 2 entries, 57 B
+rows:
+▾ Map(2)
+    "a" => 1
+  ▾ "b" => Object
+      nested: true
+    }
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{
+  "a": 1,
+  "b": {
+    "nested": true
+  }
+}
+--- ndjson
+{"a":1,"b":{"nested":true}}
+--- js
+new Map([
+  ["a", 1],
+  ["b", {
+    nested: true,
+  }],
+])

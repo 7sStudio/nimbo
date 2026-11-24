@@ -1,0 +1,23 @@
+{
+  "// owns": "The build solution: every package's emitting project (src without tests) in dependency order; `tsc -b tsconfig.build.json`.",
+  "files": [],
+  "references": [
+    { "path": "packages/core/tsconfig.build.json" },
+    { "path": "packages/tokens/tsconfig.build.json" },
+    { "path": "packages/transform/tsconfig.build.json" },
+    { "path": "packages/language/tsconfig.build.json" },
+    { "path": "packages/kernel-node/tsconfig.build.json" },
+    { "path": "packages/runtime-web/tsconfig.build.json" },
+    { "path": "packages/server/tsconfig.build.json" },
+    { "path": "packages/client/tsconfig.build.json" },
+    { "path": "packages/output-view/tsconfig.build.json" },
+    { "path": "packages/query-json/tsconfig.build.json" },
+    { "path": "packages/query-sql/tsconfig.build.json" },
+    { "path": "packages/ui/tsconfig.build.json" },
+    { "path": "packages/cli/tsconfig.build.json" },
+    { "path": "packages/mcp/tsconfig.build.json" },
+    { "path": "tools/test/tsconfig.build.json" },
+    { "path": "tools/test-daemon/tsconfig.build.json" },
+    { "path": "tools/style-gate/tsconfig.build.json" }
+  ]
+}

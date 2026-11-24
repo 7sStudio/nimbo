@@ -1,0 +1,2 @@
+/* The views' styles as "@jsnb/output-view/style.css" resolves them under the development condition: empty, because
+   Vite injects each component's <style> in development; a build writes the real ones to dist/style.css. */

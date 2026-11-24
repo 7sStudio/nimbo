@@ -1,0 +1,15 @@
+{
+  "// owns": "Emitting project of @jsnb/runtime-web: src without tests into dist, in dependency order under tsc -b.",
+  "extends": "../../tsconfig.bundler.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/fixtures/**"],
+  "references": [
+    {
+      "path": "../core/tsconfig.build.json"
+    }
+  ]
+}

@@ -1,0 +1,90 @@
+// What a generated command prints (03-api §8): its output verbatim as one JSON document under --json, else a reading
+// of it: runs as the page shows them, a cell as a line, anything else as an outline; and exit 1 when a run failed.
+import { Cell, Execution } from "@jsnb/core";
+import { z } from "zod";
+
+import type { ExitCode } from "../errors/exit.js";
+import { exitCodes } from "../errors/exit.js";
+import { outline } from "./outline.js";
+import { executionText, runLineLimit } from "./outputs.js";
+import { firstLine } from "./table.js";
+
+const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+/** The runs an output carries: `execution` (cell.run, cell.add, cell.outputs) or `executions` (notebook.run). */
+function executionsOf(output: unknown): readonly Execution[] {
+  if (!isRecord(output)) return [];
+  const one = output.execution;
+  const many = output.executions;
+  const list: unknown[] = Array.isArray(many)
+    ? many
+    : one === undefined || one === null
+      ? []
+      : [one];
+  return list.flatMap((execution) => {
+    const parsed = Execution.safeParse(execution);
+    return parsed.success ? [parsed.data] : [];
+  });
+}
+
+/** `c_a1b2c3 server ok · export const n = 41`. */
+const cellLine = (cell: Cell): string =>
+  `${cell.id} ${cell.type} ${cell.status}${cell.stale ? " stale" : ""} · ${firstLine(cell.source, 60)}\n`;
+
+const skippedSchema = z.object({
+  skipped: z.array(z.object({ cell: z.string(), code: z.string() })),
+});
+
+/** The outline of an output, or Done. for an empty one ({}): the command did what it said. */
+const outlined = (output: unknown): string => {
+  const text = outline(output);
+  return text === "" ? "Done.\n" : text;
+};
+
+/** The cells notebook.run left to a page (`skipped`), one line each; undefined when the output has no such list. */
+function skippedNotes(output: unknown): readonly string[] | undefined {
+  const skipped = skippedSchema.safeParse(output);
+  if (!skipped.success) return undefined;
+  const lines = skipped.data.skipped.map(
+    (entry) => `${entry.cell} skipped: ${entry.code} (no page is attached to run it)\n`,
+  );
+  // what to do about it, once: client cells run in the notebook's page
+  return lines.length === 0
+    ? lines
+    : [
+        ...lines,
+        "Client cells run in the page: nimbo open <notebook> attaches one, then run them again.\n",
+      ];
+}
+
+/** The line of the cell an output names (`cell`), or "" when it names none. */
+function cellHead(output: unknown): string {
+  const cell = isRecord(output) ? Cell.safeParse(output.cell) : undefined;
+  return cell?.success === true ? cellLine(cell.data) : "";
+}
+
+/** The commands that run cells (03-api §8: exit 1 is for them): cell.add runs only with `run`, else it has no run. */
+const runCommands = new Set(["cell.run", "notebook.run", "cell.add"]);
+
+function readable(name: string, output: unknown): string {
+  const runs = executionsOf(output);
+  if (name === "cell.outputs" && runs.length === 0) return "The cell has not run yet.\n";
+  const notes = skippedNotes(output);
+  const head = cellHead(output);
+  if (runs.length === 0 && head === "" && notes === undefined) return outlined(output);
+  // a run prints the first lines of each output; reading them (cell.outputs) prints them all
+  const limit = runCommands.has(name) ? runLineLimit : undefined;
+  const text = [head, ...runs.map((run) => executionText(run, limit)), ...(notes ?? [])].join("");
+  return text === "" ? "Done.\n" : text; // notebook.run of a selection with no cell in it
+}
+
+/** The text a command's output prints. */
+export const resultText = (name: string, output: unknown, asJson: boolean): string =>
+  asJson ? `${JSON.stringify(output)}\n` : readable(name, output);
+
+/** 1 when a run the command made ended in error (03-api §8), else 0; reading a failed run (cell.outputs) is 0. */
+export const resultExit = (name: string, output: unknown): ExitCode =>
+  runCommands.has(name) && executionsOf(output).some((execution) => execution.status === "error")
+    ? exitCodes.runError
+    : exitCodes.ok;

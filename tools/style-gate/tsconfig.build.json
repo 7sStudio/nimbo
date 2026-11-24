@@ -1,0 +1,7 @@
+{
+  "// owns": "Emitting project of @jsnb/style-gate: src without tests and fixtures into dist, which a package's contract test reads through its types.",
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": { "rootDir": "src", "outDir": "dist" },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/fixtures"]
+}

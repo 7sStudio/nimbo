@@ -1,0 +1,13 @@
+{
+  "// owns": "The shared test fixtures at the repository root (09-testing §8) as one project: tsc -b checks them, ESLint finds them, and the packages whose tests import them reference this project for their declarations.",
+  "extends": "../tsconfig.bundler.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "declarationDir": "dist",
+    "emitDeclarationOnly": true,
+    "rewriteRelativeImportExtensions": true,
+    "erasableSyntaxOnly": true
+  },
+  "include": ["**/*.ts"],
+  "exclude": ["dist"]
+}

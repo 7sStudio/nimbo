@@ -1,0 +1,1004 @@
+[
+  {
+    "name": "string",
+    "source": "\"hello\"",
+    "json": "hello",
+    "repr": "'hello'",
+    "truncated": false
+  },
+  {
+    "name": "emptyString",
+    "source": "\"\"",
+    "json": "",
+    "repr": "''",
+    "truncated": false
+  },
+  {
+    "name": "stringWithEscapes",
+    "source": "\"line one\\nline \\\"two\\\"\\ttab\"",
+    "json": "line one\nline \"two\"\ttab",
+    "repr": "'line one\\nline \"two\"\\ttab'",
+    "truncated": false
+  },
+  {
+    "name": "url",
+    "source": "\"https://dashboard.stripe.com/test/payments/pi_3Q4fK2\"",
+    "json": "https://dashboard.stripe.com/test/payments/pi_3Q4fK2",
+    "repr": "'https://dashboard.stripe.com/test/payments/pi_3Q4fK2'",
+    "truncated": false
+  },
+  {
+    "name": "jsonString",
+    "source": "'{\"type\":\"invoice.paid\",\"id\":\"evt_1Q4eZ1\",\"data\":{\"object\":{\"amount_paid\":12900,\"$type\":\"x\"}}}'",
+    "json": "{\"type\":\"invoice.paid\",\"id\":\"evt_1Q4eZ1\",\"data\":{\"object\":{\"amount_paid\":12900,\"$type\":\"x\"}}}",
+    "repr": "'{\"type\":\"invoice.paid\",\"id\":\"evt_1Q4eZ1\",\"data\":{\"object\":{\"amount_paid\":12900,\"$type\":\"x\"}}}'",
+    "truncated": false
+  },
+  {
+    "name": "jsonArrayString",
+    "source": "\"[1, 2, 3]\"",
+    "json": "[1, 2, 3]",
+    "repr": "'[1, 2, 3]'",
+    "truncated": false
+  },
+  {
+    "name": "notJsonString",
+    "source": "\"{not json}\"",
+    "json": "{not json}",
+    "repr": "'{not json}'",
+    "truncated": false
+  },
+  {
+    "name": "longString",
+    "source": "\"-----BEGIN CERTIFICATE-----\\n\" + \"MIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJ\".repeat(39)",
+    "json": "-----BEGIN CERTIFICATE-----\nMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJ",
+    "repr": "'-----BEGIN CERTIFICATE-----\\n' +\n  'MIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJMIIDdzCCAl+gAwIBAgIEAgAA'... 2024 more characters",
+    "truncated": false
+  },
+  {
+    "name": "isoDateString",
+    "source": "\"2026-10-10T14:02:11.000Z\"",
+    "json": "2026-10-10T14:02:11.000Z",
+    "repr": "'2026-10-10T14:02:11.000Z'",
+    "truncated": false
+  },
+  {
+    "name": "localDateString",
+    "source": "\"2026-10-10 14:05:24\"",
+    "json": "2026-10-10 14:05:24",
+    "repr": "'2026-10-10 14:05:24'",
+    "truncated": false
+  },
+  {
+    "name": "integer",
+    "source": "124500",
+    "json": 124500,
+    "repr": "124500",
+    "truncated": false
+  },
+  {
+    "name": "float",
+    "source": "1.5",
+    "json": 1.5,
+    "repr": "1.5",
+    "truncated": false
+  },
+  {
+    "name": "negative",
+    "source": "-42",
+    "json": -42,
+    "repr": "-42",
+    "truncated": false
+  },
+  {
+    "name": "unixSeconds",
+    "source": "1760105124",
+    "json": 1760105124,
+    "repr": "1760105124",
+    "truncated": false
+  },
+  {
+    "name": "unixMillis",
+    "source": "1760105124000",
+    "json": 1760105124000,
+    "repr": "1760105124000",
+    "truncated": false
+  },
+  {
+    "name": "oldUnixSeconds",
+    "source": "1000000000",
+    "json": 1000000000,
+    "repr": "1000000000",
+    "truncated": false
+  },
+  {
+    "name": "elevenDigits",
+    "source": "12345678901",
+    "json": 12345678901,
+    "repr": "12345678901",
+    "truncated": false
+  },
+  {
+    "name": "true",
+    "source": "true",
+    "json": true,
+    "repr": "true",
+    "truncated": false
+  },
+  {
+    "name": "false",
+    "source": "false",
+    "json": false,
+    "repr": "false",
+    "truncated": false
+  },
+  {
+    "name": "null",
+    "source": "null",
+    "json": null,
+    "repr": "null",
+    "truncated": false
+  },
+  {
+    "name": "nan",
+    "source": "NaN",
+    "json": {
+      "$type": "number",
+      "value": "NaN"
+    },
+    "repr": "NaN",
+    "truncated": false
+  },
+  {
+    "name": "infinity",
+    "source": "Infinity",
+    "json": {
+      "$type": "number",
+      "value": "Infinity"
+    },
+    "repr": "Infinity",
+    "truncated": false
+  },
+  {
+    "name": "negativeInfinity",
+    "source": "-Infinity",
+    "json": {
+      "$type": "number",
+      "value": "-Infinity"
+    },
+    "repr": "-Infinity",
+    "truncated": false
+  },
+  {
+    "name": "negativeZero",
+    "source": "-0",
+    "json": {
+      "$type": "number",
+      "value": "-0"
+    },
+    "repr": "-0",
+    "truncated": false
+  },
+  {
+    "name": "bigint",
+    "source": "12345678901234567890n",
+    "json": {
+      "$type": "bigint",
+      "value": "12345678901234567890"
+    },
+    "repr": "12345678901234567890n",
+    "truncated": false
+  },
+  {
+    "name": "date",
+    "source": "new Date(\"2026-10-10T14:02:11.000Z\")",
+    "json": {
+      "$type": "date",
+      "iso": "2026-10-10T14:02:11.000Z"
+    },
+    "repr": "2026-10-10T14:02:11.000Z",
+    "truncated": false
+  },
+  {
+    "name": "invalidDate",
+    "source": "new Date(NaN)",
+    "json": {
+      "$type": "date",
+      "iso": null
+    },
+    "repr": "Invalid Date",
+    "truncated": false
+  },
+  {
+    "name": "regexp",
+    "source": "/^pi_/i",
+    "json": {
+      "$type": "regexp",
+      "source": "^pi_",
+      "flags": "i"
+    },
+    "repr": "/^pi_/i",
+    "truncated": false
+  },
+  {
+    "name": "function",
+    "source": "(function createIntent(amount) { return amount; })",
+    "json": {
+      "$type": "function",
+      "name": "createIntent"
+    },
+    "repr": "[Function: createIntent]",
+    "truncated": false
+  },
+  {
+    "name": "asyncFunction",
+    "source": "(async function createIntent(amount) { return amount; })",
+    "json": {
+      "$type": "function",
+      "name": "createIntent"
+    },
+    "repr": "[AsyncFunction: createIntent]",
+    "truncated": false
+  },
+  {
+    "name": "arrowFunction",
+    "source": "(() => 1)",
+    "json": {
+      "$type": "function",
+      "name": ""
+    },
+    "repr": "[Function (anonymous)]",
+    "truncated": false
+  },
+  {
+    "name": "error",
+    "source": "(() => { const error = new TypeError(\"Cannot read properties of undefined (reading 'email')\"); error.stack = String(error); return error; })()",
+    "json": {
+      "$type": "error",
+      "name": "TypeError",
+      "message": "Cannot read properties of undefined (reading 'email')"
+    },
+    "repr": "[TypeError: Cannot read properties of undefined (reading 'email')]",
+    "truncated": false
+  },
+  {
+    "name": "errorInObject",
+    "source": "(() => { const error = new Error(\"nope\"); error.stack = String(error); return { ok: false, error }; })()",
+    "json": {
+      "ok": false,
+      "error": {
+        "$type": "error",
+        "name": "Error",
+        "message": "nope"
+      }
+    },
+    "repr": "{ ok: false, error: [Error: nope] }",
+    "truncated": false
+  },
+  {
+    "name": "bytes",
+    "source": "new Uint8Array([0x1f, 0x8b, 0x08, 0, 0, 0, 0, 0, 0, 3, 0xcb, 0x48, 0xcd, 0xc9, 0xc9, 0x07])",
+    "json": {
+      "$type": "bytes",
+      "length": 16,
+      "base64": "H4sIAAAAAAAAA8tIzcnJBw=="
+    },
+    "repr": "Uint8Array(16) [\n   31, 139,   8, 0,   0,  0,\n    0,   0,   0, 3, 203, 72,\n  205, 201, 201, 7\n]",
+    "truncated": false
+  },
+  {
+    "name": "bytesShort",
+    "source": "new Uint8Array([104, 105, 33])",
+    "json": {
+      "$type": "bytes",
+      "length": 3,
+      "base64": "aGkh"
+    },
+    "repr": "Uint8Array(3) [ 104, 105, 33 ]",
+    "truncated": false
+  },
+  {
+    "name": "emptyBytes",
+    "source": "new Uint8Array(0)",
+    "json": {
+      "$type": "bytes",
+      "length": 0,
+      "base64": ""
+    },
+    "repr": "Uint8Array(0) []",
+    "truncated": false
+  },
+  {
+    "name": "arrayBuffer",
+    "source": "new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]).buffer",
+    "json": {
+      "$type": "bytes",
+      "length": 10,
+      "base64": "AQIDBAUGBwgJCg=="
+    },
+    "repr": "ArrayBuffer {\n  [Uint8Contents]: <01 02 03 04 05 06 07 08 09 0a>,\n  [byteLength]: 10\n}",
+    "truncated": false
+  },
+  {
+    "name": "buffer",
+    "source": "Buffer.from(\"hello world\")",
+    "json": {
+      "$type": "bytes",
+      "length": 11,
+      "base64": "aGVsbG8gd29ybGQ="
+    },
+    "repr": "<Buffer 68 65 6c 6c 6f 20 77 6f 72 6c 64>",
+    "truncated": false
+  },
+  {
+    "name": "paymentIntent",
+    "source": "({ id: \"pi_3Q4fK2Lk9XyT1a0b\", object: \"payment_intent\", amount: 2000, currency: \"usd\", customer: \"cus_Nq2vT8\", status: \"requires_payment_method\", metadata: { order: \"A-1042\", source: \"notebook\" }, payment_method_options: { card: { request_three_d_secure: \"automatic\" }, link: null, us_bank_account: null }, created: 1760105124, livemode: false })",
+    "json": {
+      "id": "pi_3Q4fK2Lk9XyT1a0b",
+      "object": "payment_intent",
+      "amount": 2000,
+      "currency": "usd",
+      "customer": "cus_Nq2vT8",
+      "status": "requires_payment_method",
+      "metadata": {
+        "order": "A-1042",
+        "source": "notebook"
+      },
+      "payment_method_options": {
+        "card": {
+          "request_three_d_secure": "automatic"
+        },
+        "link": null,
+        "us_bank_account": null
+      },
+      "created": 1760105124,
+      "livemode": false
+    },
+    "repr": "{\n  id: 'pi_3Q4fK2Lk9XyT1a0b',\n  object: 'payment_intent',\n  amount: 2000,\n  currency: 'usd',\n  customer: 'cus_Nq2vT8',\n  status: 'requires_payment_method',\n  metadata: { order: 'A-1042', source: 'notebook' },\n  payment_method_options: {\n    card: { request_three_d_secure: 'automatic' },\n    link: null,\n    us_bank_account: null\n  },\n  created: 1760105124,\n  livemode: false\n}",
+    "truncated": false
+  },
+  {
+    "name": "classInstance",
+    "source": "new (class PaymentIntent { constructor() { this.id = \"pi_1\"; this.amount = 2000; this.currency = \"usd\"; } })()",
+    "json": {
+      "$class": "PaymentIntent",
+      "id": "pi_1",
+      "amount": 2000,
+      "currency": "usd"
+    },
+    "repr": "PaymentIntent { id: 'pi_1', amount: 2000, currency: 'usd' }",
+    "truncated": false
+  },
+  {
+    "name": "stripeClient",
+    "source": "new (class Stripe { constructor() { this.apiVersion = \"2026-09-30\"; this.resources = new (class Resources { constructor() { this.paymentIntents = {}; } })(); } })()",
+    "json": {
+      "$class": "Stripe",
+      "apiVersion": "2026-09-30",
+      "resources": {
+        "$class": "Resources",
+        "paymentIntents": {}
+      }
+    },
+    "repr": "Stripe {\n  apiVersion: '2026-09-30',\n  resources: Resources { paymentIntents: {} }\n}",
+    "truncated": false
+  },
+  {
+    "name": "nestedObject",
+    "source": "({ a: { b: { c: { d: 1 } } } })",
+    "json": {
+      "a": {
+        "b": {
+          "c": {
+            "d": 1
+          }
+        }
+      }
+    },
+    "repr": "{\n  a: { b: { c: { d: 1 } } }\n}",
+    "truncated": false
+  },
+  {
+    "name": "emptyObject",
+    "source": "({})",
+    "json": {},
+    "repr": "{}",
+    "truncated": false
+  },
+  {
+    "name": "nullPrototype",
+    "source": "Object.assign(Object.create(null), { a: 1 })",
+    "json": {
+      "a": 1
+    },
+    "repr": "[Object: null prototype] { a: 1 }",
+    "truncated": false
+  },
+  {
+    "name": "map",
+    "source": "new Map([[\"a\", 1], [\"b\", { nested: true }]])",
+    "json": {
+      "$type": "map",
+      "entries": [
+        ["a", 1],
+        [
+          "b",
+          {
+            "nested": true
+          }
+        ]
+      ]
+    },
+    "repr": "Map(2) { 'a' => 1, 'b' => { nested: true } }",
+    "truncated": false
+  },
+  {
+    "name": "mapObjectKeys",
+    "source": "new Map([[{ id: 1 }, \"first\"], [[1, 2], \"second\"]])",
+    "json": {
+      "$type": "map",
+      "entries": [
+        [
+          {
+            "id": 1
+          },
+          "first"
+        ],
+        [[1, 2], "second"]
+      ]
+    },
+    "repr": "Map(2) { { id: 1 } => 'first', [ 1, 2 ] => 'second' }",
+    "truncated": false
+  },
+  {
+    "name": "set",
+    "source": "new Set([\"pi\", \"ch\", \"cus\"])",
+    "json": {
+      "$type": "set",
+      "values": ["pi", "ch", "cus"]
+    },
+    "repr": "Set(3) { 'pi', 'ch', 'cus' }",
+    "truncated": false
+  },
+  {
+    "name": "emptyContainers",
+    "source": "({ o: {}, a: [], m: new Map(), s: new Set() })",
+    "json": {
+      "o": {},
+      "a": [],
+      "m": {
+        "$type": "map",
+        "entries": []
+      },
+      "s": {
+        "$type": "set",
+        "values": []
+      }
+    },
+    "repr": "{ o: {}, a: [], m: Map(0) {}, s: Set(0) {} }",
+    "truncated": false
+  },
+  {
+    "name": "records",
+    "source": "[{ id: \"evt_1\", type: \"payment_intent.succeeded\", created: 1760103669, amount: 2000, status: \"succeeded\" }, { id: \"evt_2\", type: \"charge.succeeded\", created: 1760103669, amount: 2000, status: \"succeeded\" }, { id: \"evt_3\", type: \"customer.created\", created: 1760101960, amount: null, status: null }]",
+    "json": [
+      {
+        "id": "evt_1",
+        "type": "payment_intent.succeeded",
+        "created": 1760103669,
+        "amount": 2000,
+        "status": "succeeded"
+      },
+      {
+        "id": "evt_2",
+        "type": "charge.succeeded",
+        "created": 1760103669,
+        "amount": 2000,
+        "status": "succeeded"
+      },
+      {
+        "id": "evt_3",
+        "type": "customer.created",
+        "created": 1760101960,
+        "amount": null,
+        "status": null
+      }
+    ],
+    "repr": "[\n  {\n    id: 'evt_1',\n    type: 'payment_intent.succeeded',\n    created: 1760103669,\n    amount: 2000,\n    status: 'succeeded'\n  },\n  {\n    id: 'evt_2',\n    type: 'charge.succeeded',\n    created: 1760103669,\n    amount: 2000,\n    status: 'succeeded'\n  },\n  {\n    id: 'evt_3',\n    type: 'customer.created',\n    created: 1760101960,\n    amount: null,\n    status: null\n  }\n]",
+    "truncated": false
+  },
+  {
+    "name": "recordsSparse",
+    "source": "[{ id: 1, name: \"a\", email: \"a@example.com\", plan: \"pro\" }, { id: 2, name: \"b\", email: \"b@example.com\", team: \"core\" }, { id: 3, name: \"c\", email: \"c@example.com\" }]",
+    "json": [
+      {
+        "id": 1,
+        "name": "a",
+        "email": "a@example.com",
+        "plan": "pro"
+      },
+      {
+        "id": 2,
+        "name": "b",
+        "email": "b@example.com",
+        "team": "core"
+      },
+      {
+        "id": 3,
+        "name": "c",
+        "email": "c@example.com"
+      }
+    ],
+    "repr": "[\n  { id: 1, name: 'a', email: 'a@example.com', plan: 'pro' },\n  { id: 2, name: 'b', email: 'b@example.com', team: 'core' },\n  { id: 3, name: 'c', email: 'c@example.com' }\n]",
+    "truncated": false
+  },
+  {
+    "name": "recordsBelowThreshold",
+    "source": "[{ id: 1, a: 1, b: 2 }, { id: 2, c: 3, d: 4 }]",
+    "json": [
+      {
+        "id": 1,
+        "a": 1,
+        "b": 2
+      },
+      {
+        "id": 2,
+        "c": 3,
+        "d": 4
+      }
+    ],
+    "repr": "[ { id: 1, a: 1, b: 2 }, { id: 2, c: 3, d: 4 } ]",
+    "truncated": false
+  },
+  {
+    "name": "singleRecord",
+    "source": "[{ id: 1, name: \"only\" }]",
+    "json": [
+      {
+        "id": 1,
+        "name": "only"
+      }
+    ],
+    "repr": "[ { id: 1, name: 'only' } ]",
+    "truncated": false
+  },
+  {
+    "name": "recordInstances",
+    "source": "(() => { class Price { constructor(amount) { this.amount = amount; this.currency = \"eur\"; } } return [new Price(100), new Price(250)]; })()",
+    "json": [
+      {
+        "$class": "Price",
+        "amount": 100,
+        "currency": "eur"
+      },
+      {
+        "$class": "Price",
+        "amount": 250,
+        "currency": "eur"
+      }
+    ],
+    "repr": "[\n  Price { amount: 100, currency: 'eur' },\n  Price { amount: 250, currency: 'eur' }\n]",
+    "truncated": false
+  },
+  {
+    "name": "repeatedRecords",
+    "source": "(() => { const row = { id: 1, name: \"same\" }; return [row, row, { id: 2, name: \"other\" }]; })()",
+    "json": [
+      {
+        "id": 1,
+        "name": "same"
+      },
+      {
+        "$type": "ref",
+        "path": [0]
+      },
+      {
+        "id": 2,
+        "name": "other"
+      }
+    ],
+    "repr": "[\n  { id: 1, name: 'same' },\n  { id: 1, name: 'same' },\n  { id: 2, name: 'other' }\n]",
+    "truncated": false
+  },
+  {
+    "name": "eventList",
+    "source": "[{ id: \"evt_1\", object: \"event\", type: \"charge.succeeded\", created: 1760103669, livemode: false, data: { object: { id: \"ch_1\", object: \"charge\", amount: 2000, paid: true } } }, { id: \"evt_2\", object: \"event\", type: \"customer.created\", created: 1760101960, livemode: false, data: { object: { id: \"cus_1\", object: \"customer\", email: \"user1@example.com\" } } }, { id: \"evt_3\", object: \"event\", type: \"invoice.paid\", created: 1760100168, livemode: false, data: { object: { id: \"in_1\", object: \"invoice\", total: 12900 } } }]",
+    "json": [
+      {
+        "id": "evt_1",
+        "object": "event",
+        "type": "charge.succeeded",
+        "created": 1760103669,
+        "livemode": false,
+        "data": {
+          "object": {
+            "id": "ch_1",
+            "object": "charge",
+            "amount": 2000,
+            "paid": true
+          }
+        }
+      },
+      {
+        "id": "evt_2",
+        "object": "event",
+        "type": "customer.created",
+        "created": 1760101960,
+        "livemode": false,
+        "data": {
+          "object": {
+            "id": "cus_1",
+            "object": "customer",
+            "email": "user1@example.com"
+          }
+        }
+      },
+      {
+        "id": "evt_3",
+        "object": "event",
+        "type": "invoice.paid",
+        "created": 1760100168,
+        "livemode": false,
+        "data": {
+          "object": {
+            "id": "in_1",
+            "object": "invoice",
+            "total": 12900
+          }
+        }
+      }
+    ],
+    "repr": "[\n  {\n    id: 'evt_1',\n    object: 'event',\n    type: 'charge.succeeded',\n    created: 1760103669,\n    livemode: false,\n    data: {\n      object: { id: 'ch_1', object: 'charge', amount: 2000, paid: true }\n    }\n  },\n  {\n    id: 'evt_2',\n    object: 'event',\n    type: 'customer.created',\n    created: 1760101960,\n    livemode: false,\n    data: {\n      object: { id: 'cus_1', object: 'customer', email: 'user1@example.com' }\n    }\n  },\n  {\n    id: 'evt_3',\n    object: 'event',\n    type: 'invoice.paid',\n    created: 1760100168,\n    livemode: false,\n    data: { object: { id: 'in_1', object: 'invoice', total: 12900 } }\n  }\n]",
+    "truncated": false
+  },
+  {
+    "name": "listResponse",
+    "source": "({ object: \"list\", url: \"/v1/events\", has_more: true, data: [{ id: \"evt_4\", object: \"event\", type: \"payment_intent.succeeded\", created: 1760103669, livemode: false, data: { object: { id: \"pi_1\", amount: 2000, status: \"succeeded\" } } }, { id: \"evt_5\", object: \"event\", type: \"payment_intent.created\", created: 1760103662, livemode: false, data: { object: { id: \"pi_1\", amount: 2000, status: \"requires_payment_method\" } } }] })",
+    "json": {
+      "object": "list",
+      "url": "/v1/events",
+      "has_more": true,
+      "data": [
+        {
+          "id": "evt_4",
+          "object": "event",
+          "type": "payment_intent.succeeded",
+          "created": 1760103669,
+          "livemode": false,
+          "data": {
+            "object": {
+              "id": "pi_1",
+              "amount": 2000,
+              "status": "succeeded"
+            }
+          }
+        },
+        {
+          "id": "evt_5",
+          "object": "event",
+          "type": "payment_intent.created",
+          "created": 1760103662,
+          "livemode": false,
+          "data": {
+            "object": {
+              "id": "pi_1",
+              "amount": 2000,
+              "status": "requires_payment_method"
+            }
+          }
+        }
+      ]
+    },
+    "repr": "{\n  object: 'list',\n  url: '/v1/events',\n  has_more: true,\n  data: [\n    {\n      id: 'evt_4',\n      object: 'event',\n      type: 'payment_intent.succeeded',\n      created: 1760103669,\n      livemode: false,\n      data: { object: [Object] }\n    },\n    {\n      id: 'evt_5',\n      object: 'event',\n      type: 'payment_intent.created',\n      created: 1760103662,\n      livemode: false,\n      data: { object: [Object] }\n    }\n  ]\n}",
+    "truncated": false
+  },
+  {
+    "name": "matrix",
+    "source": "[[1, 2, 3], [4, 5, 6]]",
+    "json": [
+      [1, 2, 3],
+      [4, 5, 6]
+    ],
+    "repr": "[ [ 1, 2, 3 ], [ 4, 5, 6 ] ]",
+    "truncated": false
+  },
+  {
+    "name": "raggedRows",
+    "source": "[[1, 2], [3]]",
+    "json": [[1, 2], [3]],
+    "repr": "[ [ 1, 2 ], [ 3 ] ]",
+    "truncated": false
+  },
+  {
+    "name": "mixedArray",
+    "source": "[1, \"two\", { three: 3 }, [4]]",
+    "json": [
+      1,
+      "two",
+      {
+        "three": 3
+      },
+      [4]
+    ],
+    "repr": "[ 1, 'two', { three: 3 }, [ 4 ] ]",
+    "truncated": false
+  },
+  {
+    "name": "numberArray",
+    "source": "[3, 1, 2]",
+    "json": [3, 1, 2],
+    "repr": "[ 3, 1, 2 ]",
+    "truncated": false
+  },
+  {
+    "name": "emptyArray",
+    "source": "[]",
+    "json": [],
+    "repr": "[]",
+    "truncated": false
+  },
+  {
+    "name": "cycle",
+    "source": "(() => { const node = { name: \"cycle\" }; node.self = node; return node; })()",
+    "json": {
+      "name": "cycle",
+      "self": {
+        "$type": "ref",
+        "path": []
+      }
+    },
+    "repr": "<ref *1> { name: 'cycle', self: [Circular *1] }",
+    "truncated": false
+  },
+  {
+    "name": "repeatedReference",
+    "source": "(() => { const shared = { id: \"shared\" }; return { a: shared, b: shared, c: [shared] }; })()",
+    "json": {
+      "a": {
+        "id": "shared"
+      },
+      "b": {
+        "$type": "ref",
+        "path": ["a"]
+      },
+      "c": [
+        {
+          "$type": "ref",
+          "path": ["a"]
+        }
+      ]
+    },
+    "repr": "{ a: { id: 'shared' }, b: { id: 'shared' }, c: [ { id: 'shared' } ] }",
+    "truncated": false
+  },
+  {
+    "name": "repeatedInMap",
+    "source": "(() => { const shared = { id: \"shared\" }; return { first: shared, map: new Map([[\"a\", shared]]) }; })()",
+    "json": {
+      "first": {
+        "id": "shared"
+      },
+      "map": {
+        "$type": "map",
+        "entries": [
+          [
+            "a",
+            {
+              "$type": "ref",
+              "path": ["first"]
+            }
+          ]
+        ]
+      }
+    },
+    "repr": "{ first: { id: 'shared' }, map: Map(1) { 'a' => { id: 'shared' } } }",
+    "truncated": false
+  },
+  {
+    "name": "dollarKeys",
+    "source": "({ $type: \"user\", $class: \"x\", $: 1, $$: 2, plain: \"p\" })",
+    "json": {
+      "$$type": "user",
+      "$$class": "x",
+      "$$": 1,
+      "$$$": 2,
+      "plain": "p"
+    },
+    "repr": "{ '$type': 'user', '$class': 'x', '$': 1, '$$': 2, plain: 'p' }",
+    "truncated": false
+  },
+  {
+    "name": "symbols",
+    "source": "({ [Symbol(\"hidden\")]: 1, kept: 1, dropped: Symbol(\"v\"), list: [Symbol(\"s\")] })",
+    "json": {
+      "kept": 1,
+      "list": [
+        {
+          "$type": "undefined"
+        }
+      ]
+    },
+    "repr": "{ kept: 1, dropped: Symbol(v), list: [ Symbol(s) ], Symbol(hidden): 1 }",
+    "truncated": false
+  },
+  {
+    "name": "undefinedInArray",
+    "source": "[1, undefined, 2]",
+    "json": [
+      1,
+      {
+        "$type": "undefined"
+      },
+      2
+    ],
+    "repr": "[ 1, undefined, 2 ]",
+    "truncated": false
+  },
+  {
+    "name": "undefinedProperty",
+    "source": "({ a: undefined, b: 1 })",
+    "json": {
+      "a": {
+        "$type": "undefined"
+      },
+      "b": 1
+    },
+    "repr": "{ a: undefined, b: 1 }",
+    "truncated": false
+  },
+  {
+    "name": "specialValues",
+    "source": "(() => { const error = new Error(\"nope\"); error.stack = String(error); return { map: new Map([[\"a\", 1]]), set: new Set([\"pi\"]), date: new Date(\"2026-10-10T14:02:11.000Z\"), big: 12345678901234567890n, bytes: new Uint8Array([31, 139, 8]), re: /^pi_/i, fn: function createIntent() {}, error, nan: NaN, inf: -Infinity, nothing: undefined }; })()",
+    "json": {
+      "map": {
+        "$type": "map",
+        "entries": [["a", 1]]
+      },
+      "set": {
+        "$type": "set",
+        "values": ["pi"]
+      },
+      "date": {
+        "$type": "date",
+        "iso": "2026-10-10T14:02:11.000Z"
+      },
+      "big": {
+        "$type": "bigint",
+        "value": "12345678901234567890"
+      },
+      "bytes": {
+        "$type": "bytes",
+        "length": 3,
+        "base64": "H4sI"
+      },
+      "re": {
+        "$type": "regexp",
+        "source": "^pi_",
+        "flags": "i"
+      },
+      "fn": {
+        "$type": "function",
+        "name": "createIntent"
+      },
+      "error": {
+        "$type": "error",
+        "name": "Error",
+        "message": "nope"
+      },
+      "nan": {
+        "$type": "number",
+        "value": "NaN"
+      },
+      "inf": {
+        "$type": "number",
+        "value": "-Infinity"
+      },
+      "nothing": {
+        "$type": "undefined"
+      }
+    },
+    "repr": "{\n  map: Map(1) { 'a' => 1 },\n  set: Set(1) { 'pi' },\n  date: 2026-10-10T14:02:11.000Z,\n  big: 12345678901234567890n,\n  bytes: Uint8Array(3) [ 31, 139, 8 ],\n  re: /^pi_/i,\n  fn: [Function: createIntent],\n  error: [Error: nope],\n  nan: NaN,\n  inf: -Infinity,\n  nothing: undefined\n}",
+    "truncated": false
+  },
+  {
+    "name": "deepNesting",
+    "source": "(() => { let node = { leaf: true }; for (let i = 0; i < 12; i += 1) node = { child: node }; return node; })()",
+    "json": {
+      "child": {
+        "child": {
+          "child": {
+            "child": {
+              "child": {
+                "child": {
+                  "child": {
+                    "child": {
+                      "child": {
+                        "child": {
+                          "$type": "truncated"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "repr": "{\n  child: { child: { child: { child: [Object] } } }\n}",
+    "truncated": true
+  },
+  {
+    "name": "undefined",
+    "json": {
+      "$type": "undefined"
+    },
+    "repr": "undefined",
+    "truncated": false
+  },
+  {
+    "name": "truncatedNodes",
+    "json": [
+      {
+        "id": 0
+      },
+      {
+        "id": 1
+      },
+      {
+        "id": 2
+      },
+      {
+        "id": 3
+      },
+      {
+        "id": 4
+      },
+      {
+        "id": 5
+      },
+      {
+        "id": 6
+      },
+      {
+        "id": 7
+      },
+      {
+        "id": 8
+      },
+      {
+        "id": {
+          "$type": "truncated"
+        }
+      }
+    ],
+    "repr": "[\n  { id: 0 },  { id: 1 },  { id: 2 },\n  { id: 3 },  { id: 4 },  { id: 5 },\n  { id: 6 },  { id: 7 },  { id: 8 },\n  { id: 9 },  { id: 10 }, { id: 11 },\n  { id: 12 }, { id: 13 }, { id: 14 },\n  { id: 15 }, { id: 16 }, { id: 17 },\n  { id: 18 }, { id: 19 }, { id: 20 },\n  { id: 21 }, { id: 22 }, { id: 23 },\n  { id: 24 }, { id: 25 }, { id: 26 },\n  { id: 27 }, { id: 28 }, { id: 29 }\n]",
+    "truncated": true
+  },
+  {
+    "name": "truncatedBytes",
+    "json": {
+      "note": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    "repr": "{\n  note: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',\n  more: 'y'\n}",
+    "truncated": true
+  },
+  {
+    "name": "truncatedDepth",
+    "json": {
+      "a": {
+        "b": {
+          "$type": "truncated"
+        }
+      },
+      "d": [
+        {
+          "$type": "truncated"
+        }
+      ]
+    },
+    "repr": "{\n  a: { b: { c: 1 } },\n  d: [ [ [ 1 ] ] ]\n}",
+    "truncated": true
+  }
+]

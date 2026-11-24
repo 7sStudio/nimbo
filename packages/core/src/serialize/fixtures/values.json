@@ -1,0 +1,266 @@
+{
+  "primitives": {
+    "json": {
+      "s": "text",
+      "n": 1.5,
+      "t": true,
+      "f": false,
+      "nil": null
+    },
+    "truncated": false
+  },
+  "undefined": {
+    "json": {
+      "$type": "undefined"
+    },
+    "truncated": false
+  },
+  "undefinedInArray": {
+    "json": [
+      1,
+      {
+        "$type": "undefined"
+      },
+      2
+    ],
+    "truncated": false
+  },
+  "undefinedProperty": {
+    "json": {
+      "a": {
+        "$type": "undefined"
+      }
+    },
+    "truncated": false
+  },
+  "nan": {
+    "json": {
+      "$type": "number",
+      "value": "NaN"
+    },
+    "truncated": false
+  },
+  "negativeZero": {
+    "json": {
+      "$type": "number",
+      "value": "-0"
+    },
+    "truncated": false
+  },
+  "infinities": {
+    "json": [
+      {
+        "$type": "number",
+        "value": "Infinity"
+      },
+      {
+        "$type": "number",
+        "value": "-Infinity"
+      }
+    ],
+    "truncated": false
+  },
+  "bigint": {
+    "json": {
+      "$type": "bigint",
+      "value": "12345678901234567890"
+    },
+    "truncated": false
+  },
+  "date": {
+    "json": {
+      "$type": "date",
+      "iso": "2026-10-10T14:02:11.000Z"
+    },
+    "truncated": false
+  },
+  "invalidDate": {
+    "json": {
+      "$type": "date",
+      "iso": null
+    },
+    "truncated": false
+  },
+  "regexp": {
+    "json": {
+      "$type": "regexp",
+      "source": "a+b",
+      "flags": "gi"
+    },
+    "truncated": false
+  },
+  "map": {
+    "json": {
+      "$type": "map",
+      "entries": [
+        ["k", 1],
+        [2, "two"]
+      ]
+    },
+    "truncated": false
+  },
+  "set": {
+    "json": {
+      "$type": "set",
+      "values": [1, "two", null]
+    },
+    "truncated": false
+  },
+  "nested": {
+    "json": {
+      "list": [
+        {
+          "deep": {
+            "$type": "map",
+            "entries": [
+              [
+                "s",
+                {
+                  "$type": "set",
+                  "values": [1]
+                }
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    "truncated": false
+  },
+  "cycle": {
+    "json": {
+      "name": "cycle",
+      "self": {
+        "$type": "ref",
+        "path": []
+      }
+    },
+    "truncated": false
+  },
+  "repeatedReference": {
+    "json": {
+      "a": {
+        "id": "shared"
+      },
+      "b": {
+        "$type": "ref",
+        "path": ["a"]
+      },
+      "c": [
+        {
+          "$type": "ref",
+          "path": ["a"]
+        }
+      ]
+    },
+    "truncated": false
+  },
+  "repeatedInMap": {
+    "json": {
+      "first": {
+        "id": "shared"
+      },
+      "map": {
+        "$type": "map",
+        "entries": [
+          [
+            "a",
+            {
+              "$type": "ref",
+              "path": ["first"]
+            }
+          ]
+        ]
+      }
+    },
+    "truncated": false
+  },
+  "classInstance": {
+    "json": {
+      "$class": "Price",
+      "amount": 2000,
+      "currency": "eur"
+    },
+    "truncated": false
+  },
+  "error": {
+    "json": {
+      "$type": "error",
+      "name": "TypeError",
+      "message": "boom"
+    },
+    "truncated": false
+  },
+  "function": {
+    "json": {
+      "$type": "function",
+      "name": "createIntent"
+    },
+    "truncated": false
+  },
+  "arrow": {
+    "json": {
+      "$type": "function",
+      "name": "value"
+    },
+    "truncated": false
+  },
+  "bytes": {
+    "json": {
+      "$type": "bytes",
+      "length": 9,
+      "base64": "AAEC+vv8/f7/"
+    },
+    "truncated": false
+  },
+  "arrayBuffer": {
+    "json": {
+      "$type": "bytes",
+      "length": 2,
+      "base64": "aGk="
+    },
+    "truncated": false
+  },
+  "symbols": {
+    "json": {
+      "kept": 1,
+      "list": [
+        {
+          "$type": "undefined"
+        }
+      ]
+    },
+    "truncated": false
+  },
+  "dollarKeys": {
+    "json": {
+      "$$type": "user",
+      "$$class": "x",
+      "$$": 1,
+      "$$$": 2,
+      "plain": "p"
+    },
+    "truncated": false
+  },
+  "emptyContainers": {
+    "json": {
+      "o": {},
+      "a": [],
+      "m": {
+        "$type": "map",
+        "entries": []
+      },
+      "s": {
+        "$type": "set",
+        "values": []
+      }
+    },
+    "truncated": false
+  },
+  "nullPrototype": {
+    "json": {
+      "a": 1
+    },
+    "truncated": false
+  }
+}

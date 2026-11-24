@@ -1,0 +1,27 @@
+view: tree (switch: tree, raw)
+summary: Object, 4 keys, 80 B
+rows:
+▾ Object
+    o: {}
+    a: []
+    m: Map(0) {}
+    s: Set(0) {}
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{
+  "o": {},
+  "a": [],
+  "m": {},
+  "s": []
+}
+--- ndjson
+{"o":{},"a":[],"m":{},"s":[]}
+--- js
+{
+  o: {},
+  a: [],
+  m: new Map([]),
+  s: new Set([]),
+}

@@ -1,0 +1,12 @@
+view: primitive (switch: none)
+summary: createIntent, function
+rows:
+  ƒ createIntent
+hints:
+exports: json, ndjson, js, text, html
+--- json
+null
+--- ndjson
+null
+--- js
+function createIntent() {}

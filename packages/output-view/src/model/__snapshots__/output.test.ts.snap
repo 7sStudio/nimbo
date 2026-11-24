@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`InvalidOutput > has a catalogue-style name and a message that says what to pass 1`] = `"The viewer was given something that is not an output: unknown shape. Pass an Output of 03-api §5 or { kind: "value", json, repr }."`;
+
+exports[`toOutput failures > throws InvalidOutput naming the first issue 1`] = `"The viewer was given something that is not an output at repr: Invalid input: expected string, received undefined. Pass an Output of 03-api §5 or { kind: "value", json, repr }."`;

@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SubscriberFailed > names the callback, keeps what it threw as the cause, and says what to do 1`] = `"The subscription's onEvent callback threw, so the subscription was closed; the cause is what it threw. Fix the callback and subscribe again."`;

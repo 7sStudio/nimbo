@@ -1,0 +1,15 @@
+{
+  "// owns": "The root config files and tools/*.ts (vitest, playwright, the project list) as one no-emit project for typecheck and lint, with the Tailwind scope plugin vitest.config.ts takes from @jsnb/style-gate and output-view's scope.",
+  "extends": "./tsconfig.node.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": [
+    "*.ts",
+    "tools/*.ts",
+    "packages/output-view/tailwindScope.ts",
+    "tools/style-gate/src/tailwindScope.ts",
+    "tools/test/pacedDownloads.ts"
+  ]
+}

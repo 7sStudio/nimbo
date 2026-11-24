@@ -1,0 +1,10 @@
+{
+  "// owns": "Emitting project of @jsnb/test-daemon into dist.",
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": { "rootDir": ".", "outDir": "dist" },
+  "include": ["*.ts"],
+  "references": [
+    { "path": "../../packages/server/tsconfig.build.json" },
+    { "path": "../test/tsconfig.build.json" }
+  ]
+}

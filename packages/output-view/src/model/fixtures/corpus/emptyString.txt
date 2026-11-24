@@ -1,0 +1,12 @@
+view: primitive (switch: none)
+summary: string, 0 characters
+rows:
+  ""
+hints:
+exports: json, ndjson, js, text, html
+--- json
+""
+--- ndjson
+""
+--- js
+""

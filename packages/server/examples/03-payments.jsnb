@@ -1,0 +1,246 @@
+{
+  "version": 1,
+  "cells": [
+    {
+      "id": "c_pa0001",
+      "type": "markdown",
+      "source": [
+        "# Backend and frontend: a payment with Stripe",
+        "",
+        "Take a payment from end to end with Stripe: a server cell creates the payment, a route receives Stripe's webhook, and a client cell calls the server and shows what came back.",
+        "",
+        "What you will learn: how a client cell calls a server function, how a route takes a webhook with no token, how secrets stay out of the notebook, and how the Activity log follows each call. It takes about 15 minutes.",
+        "",
+        "It runs as it is, with no key and no network: every Stripe call is replaced by a sample made in this notebook's own code, and each sample says so (\"sample response, no STRIPE_SECRET_KEY set\"). Step 1 says how to make the calls real. Run all (Cmd Shift Enter; Ctrl instead of Cmd off a Mac), then follow the steps."
+      ]
+    },
+    {
+      "id": "c_pa0002",
+      "type": "markdown",
+      "source": [
+        "## Step 1: the key, in test mode",
+        "",
+        "Stripe's secret key never goes in a notebook. It goes in the workspace's `.env`, which the notebook file does not hold and the page never reads. To make real calls:",
+        "",
+        "1. In Stripe's dashboard, turn on Test mode and copy the secret key. It starts with `sk_test_`. Use a test-mode key here, never a live one.",
+        "2. Open the **Environment** view (the third icon on the left), then Secrets, then Add secret: the name `STRIPE_SECRET_KEY` and the key as its value, then Save. The value is hidden once saved and never sent to the page.",
+        "3. Still in Environment, under Packages, add `stripe`. For Stripe's own card form in step 4, also add `@stripe/stripe-js` and a secret `STRIPE_PUBLISHABLE_KEY` (`pk_test_…`): a name ending in `_PUBLISHABLE_KEY` is the one kind a client cell may read.",
+        "4. Run all again.",
+        "",
+        "This cell says which mode the notebook runs in."
+      ]
+    },
+    {
+      "id": "c_pa0003",
+      "type": "server",
+      "source": [
+        "// The Stripe client, made only once a key is set. Its package is loaded by a name held in a variable: a cell",
+        "// that imports a package not installed yet stops before it runs (and offers Install), and this one must run",
+        "// without stripe, as a sample.",
+        "const stripePackage = \"stripe\";",
+        "const stripe = env.has(\"STRIPE_SECRET_KEY\")",
+        "  ? new (await import(stripePackage)).default(env.STRIPE_SECRET_KEY)",
+        "  : null;",
+        "",
+        "stripe === null",
+        "  ? \"Sample mode: no STRIPE_SECRET_KEY set, so the cells below answer with samples\"",
+        "  : \"Test mode: the cells below call Stripe with your key\""
+      ]
+    },
+    {
+      "id": "c_pa0004",
+      "type": "markdown",
+      "source": [
+        "## Step 2: create the payment on the server",
+        "",
+        "`createIntent` is **exported**, so a client cell can call it by name; the call runs here, on the server, where the key is. With a key it asks Stripe for a PaymentIntent, the object that follows one payment from start to end. Without one it builds the same shape itself, and its `sample` field says so. The last line calls it once, so you can see the answer."
+      ]
+    },
+    {
+      "id": "c_pa0005",
+      "type": "server",
+      "source": [
+        "let samples = 0;",
+        "",
+        "export async function createIntent(amount: number, currency = \"eur\") {",
+        "  if (stripe === null) {",
+        "    samples += 1;",
+        "    return {",
+        "      id: `pi_sample_${String(samples).padStart(4, \"0\")}`,",
+        "      amount,",
+        "      currency,",
+        "      status: \"requires_payment_method\",",
+        "      clientSecret: null,",
+        "      sample: \"sample response, no STRIPE_SECRET_KEY set\",",
+        "    };",
+        "  }",
+        "  const intent = await stripe.paymentIntents.create({",
+        "    amount,",
+        "    currency,",
+        "    automatic_payment_methods: { enabled: true },",
+        "  });",
+        "  return {",
+        "    id: intent.id,",
+        "    amount: intent.amount,",
+        "    currency: intent.currency,",
+        "    status: intent.status,",
+        "    clientSecret: intent.client_secret,",
+        "    sample: null,",
+        "  };",
+        "}",
+        "",
+        "await createIntent(2000)"
+      ]
+    },
+    {
+      "id": "c_pa0006",
+      "type": "markdown",
+      "source": [
+        "## Step 3: receive the webhook",
+        "",
+        "Stripe tells your server what happened to a payment by sending events to an address you give it. `route()` serves one from this notebook, with no token, since Stripe has none. The result under the cell shows the address with Copy URL, and one row for each request as it arrives.",
+        "",
+        "With `STRIPE_WEBHOOK_SECRET` set, the route checks Stripe's signature on the raw body and refuses an event that fails it; without it, the route reads the body as it comes and marks the event not verified.",
+        "",
+        "Send it a test event from a terminal, with the address the cell's result shows:",
+        "",
+        "```bash",
+        "curl -X POST http://127.0.0.1:<port>/n/03-payments/webhook \\",
+        "  -H 'content-type: application/json' \\",
+        "  -d '{\"type\":\"payment_intent.succeeded\",\"data\":{\"object\":{\"id\":\"pi_sample_0001\",\"amount\":2000}}}'",
+        "```",
+        "",
+        "With the Stripe CLI and a test key, `stripe listen --forward-to <the address>` forwards real test events and prints a `whsec_…` secret: save it as `STRIPE_WEBHOOK_SECRET` in the Environment view, run this cell again, then `stripe trigger payment_intent.succeeded`."
+      ]
+    },
+    {
+      "id": "c_pa0007",
+      "type": "server",
+      "source": [
+        "type Received = {",
+        "  type: string;",
+        "  payment: string | null;",
+        "  amount: number | null;",
+        "  verified: boolean;",
+        "  at: string;",
+        "};",
+        "const received: Received[] = [];",
+        "",
+        "route(\"POST /webhook\", async (request) => {",
+        "  const body = await request.text();",
+        "  const signed = stripe !== null && env.has(\"STRIPE_WEBHOOK_SECRET\");",
+        "  let event;",
+        "  try {",
+        "    event = signed",
+        "      ? stripe.webhooks.constructEvent(",
+        "          body,",
+        "          request.headers.get(\"stripe-signature\") ?? \"\",",
+        "          env.STRIPE_WEBHOOK_SECRET,",
+        "        )",
+        "      : JSON.parse(body);",
+        "  } catch (error) {",
+        "    return new Response(`Refused: ${(error as Error).message}`, { status: 400 });",
+        "  }",
+        "  const object = event.data?.object ?? {};",
+        "  received.push({",
+        "    type: String(event.type),",
+        "    payment: object.id ?? null,",
+        "    amount: object.amount ?? null,",
+        "    verified: signed,",
+        "    at: new Date().toISOString(),",
+        "  });",
+        "  console.log(`${String(event.type)} for ${object.id ?? \"no payment\"}${signed ? \"\" : \", not verified\"}`);",
+        "  return { received: true, verified: signed };",
+        "});",
+        "",
+        "export function payments() {",
+        "  return received.slice(-20).reverse();",
+        "}"
+      ]
+    },
+    {
+      "id": "c_pa0008",
+      "type": "markdown",
+      "source": [
+        "## Step 4: the page side",
+        "",
+        "This client cell calls `createIntent` as if it were a local function: the call crosses to the server and comes back as plain data. It then shows what came back. When the payment is real and `STRIPE_PUBLISHABLE_KEY` is set, it also mounts Stripe's Payment Element, the card form, under the summary.",
+        "",
+        "Change the amount to 4500 and run the cell again with Cmd Enter: a new payment, a new summary."
+      ]
+    },
+    {
+      "id": "c_pa0009",
+      "type": "client",
+      "source": [
+        "const intent = await createIntent(2000);",
+        "",
+        "const panel = display.div();",
+        "panel.style.cssText =",
+        "  \"display: grid; grid-template-columns: max-content 1fr; gap: 0.25rem 1rem; max-width: 30rem; font: 0.875rem/1.5 system-ui, sans-serif\";",
+        "const price = new Intl.NumberFormat(\"en\", { style: \"currency\", currency: intent.currency });",
+        "const facts = [",
+        "  [\"Payment\", intent.id],",
+        "  [\"Amount\", price.format(intent.amount / 100)],",
+        "  [\"Status\", intent.status.replaceAll(\"_\", \" \")],",
+        "  ...(intent.sample === null ? [] : [[\"Note\", intent.sample]]),",
+        "];",
+        "for (const [term, detail] of facts) {",
+        "  const dt = document.createElement(\"span\");",
+        "  dt.textContent = term;",
+        "  dt.style.opacity = \"0.7\";",
+        "  const dd = document.createElement(\"span\");",
+        "  dd.textContent = detail;",
+        "  panel.append(dt, dd);",
+        "}",
+        "",
+        "if (intent.clientSecret !== null && env.has(\"STRIPE_PUBLISHABLE_KEY\")) {",
+        "  const stripeJs = \"@stripe/stripe-js\";",
+        "  const { loadStripe } = await import(stripeJs);",
+        "  const browserStripe = await loadStripe(env.STRIPE_PUBLISHABLE_KEY);",
+        "  const mount = display.div();",
+        "  browserStripe.elements({ clientSecret: intent.clientSecret }).create(\"payment\").mount(mount);",
+        "}",
+        "",
+        "intent"
+      ]
+    },
+    {
+      "id": "c_pa0010",
+      "type": "markdown",
+      "source": [
+        "## Step 5: follow the calls",
+        "",
+        "Run the curl line of step 3 two or three times, then look in three places:",
+        "",
+        "- the route cell's result: one row per request, with its time, its status, how long the handler took and the event's type;",
+        "- the bottom panel's **Activity** tab (Cmd J): every run, every call from the page to `createIntent`, and every request to the route, with who sent it and how long it took;",
+        "- the **Console** tab: the line each request logged.",
+        "",
+        "This last cell reads what the route received through `payments`, an exported function, so it is current each time it runs."
+      ]
+    },
+    {
+      "id": "c_pa0011",
+      "type": "client",
+      "source": [
+        "const seen = await payments();",
+        "seen.length === 0",
+        "  ? \"No webhook yet: run the curl line of step 3, then run this cell again\"",
+        "  : seen"
+      ]
+    },
+    {
+      "id": "c_pa0012",
+      "type": "markdown",
+      "source": [
+        "## Try this next",
+        "",
+        "- Set a test key and run all again: the samples become real PaymentIntents, listed in Stripe's dashboard under Payments.",
+        "- With both keys, finish a payment in the Payment Element with Stripe's test card 4242 4242 4242 4242 (any future date, any CVC) by calling `browserStripe.confirmPayment` from a button of your own.",
+        "- Add a `GET /status` route that answers `payments()` as JSON, and call it with curl.",
+        "- See the **Routes and agents** example in Home's Examples for more on routes, errors and reviewing an agent's edit."
+      ]
+    }
+  ]
+}

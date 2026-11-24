@@ -1,0 +1,92 @@
+view: grid (switch: tree, grid, raw)
+summary: Array, 3 rows, 5 columns, 293 B
+rows:
+▾ Array(3)
+  ▾ 0: Object
+      id: "evt_1"
+      type: "payment_intent.succeeded"
+      created: 1760103669
+      amount: 2000
+      status: "succeeded"
+    }
+  ▾ 1: Object
+      id: "evt_2"
+      type: "charge.succeeded"
+      created: 1760103669
+      amount: 2000
+      status: "succeeded"
+    }
+  ▾ 2: Object
+      id: "evt_3"
+      type: "customer.created"
+      created: 1760101960
+      amount: null
+      status: null
+    }
+  ]
+grid (records, 0 omitted): id | type | created | amount | status
+  0: "evt_1" | "payment_intent.succeeded" | 1760103669 | 2000 | "succeeded"
+  1: "evt_2" | "charge.succeeded" | 1760103669 | 2000 | "succeeded"
+  2: "evt_3" | "customer.created" | 1760101960 | null | null
+hints:
+  $[0].created: time (seconds) 2025-10-10 15:41:09 · 1 y ago
+  $[1].created: time (seconds) 2025-10-10 15:41:09 · 1 y ago
+  $[2].created: time (seconds) 2025-10-10 15:12:40 · 1 y ago
+exports: json, ndjson, csv, js, text, html
+--- json
+[
+  {
+    "id": "evt_1",
+    "type": "payment_intent.succeeded",
+    "created": 1760103669,
+    "amount": 2000,
+    "status": "succeeded"
+  },
+  {
+    "id": "evt_2",
+    "type": "charge.succeeded",
+    "created": 1760103669,
+    "amount": 2000,
+    "status": "succeeded"
+  },
+  {
+    "id": "evt_3",
+    "type": "customer.created",
+    "created": 1760101960,
+    "amount": null,
+    "status": null
+  }
+]
+--- ndjson
+{"id":"evt_1","type":"payment_intent.succeeded","created":1760103669,"amount":2000,"status":"succeeded"}
+{"id":"evt_2","type":"charge.succeeded","created":1760103669,"amount":2000,"status":"succeeded"}
+{"id":"evt_3","type":"customer.created","created":1760101960,"amount":null,"status":null}
+--- csv
+id,type,created,amount,status
+evt_1,payment_intent.succeeded,1760103669,2000,succeeded
+evt_2,charge.succeeded,1760103669,2000,succeeded
+evt_3,customer.created,1760101960,,
+--- js
+[
+  {
+    id: "evt_1",
+    type: "payment_intent.succeeded",
+    created: 1760103669,
+    amount: 2000,
+    status: "succeeded",
+  },
+  {
+    id: "evt_2",
+    type: "charge.succeeded",
+    created: 1760103669,
+    amount: 2000,
+    status: "succeeded",
+  },
+  {
+    id: "evt_3",
+    type: "customer.created",
+    created: 1760101960,
+    amount: null,
+    status: null,
+  },
+]

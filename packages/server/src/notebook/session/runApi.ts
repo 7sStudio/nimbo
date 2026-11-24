@@ -1,0 +1,170 @@
+// The run side of a session (02-architecture §5, 03-api §4.3, §4.4): its queue and the commands over it, the outputs
+// and full values of the runs, and the kernel's answers; a late output (a timer's, a route handler's) joins its run.
+import type {
+  Binding,
+  BindingValue,
+  CellId,
+  Execution,
+  ExecutionId,
+  KernelStatus,
+  Route,
+} from "@jsnb/core";
+
+import type { SessionContext } from "./context.js";
+import type { ExecutionRecord } from "./records.js";
+import { toExecution } from "./records.js";
+import type { NotebookRun, NotebookRunAnswer, Waiting } from "./runs/control.js";
+import { runCell, runNotebook } from "./runs/control.js";
+import type { ClientRunner } from "./runs/execute.js";
+import { clearOutputs } from "./runs/clear.js";
+import { executeRun } from "./runs/execute.js";
+import { addOutput, findExecution, finish } from "./runs/executions.js";
+import {
+  cellRunsDropper,
+  clearClientRuns,
+  clearQueue,
+  interruptRuns,
+  restartKernel,
+} from "./runs/kernelControl.js";
+import { routesOf, serverBindings, serverScope } from "./runs/kernelViews.js";
+import type { ValueRequest } from "./runs/outputs.js";
+import { fullValue, outputValue } from "./runs/outputs.js";
+import type { RunQueue } from "./runs/queue.js";
+import { createRunQueue } from "./runs/queue.js";
+import { runError } from "./runs/errors.js";
+import type { Slice } from "./runs/slice.js";
+import type { LogTail } from "../../files/logs/kernelLog.js";
+import { readLogTail } from "../../files/logs/kernelLog.js";
+
+/** What the runs need from the session's client realm (the page). */
+export type RealmPart = {
+  readonly attached: () => boolean;
+  readonly run: ClientRunner;
+  readonly bindings: (cell: CellId) => BindingValue[];
+  readonly scope: () => Binding[];
+  /** After a kernel restart: the page's bridge layer cleared (or, with `all`, the whole client realm reset). */
+  readonly reset: (all: boolean) => Promise<void>;
+  /** Whether the page runs the client run `execution` now. */
+  readonly runs: (execution: ExecutionId) => boolean;
+  /** kernel.interrupt while the page runs `execution`: the page ends it, or the daemon does within a second; false when
+   * the page had finished it already. */
+  readonly interrupt: (execution: ExecutionRecord) => Promise<boolean>;
+};
+
+export type SessionRuns = {
+  readonly queue: RunQueue;
+  /** Whether a page is attached to run client cells. */
+  readonly realmAttached: () => boolean;
+  readonly run: (cell: CellId, waiting: Waiting) => Promise<Execution>;
+  readonly runAll: (input: NotebookRun) => Promise<NotebookRunAnswer>;
+  readonly outputs: (cell: CellId) => Execution | null;
+  /** A read of a value waits for the retained values' measures under way, so it sees the budget applied. */
+  readonly outputValue: (request: ValueRequest) => Promise<Slice>;
+  /** The full value of one of this session's last runs; undefined when `execution` is none of them. */
+  readonly fullValue: (
+    execution: ExecutionId,
+    index: number,
+  ) => Promise<{ readonly json: unknown } | undefined>;
+  readonly bindings: (cell: CellId) => Promise<BindingValue[]>;
+  readonly scope: (realm: "server" | "client") => Promise<Binding[]>;
+  readonly routes: () => Route[];
+  readonly kernelStatus: () => KernelStatus;
+  /** The tail of the kernel's log file (kernel.log). */
+  readonly kernelLog: (lines: number) => LogTail;
+  readonly interrupt: () => Promise<CellId | null>;
+  /** cell.delete: ends the queued runs of `cell`, interrupts its run under way (in the kernel, or on the page for
+   * a client run the realm says it runs) and ends one still being prepared before it executes; settles once done. */
+  readonly dropRuns: (cell: CellId) => Promise<void>;
+  readonly restart: (all: boolean) => Promise<void>;
+  /** realm.restart: the queued client runs ended, then the page's full reset. */
+  readonly restartRealm: () => Promise<void>;
+  /** notebook.clearOutputs: the cells' last runs forgotten (all cells when absent); the cells cleared. */
+  readonly clearOutputs: (cells?: readonly CellId[]) => CellId[];
+  /** Closing: the queue cleared and the running run ended with the kernel. */
+  readonly stop: () => Promise<void>;
+};
+
+function lateOutputs(context: SessionContext): void {
+  context.hooks.lateOutput = (late) => {
+    const execution = findExecution(context, late.execution);
+    if (execution) addOutput(context, execution, late.output, late.full);
+  };
+}
+
+/** What a session answers about its runs' outputs and its kernel. */
+function views(context: SessionContext, realm: RealmPart) {
+  return {
+    outputs: (cell: CellId) => {
+      const last = context.cells.require(cell).last;
+      return last ? toExecution(last) : null;
+    },
+    outputValue: async (request: ValueRequest) => {
+      await context.runs.retained.settled();
+      return outputValue(context, request);
+    },
+    fullValue: async (execution: ExecutionId, index: number) => {
+      await context.runs.retained.settled();
+      return fullValue(context, execution, index);
+    },
+    bindings: (cell: CellId) =>
+      context.cells.require(cell).type === "client"
+        ? Promise.resolve(realm.bindings(cell))
+        : serverBindings(context, cell),
+    scope: (which: "server" | "client") =>
+      which === "client" ? Promise.resolve(realm.scope()) : serverScope(context),
+    routes: () => routesOf(context),
+    kernelStatus: () => context.kernel.status(),
+    kernelLog: (lines: number) => readLogTail(context.logPath, lines),
+  };
+}
+
+/** kernel.restart (with `all`, the page's full reset first) and realm.restart over `queue` and `realm`. */
+const restarts = (context: SessionContext, queue: RunQueue, realm: RealmPart) => ({
+  restart: async (all: boolean) => {
+    clearQueue(context, queue);
+    if (all) await realm.reset(true); // the page drops its client run first, as runtime-web reports it
+    await restartKernel(context, queue, realm.runs);
+    if (!all) await realm.reset(false);
+  },
+  restartRealm: async () => {
+    clearClientRuns(context, queue);
+    await realm.reset(true);
+  },
+});
+
+/** The session's queue and run commands over `realm`. */
+export function createRuns(context: SessionContext, realm: RealmPart): SessionRuns {
+  const queue = createRunQueue(
+    (run) => executeRun(context, run, realm.run),
+    (run, error) => {
+      context.log.error(
+        { err: error, execution: run.execution.id },
+        "a run failed inside the daemon",
+      );
+      finish(context, run.execution, {
+        status: "error",
+        durationMs: 0,
+        error: runError(error, run.execution.cell),
+      });
+    },
+  );
+  lateOutputs(context);
+  const runs = { queue, realmAttached: realm.attached };
+  return {
+    ...views(context, realm),
+    queue,
+    realmAttached: realm.attached,
+    run: (cell, waiting) => runCell(context, runs, cell, waiting),
+    runAll: (input) => runNotebook(context, runs, input),
+    interrupt: () => interruptRuns(context, queue, realm),
+    clearOutputs: (cells) => clearOutputs(context, cells),
+    dropRuns: cellRunsDropper(context, queue, realm),
+    ...restarts(context, queue, realm),
+    stop: async () => {
+      clearQueue(context, queue);
+      context.runs.ending = true;
+      await context.kernel.stop();
+      await queue.running()?.done;
+    },
+  };
+}

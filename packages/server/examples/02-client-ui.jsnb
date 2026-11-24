@@ -1,0 +1,243 @@
+{
+  "version": 1,
+  "cells": [
+    {
+      "id": "c_cu0001",
+      "type": "markdown",
+      "source": [
+        "# Client side: build a small interface",
+        "",
+        "Build a small interface in the page with client cells: elements you draw, events that change state, and state that more than one cell reads.",
+        "",
+        "What you will learn: what `display` gives a client cell, how events and state work across cells, how a cell cleans up after itself, and what the Inspector shows of the page. It takes about 10 minutes. Client cells run in this browser tab, so keep it open; nothing here needs a package or a network.",
+        "",
+        "Run all (Cmd Shift Enter; Ctrl instead of Cmd off a Mac) runs every cell in the page. Then follow the steps."
+      ]
+    },
+    {
+      "id": "c_cu0002",
+      "type": "markdown",
+      "source": [
+        "## Step 1: draw into the cell",
+        "",
+        "A **client** cell runs in this tab, with `document`, `window` and every browser API. `display.div()` gives it a container of its own under its result: what you put in it shows there, and running the cell again empties it first. The last line is still the cell's value, shown just above the container.",
+        "",
+        "A container takes none of the page's styles, so these cells set their own font; anything you draw is yours to style."
+      ]
+    },
+    {
+      "id": "c_cu0003",
+      "type": "client",
+      "source": [
+        "const intro = display.div();",
+        "intro.innerHTML = \"<strong>Hello from the page.</strong> A client cell drew this text.\";",
+        "intro.style.font = \"0.875rem/1.5 system-ui, sans-serif\";",
+        "intro.textContent"
+      ]
+    },
+    {
+      "id": "c_cu0004",
+      "type": "markdown",
+      "source": [
+        "## Step 2: state and events",
+        "",
+        "A to-do list: `todos` is plain state, `render` draws it, and every control changes the state, then draws again. Type a task and press Enter or Add, tick a task to mark it done, Remove deletes it. No framework: the DOM and a function.",
+        "",
+        "`changed` also sends a `todos:changed` event on `window`, so other cells can follow the list (step 3)."
+      ]
+    },
+    {
+      "id": "c_cu0005",
+      "type": "client",
+      "source": [
+        "type Todo = { id: number; text: string; done: boolean; tag: string };",
+        "const todos: Todo[] = [",
+        "  { id: 1, text: \"Read the data example\", done: true, tag: \"learn\" },",
+        "  { id: 2, text: \"Pin a query to the inspector\", done: false, tag: \"learn\" },",
+        "  { id: 3, text: \"Ship the payment flow\", done: false, tag: \"work\" },",
+        "];",
+        "let nextId = 4;",
+        "",
+        "const app = display.div();",
+        "app.style.cssText = \"display: grid; gap: 0.5rem; font: 0.875rem/1.5 system-ui, sans-serif; max-width: 28rem\";",
+        "const form = document.createElement(\"form\");",
+        "form.style.cssText = \"display: flex; gap: 0.5rem\";",
+        "const input = document.createElement(\"input\");",
+        "input.placeholder = \"A task, then Enter\";",
+        "input.style.cssText = \"flex: 1; font: inherit; padding: 0.25rem 0.5rem\";",
+        "const add = document.createElement(\"button\");",
+        "add.type = \"submit\";",
+        "add.textContent = \"Add\";",
+        "form.append(input, add);",
+        "const list = document.createElement(\"ul\");",
+        "list.style.cssText = \"margin: 0; padding: 0; list-style: none; display: grid; gap: 0.25rem\";",
+        "app.append(form, list);",
+        "",
+        "function render() {",
+        "  list.replaceChildren(",
+        "    ...todos.map((todo) => {",
+        "      const item = document.createElement(\"li\");",
+        "      item.style.cssText = \"display: flex; gap: 0.5rem; align-items: center\";",
+        "      const box = document.createElement(\"input\");",
+        "      box.type = \"checkbox\";",
+        "      box.checked = todo.done;",
+        "      box.addEventListener(\"change\", () => {",
+        "        todo.done = box.checked;",
+        "        changed();",
+        "      });",
+        "      const text = document.createElement(\"span\");",
+        "      text.textContent = `${todo.text} (${todo.tag})`;",
+        "      text.style.cssText = `flex: 1; ${todo.done ? \"text-decoration: line-through; opacity: 0.6\" : \"\"}`;",
+        "      const remove = document.createElement(\"button\");",
+        "      remove.type = \"button\";",
+        "      remove.textContent = \"Remove\";",
+        "      remove.addEventListener(\"click\", () => {",
+        "        todos.splice(todos.indexOf(todo), 1);",
+        "        changed();",
+        "      });",
+        "      item.append(box, text, remove);",
+        "      return item;",
+        "    }),",
+        "  );",
+        "}",
+        "",
+        "function changed() {",
+        "  render();",
+        "  window.dispatchEvent(new CustomEvent(\"todos:changed\"));",
+        "}",
+        "",
+        "form.addEventListener(\"submit\", (event) => {",
+        "  event.preventDefault();",
+        "  const text = input.value.trim();",
+        "  if (text === \"\") return;",
+        "  todos.push({ id: nextId++, text, done: false, tag: text.includes(\"learn\") ? \"learn\" : \"work\" });",
+        "  input.value = \"\";",
+        "  changed();",
+        "});",
+        "",
+        "render();",
+        "`${String(todos.length)} tasks`"
+      ]
+    },
+    {
+      "id": "c_cu0006",
+      "type": "markdown",
+      "source": [
+        "## Step 3: one state, two cells",
+        "",
+        "A name a client cell defines is there for the client cells after it, as on the server. This cell reads `todos` and listens for `todos:changed`, so its line follows every click above.",
+        "",
+        "A listener a cell adds to `window` belongs to the cell: running the cell again, or deleting it, removes the old listener first, so they never stack up. Run this cell three times and tick a task: the line still updates once."
+      ]
+    },
+    {
+      "id": "c_cu0007",
+      "type": "client",
+      "source": [
+        "const summary = display.div();",
+        "summary.style.font = \"0.875rem/1.5 system-ui, sans-serif\";",
+        "function summarize() {",
+        "  const done = todos.filter((todo) => todo.done).length;",
+        "  summary.textContent = `${String(todos.length)} tasks, ${String(done)} done, ${String(todos.length - done)} to go`;",
+        "}",
+        "window.addEventListener(\"todos:changed\", summarize);",
+        "summarize();",
+        "summary.textContent"
+      ]
+    },
+    {
+      "id": "c_cu0008",
+      "type": "markdown",
+      "source": [
+        "## Step 4: what the Inspector shows",
+        "",
+        "Open the **Inspector** with Cmd I (or Variables in the notebook's toolbar), then its Variables group, and switch it to **Client**. It lists the names the page's cells define (`todos`, `render`, `summary` and the rest), each with the number of the cell that defines it. Their values live in this tab, not on the server, so each one says \"(defined in the page)\" instead of a copy of its value: to look inside one, make it a cell's last line.",
+        "",
+        "The bottom panel's Activity tab (Cmd J) lists each run with where it ran (\"page\" for these), and its Console tab every line a cell printed with `console.log`."
+      ]
+    },
+    {
+      "id": "c_cu0009",
+      "type": "markdown",
+      "source": [
+        "## Step 5: a timer that stops itself",
+        "",
+        "Timers belong to the cell too. This clock ticks every second; run the cell again (Cmd Enter) and the old timer is cleared before the new one starts, so there is only ever one clock. Delete the cell and it stops."
+      ]
+    },
+    {
+      "id": "c_cu0010",
+      "type": "client",
+      "source": [
+        "const clock = display.div();",
+        "clock.style.font = \"0.875rem/1.5 system-ui, sans-serif\";",
+        "clock.style.fontVariantNumeric = \"tabular-nums\";",
+        "const tick = () => {",
+        "  clock.textContent = `The page's time: ${new Date().toLocaleTimeString()}`;",
+        "};",
+        "tick();",
+        "setInterval(tick, 1000);",
+        "clock.textContent"
+      ]
+    },
+    {
+      "id": "c_cu0011",
+      "type": "markdown",
+      "source": [
+        "## Step 6: draw from state",
+        "",
+        "A chart without a library: SVG drawn from `todos`, one bar per tag, redrawn on every change. Add a task with \"learn\" in it and watch its bar grow."
+      ]
+    },
+    {
+      "id": "c_cu0012",
+      "type": "client",
+      "source": [
+        "const svgNs = \"http://www.w3.org/2000/svg\";",
+        "const chart = display.div();",
+        "chart.style.font = \"0.8125rem system-ui, sans-serif\";",
+        "",
+        "function draw() {",
+        "  const tags = [...new Set(todos.map((todo) => todo.tag))];",
+        "  const counts = tags.map((tag) => todos.filter((todo) => todo.tag === tag).length);",
+        "  const max = Math.max(1, ...counts);",
+        "  const svg = document.createElementNS(svgNs, \"svg\");",
+        "  svg.setAttribute(\"width\", \"320\");",
+        "  svg.setAttribute(\"height\", String(tags.length * 28));",
+        "  tags.forEach((tag, at) => {",
+        "    const bar = document.createElementNS(svgNs, \"rect\");",
+        "    bar.setAttribute(\"x\", \"64\");",
+        "    bar.setAttribute(\"y\", String(at * 28 + 4));",
+        "    bar.setAttribute(\"height\", \"20\");",
+        "    bar.setAttribute(\"width\", String((counts[at] / max) * 240));",
+        "    bar.setAttribute(\"fill\", \"currentColor\");",
+        "    bar.setAttribute(\"opacity\", \"0.55\");",
+        "    const label = document.createElementNS(svgNs, \"text\");",
+        "    label.setAttribute(\"x\", \"0\");",
+        "    label.setAttribute(\"y\", String(at * 28 + 19));",
+        "    label.setAttribute(\"fill\", \"currentColor\");",
+        "    label.textContent = `${tag} ${String(counts[at])}`;",
+        "    svg.append(bar, label);",
+        "  });",
+        "  chart.replaceChildren(svg);",
+        "}",
+        "",
+        "window.addEventListener(\"todos:changed\", draw);",
+        "draw();",
+        "\"one bar per tag\""
+      ]
+    },
+    {
+      "id": "c_cu0013",
+      "type": "markdown",
+      "source": [
+        "## Try this next",
+        "",
+        "- Give the form a field for the tag, and watch the chart split.",
+        "- Make the list survive a reload: save `todos` with `localStorage.setItem` in `changed`, and read it back in step 2.",
+        "- Move `todos` to a server cell with `export` and read it here: the **Backend and frontend** example in Home's Examples shows how a client cell calls the server.",
+        "- Use a framework: the **Vue** example builds this list with Vue components."
+      ]
+    }
+  ]
+}

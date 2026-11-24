@@ -1,0 +1,11 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the client errors > CallAborted is a JsnbError with its catalogue name and a templated message 1`] = `"notebook.run was aborted before the daemon answered; the daemon may still carry it out."`;
+
+exports[`the client errors > ConnectionClosed is a JsnbError with its catalogue name and a templated message 1`] = `"kernel.status got no answer because this connection was closed. Open a new connection to call it."`;
+
+exports[`the client errors > ConnectionDropped is a JsnbError with its catalogue name and a templated message 1`] = `"The connection to the daemon dropped while cell.run was in flight. It was not sent again because it may already have taken effect; check before calling it again."`;
+
+exports[`the client errors > DaemonUnreachable is a JsnbError with its catalogue name and a templated message 1`] = `"No nimbo daemon answered at http://127.0.0.1:47130 after 5 attempts. Start it in the workspace with nimbo open or nimbo serve."`;
+
+exports[`the client errors > InvalidResponse is a JsnbError with its catalogue name and a templated message 1`] = `"The daemon's answer to cell.get does not fit the API (cell.id: Invalid string). The daemon may be another version; compare apiVersion from workspace.info."`;

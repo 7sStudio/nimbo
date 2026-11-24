@@ -1,0 +1,35 @@
+{
+  "name": "@jsnb/mcp",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./main": "./dist/main.js"
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@jsnb/client": "workspace:*",
+    "@jsnb/core": "workspace:*",
+    "@jsnb/server": "workspace:*",
+    "@modelcontextprotocol/sdk": "1.32.2",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@jsnb/test-daemon": "workspace:*",
+    "@jsnb/test-tools": "workspace:*",
+    "typescript": "~5.9.3"
+  }
+}

@@ -1,0 +1,12 @@
+view: primitive (switch: none)
+summary: undefined
+rows:
+  undefined
+hints:
+exports: json, ndjson, js, text, html
+--- json
+null
+--- ndjson
+null
+--- js
+undefined

@@ -1,0 +1,32 @@
+view: tree (switch: tree, raw)
+summary: Object, 1 key, 25 B
+rows:
+▾ Object
+  ▾ a: Object
+    ▸ b: Object · 1 key
+    }
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{
+  "a": {
+    "b": {
+      "c": {
+        "d": 1
+      }
+    }
+  }
+}
+--- ndjson
+{"a":{"b":{"c":{"d":1}}}}
+--- js
+{
+  a: {
+    b: {
+      c: {
+        d: 1,
+      },
+    },
+  },
+}

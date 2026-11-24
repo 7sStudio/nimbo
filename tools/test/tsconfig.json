@@ -1,0 +1,11 @@
+{
+  "// owns": "Full project of @jsnb/test-tools (helpers and their tests) for typecheck, lint and editors; emits nothing.",
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": { "noEmit": true },
+  "include": ["*.ts"],
+  "references": [
+    { "path": "../../packages/core/tsconfig.build.json" },
+    { "path": "../../packages/transform/tsconfig.build.json" },
+    { "path": "../../packages/client/tsconfig.build.json" }
+  ]
+}

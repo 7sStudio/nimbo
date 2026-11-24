@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`MissingPackage > lists several packages 1`] = `"Packages "stripe", "zod" and "ms" are not installed. Run: nimbo add stripe zod ms"`;

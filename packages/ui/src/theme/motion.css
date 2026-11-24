@@ -1,0 +1,14 @@
+/* The page's keyframes, named jsnb-ui-* so a user's own @keyframes never meets them; the animate-*
+   utilities of main.css play them, always under motion-safe: (08 §7). */
+@keyframes jsnb-ui-enter {
+  from {
+    opacity: 0;
+    scale: 0.97;
+  }
+}
+
+@keyframes jsnb-ui-spin {
+  to {
+    rotate: 1turn;
+  }
+}

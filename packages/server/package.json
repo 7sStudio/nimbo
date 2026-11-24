@@ -1,0 +1,52 @@
+{
+  "name": "@jsnb/server",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist",
+    "examples",
+    "vendor",
+    "THIRD-PARTY-NOTICES.txt"
+  ],
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./main": "./dist/main.js",
+    "./doctor": "./dist/doctor.js",
+    "./sql-install": "./dist/sqlInstall.js"
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json && node ../../tools/fetch-js-debug.mjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@jsnb/core": "workspace:*",
+    "@jsnb/kernel-node": "workspace:*",
+    "@jsnb/language": "workspace:*",
+    "@jsnb/output-view": "workspace:*",
+    "@jsnb/query-json": "workspace:*",
+    "@jsnb/query-sql": "workspace:*",
+    "@jsnb/transform": "workspace:*",
+    "@types/node": "^26.6.5",
+    "cjs-module-lexer": "2.3.0",
+    "esbuild": "0.28.2",
+    "jsonc-parser": "^3.3.1",
+    "marked": "~18.1.2",
+    "pino": "^10.4.0",
+    "ws": "^8.22.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@jsnb/test-tools": "workspace:*",
+    "@types/ws": "^8.18.2",
+    "@vscode/debugprotocol": "1.68.0",
+    "fast-check": "^4.10.2",
+    "typescript": "~5.9.3"
+  }
+}

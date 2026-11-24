@@ -1,0 +1,37 @@
+# dependencies and build output
+node_modules/
+dist/
+# js-debug, fetched at its pinned version by tools/fetch-js-debug.mjs
+packages/server/vendor/
+coverage/
+*.tsbuildinfo
+
+# parallel threads work in worktrees under this folder (CONTRIBUTING.md)
+.worktrees/
+
+# a nimbo workspace directory: ignored except the shared settings (07-file-format §7)
+.jsnb/*
+!.jsnb/.gitignore
+!.jsnb/settings.json
+
+# secrets, never committed
+.env
+.env.*
+
+# tool and OS noise
+.DS_Store
+*.log
+test-results/
+playwright-report/
+.vite/
+.vitest/
+
+# local coding-assistant configuration and skills
+.claude/
+.opencode/
+.agents/
+skills-lock.json
+.impeccable/
+
+# release builds (tools/release/build.mjs)
+.release/

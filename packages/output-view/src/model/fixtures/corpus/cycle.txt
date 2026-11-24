@@ -1,0 +1,21 @@
+view: tree (switch: tree, raw)
+summary: Object, 2 keys, 49 B
+rows:
+▾ Object
+    name: "cycle"
+    self: [Circular → $]
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{
+  "name": "cycle",
+  "self": "[Circular → $]"
+}
+--- ndjson
+{"name":"cycle","self":"[Circular → $]"}
+--- js
+{
+  name: "cycle",
+  self: undefined /* circular → $ */,
+}

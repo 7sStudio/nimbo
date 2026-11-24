@@ -1,0 +1,26 @@
+/* What the views' Tailwind utilities do not say well, loaded unscoped by OutputView (08 §7). Everything else of the
+   viewer's chrome is written in its templates. No rule here matches a DOM output's live container ([data-live]) or
+   what it holds: that is the user's DOM, which the viewer may slot but never style. */
+@layer components {
+  /* the focus ring of every focusable element under .jsnb-ov, Reka's and CodeMirror's included: one rule for all of them,
+     rather than the same four utilities on each */
+  .jsnb-ov :is(button, a, input, select, [tabindex]):not([data-live], [data-live] *):focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  /* the buttons' washes and the output's tools fade in, unless the user asked for reduced motion */
+  @media (prefers-reduced-motion: no-preference) {
+    .jsnb-ov
+      :is([data-part="icon-button"], [data-part="hint-action"], [data-part="text-button"]):not(
+        [data-live],
+        [data-live] *
+      ) {
+      transition: background var(--dur) var(--ease-out);
+    }
+
+    .jsnb-ov [data-part="tools"]:not([data-live], [data-live] *) {
+      transition: opacity var(--dur) var(--ease-out);
+    }
+  }
+}

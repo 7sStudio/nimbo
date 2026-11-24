@@ -1,0 +1,13 @@
+{
+  "// owns": "Full project of @jsnb/client (sources, tests and the generator scripts) for typecheck, lint and editors; emits nothing.",
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["src", "scripts"],
+  "references": [
+    {
+      "path": "../core/tsconfig.build.json"
+    }
+  ]
+}

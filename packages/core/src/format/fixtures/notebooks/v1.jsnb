@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "jsnb": "0.1.0",
+  "cells": [
+    {
+      "id": "c_a1b2c3",
+      "type": "server",
+      "source": [
+        "import Stripe from \"stripe\";",
+        "export const stripe = new Stripe(env.STRIPE_SECRET_KEY);"
+      ],
+      "meta": {
+        "lastEdit": {
+          "by": "user",
+          "client": "ui",
+          "at": "2026-10-10T14:02:11Z"
+        }
+      }
+    },
+    {
+      "id": "c_d4e5f6",
+      "type": "markdown",
+      "source": [
+        "## Create the intent",
+        "",
+        "Export a function; client cells can only call exports."
+      ]
+    },
+    {
+      "id": "c_g7h8i9",
+      "type": "client",
+      "source": [
+        "const { clientSecret } = await createIntent(2000);"
+      ],
+      "meta": {
+        "outputView": "tree",
+        "lastEdit": {
+          "by": "agent",
+          "client": "mcp",
+          "agent": "claude-code",
+          "at": "2026-10-10T14:05:40Z"
+        }
+      }
+    }
+  ]
+}

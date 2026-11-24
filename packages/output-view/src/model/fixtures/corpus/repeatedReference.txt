@@ -1,0 +1,44 @@
+view: tree (switch: tree, raw)
+summary: Object, 3 keys, 89 B
+rows:
+▾ Object
+  ▾ a: Object
+      id: "shared"
+    }
+    b: [Ref → $.a]
+  ▾ c: Array(1)
+      0: [Ref → $.a]
+    ]
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{
+  "a": {
+    "id": "shared"
+  },
+  "b": {
+    "id": "shared"
+  },
+  "c": [
+    {
+      "id": "shared"
+    }
+  ]
+}
+--- ndjson
+{"a":{"id":"shared"},"b":{"id":"shared"},"c":[{"id":"shared"}]}
+--- js
+{
+  a: {
+    id: "shared",
+  },
+  b: {
+    id: "shared",
+  },
+  c: [
+    {
+      id: "shared",
+    },
+  ],
+}

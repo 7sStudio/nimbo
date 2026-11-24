@@ -1,0 +1,7 @@
+nimbo
+Copyright 2026 7sStudio
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Release builds bundle third-party software (the Node.js runtime and npm packages) under their own licences; their
+notices are in THIRD-PARTY-NOTICES.txt inside each release.

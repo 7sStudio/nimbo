@@ -1,0 +1,47 @@
+view: grid (switch: tree, grid, raw)
+summary: Array, 2 rows, 2 columns, 99 B
+rows:
+▾ Array(2)
+  ▾ 0: Price
+      amount: 100
+      currency: "eur"
+    }
+  ▾ 1: Price
+      amount: 250
+      currency: "eur"
+    }
+  ]
+grid (records, 0 omitted): amount | currency
+  0: 100 | "eur"
+  1: 250 | "eur"
+hints:
+exports: json, ndjson, csv, js, text, html
+--- json
+[
+  {
+    "amount": 100,
+    "currency": "eur"
+  },
+  {
+    "amount": 250,
+    "currency": "eur"
+  }
+]
+--- ndjson
+{"amount":100,"currency":"eur"}
+{"amount":250,"currency":"eur"}
+--- csv
+amount,currency
+100,eur
+250,eur
+--- js
+[
+  /* Price */ {
+    amount: 100,
+    currency: "eur",
+  },
+  /* Price */ {
+    amount: 250,
+    currency: "eur",
+  },
+]

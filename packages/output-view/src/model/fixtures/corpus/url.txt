@@ -1,0 +1,13 @@
+view: primitive (switch: none)
+summary: string, 52 characters
+rows:
+  "https://dashboard.stripe.com/test/payments/pi_3Q4fK2"
+hints:
+  $: link https://dashboard.stripe.com/test/payments/pi_3Q4fK2
+exports: json, ndjson, js, text, html
+--- json
+"https://dashboard.stripe.com/test/payments/pi_3Q4fK2"
+--- ndjson
+"https://dashboard.stripe.com/test/payments/pi_3Q4fK2"
+--- js
+"https://dashboard.stripe.com/test/payments/pi_3Q4fK2"

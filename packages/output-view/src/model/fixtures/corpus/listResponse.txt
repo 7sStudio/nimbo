@@ -1,0 +1,90 @@
+view: tree (switch: tree, raw)
+summary: Object, 4 keys, 415 B
+rows:
+▾ Object
+    object: "list"
+    url: "/v1/events"
+    has_more: true
+  ▾ data: Array(2)
+    ▸ 0: Object · 6 keys
+    ▸ 1: Object · 6 keys
+    ]
+  }
+hints:
+  $.data[0].created: time (seconds) 2025-10-10 15:41:09 · 1 y ago
+  $.data[1].created: time (seconds) 2025-10-10 15:41:02 · 1 y ago
+exports: json, ndjson, js, text, html
+--- json
+{
+  "object": "list",
+  "url": "/v1/events",
+  "has_more": true,
+  "data": [
+    {
+      "id": "evt_4",
+      "object": "event",
+      "type": "payment_intent.succeeded",
+      "created": 1760103669,
+      "livemode": false,
+      "data": {
+        "object": {
+          "id": "pi_1",
+          "amount": 2000,
+          "status": "succeeded"
+        }
+      }
+    },
+    {
+      "id": "evt_5",
+      "object": "event",
+      "type": "payment_intent.created",
+      "created": 1760103662,
+      "livemode": false,
+      "data": {
+        "object": {
+          "id": "pi_1",
+          "amount": 2000,
+          "status": "requires_payment_method"
+        }
+      }
+    }
+  ]
+}
+--- ndjson
+{"object":"list","url":"/v1/events","has_more":true,"data":[{"id":"evt_4","object":"event","type":"payment_intent.succeeded","created":1760103669,"livemode":false,"data":{"object":{"id":"pi_1","amount":2000,"status":"succeeded"}}},{"id":"evt_5","object":"event","type":"payment_intent.created","created":1760103662,"livemode":false,"data":{"object":{"id":"pi_1","amount":2000,"status":"requires_payment_method"}}}]}
+--- js
+{
+  object: "list",
+  url: "/v1/events",
+  has_more: true,
+  data: [
+    {
+      id: "evt_4",
+      object: "event",
+      type: "payment_intent.succeeded",
+      created: 1760103669,
+      livemode: false,
+      data: {
+        object: {
+          id: "pi_1",
+          amount: 2000,
+          status: "succeeded",
+        },
+      },
+    },
+    {
+      id: "evt_5",
+      object: "event",
+      type: "payment_intent.created",
+      created: 1760103662,
+      livemode: false,
+      data: {
+        object: {
+          id: "pi_1",
+          amount: 2000,
+          status: "requires_payment_method",
+        },
+      },
+    },
+  ],
+}

@@ -1,0 +1,37 @@
+view: tree (switch: tree, raw)
+summary: Object, 2 keys, 98 B
+rows:
+▾ Object
+  ▾ first: Object
+      id: "shared"
+    }
+  ▾ map: Map(1)
+      "a" => [Ref → $.first]
+    }
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{
+  "first": {
+    "id": "shared"
+  },
+  "map": {
+    "a": {
+      "id": "shared"
+    }
+  }
+}
+--- ndjson
+{"first":{"id":"shared"},"map":{"a":{"id":"shared"}}}
+--- js
+{
+  first: {
+    id: "shared",
+  },
+  map: new Map([
+    ["a", {
+      id: "shared",
+    }],
+  ]),
+}

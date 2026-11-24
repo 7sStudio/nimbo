@@ -1,0 +1,40 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`serialize > writes one element per line, meta keys in order, then unknown keys in insertion order 1`] = `
+"{
+  "version": 1,
+  "cells": [
+    {
+      "id": "c_a1b2c3",
+      "type": "server",
+      "source": [
+        "a\\r",
+        "",
+        "🙂"
+      ],
+      "meta": {
+        "collapsed": true,
+        "lastEdit": {
+          "by": "user",
+          "client": "ui",
+          "at": "t"
+        },
+        "color": "red"
+      },
+      "pinned": [
+        1,
+        2
+      ]
+    },
+    {
+      "id": "c_d4e5f6",
+      "type": "markdown",
+      "source": []
+    }
+  ],
+  "attachments": {
+    "a": 1
+  }
+}
+"
+`;

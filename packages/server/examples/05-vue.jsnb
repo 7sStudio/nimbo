@@ -1,0 +1,256 @@
+{
+  "version": 1,
+  "cells": [
+    {
+      "id": "c_vu0001",
+      "type": "markdown",
+      "source": [
+        "# Vue: components, state and the server",
+        "",
+        "Build a Vue 3 interface in client cells: state in one cell, components in others, and a server function called from a component.",
+        "",
+        "What you will learn: how a cell imports Vue, which Vue features work here (templates, props and emits, `ref`, `reactive`, `computed`, `watch`, lifecycle hooks, composables), how state outlives a component's cell, and how a component calls the server. It takes about 10 minutes.",
+        "",
+        "It needs the `vue` package. Run all (Cmd Shift Enter; Ctrl instead of Cmd off a Mac): without it, the first client cell stops on `MissingPackage`; press **Install** there, then Run all again."
+      ]
+    },
+    {
+      "id": "c_vu0002",
+      "type": "markdown",
+      "source": [
+        "## Step 1: state in a cell of its own",
+        "",
+        "`import` from `\"vue\"` works as in any Vue project, with its types and completions. The page gets Vue's full build, so components can use `template` strings; there is no build step, so no `.vue` files and no JSX.",
+        "",
+        "`store` is reactive state. It lives in this cell, not in a component, so the components below can be run again without losing it, as Vue's hot reload keeps state."
+      ]
+    },
+    {
+      "id": "c_vu0003",
+      "type": "client",
+      "source": [
+        "import { computed, reactive } from \"vue\";",
+        "",
+        "type Todo = { id: number; text: string; done: boolean };",
+        "",
+        "const store = reactive({",
+        "  todos: [",
+        "    { id: 1, text: \"Read the Vue example\", done: true },",
+        "    { id: 2, text: \"Write a component\", done: false },",
+        "  ] as Todo[],",
+        "  nextId: 3,",
+        "});",
+        "const remaining = computed(() => store.todos.filter((todo) => !todo.done).length);",
+        "",
+        "function addTodo(text: string): void {",
+        "  store.todos.push({ id: store.nextId++, text, done: false });",
+        "}",
+        "",
+        "remaining.value"
+      ]
+    },
+    {
+      "id": "c_vu0004",
+      "type": "markdown",
+      "source": [
+        "## Step 2: a component with props and emits",
+        "",
+        "`TodoItem` takes a `todo` and tells its parent with `toggle` and `remove`; it changes nothing itself. A component is a value like any other: later cells use it by name."
+      ]
+    },
+    {
+      "id": "c_vu0005",
+      "type": "client",
+      "source": [
+        "import { defineComponent, type PropType } from \"vue\";",
+        "",
+        "const TodoItem = defineComponent({",
+        "  props: { todo: { type: Object as PropType<Todo>, required: true } },",
+        "  emits: { toggle: (id: number) => id > 0, remove: (id: number) => id > 0 },",
+        "  template: `",
+        "    <li style=\"display: flex; gap: 0.5rem; align-items: center\">",
+        "      <input type=\"checkbox\" :checked=\"todo.done\" @change=\"$emit('toggle', todo.id)\" />",
+        "      <span :style=\"{ flex: 1, textDecoration: todo.done ? 'line-through' : 'none' }\">{{ todo.text }}</span>",
+        "      <button type=\"button\" @click=\"$emit('remove', todo.id)\">Remove</button>",
+        "    </li>",
+        "  `,",
+        "});"
+      ]
+    },
+    {
+      "id": "c_vu0006",
+      "type": "markdown",
+      "source": [
+        "## Step 3: mount an app",
+        "",
+        "`createApp(...).mount(display.div())` draws the app under the cell. `v-model`, `watch` and the lifecycle hooks work as usual; what `watch` logs shows under the cell.",
+        "",
+        "Run this cell again (Cmd Enter): the old app is unmounted first (its `onUnmounted` runs, its watchers stop) and a new one mounts, with the same tasks, since they live in step 1."
+      ]
+    },
+    {
+      "id": "c_vu0007",
+      "type": "client",
+      "source": [
+        "import { createApp, onMounted, onUnmounted, ref, watch } from \"vue\";",
+        "",
+        "const app = createApp({",
+        "  components: { TodoItem },",
+        "  setup() {",
+        "    const draft = ref(\"\");",
+        "    const submit = () => {",
+        "      if (draft.value.trim() === \"\") return;",
+        "      addTodo(draft.value.trim());",
+        "      draft.value = \"\";",
+        "    };",
+        "    const toggle = (id: number) => {",
+        "      const todo = store.todos.find((each) => each.id === id);",
+        "      if (todo) todo.done = !todo.done;",
+        "    };",
+        "    const remove = (id: number) => {",
+        "      store.todos = store.todos.filter((each) => each.id !== id);",
+        "    };",
+        "    watch(remaining, (now, before) => console.log(`remaining: ${before} -> ${now}`));",
+        "    onMounted(() => console.log(\"todo app mounted\"));",
+        "    onUnmounted(() => console.log(\"todo app unmounted\"));",
+        "    return { store, remaining, draft, submit, toggle, remove };",
+        "  },",
+        "  template: `",
+        "    <form style=\"display: flex; gap: 0.5rem\" @submit.prevent=\"submit\">",
+        "      <input v-model=\"draft\" placeholder=\"A task, then Enter\" style=\"flex: 1\" />",
+        "      <button type=\"submit\">Add</button>",
+        "    </form>",
+        "    <ul style=\"margin: 0.5rem 0; padding: 0; list-style: none; display: grid; gap: 0.25rem\">",
+        "      <TodoItem v-for=\"todo in store.todos\" :key=\"todo.id\" :todo=\"todo\" @toggle=\"toggle\" @remove=\"remove\" />",
+        "    </ul>",
+        "    <p style=\"margin: 0\">{{ remaining }} of {{ store.todos.length }} to do</p>",
+        "  `,",
+        "});",
+        "const root = display.div();",
+        "root.style.cssText = \"display: block; max-width: 28rem; font: 0.875rem/1.5 system-ui, sans-serif\";",
+        "app.mount(root);",
+        "`${String(store.todos.length)} tasks`"
+      ]
+    },
+    {
+      "id": "c_vu0008",
+      "type": "markdown",
+      "source": [
+        "## Step 4: change state from another cell",
+        "",
+        "Any cell can change `store`, and the app above follows. Run this cell a few times."
+      ]
+    },
+    {
+      "id": "c_vu0009",
+      "type": "client",
+      "source": [
+        "addTodo(`Task added from a cell at ${new Date().toLocaleTimeString()}`);",
+        "remaining.value"
+      ]
+    },
+    {
+      "id": "c_vu0010",
+      "type": "markdown",
+      "source": [
+        "## Step 5: a composable",
+        "",
+        "A composable is a function that uses Vue's reactivity and hooks. `useNow` gives a `ref` that ticks every second and stops its timer when the component unmounts. `watchEffect` reruns whenever what it reads changes."
+      ]
+    },
+    {
+      "id": "c_vu0011",
+      "type": "client",
+      "source": [
+        "import { createApp, onUnmounted, ref, watchEffect } from \"vue\";",
+        "",
+        "function useNow(everyMs = 1000) {",
+        "  const now = ref(new Date());",
+        "  const timer = setInterval(() => (now.value = new Date()), everyMs);",
+        "  onUnmounted(() => clearInterval(timer));",
+        "  return now;",
+        "}",
+        "",
+        "const status = ref(\"\");",
+        "createApp({",
+        "  setup() {",
+        "    const now = useNow();",
+        "    watchEffect(() => {",
+        "      status.value = `${String(remaining.value)} to do at ${now.value.toLocaleTimeString()}`;",
+        "    });",
+        "    return { status };",
+        "  },",
+        "  template: `<p style=\"margin: 0; font: 0.875rem/1.5 system-ui, sans-serif; font-variant-numeric: tabular-nums\">{{ status }}</p>`,",
+        "}).mount(display.div());",
+        "status.value"
+      ]
+    },
+    {
+      "id": "c_vu0012",
+      "type": "markdown",
+      "source": [
+        "## Step 6: call the server from a component",
+        "",
+        "A server cell's exported function is a plain async function in the page: the call goes to the server and comes back as data. Reactive state goes as the plain data it holds."
+      ]
+    },
+    {
+      "id": "c_vu0013",
+      "type": "server",
+      "source": [
+        "export async function summarize(todos: { text: string; done: boolean }[]) {",
+        "  const done = todos.filter((todo) => todo.done).length;",
+        "  return {",
+        "    total: todos.length,",
+        "    done,",
+        "    longest: todos.reduce((best, todo) => (todo.text.length > best.length ? todo.text : best), \"\"),",
+        "    node: process.version,",
+        "    at: new Date().toISOString(),",
+        "  };",
+        "}",
+        "",
+        "await summarize([{ text: \"a sample\", done: true }])"
+      ]
+    },
+    {
+      "id": "c_vu0014",
+      "type": "client",
+      "source": [
+        "import { createApp, ref } from \"vue\";",
+        "",
+        "type Summary = Awaited<ReturnType<typeof summarize>>;",
+        "",
+        "createApp({",
+        "  setup() {",
+        "    const summary = ref<Summary | null>(null);",
+        "    const busy = ref(false);",
+        "    const ask = async () => {",
+        "      busy.value = true;",
+        "      summary.value = await summarize(store.todos);",
+        "      busy.value = false;",
+        "    };",
+        "    return { summary, busy, ask };",
+        "  },",
+        "  template: `",
+        "    <div style=\"display: grid; gap: 0.5rem; justify-items: start; font: 0.875rem/1.5 system-ui, sans-serif\">",
+        "      <button type=\"button\" :disabled=\"busy\" @click=\"ask\">Summarize on the server</button>",
+        "      <span v-if=\"summary\">{{ summary.done }} of {{ summary.total }} done, longest \"{{ summary.longest }}\", Node {{ summary.node }}</span>",
+        "    </div>",
+        "  `,",
+        "}).mount(display.div());",
+        "\"press the button\""
+      ]
+    },
+    {
+      "id": "c_vu0015",
+      "type": "markdown",
+      "source": [
+        "## Try this next",
+        "",
+        "- Give `TodoItem` a slot for the text, or a second component for the form.",
+        "- Keep the tasks across reloads: `watch(store, ..., { deep: true })` in step 1, saving to `localStorage`.",
+        "- Move `store` to a server cell with `export`, and load it through a function as step 6 does."
+      ]
+    }
+  ]
+}

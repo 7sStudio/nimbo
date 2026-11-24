@@ -1,0 +1,18 @@
+{
+  "name": "eslint-plugin-jsnb",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The ESLint rules of 08-code-standards §8.",
+  "main": "index.js",
+  "exports": "./index.js",
+  "scripts": {
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "eslint": "^9.0.0"
+  },
+  "devDependencies": {
+    "@jsnb/core": "workspace:*"
+  }
+}

@@ -1,0 +1,82 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the daemon side's errors > carry a catalogue name, typed data and a message that says what to do 1`] = `
+[
+  {
+    "data": {
+      "path": "/usr/local/bin/node",
+      "version": "22.0.0",
+    },
+    "message": "Kernels need Node 26 or later, but /usr/local/bin/node is Node 22.0.0. Point kernel.nodePath at a Node 26 binary.",
+    "name": "UnsupportedNode",
+  },
+  {
+    "data": {
+      "path": "/opt/not-node",
+      "version": "unknown",
+    },
+    "message": "Kernels need Node 26 or later, but /opt/not-node is not a Node that reports its version. Point kernel.nodePath at a Node 26 binary.",
+    "name": "UnsupportedNode",
+  },
+  {
+    "data": {
+      "timeoutMs": 10000,
+    },
+    "message": "The kernel did not report ready within 10s and was stopped. Check the kernel log, then start it again.",
+    "name": "KernelStartTimeout",
+  },
+  {
+    "data": {
+      "method": "Debugger.enable",
+      "reason": "the connection closed",
+    },
+    "message": "The kernel's inspector refused Debugger.enable: the connection closed. Restart the kernel if interrupts stop working.",
+    "name": "InspectorFailed",
+  },
+  {
+    "data": {
+      "path": "/w/.jsnb/loader.mjs",
+      "reason": "it is a FIFO (a named pipe), not a regular file",
+    },
+    "message": "The kernel could not write its workspace loader at /w/.jsnb/loader.mjs (it is a FIFO (a named pipe), not a regular file). Remove whatever is there if it is not a regular file, check that the workspace folder is writable, then start the kernel again.",
+    "name": "LoaderWriteFailed",
+  },
+  {
+    "data": {
+      "issues": [
+        {
+          "message": "Invalid input",
+          "path": [
+            "prices",
+            "kind",
+          ],
+        },
+      ],
+      "request": "snapshot",
+    },
+    "message": "The kernel answered a snapshot request with a result that is not valid (prices.kind: Invalid input). Restart the kernel, and report it if it happens again.",
+    "name": "KernelResultInvalid",
+  },
+  {
+    "data": {
+      "issues": [],
+      "request": "route",
+    },
+    "message": "The kernel answered a route request with a result that is not valid. Restart the kernel, and report it if it happens again.",
+    "name": "KernelResultInvalid",
+  },
+  {
+    "data": {
+      "error": {
+        "frames": [],
+        "message": "nope is not a current export",
+        "name": "ReferenceError",
+        "raw": "",
+      },
+      "request": "snapshot",
+    },
+    "message": "The kernel could not answer the snapshot request: ReferenceError: nope is not a current export",
+    "name": "KernelRequestFailed",
+  },
+]
+`;

@@ -1,0 +1,341 @@
+{
+  "version": 1,
+  "cells": [
+    {
+      "id": "c_da0001",
+      "type": "markdown",
+      "source": [
+        "# Explore data: a few thousand orders",
+        "",
+        "Generate a few thousand orders on the server and read them with every data view the app has: the tree, the grid with its sort and filters, raw JSON, JSONPath and jq queries, SQL with DuckDB, export, the seven-line cap with Expand and Pin.",
+        "",
+        "What you will learn: how a value shows under its cell, how to find what you need in it without writing code, and how to keep a query with the cell. It takes about 15 minutes. Nothing here needs a package or a network.",
+        "",
+        "Run every cell now with Run All in the notebook's toolbar (Cmd Shift Enter; Ctrl instead of Cmd off a Mac), then follow the steps. Each step says what to click and what you should see."
+      ]
+    },
+    {
+      "id": "c_da0002",
+      "type": "markdown",
+      "source": [
+        "## Step 1: make the data",
+        "",
+        "Two server cells build 3,000 orders from a seeded random generator, so you and anyone you share the notebook with see the same numbers.",
+        "",
+        "The first holds the generator and the lists it draws from (countries, cities, names, a catalogue). It is folded to its header row: click its header, or select it and press Space, to see the code. The second builds the orders, each one nested: a customer, a list of items, a shipping address. The names the cells declare (`orders`, `catalogue`) stay in the kernel for the cells below.",
+        "",
+        "A cell's last line is its value: here an overview of what was made."
+      ]
+    },
+    {
+      "id": "c_da0003",
+      "type": "server",
+      "source": [
+        "// A seeded generator (mulberry32): the same orders on every run and every computer.",
+        "let seed = 20261115;",
+        "const random = () => {",
+        "  seed = (seed + 0x6d2b79f5) | 0;",
+        "  let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);",
+        "  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;",
+        "  return ((t ^ (t >>> 14)) >>> 0) / 4294967296;",
+        "};",
+        "const pick = <T,>(list: readonly T[]): T => list[Math.floor(random() * list.length)] as T;",
+        "",
+        "const countries = [\"France\", \"Germany\", \"Spain\", \"Italy\", \"Netherlands\", \"Sweden\", \"Poland\", \"Portugal\"];",
+        "const cities: Record<string, string[]> = {",
+        "  France: [\"Paris\", \"Lyon\", \"Lille\"],",
+        "  Germany: [\"Berlin\", \"Hamburg\", \"Munich\"],",
+        "  Spain: [\"Madrid\", \"Valencia\", \"Seville\"],",
+        "  Italy: [\"Milan\", \"Rome\", \"Turin\"],",
+        "  Netherlands: [\"Amsterdam\", \"Utrecht\", \"Rotterdam\"],",
+        "  Sweden: [\"Stockholm\", \"Malmo\", \"Uppsala\"],",
+        "  Poland: [\"Warsaw\", \"Krakow\", \"Gdansk\"],",
+        "  Portugal: [\"Lisbon\", \"Porto\", \"Braga\"],",
+        "};",
+        "const firstNames = [\"Ada\", \"Grace\", \"Linus\", \"Margaret\", \"Alan\", \"Barbara\", \"Edsger\", \"Frances\", \"Ken\", \"Radia\"];",
+        "const lastNames = [\"Lovelace\", \"Hopper\", \"Torvalds\", \"Hamilton\", \"Turing\", \"Liskov\", \"Dijkstra\", \"Allen\", \"Thompson\", \"Perlman\"];",
+        "const catalogue = [",
+        "  { sku: \"mug-01\", name: \"Enamel mug\", category: \"kitchen\", price: 1400 },",
+        "  { sku: \"pot-02\", name: \"Pour-over kettle\", category: \"kitchen\", price: 5900 },",
+        "  { sku: \"tee-03\", name: \"Logo t-shirt\", category: \"clothing\", price: 2500 },",
+        "  { sku: \"hoo-04\", name: \"Zip hoodie\", category: \"clothing\", price: 6200 },",
+        "  { sku: \"nbk-05\", name: \"Dot-grid notebook\", category: \"paper\", price: 1200 },",
+        "  { sku: \"pen-06\", name: \"Fountain pen\", category: \"paper\", price: 4800 },",
+        "  { sku: \"lamp-07\", name: \"Desk lamp\", category: \"home\", price: 8900 },",
+        "  { sku: \"rug-08\", name: \"Wool rug\", category: \"home\", price: 15900 },",
+        "];",
+        "const statuses = [\"paid\", \"paid\", \"paid\", \"paid\", \"paid\", \"paid\", \"pending\", \"refunded\", \"failed\", \"paid\"];",
+        "const customers = Array.from({ length: 240 }, (_, i) => {",
+        "  const country = pick(countries);",
+        "  const first = pick(firstNames);",
+        "  const last = pick(lastNames);",
+        "  return {",
+        "    id: `cus_${String(1000 + i)}`,",
+        "    name: `${first} ${last}`,",
+        "    email: `${first}.${last}${String(i)}@example.com`.toLowerCase(),",
+        "    country,",
+        "    tier: random() < 0.15 ? \"gold\" : random() < 0.4 ? \"silver\" : \"standard\",",
+        "  };",
+        "});"
+      ],
+      "meta": {
+        "collapsed": true
+      }
+    },
+    {
+      "id": "c_da0004",
+      "type": "server",
+      "source": [
+        "const count = 3000;",
+        "",
+        "const orders = Array.from({ length: count }, (_, i) => {",
+        "  const customer = pick(customers);",
+        "  const items = Array.from({ length: 1 + Math.floor(random() * 3) }, () => {",
+        "    const product = pick(catalogue);",
+        "    return { ...product, qty: 1 + Math.floor(random() * 3) };",
+        "  });",
+        "  const day = new Date(Date.UTC(2026, 0, 1) + Math.floor(random() * 300) * 86_400_000);",
+        "  return {",
+        "    id: `ord_${String(10001 + i)}`,",
+        "    created: day.toISOString().slice(0, 10),",
+        "    status: pick(statuses),",
+        "    customer: { ...customer },",
+        "    items,",
+        "    total: items.reduce((sum, item) => sum + item.price * item.qty, 0),",
+        "    currency: \"eur\",",
+        "    shipping: { method: pick([\"standard\", \"standard\", \"express\"]), city: pick(cities[customer.country] ?? [\"Paris\"]), days: 1 + Math.floor(random() * 6) },",
+        "  };",
+        "});",
+        "",
+        "({",
+        "  orders: orders.length,",
+        "  customers: customers.length,",
+        "  first: orders[0],",
+        "  revenue: `${(orders.filter((o) => o.status === \"paid\").reduce((sum, o) => sum + o.total, 0) / 100).toFixed(2)} eur`,",
+        "})"
+      ]
+    },
+    {
+      "id": "c_da0005",
+      "type": "markdown",
+      "source": [
+        "## Step 2: the tree, and raw",
+        "",
+        "The value above shows as a **tree**. Click `first` to open it, then `customer` and `items`. With the result focused, Up and Down move, Right opens a row and Left closes it. Hover a row: Copy value and Copy path appear at its end. The line above the tree says what the value is in words: an object, how many keys, how large.",
+        "",
+        "At the right of that line, the Tree, Grid, Raw switch changes the view. Pick **Raw**: the same value as JSON text, the way a program reads it. Pick Tree again; the choice is kept with the cell."
+      ]
+    },
+    {
+      "id": "c_da0006",
+      "type": "markdown",
+      "source": [
+        "## Step 3: sort and filter a grid",
+        "",
+        "A list of flat records reads best as a **grid**. This cell turns each order into one row of plain fields (`rows`, kept for later) and shows the first 500; its view is set to Grid and saved with the cell.",
+        "",
+        "- Click the `total` header: the rows sort ascending. Click again for descending, a third time to stop sorting.",
+        "- Each header has a Filter button. Open the one on `country`, type `France` (it is case sensitive) and press Enter: the query bar opens above the grid with a chip, \"country contains France\", and only the French orders stay. The chip's close button brings them all back.",
+        "- Drag a column's edge to widen it."
+      ]
+    },
+    {
+      "id": "c_da0007",
+      "type": "server",
+      "source": [
+        "const rows = orders.map((order) => ({",
+        "  id: order.id,",
+        "  created: order.created,",
+        "  status: order.status,",
+        "  customer: order.customer.name,",
+        "  country: order.customer.country,",
+        "  items: order.items.length,",
+        "  total: order.total / 100,",
+        "  shipping: order.shipping.method,",
+        "}));",
+        "rows.slice(0, 500)"
+      ],
+      "meta": {
+        "outputView": "grid"
+      }
+    },
+    {
+      "id": "c_da0008",
+      "type": "markdown",
+      "source": [
+        "## Step 4: the seven-line cap, Expand and Pin",
+        "",
+        "A long result stops at seven lines and scrolls in place, so the notebook stays readable. Under the grid above, the footer says which rows are in view and that the rest scrolls in place.",
+        "",
+        "- **Expand** shows every line; while you scroll through it the cell's header row stays at the top. **Cap at 7 lines** puts it back.",
+        "- **Pin to inspector** (or P with the cell selected) moves the result to the Inspector on the right, where it stays in view while you work further down. \"Unpin, show here\" brings it back.",
+        "- **Fold** (or O) hides the result under one line; O shows it again."
+      ]
+    },
+    {
+      "id": "c_da0009",
+      "type": "markdown",
+      "source": [
+        "## Step 5: JSONPath, on the daemon",
+        "",
+        "This cell's value is all 3,000 orders. That is more than the page keeps of one value (256 KB), so the line above the result says truncated: the page holds the first part and the daemon keeps the whole value.",
+        "",
+        "The cell pins a **JSONPath** query, so its answer shows as soon as the cell runs: `$[?@.status == \"refunded\" && @.total > 20000].id`, the refunded orders over 200 euros, read from all 3,000 orders on the daemon.",
+        "",
+        "Open the query bar yourself: hover the result and click Query, or click in the result and press Cmd Shift F. Change the query and press Enter to run it; Cmd Enter runs it and pins it to the cell. `?` in the bar shows ten examples."
+      ]
+    },
+    {
+      "id": "c_da0010",
+      "type": "server",
+      "source": [
+        "orders"
+      ],
+      "meta": {
+        "outputQuery": {
+          "mode": "jsonpath",
+          "query": "$[?@.status == \"refunded\" && @.total > 20000].id"
+        }
+      }
+    },
+    {
+      "id": "c_da0011",
+      "type": "markdown",
+      "source": [
+        "## Step 6: reshape with jq",
+        "",
+        "JSONPath picks parts of a value; **jq** builds a new one. The program pinned here keeps the paid orders, groups them by country, and answers one line per country with its orders and its total in euros, the largest first:",
+        "",
+        "```",
+        "[.[] | select(.status == \"paid\")]",
+        "| group_by(.customer.country)",
+        "| map({country: .[0].customer.country, orders: length, euros: ((map(.total) | add) / 100)})",
+        "| sort_by(-.euros)",
+        "```",
+        "",
+        "Pick jq in the query bar's mode switch and try `[.[] | .shipping.city] | unique`."
+      ]
+    },
+    {
+      "id": "c_da0012",
+      "type": "server",
+      "source": [
+        "orders"
+      ],
+      "meta": {
+        "outputQuery": {
+          "mode": "jq",
+          "query": "[.[] | select(.status == \"paid\")] | group_by(.customer.country) | map({country: .[0].customer.country, orders: length, euros: ((map(.total) | add) / 100)}) | sort_by(-.euros)"
+        }
+      }
+    },
+    {
+      "id": "c_da0013",
+      "type": "markdown",
+      "source": [
+        "## Step 7: SQL with DuckDB",
+        "",
+        "**SQL** runs in DuckDB on the daemon, over a table called `t` that holds the result's rows. This cell makes one row per line of an order (about 6,000 rows), and the pinned query adds up what each category sold:",
+        "",
+        "```sql",
+        "SELECT category, sum(qty) AS sold, round(sum(amount) / 100.0, 2) AS euros",
+        "FROM t WHERE status = 'paid'",
+        "GROUP BY category ORDER BY euros DESC",
+        "```",
+        "",
+        "Pick SQL in the query bar and try `SELECT country, count(DISTINCT order_id) AS orders FROM t GROUP BY country ORDER BY orders DESC`. A query that returns many rows shows how many and offers to download them all as CSV or NDJSON."
+      ]
+    },
+    {
+      "id": "c_da0014",
+      "type": "server",
+      "source": [
+        "const lines = orders.flatMap((order) =>",
+        "  order.items.map((item) => ({",
+        "    order_id: order.id,",
+        "    created: order.created,",
+        "    status: order.status,",
+        "    country: order.customer.country,",
+        "    sku: item.sku,",
+        "    category: item.category,",
+        "    qty: item.qty,",
+        "    amount: item.price * item.qty,",
+        "  })),",
+        ");",
+        "lines"
+      ],
+      "meta": {
+        "outputView": "grid",
+        "outputQuery": {
+          "mode": "sql",
+          "query": "SELECT category, sum(qty) AS sold, round(sum(amount) / 100.0, 2) AS euros FROM t WHERE status = 'paid' GROUP BY category ORDER BY euros DESC"
+        }
+      }
+    },
+    {
+      "id": "c_da0015",
+      "type": "markdown",
+      "source": [
+        "## Step 8: filter without a query language",
+        "",
+        "For the common case you do not need one. On the grid of step 3, open the query bar (Query in the result's header) and pick **Filter**. It has three fields: type `status` in key, pick `=`, type `refunded` in value and press Enter; then `total`, `>`, `100`. Each condition becomes a chip, the grid keeps the rows that match all of them, and under the chips the bar shows the JSONPath they compile to, so you learn the syntax on the way. A chip's close button removes it; Esc closes the bar."
+      ]
+    },
+    {
+      "id": "c_da0016",
+      "type": "markdown",
+      "source": [
+        "## Step 9: export",
+        "",
+        "Hover a result and click **Export**: the value as JSON, NDJSON, CSV (for records like the grid's rows), text, or a self-contained HTML page. Under a JSONPath answer, Copy JSON and Export NDJSON take just the selected parts.",
+        "",
+        "The same queries work from a terminal, for a script or an agent: `nimbo ls` lists the cell ids, and",
+        "",
+        "```bash",
+        "nimbo outputs <cell> --sql \"SELECT status, count(*) FROM t GROUP BY 1\"",
+        "nimbo outputs <cell> --jq '[.[] | .total] | add'",
+        "```"
+      ]
+    },
+    {
+      "id": "c_da0017",
+      "type": "markdown",
+      "source": [
+        "## Step 10: a large value, full screen",
+        "",
+        "Some values are big in another way: a long text, a deep list. This cell builds one order with a long note and 2,000 tracking events. A long string folds behind Show all, and a long list loads more as you scroll, straight from the daemon.",
+        "",
+        "Hover the result and click Full screen (or click in the result and press Cmd Shift O): the value fills the window with the same views and the query bar, and Open in a new tab gives it a page of its own."
+      ]
+    },
+    {
+      "id": "c_da0018",
+      "type": "server",
+      "source": [
+        "const tracking = Array.from({ length: 2000 }, (_, i) => ({",
+        "  at: new Date(Date.UTC(2026, 5, 1) + i * 90_000).toISOString(),",
+        "  event: i % 50 === 49 ? \"scanned at a hub\" : \"position updated\",",
+        "  lat: 48.85 + Math.sin(i / 40) * 2,",
+        "  lon: 2.35 + Math.cos(i / 40) * 3,",
+        "}));",
+        "({",
+        "  ...orders[0],",
+        "  note: Array.from({ length: 60 }, (_, i) => `Line ${String(i + 1)} of a long delivery note, kept whole by the daemon.`).join(\" \"),",
+        "  tracking,",
+        "})"
+      ]
+    },
+    {
+      "id": "c_da0019",
+      "type": "markdown",
+      "source": [
+        "## Try this next",
+        "",
+        "- Change `count` in step 1's second cell to 20000 and run all again (Cmd Shift Enter): the grid still opens at once, and the pinned queries still read every order on the daemon.",
+        "- Pin a query of your own with Cmd Enter in the query bar, then close the notebook and open it again from Home: the query is saved with its cell.",
+        "- Make the data a function of your own: read a CSV with `node:fs` in a server cell, and every view above works on it the same way.",
+        "- Open the **Client side** example from Home's Examples to draw an interface from data in the page."
+      ]
+    }
+  ]
+}

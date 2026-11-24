@@ -1,0 +1,68 @@
+{
+  "name": "@jsnb/test-tools",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "./workspace": {
+      "development": "./workspace.ts",
+      "types": "./dist/workspace.d.ts",
+      "import": "./dist/workspace.js"
+    },
+    "./ids": {
+      "development": "./ids.ts",
+      "types": "./dist/ids.d.ts",
+      "import": "./dist/ids.js"
+    },
+    "./events": {
+      "development": "./events.ts",
+      "types": "./dist/events.d.ts",
+      "import": "./dist/events.js"
+    },
+    "./kernel": {
+      "development": "./kernel.ts",
+      "types": "./dist/kernel.d.ts",
+      "import": "./dist/kernel.js"
+    },
+    "./daemon": {
+      "development": "./daemon.ts",
+      "types": "./dist/daemon.d.ts",
+      "import": "./dist/daemon.js"
+    },
+    "./realm": {
+      "development": "./realm.ts",
+      "types": "./dist/realm.d.ts",
+      "import": "./dist/realm.js"
+    },
+    "./contract": {
+      "development": "./contract.ts",
+      "types": "./dist/contract.d.ts",
+      "import": "./dist/contract.js"
+    },
+    "./registry": {
+      "development": "./registry.ts",
+      "types": "./dist/registry.d.ts",
+      "import": "./dist/registry.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@jsnb/client": "workspace:*",
+    "@jsnb/core": "workspace:*",
+    "@jsnb/runtime-web": "workspace:*",
+    "@jsnb/transform": "workspace:*",
+    "esbuild": "0.28.2",
+    "playwright": "^1.64.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "typescript": "~5.9.3"
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "name": "@jsnb/ui",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    "./index.html": "./dist/index.html"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "record:events": "NIMBO_RECORD=1 vitest run --root ../.. --project ui src/store/record.integration.test.ts"
+  },
+  "devDependencies": {
+    "@codemirror/autocomplete": "^6.20.3",
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/lint": "^6.9.7",
+    "@codemirror/lsp-client": "^6.3.0",
+    "@codemirror/merge": "^6.12.3",
+    "@codemirror/search": "^6.7.2",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.14",
+    "@jsnb/client": "workspace:*",
+    "@jsnb/core": "workspace:*",
+    "@jsnb/output-view": "workspace:*",
+    "@jsnb/query-json": "workspace:*",
+    "@jsnb/query-sql": "workspace:*",
+    "@jsnb/runtime-web": "workspace:*",
+    "@jsnb/style-gate": "workspace:*",
+    "@jsnb/test-daemon": "workspace:*",
+    "@jsnb/test-tools": "workspace:*",
+    "@jsnb/tokens": "workspace:*",
+    "@lezer/highlight": "^1.2.5",
+    "@lezer/markdown": "^1.8.1",
+    "@lucide/vue": "^1.54.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "@vueuse/core": "^15.0.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "dompurify": "^3.4.17",
+    "marked": "~18.1.2",
+    "modern-screenshot": "^4.7.0",
+    "pinia": "^3.0.4",
+    "postcss": "^8.5.29",
+    "reka-ui": "^2.11.0",
+    "tailwind-merge": "^3.7.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.4",
+    "vue": "^3.5.26"
+  },
+  "// devDependencies": "Everything here is a build input: the page ships as dist/, which bundles it, so a deployed app installs none of it."
+}

@@ -1,0 +1,108 @@
+/* Tailwind v4 for the views' templates (08 §3: inside .jsnb-ov, Tailwind utilities and data- attributes), compiled
+   into dist/style.css, so a host without Tailwind gets every rule. No Preflight, and no default theme: the
+   theme below is the viewer's whole scale, every value inlined into its utilities (so nothing lands on :root), colors,
+   type and shape read from .jsnb-ov's tokens (08 §7). The prefix ov: keeps the viewer's utilities apart from a host's
+   own Tailwind build. The layer order comes first, so it holds whichever of theme.css and style.css a host loads first. */
+@layer properties, tokens, base, components, utilities;
+
+@import "tailwindcss/utilities.css" layer(utilities) prefix(ov);
+
+@source "../";
+
+/* The 08 §7 gate's planted classes (src/fixtures) are test data the build must never compile. */
+@source not "../fixtures";
+
+/* A pointer's hover only where a mouse or trackpad gives one (08 §7): Tailwind's own variant asks (hover: hover) alone,
+   which a touch screen with a stylus or an emulated hover also answers. group-hover and every hover after another
+   variant are built on this one. */
+@custom-variant hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
+@theme inline prefix(ov) {
+  --spacing: 0.25rem;
+  --color-transparent: transparent;
+  --color-current: currentcolor;
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-2: var(--border-2);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-client: var(--client);
+  --color-client-soft: var(--client-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-err: var(--err);
+  --color-err-soft: var(--err-soft);
+  --color-match: var(--match);
+  --color-sel: var(--sel);
+  --color-tip-bg: var(--tip-bg);
+  --color-tip-fg: var(--tip-fg);
+  --color-tip-rule: var(--tip-rule);
+  --color-tip-muted: var(--pop-muted);
+  --color-scrim: var(--scrim);
+  --color-key: var(--key);
+  --color-str: var(--str);
+  --color-num: var(--num);
+  --color-bool: var(--bool);
+  --color-nul: var(--nul);
+  --color-typ: var(--typ);
+  --color-fn: var(--fn);
+  --color-punc: var(--punc);
+  --color-run-fg: var(--run-fg);
+  --color-run-bg: var(--run-bg);
+  --font-sans: var(--font);
+  --font-mono: var(--mono);
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* the type scale at the 16 px root: 10.5, 11, 12, 13 (interface), 12.5 (values) and 14 px; font size only.
+     A key here never repeats a token's name (text-interface reads --text-ui), which would make a cycle. */
+  --text-kbd: calc(10.5rem / 16);
+  --text-meta: 0.6875rem;
+  --text-small: 0.75rem;
+  --text-interface: var(--text-ui);
+  --text-value: var(--text-code);
+  --text-title: 0.875rem;
+  --leading-code: 1.6;
+  --radius-mark: 0.1875rem;
+  --radius-small: 0.25rem;
+  --radius-box: var(--radius-control);
+  --radius-round: var(--radius-pill);
+  --radius-panel: var(--radius-card);
+  --shadow-soft: var(--shadow);
+}
+
+/* A DOM output's live container (DomView.vue) takes the style 04 §5.5 gives a client cell's container: every property
+   back to its initial value, so nothing .jsnb-ov or the page above it passes down by inheritance reaches the user's
+   elements, then a block that inherits color-scheme and the page's language, which Chromium and WebKit carry
+   in -webkit-locale and `all` resets too. Custom properties still inherit; CSS has no way to stop them. */
+@utility live-slot {
+  all: initial;
+  display: block;
+  color-scheme: inherit;
+  -webkit-locale: inherit;
+}
+
+/* A button's or a field's font from its context, which the browser's defaults do not give. Longhands, not the font
+   shorthand: Tailwind sorts this utility before the type scale's, so a size or a family beside it still wins. */
+@utility font-inherit {
+  font-family: inherit;
+  font-size: inherit;
+  font-style: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}

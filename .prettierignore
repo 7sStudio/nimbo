@@ -1,0 +1,15 @@
+# Paths Prettier never touches: build output, lockfile, worktrees.
+dist
+coverage
+pnpm-lock.yaml
+.worktrees
+playwright-report
+test-results
+CHANGELOG.md
+docs
+# local coding-assistant configuration (git-ignored)
+.agents
+.claude
+.opencode
+skills-lock.json
+.impeccable

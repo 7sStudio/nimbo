@@ -1,0 +1,12 @@
+view: tree (switch: tree, raw)
+summary: Array, 0 items, 2 B
+rows:
+  []
+hints:
+exports: json, ndjson, js, text, html
+--- json
+[]
+--- ndjson
+
+--- js
+[]

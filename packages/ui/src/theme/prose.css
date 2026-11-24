@@ -1,0 +1,180 @@
+/* The rendered prose of a markdown cell, on the cell's white: 13 px / 1.5 at the 16 px root in the quieter ink, an 88
+   character measure, headings 22 / 18 / 15 px in full ink, code spans and fenced code in the mono face on the result's
+   tone with no outline (a JavaScript or TypeScript fence in the editor's colours, its language at its corner), links in
+   --client. A
+   utility, so its selectors are ui:-prefixed like every other rule of the page, and each element it styles excludes a
+   live slot and what it holds, as the gate asks of every element selector (08 §7). */
+@utility prose {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--fg-2);
+  max-inline-size: 88ch;
+  overflow-wrap: anywhere;
+
+  .jsnb-ui & > * + *:not([data-live], [data-live] *) {
+    margin-block-start: 0.75em;
+  }
+
+  .jsnb-ui & h1:not([data-live], [data-live] *),
+  .jsnb-ui & h2:not([data-live], [data-live] *),
+  .jsnb-ui & h3:not([data-live], [data-live] *),
+  .jsnb-ui & h4:not([data-live], [data-live] *),
+  .jsnb-ui & h5:not([data-live], [data-live] *),
+  .jsnb-ui & h6:not([data-live], [data-live] *) {
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+    color: var(--fg);
+    margin-block-start: 1.2em;
+  }
+
+  .jsnb-ui & > :first-child:not([data-live], [data-live] *) {
+    margin-block-start: 0;
+  }
+
+  .jsnb-ui & h1:not([data-live], [data-live] *) {
+    font-size: 1.375rem;
+  }
+
+  .jsnb-ui & h2:not([data-live], [data-live] *) {
+    font-size: 1.125rem;
+  }
+
+  .jsnb-ui & h3:not([data-live], [data-live] *) {
+    font-size: 0.9375rem;
+  }
+
+  .jsnb-ui & h4:not([data-live], [data-live] *),
+  .jsnb-ui & h5:not([data-live], [data-live] *),
+  .jsnb-ui & h6:not([data-live], [data-live] *) {
+    font-size: 0.8125rem;
+  }
+
+  .jsnb-ui & ul:not([data-live], [data-live] *),
+  .jsnb-ui & ol:not([data-live], [data-live] *) {
+    padding-inline-start: 1.5em;
+  }
+
+  .jsnb-ui & ul:not([data-live], [data-live] *) {
+    list-style: disc;
+  }
+
+  .jsnb-ui & ol:not([data-live], [data-live] *) {
+    list-style: decimal;
+  }
+
+  .jsnb-ui & li + li:not([data-live], [data-live] *) {
+    margin-block-start: 0.25em;
+  }
+
+  .jsnb-ui & a:not([data-live], [data-live] *) {
+    color: var(--client);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+  }
+
+  .jsnb-ui & code:not([data-live], [data-live] *) {
+    font-family: var(--mono);
+    font-size: 0.85em;
+    background: var(--result);
+    border-radius: var(--radius-control);
+    padding-block: 0.1em;
+    padding-inline: 0.3em;
+  }
+
+  .jsnb-ui & pre:not([data-live], [data-live] *) {
+    font-family: var(--mono);
+    font-size: var(--text-code);
+    background: var(--result);
+    border-radius: var(--radius-control);
+    color: var(--fg);
+    padding-block: 0.625rem;
+    padding-inline: 1rem;
+    overflow-x: auto;
+    position: relative;
+  }
+
+  /* a fence's language at its corner, and its JavaScript or TypeScript in the editor's colours (editor/render.ts) */
+  .jsnb-ui & pre[data-lang]:not([data-live], [data-live] *)::after {
+    content: attr(data-lang);
+    position: absolute;
+    inset-block-start: 0.4375rem;
+    inset-inline-end: 0.625rem;
+    font-size: 0.6875rem;
+    color: var(--muted);
+  }
+
+  .jsnb-ui & [data-tok~="kw"]:not([data-live], [data-live] *) {
+    color: var(--kw);
+  }
+
+  .jsnb-ui & [data-tok~="ctl"]:not([data-live], [data-live] *) {
+    color: var(--ctl);
+  }
+
+  .jsnb-ui & [data-tok~="str"]:not([data-live], [data-live] *) {
+    color: var(--str);
+  }
+
+  .jsnb-ui & [data-tok~="num"]:not([data-live], [data-live] *) {
+    color: var(--num);
+  }
+
+  .jsnb-ui & [data-tok~="bool"]:not([data-live], [data-live] *) {
+    color: var(--bool);
+  }
+
+  .jsnb-ui & [data-tok~="typ"]:not([data-live], [data-live] *) {
+    color: var(--typ);
+  }
+
+  .jsnb-ui & [data-tok~="fn"]:not([data-live], [data-live] *) {
+    color: var(--fn);
+  }
+
+  .jsnb-ui & [data-tok~="key"]:not([data-live], [data-live] *) {
+    color: var(--key);
+  }
+
+  .jsnb-ui & [data-tok~="cmt"]:not([data-live], [data-live] *) {
+    color: var(--cmt);
+  }
+
+  .jsnb-ui & [data-tok~="punc"]:not([data-live], [data-live] *) {
+    color: var(--punc);
+  }
+
+  .jsnb-ui & pre code:not([data-live], [data-live] *) {
+    background: none;
+    padding: 0;
+    font-size: inherit;
+  }
+
+  .jsnb-ui & blockquote:not([data-live], [data-live] *) {
+    border-inline-start: 2px solid var(--border-2);
+    padding-inline-start: 1em;
+    color: var(--fg-2);
+  }
+
+  .jsnb-ui & hr:not([data-live], [data-live] *) {
+    border: 0;
+    border-block-start: 1px solid var(--border);
+  }
+
+  .jsnb-ui & table:not([data-live], [data-live] *) {
+    border-collapse: collapse;
+    font-size: 0.875rem;
+  }
+
+  .jsnb-ui & th:not([data-live], [data-live] *),
+  .jsnb-ui & td:not([data-live], [data-live] *) {
+    border: 1px solid var(--border);
+    padding-block: 0.25rem;
+    padding-inline: 0.5rem;
+    text-align: start;
+  }
+
+  .jsnb-ui & img:not([data-live], [data-live] *) {
+    max-inline-size: 100%;
+  }
+}

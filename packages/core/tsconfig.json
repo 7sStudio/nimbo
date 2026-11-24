@@ -1,0 +1,10 @@
+{
+  "// owns": "Full project of @jsnb/core (sources and tests) for typecheck, lint and editors; emits nothing.",
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "resolveJsonModule": true
+  },
+  "include": ["src"],
+  "references": []
+}

@@ -1,0 +1,38 @@
+view: tree (switch: tree, raw)
+summary: Map, 2 entries, 63 B
+rows:
+▾ Map(2)
+    { id: 1 } => "first"
+    [1, 2] => "second"
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+[
+  [
+    {
+      "id": 1
+    },
+    "first"
+  ],
+  [
+    [
+      1,
+      2
+    ],
+    "second"
+  ]
+]
+--- ndjson
+[{"id":1},"first"]
+[[1,2],"second"]
+--- js
+new Map([
+  [{
+    id: 1,
+  }, "first"],
+  [[
+    1,
+    2,
+  ], "second"],
+])

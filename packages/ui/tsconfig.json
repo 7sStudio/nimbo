@@ -1,0 +1,46 @@
+{
+  "// owns": "Full project of @jsnb/ui (sources, tests, e2e, vite config) for typecheck, lint and editors; emits nothing.",
+  "// exactOptionalPropertyTypes": "off for ui only: the shadcn-vue copies forward optional props to Reka UI, whose prop types are not exact-optional clean (39 vue-tsc errors otherwise); every other 08 \u00a76 flag applies.",
+  "// development": "Resolves @jsnb/output-view through its development condition, its .vue sources, as the Vite dev server and Vitest do: the typecheck stage runs before the build, so its dist does not exist yet.",
+  "extends": "../../tsconfig.bundler.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    "customConditions": ["development"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["env.d.ts", "src", "e2e", "vite.config.ts", "pageScope.ts"],
+  "references": [
+    {
+      "path": "../core/tsconfig.build.json"
+    },
+    {
+      "path": "../client/tsconfig.build.json"
+    },
+    {
+      "path": "../output-view/tsconfig.build.json"
+    },
+    {
+      "path": "../query-json/tsconfig.build.json"
+    },
+    {
+      "path": "../query-sql/tsconfig.build.json"
+    },
+    {
+      "path": "../runtime-web/tsconfig.build.json"
+    },
+    {
+      "path": "../tokens/tsconfig.build.json"
+    },
+    {
+      "path": "../../tools/test/tsconfig.build.json"
+    },
+    {
+      "path": "../../tools/test-daemon/tsconfig.build.json"
+    }
+  ]
+}

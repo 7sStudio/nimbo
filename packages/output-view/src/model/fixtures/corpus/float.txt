@@ -1,0 +1,12 @@
+view: primitive (switch: none)
+summary: number
+rows:
+  1.5
+hints:
+exports: json, ndjson, js, text, html
+--- json
+1.5
+--- ndjson
+1.5
+--- js
+1.5

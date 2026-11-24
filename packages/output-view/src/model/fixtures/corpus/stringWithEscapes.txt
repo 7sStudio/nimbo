@@ -1,0 +1,12 @@
+view: primitive (switch: none)
+summary: string, 23 characters
+rows:
+  "line one\nline \"two\"\ttab"
+hints:
+exports: json, ndjson, js, text, html
+--- json
+"line one\nline \"two\"\ttab"
+--- ndjson
+"line one\nline \"two\"\ttab"
+--- js
+"line one\nline \"two\"\ttab"

@@ -1,0 +1,15 @@
+view: primitive (switch: none)
+summary: TypeError
+rows:
+  TypeError: "Cannot read properties of undefined (reading 'email')"
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{
+  "name": "TypeError",
+  "message": "Cannot read properties of undefined (reading 'email')"
+}
+--- ndjson
+{"name":"TypeError","message":"Cannot read properties of undefined (reading 'email')"}
+--- js
+new TypeError("Cannot read properties of undefined (reading 'email')")

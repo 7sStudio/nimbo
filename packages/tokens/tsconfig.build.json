@@ -1,0 +1,11 @@
+{
+  "// owns": "Emitting project of @jsnb/tokens: src without tests and their fixtures into dist, in dependency order under tsc -b.",
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/**/fixtures/**"],
+  "references": []
+}

@@ -1,0 +1,72 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the built-in errors > carry a catalogue name, typed data and a message that says what to do 1`] = `
+[
+  {
+    "data": {
+      "spec": "webhook",
+    },
+    "message": "route() takes "METHOD /path", such as route("POST /webhook", handler); got "webhook".",
+    "name": "InvalidRouteSpec",
+  },
+  {
+    "data": {
+      "spec": "POST /hook",
+      "type": "undefined",
+    },
+    "message": "route("POST /hook", handler) needs a handler function, not undefined. Pass (req) => a Response, an object, a string or nothing.",
+    "name": "InvalidRouteHandler",
+  },
+  {
+    "data": {
+      "spec": "GET /f",
+      "type": "function",
+    },
+    "message": "The handler of GET /f returned a function, which has no JSON form. Return a Response, a string, plain data or nothing.",
+    "name": "RouteResultInvalid",
+  },
+  {
+    "data": {
+      "builtin": "route",
+    },
+    "message": "route() was called outside any cell's run, so no cell can own what it registers. Call it from cell code.",
+    "name": "OutsideCell",
+  },
+  {
+    "data": {
+      "path": "/w/.jsnb/loader.mjs",
+    },
+    "message": "/w/.jsnb/loader.mjs does not export a load function. Restart the kernel to rewrite it.",
+    "name": "LoaderInvalid",
+  },
+  {
+    "data": {
+      "path": "/w/.env",
+      "reason": "it is a FIFO (a named pipe), not a regular file",
+    },
+    "message": "/w/.env could not be read (it is a FIFO (a named pipe), not a regular file), so the run did not start. Make it a regular file the kernel may read, of at most 1 MiB, then run the cell again.",
+    "name": "EnvUnreadable",
+  },
+  {
+    "data": {
+      "cell": "c_aaaaaa",
+    },
+    "message": "The code sent for cell c_aaaaaa is not a compiled cell: it does not evaluate to a cell function. Run the cell again, and report it if it happens again.",
+    "name": "CellCodeInvalid",
+  },
+  {
+    "data": {
+      "name": "process.nextTick",
+    },
+    "message": "process.nextTick was replaced by a function or an accessor that does not call Node's own, so this kernel stopped receiving runs and requests; it has put Node's own back. Replace process.nextTick only with a wrapper that calls the original, or fake it only around synchronous code and restore it before the cell awaits anything (with fake timers, uninstall them before its first await).",
+    "name": "ProcessHookReplaced",
+  },
+  {
+    "data": {
+      "name": "process.emit",
+    },
+    "message": "process.emit was replaced by a function or an accessor that does not call Node's own, so this kernel stopped receiving runs and requests; it has put Node's own back. Replace process.emit only with a wrapper that calls the original, or fake it only around synchronous code and restore it before the cell awaits anything (with fake timers, uninstall them before its first await).",
+    "name": "ProcessHookReplaced",
+  },
+]
+`;

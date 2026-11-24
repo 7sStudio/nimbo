@@ -1,0 +1,13 @@
+{
+  "// owns": "The output-view test host (tests, fixtures and the engines' composition) for typecheck, lint and editors; emits nothing. vue-tsc checks it (the root typecheck script), since it mounts output-view's .vue views.",
+  "// development": "Resolves the four workspace packages through their development condition, as the host's Vitest projects do, so it checks against their sources and needs no build; query-json's and query-sql's sources import .ts files, which this no-emit project allows.",
+  "extends": "../../tsconfig.bundler.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "composite": false,
+    "types": ["vite/client", "node"],
+    "customConditions": ["development"],
+    "allowImportingTsExtensions": true
+  },
+  "include": ["env.d.ts", "*.ts", "fixtures/*.ts"]
+}

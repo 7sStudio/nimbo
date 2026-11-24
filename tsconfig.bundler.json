@@ -1,0 +1,9 @@
+{
+  "// owns": "Module settings for the packages Vite bundles: ui, runtime-web, output-view, query-json, query-sql.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2024", "DOM", "DOM.Iterable"]
+  }
+}

@@ -1,0 +1,20 @@
+view: tree (switch: tree, raw)
+summary: Object, 2 keys, 33 B
+rows:
+▾ Object
+    a: undefined
+    b: 1
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{
+  "b": 1
+}
+--- ndjson
+{"b":1}
+--- js
+{
+  a: undefined,
+  b: 1,
+}

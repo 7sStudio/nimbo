@@ -1,0 +1,18 @@
+{
+  "// owns": "Declarations of the Vue layer (src/index.ts, vue/, renderers/), emitted by vue-tsc into node_modules/.cache/declarations beside the model's (tsconfig.build.json); rollup.dts.config.mjs rolls both into dist.",
+  "extends": "../../tsconfig.bundler.json",
+  "compilerOptions": {
+    "composite": false,
+    "rootDir": "src",
+    "outDir": "node_modules/.cache/declarations",
+    "emitDeclarationOnly": true,
+    "erasableSyntaxOnly": true
+  },
+  "include": ["env.d.ts", "src/index.ts", "src/vue", "src/renderers"],
+  "exclude": ["src/**/*.test.ts", "src/**/fixtures/**"],
+  "references": [
+    {
+      "path": "./tsconfig.build.json"
+    }
+  ]
+}

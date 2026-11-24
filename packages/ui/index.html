@@ -1,0 +1,26 @@
+<!doctype html>
+<!-- data-jsnb-tokens: the page declares @jsnb/tokens on :root (main.css), so an output viewer inside it declares none of
+     its own and reads the page's, the tones the page sets around it included (the Variables panel's). -->
+<html lang="en" data-jsnb-tokens>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>nimbo</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23d6420a'/%3E%3Cpath d='M10 23V9h3l6 9V9h3v14h-3l-6-9v9z' fill='%23fff'/%3E%3C/svg%3E"
+    />
+    <!-- The body's own 8 px margin would push the shell's grid off the window's edges; nothing of our stylesheet may
+         style an element outside .jsnb-ui (08 §7), so the page's one document-level rule lives here. A rule, not the
+         body's style attribute: a dialog's scroll lock rewrites that attribute's margins and leaves the default 8 px. -->
+    <style>
+      body {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

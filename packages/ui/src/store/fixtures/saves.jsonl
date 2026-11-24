@@ -1,0 +1,12 @@
+{"notebook":"flow.jsnb","seq":3,"ts":"2026-11-02T15:47:06.134Z","type":"cell.added","data":{"cell":{"id":"c_m0izya","type":"server","source":"1","index":0,"meta":{"lastEdit":{"by":"agent","client":"cli","at":"2026-11-02T15:47:06.133Z"}},"status":"idle","stale":false,"lastExecution":null}}}
+{"notebook":"flow.jsnb","seq":4,"ts":"2026-11-02T15:47:06.138Z","type":"notebook.saved","data":{"savedAt":"2026-11-02T15:47:06.138Z"}}
+{"notebook":"flow.jsnb","seq":5,"ts":"2026-11-02T15:47:06.139Z","type":"cell.added","data":{"cell":{"id":"c_mpfzgh","type":"server","source":"2","index":1,"meta":{"lastEdit":{"by":"agent","client":"cli","at":"2026-11-02T15:47:06.139Z"}},"status":"idle","stale":false,"lastExecution":null}}}
+{"notebook":"flow.jsnb","seq":6,"ts":"2026-11-02T15:47:06.236Z","type":"notebook.saveFailed","data":{"path":"flow.jsnb","error":{"code":"EACCES","message":"Could not save flow.jsnb: EACCES. The notebook stays open; it is saved again at the next change."}}}
+{"notebook":"flow.jsnb","seq":7,"ts":"2026-11-02T15:47:06.243Z","type":"notebook.saved","data":{"savedAt":"2026-11-02T15:47:06.243Z"}}
+{"notebook":"flow.jsnb","seq":8,"ts":"2026-11-02T15:47:06.244Z","type":"cell.added","data":{"cell":{"id":"c_5e85h2","type":"server","source":"3","index":2,"meta":{"lastEdit":{"by":"agent","client":"cli","at":"2026-11-02T15:47:06.244Z"}},"status":"idle","stale":false,"lastExecution":null}}}
+{"notebook":"flow.jsnb","seq":9,"ts":"2026-11-02T15:47:06.345Z","type":"notebook.conflict","data":{"path":"flow.jsnb"}}
+{"notebook":"flow.jsnb","seq":10,"ts":"2026-11-02T15:47:06.351Z","type":"notebook.saved","data":{"savedAt":"2026-11-02T15:47:06.351Z"}}
+{"notebook":"flow.jsnb","seq":11,"ts":"2026-11-02T15:47:06.352Z","type":"cell.deleted","data":{"cell":"c_m0izya"}}
+{"notebook":"flow.jsnb","seq":12,"ts":"2026-11-02T15:47:06.352Z","type":"cell.deleted","data":{"cell":"c_mpfzgh"}}
+{"notebook":"flow.jsnb","seq":13,"ts":"2026-11-02T15:47:06.352Z","type":"cell.deleted","data":{"cell":"c_5e85h2"}}
+{"notebook":"flow.jsnb","seq":14,"ts":"2026-11-02T15:47:06.352Z","type":"notebook.saved","data":{"savedAt":"2026-11-02T15:47:06.352Z"}}

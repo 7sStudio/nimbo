@@ -1,0 +1,77 @@
+view: grid (switch: tree, grid, raw)
+summary: Array, 3 rows, 5 columns, 160 B
+rows:
+▾ Array(3)
+  ▾ 0: Object
+      id: 1
+      name: "a"
+      email: "a@example.com"
+      plan: "pro"
+    }
+  ▾ 1: Object
+      id: 2
+      name: "b"
+      email: "b@example.com"
+      team: "core"
+    }
+  ▾ 2: Object
+      id: 3
+      name: "c"
+      email: "c@example.com"
+    }
+  ]
+grid (records, 0 omitted): id | name | email | plan | team
+  0: 1 | "a" | "a@example.com" | "pro" | ∅
+  1: 2 | "b" | "b@example.com" | ∅ | "core"
+  2: 3 | "c" | "c@example.com" | ∅ | ∅
+hints:
+exports: json, ndjson, csv, js, text, html
+--- json
+[
+  {
+    "id": 1,
+    "name": "a",
+    "email": "a@example.com",
+    "plan": "pro"
+  },
+  {
+    "id": 2,
+    "name": "b",
+    "email": "b@example.com",
+    "team": "core"
+  },
+  {
+    "id": 3,
+    "name": "c",
+    "email": "c@example.com"
+  }
+]
+--- ndjson
+{"id":1,"name":"a","email":"a@example.com","plan":"pro"}
+{"id":2,"name":"b","email":"b@example.com","team":"core"}
+{"id":3,"name":"c","email":"c@example.com"}
+--- csv
+id,name,email,plan,team
+1,a,a@example.com,pro,
+2,b,b@example.com,,core
+3,c,c@example.com,,
+--- js
+[
+  {
+    id: 1,
+    name: "a",
+    email: "a@example.com",
+    plan: "pro",
+  },
+  {
+    id: 2,
+    name: "b",
+    email: "b@example.com",
+    team: "core",
+  },
+  {
+    id: 3,
+    name: "c",
+    email: "c@example.com",
+  },
+]

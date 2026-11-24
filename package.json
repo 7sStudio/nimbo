@@ -1,0 +1,93 @@
+{
+  "name": "nimbo",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.10.1",
+  "engines": {
+    "node": ">=26"
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json && pnpm --filter @jsnb/output-view build && pnpm --filter @jsnb/ui build",
+    "typecheck": "tsc -b && vue-tsc --noEmit -p packages/ui/tsconfig.json && vue-tsc --noEmit -p packages/output-view/tsconfig.json && vue-tsc --noEmit -p tests/output-view/tsconfig.json",
+    "lint": "eslint . --max-warnings 0 --cache --cache-strategy content --cache-location node_modules/.cache/eslint/ && stylelint \"packages/**/*.{css,vue}\" && node tools/check-disables.mjs",
+    "lint:full": "eslint . --max-warnings 0 && stylelint \"packages/**/*.{css,vue}\" && node tools/check-disables.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "node tools/stage.mjs vitest unit",
+    "test:coverage": "node tools/stage.mjs vitest unit --coverage",
+    "test:integration": "node tools/stage.mjs vitest integration",
+    "test:contract": "node tools/stage.mjs vitest contract",
+    "test:security": "node tools/stage.mjs vitest security",
+    "test:browser": "node tools/stage.mjs playwright browser",
+    "test:acceptance": "node tools/stage.mjs playwright acceptance",
+    "size": "node tools/size.mjs",
+    "knip": "NODE_OPTIONS=\"${NODE_OPTIONS:-} --conditions=development\" knip",
+    "depcruise": "depcruise packages tests --config .dependency-cruiser.cjs",
+    "ci": "bash tools/ci.sh",
+    "changeset": "changeset",
+    "hooks": "simple-git-hooks"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@changesets/cli": "^3.0.3",
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.64.0",
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^26.6.5",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "@vitest/browser-playwright": "^5.0.3",
+    "@vitest/coverage-v8": "^5.0.3",
+    "@vue/test-utils": "^2.5.1",
+    "dependency-cruiser": "^18.5.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-boundaries": "^7.2.0",
+    "eslint-plugin-import-x": "^4.17.1",
+    "eslint-plugin-jsnb": "workspace:*",
+    "eslint-plugin-vue": "^10.11.1",
+    "fast-check": "^4.10.2",
+    "globals": "^17.13.0",
+    "happy-dom": "^20.14.6",
+    "knip": "^6.41.0",
+    "lint-staged": "^17.6.0",
+    "playwright": "^1.64.0",
+    "postcss-html": "^2.0.0",
+    "prettier": "^3.9.10",
+    "prettier-plugin-tailwindcss": "^0.8.1",
+    "simple-git-hooks": "^2.14.0",
+    "stylelint": "^17.16.0",
+    "stylelint-config-standard": "^40.0.0",
+    "stylelint-use-logical": "^2.1.3",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.71.1",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.3",
+    "vue-eslint-parser": "^10.4.1",
+    "vue-tsc": "^3.3.13"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm lint-staged",
+    "commit-msg": "pnpm commitlint --edit $1"
+  },
+  "lint-staged": {
+    "*.{ts,mts,cts,js,mjs,cjs}": [
+      "prettier --write"
+    ],
+    "*.vue": [
+      "stylelint",
+      "prettier --write"
+    ],
+    "*.css": [
+      "stylelint",
+      "prettier --write"
+    ],
+    "*.{json,md,yaml,yml,html}": [
+      "prettier --write"
+    ]
+  }
+}

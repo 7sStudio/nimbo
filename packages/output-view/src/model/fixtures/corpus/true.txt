@@ -1,0 +1,12 @@
+view: primitive (switch: none)
+summary: boolean
+rows:
+  true
+hints:
+exports: json, ndjson, js, text, html
+--- json
+true
+--- ndjson
+true
+--- js
+true

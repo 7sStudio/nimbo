@@ -1,0 +1,31 @@
+{
+  "name": "@jsnb/transform",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "budget": "node --import ./src/fixtures/resolve-ts.mjs ./src/fixtures/measure-transform.mts --assert",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@jridgewell/trace-mapping": "^0.3.31",
+    "fast-check": "^4.10.2"
+  },
+  "dependencies": {
+    "@jsnb/core": "workspace:*",
+    "typescript": "~5.9.3"
+  }
+}

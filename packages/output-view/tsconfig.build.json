@@ -1,0 +1,21 @@
+{
+  "// owns": "Emitting project of @jsnb/output-view under tsc -b: the model layer's declarations (src/model without tests and fixtures) into node_modules/.cache/declarations, which rollup.dts.config.mjs rolls into dist with core's types inlined.",
+  "// why": "Vite compiles the JavaScript of both entries (the Vue layer and the ./model subpath), bundling @jsnb/core in; vue-tsc declares the Vue layer (tsconfig.dts.json) into the same folder.",
+  "extends": "../../tsconfig.bundler.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "node_modules/.cache/declarations",
+    "erasableSyntaxOnly": true,
+    "emitDeclarationOnly": true
+  },
+  "include": ["src/model"],
+  "exclude": ["src/**/*.test.ts", "src/**/fixtures/**"],
+  "references": [
+    {
+      "path": "../core/tsconfig.build.json"
+    },
+    {
+      "path": "../tokens/tsconfig.build.json"
+    }
+  ]
+}

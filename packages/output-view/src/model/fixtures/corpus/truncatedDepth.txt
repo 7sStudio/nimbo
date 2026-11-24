@@ -1,0 +1,33 @@
+view: tree (switch: tree, raw)
+summary: Object, 2 keys, 61 B, truncated
+rows:
+▾ Object
+  ▾ a: Object
+      b: truncated
+    }
+  ▾ d: Array(1+)
+      0: truncated
+    ]
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{
+  "a": {
+    "b": "[truncated]"
+  },
+  "d": [
+    "[truncated]"
+  ]
+}
+--- ndjson
+{"a":{"b":"[truncated]"},"d":["[truncated]"]}
+--- js
+{
+  a: {
+    b: undefined /* truncated */,
+  },
+  d: [
+    undefined /* truncated */,
+  ],
+}

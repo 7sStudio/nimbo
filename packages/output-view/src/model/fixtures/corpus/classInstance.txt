@@ -1,0 +1,24 @@
+view: tree (switch: tree, raw)
+summary: PaymentIntent, object, 3 keys, 69 B
+rows:
+▾ PaymentIntent
+    id: "pi_1"
+    amount: 2000
+    currency: "usd"
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{
+  "id": "pi_1",
+  "amount": 2000,
+  "currency": "usd"
+}
+--- ndjson
+{"id":"pi_1","amount":2000,"currency":"usd"}
+--- js
+/* PaymentIntent */ {
+  id: "pi_1",
+  amount: 2000,
+  currency: "usd",
+}

@@ -1,0 +1,27 @@
+view: tree (switch: tree, raw)
+summary: Object, 2 keys, 41 B
+rows:
+▾ Object
+    kept: 1
+  ▾ list: Array(1)
+      0: undefined
+    ]
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{
+  "kept": 1,
+  "list": [
+    null
+  ]
+}
+--- ndjson
+{"kept":1,"list":[null]}
+--- js
+{
+  kept: 1,
+  list: [
+    undefined,
+  ],
+}

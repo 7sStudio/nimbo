@@ -1,0 +1,137 @@
+view: grid (switch: tree, grid, raw)
+summary: Array, 10 rows, 1 column, 111 B, truncated
+rows:
+▾ Array(10)
+  ▾ 0: Object
+      id: 0
+    }
+  ▾ 1: Object
+      id: 1
+    }
+  ▾ 2: Object
+      id: 2
+    }
+  ▾ 3: Object
+      id: 3
+    }
+  ▾ 4: Object
+      id: 4
+    }
+  ▾ 5: Object
+      id: 5
+    }
+  ▾ 6: Object
+      id: 6
+    }
+  ▾ 7: Object
+      id: 7
+    }
+  ▾ 8: Object
+      id: 8
+    }
+  ▾ 9: Object
+      id: truncated
+    }
+  ]
+grid (records, 0 omitted): id
+  0: 0
+  1: 1
+  2: 2
+  3: 3
+  4: 4
+  5: 5
+  6: 6
+  7: 7
+  8: 8
+  9: truncated
+hints:
+exports: json, ndjson, csv, js, text, html
+--- json
+[
+  {
+    "id": 0
+  },
+  {
+    "id": 1
+  },
+  {
+    "id": 2
+  },
+  {
+    "id": 3
+  },
+  {
+    "id": 4
+  },
+  {
+    "id": 5
+  },
+  {
+    "id": 6
+  },
+  {
+    "id": 7
+  },
+  {
+    "id": 8
+  },
+  {
+    "id": "[truncated]"
+  }
+]
+--- ndjson
+{"id":0}
+{"id":1}
+{"id":2}
+{"id":3}
+{"id":4}
+{"id":5}
+{"id":6}
+{"id":7}
+{"id":8}
+{"id":"[truncated]"}
+--- csv
+id
+0
+1
+2
+3
+4
+5
+6
+7
+8
+truncated
+--- js
+[
+  {
+    id: 0,
+  },
+  {
+    id: 1,
+  },
+  {
+    id: 2,
+  },
+  {
+    id: 3,
+  },
+  {
+    id: 4,
+  },
+  {
+    id: 5,
+  },
+  {
+    id: 6,
+  },
+  {
+    id: 7,
+  },
+  {
+    id: 8,
+  },
+  {
+    id: undefined /* truncated */,
+  },
+]

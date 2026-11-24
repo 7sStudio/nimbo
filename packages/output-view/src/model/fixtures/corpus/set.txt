@@ -1,0 +1,26 @@
+view: tree (switch: tree, raw)
+summary: Set, 3 values, 42 B
+rows:
+▾ Set(3)
+    "pi"
+    "ch"
+    "cus"
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+[
+  "pi",
+  "ch",
+  "cus"
+]
+--- ndjson
+"pi"
+"ch"
+"cus"
+--- js
+new Set([
+  "pi",
+  "ch",
+  "cus",
+])

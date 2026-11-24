@@ -1,0 +1,63 @@
+{
+  "start": {
+    "path": "flow.jsnb",
+    "cells": [],
+    "kernel": {
+      "state": "starting",
+      "pid": null,
+      "startedAt": null,
+      "executing": null,
+      "inspectorUrl": null
+    },
+    "realm": {
+      "attached": false,
+      "kind": null,
+      "attachedAt": null
+    },
+    "savedAt": null,
+    "dirty": false
+  },
+  "startSeq": 2,
+  "end": {
+    "path": "flow.jsnb",
+    "cells": [
+      {
+        "id": "c_m0izya",
+        "type": "server",
+        "source": "route(\"GET /pong\", () => \"ping\")",
+        "index": 0,
+        "meta": {
+          "lastEdit": {
+            "by": "agent",
+            "client": "cli",
+            "at": "2026-11-02T15:47:06.104Z"
+          }
+        },
+        "status": "ok",
+        "stale": false,
+        "lastExecution": {
+          "id": "x_85h2era6",
+          "status": "ok",
+          "startedAt": "2026-11-02T15:47:06.105Z",
+          "durationMs": 0.08908300000001645,
+          "hasError": false,
+          "defines": []
+        }
+      }
+    ],
+    "kernel": {
+      "state": "idle",
+      "pid": 98853,
+      "startedAt": "2026-11-02T15:47:06.100Z",
+      "executing": null,
+      "inspectorUrl": "ws://127.0.0.1:54769/fdf475e6-9519-4004-a10b-05b10e594503"
+    },
+    "realm": {
+      "attached": false,
+      "kind": null,
+      "attachedAt": null
+    },
+    "savedAt": "2026-11-02T15:47:05.960Z",
+    "dirty": true
+  }
+}

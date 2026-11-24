@@ -1,0 +1,12 @@
+view: bytes (switch: none)
+summary: bytes, 0 B
+rows:
+  bytes(0) []
+hints:
+exports: json, ndjson, js, text, html
+--- json
+""
+--- ndjson
+""
+--- js
+new Uint8Array([])

@@ -1,0 +1,12 @@
+{
+  "// owns": "Emitting project of @jsnb/test-tools: the helpers without their tests into dist.",
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": { "rootDir": ".", "outDir": "dist" },
+  "include": ["*.ts"],
+  "exclude": ["*.test.ts"],
+  "references": [
+    { "path": "../../packages/core/tsconfig.build.json" },
+    { "path": "../../packages/transform/tsconfig.build.json" },
+    { "path": "../../packages/client/tsconfig.build.json" }
+  ]
+}

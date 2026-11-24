@@ -1,0 +1,26 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [
+    [
+      "@jsnb/core",
+      "@jsnb/tokens",
+      "@jsnb/transform",
+      "@jsnb/language",
+      "@jsnb/kernel-node",
+      "@jsnb/runtime-web",
+      "@jsnb/server",
+      "@jsnb/client",
+      "@jsnb/ui",
+      "@jsnb/cli",
+      "@jsnb/mcp"
+    ]
+  ],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "privatePackages": { "version": true, "tag": false },
+  "ignore": ["@jsnb/test-tools", "@jsnb/test-daemon", "@jsnb/style-gate", "eslint-plugin-jsnb"]
+}

@@ -1,0 +1,62 @@
+view: tree (switch: tree, raw)
+summary: Object, 11 keys, 521 B
+rows:
+▾ Object
+  ▾ map: Map(1)
+      "a" => 1
+    }
+  ▾ set: Set(1)
+      "pi"
+    }
+    date: Date 2026-10-10T16:02:11.000+02:00
+    big: 12345678901234567890n
+    bytes: bytes(3) [1f 8b 08]
+    re: /^pi_/i
+    fn: ƒ createIntent
+    error: Error: "nope"
+    nan: NaN
+    inf: -Infinity
+    nothing: undefined
+  }
+hints:
+  $.date: time (date) 2026-10-10T16:02:11.000+02:00 · 1 day ago
+exports: json, ndjson, js, text, html
+--- json
+{
+  "map": {
+    "a": 1
+  },
+  "set": [
+    "pi"
+  ],
+  "date": "2026-10-10T14:02:11.000Z",
+  "big": "12345678901234567890",
+  "bytes": "H4sI",
+  "re": "/^pi_/i",
+  "error": {
+    "name": "Error",
+    "message": "nope"
+  },
+  "nan": null,
+  "inf": null
+}
+--- ndjson
+{"map":{"a":1},"set":["pi"],"date":"2026-10-10T14:02:11.000Z","big":"12345678901234567890","bytes":"H4sI","re":"/^pi_/i","error":{"name":"Error","message":"nope"},"nan":null,"inf":null}
+--- js
+{
+  map: new Map([
+    ["a", 1],
+  ]),
+  set: new Set([
+    "pi",
+  ]),
+  date: new Date("2026-10-10T14:02:11.000Z"),
+  big: 12345678901234567890n,
+  bytes: new Uint8Array([31, 139, 8]),
+  re: /^pi_/i,
+  fn: function createIntent() {},
+  error: new Error("nope"),
+  nan: NaN,
+  inf: -Infinity,
+  nothing: undefined,
+}

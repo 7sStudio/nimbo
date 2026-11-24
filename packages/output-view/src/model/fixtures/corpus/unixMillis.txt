@@ -1,0 +1,13 @@
+view: primitive (switch: none)
+summary: number
+rows:
+  1760105124000
+hints:
+  $: time (milliseconds) 2025-10-10 16:05:24 · 1 y ago
+exports: json, ndjson, js, text, html
+--- json
+1760105124000
+--- ndjson
+1760105124000
+--- js
+1760105124000

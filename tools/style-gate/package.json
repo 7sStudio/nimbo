@@ -1,0 +1,38 @@
+{
+  "name": "@jsnb/style-gate",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "08-code-standards §7 on a compiled stylesheet: Stylelint with the repository's rules and three of its own; and the PostCSS plugin that keeps Tailwind's internals in a package's scope.",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "development": "./src/gate.ts",
+      "types": "./dist/gate.d.ts",
+      "import": "./dist/gate.js",
+      "default": "./dist/gate.js"
+    },
+    "./tailwind-scope": {
+      "development": "./src/tailwindScope.ts",
+      "types": "./dist/tailwindScope.d.ts",
+      "import": "./dist/tailwindScope.js",
+      "default": "./dist/tailwindScope.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "postcss": "^8.5.29",
+    "postcss-selector-parser": "^7.1.6",
+    "stylelint": "^17.16.0"
+  },
+  "devDependencies": {
+    "stylelint-use-logical": "^2.1.3",
+    "typescript": "~5.9.3"
+  }
+}

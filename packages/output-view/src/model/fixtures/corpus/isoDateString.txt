@@ -1,0 +1,13 @@
+view: primitive (switch: none)
+summary: string, 24 characters
+rows:
+  "2026-10-10T14:02:11.000Z"
+hints:
+  $: time (iso) 2026-10-10T16:02:11.000+02:00 · 1 day ago
+exports: json, ndjson, js, text, html
+--- json
+"2026-10-10T14:02:11.000Z"
+--- ndjson
+"2026-10-10T14:02:11.000Z"
+--- js
+"2026-10-10T14:02:11.000Z"

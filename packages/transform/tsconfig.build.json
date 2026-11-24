@@ -1,0 +1,15 @@
+{
+  "// owns": "Emitting project of @jsnb/transform: src without tests into dist, in dependency order under tsc -b.",
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "rootDir": "src",
+    "outDir": "dist"
+  },
+  "include": ["src"],
+  "exclude": ["src/**/*.test.ts", "src/corpus/**", "src/fixtures/**"],
+  "references": [
+    {
+      "path": "../core/tsconfig.build.json"
+    }
+  ]
+}

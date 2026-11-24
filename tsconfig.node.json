@@ -1,0 +1,9 @@
+{
+  "// owns": "Module settings for the Node packages: core, transform, language, kernel-node, server, client, cli, mcp, tools/test.",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "types": ["node"]
+  }
+}

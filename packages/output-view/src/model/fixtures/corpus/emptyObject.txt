@@ -1,0 +1,12 @@
+view: tree (switch: tree, raw)
+summary: Object, 0 keys, 2 B
+rows:
+  {}
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{}
+--- ndjson
+{}
+--- js
+{}

@@ -1,0 +1,42 @@
+view: tree (switch: tree, raw)
+summary: Array, 4 items, 25 B
+rows:
+▾ Array(4)
+    0: 1
+    1: "two"
+  ▾ 2: Object
+      three: 3
+    }
+  ▾ 3: Array(1)
+      0: 4
+    ]
+  ]
+hints:
+exports: json, ndjson, js, text, html
+--- json
+[
+  1,
+  "two",
+  {
+    "three": 3
+  },
+  [
+    4
+  ]
+]
+--- ndjson
+1
+"two"
+{"three":3}
+[4]
+--- js
+[
+  1,
+  "two",
+  {
+    three: 3,
+  },
+  [
+    4,
+  ],
+]

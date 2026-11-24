@@ -1,0 +1,26 @@
+view: tree (switch: tree, raw)
+summary: Array, 3 items, 7 B
+rows:
+▾ Array(3)
+    0: 3
+    1: 1
+    2: 2
+  ]
+hints:
+exports: json, ndjson, js, text, html
+--- json
+[
+  3,
+  1,
+  2
+]
+--- ndjson
+3
+1
+2
+--- js
+[
+  3,
+  1,
+  2,
+]

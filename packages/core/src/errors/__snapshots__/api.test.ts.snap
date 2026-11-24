@@ -1,0 +1,37 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`InterruptRefused > says where AsyncResource code runs that an interrupt did not stop, with or without its cell 1`] = `"Cell c_a1b2c3's code was not stopped: it runs in an AsyncResource scope, where stopping it would end the kernel, so it keeps running. kernel.restart stops it; until then, requests to this kernel time out."`;
+
+exports[`InterruptRefused > says where Immediate code runs that an interrupt did not stop, with or without its cell 1`] = `"Cell c_a1b2c3's code was not stopped: it runs in an immediate callback (Node's own setImmediate), where stopping it would end the kernel, so it keeps running. kernel.restart stops it; until then, requests to this kernel time out."`;
+
+exports[`InterruptRefused > says where Promise code runs that an interrupt did not stop, with or without its cell 1`] = `"Cell c_a1b2c3's code was not stopped: it runs in a promise job under an async hook, where stopping it would end the kernel, so it keeps running. kernel.restart stops it; until then, requests to this kernel time out."`;
+
+exports[`InterruptRefused > says where TickObject code runs that an interrupt did not stop, with or without its cell 1`] = `"Cell c_a1b2c3's code was not stopped: it runs in a process.nextTick callback, where stopping it would end the kernel, so it keeps running. kernel.restart stops it; until then, requests to this kernel time out."`;
+
+exports[`the API errors > undefined carries code -32602 and is a JsnbError 1`] = `"Invalid params: cell: expected string"`;
+
+exports[`the API errors > undefined carries code 1001 and is a JsnbError 1`] = `"demo.jsnb was not found in the workspace. Check the path or create it with notebook.create."`;
+
+exports[`the API errors > undefined carries code 1002 and is a JsnbError 1`] = `"Cell c_a1b2c3 does not exist in this notebook. List the cells with notebook.get."`;
+
+exports[`the API errors > undefined carries code 1003 and is a JsnbError 1`] = `"The kernel is not running (exit code 1). Restart it with kernel.restart."`;
+
+exports[`the API errors > undefined carries code 1004 and is a JsnbError 1`] = `"No notebook page is open for demo.jsnb; open it in the browser to run client cells."`;
+
+exports[`the API errors > undefined carries code 1005 and is a JsnbError 1`] = `"demo.jsnb already exists. Open it with notebook.open or choose another path."`;
+
+exports[`the API errors > undefined carries code 1006 and is a JsnbError 1`] = `"The token is missing or wrong. Read it from .jsnb/server.json in the workspace."`;
+
+exports[`the API errors > undefined carries code 1007 and is a JsnbError 1`] = `"demo.jsnb changed on disk since it was last written. Reload it with notebook.reload or overwrite it with notebook.save { force: true }."`;
+
+exports[`the API errors > undefined carries code 1008 and is a JsnbError 1`] = `"Cell id c_a1b2c3 is already in use in this notebook. Omit id to get a fresh one."`;
+
+exports[`the API errors > undefined carries code 1009 and is a JsnbError 1`] = `"debug.pause is not available in this version of nimbo."`;
+
+exports[`the API errors > undefined carries code 1010 and is a JsnbError 1`] = `"Cell c_a1b2c3's code was not stopped: it runs in a timer callback (Node's own setTimeout or setInterval), where stopping it would end the kernel, so it keeps running. kernel.restart stops it; until then, requests to this kernel time out."`;
+
+exports[`the API errors > undefined carries code 1011 and is a JsnbError 1`] = `"Another page already runs the client cells of demo.jsnb, so this one is view-only. Close that page and reload this one to run client cells here."`;
+
+exports[`the API errors > undefined carries code 1012 and is a JsnbError 1`] = `"demo.jsnb is open. Close it with notebook.close first, then delete or rename it."`;
+
+exports[`the API errors > undefined carries code 2001 and is a JsnbError 1`] = `"The server function failed: TypeError: x"`;

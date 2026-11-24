@@ -1,0 +1,12 @@
+view: primitive (switch: none)
+summary: number
+rows:
+  -Infinity
+hints:
+exports: json, ndjson, js, text, html
+--- json
+null
+--- ndjson
+null
+--- js
+-Infinity

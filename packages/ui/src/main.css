@@ -1,0 +1,232 @@
+/* The page stylesheet: the layer order, Tailwind v4's utilities without Preflight and without its default
+   theme, prefixed ui: so they never style a user's element that happens to carry a class of the same name, the
+   shared tokens on :root (@jsnb/tokens, the palette the output viewer shows too), the theme files, and the page's scale
+   below, every value inlined into its utilities and read from the tokens. */
+@layer properties, tokens, base, components, utilities;
+@import "tailwindcss/utilities.css" layer(utilities) prefix(ui);
+@import "@jsnb/tokens/page.css";
+@import "./theme/tokens.css";
+@import "./theme/fonts.css";
+@import "./theme/reset.css";
+@import "./theme/motion.css";
+@import "./theme/prose.css";
+
+@source "./";
+
+/* Test files and fixtures are not the page: their classes never reach the build. */
+@source not "./**/*.test.ts";
+
+/* A pointer's hover only where a mouse or trackpad gives one (08 §7), as output-view's utilities.css does: Tailwind's own
+   variant asks (hover: hover) alone. */
+@custom-variant hover {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @slot;
+    }
+  }
+}
+
+/* The page's whole Tailwind scale (no default theme, so nothing of Tailwind's lands on :root): colors through the
+   tokens, type and shape at the 16 px root in rem. */
+@theme inline prefix(ui) {
+  --spacing: 0.25rem;
+  --color-transparent: transparent;
+  --color-current: currentcolor;
+  --color-ground: var(--ground);
+  --color-side: var(--side);
+
+  /* the code's white is "sheet" here: a color named code would collide with the code type size (text-code) */
+  --color-sheet: var(--code);
+  --color-sheet-2: var(--code-2);
+  --color-result: var(--result);
+  --color-head: var(--head);
+  --color-head-focus: var(--head-focus);
+  --color-focus: var(--focus);
+  --color-focus-fg: var(--focus-fg);
+  --color-well: var(--well);
+  --color-grip: var(--grip);
+  --color-faint: var(--faint);
+  --color-hot: var(--hot);
+  --color-fill: var(--fill);
+  --color-fill-fg: var(--fill-fg);
+  --color-agent: var(--agent);
+  --color-agent-soft: var(--agent-soft);
+  --color-pop: var(--pop);
+  --color-pop-fg: var(--pop-fg);
+  --color-pop-muted: var(--pop-muted);
+  --color-agent-pop: var(--agent-pop);
+  --color-diff-removed: var(--diff-removed);
+  --color-diff-added: var(--diff-added);
+  --color-diff-removed-fg: var(--diff-removed-fg);
+  --color-diff-added-fg: var(--diff-added-fg);
+  --color-chip: var(--chip);
+  --color-chip-fg: var(--chip-fg);
+  --color-bg: var(--bg);
+  --color-bg-2: var(--bg-2);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-border: var(--border);
+  --color-border-2: var(--border-2);
+  --color-fg: var(--fg);
+  --color-fg-2: var(--fg-2);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-text: var(--accent-text);
+  --color-server-text: var(--server-text);
+  --color-client-text: var(--client-text);
+  --color-md-text: var(--md-text);
+  --color-ok-text: var(--ok-text);
+  --color-warn-text: var(--warn-text);
+  --color-err-text: var(--err-text);
+  --color-server: var(--server);
+  --color-server-soft: var(--server-soft);
+  --color-client: var(--client);
+  --color-client-soft: var(--client-soft);
+  --color-md: var(--md);
+  --color-md-soft: var(--md-soft);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-err: var(--err);
+  --color-err-soft: var(--err-soft);
+  --color-match: var(--match);
+  --color-key: var(--key);
+  --color-typ: var(--typ);
+
+  /* the editor's other syntax colours, for code shown outside an editor (Home's peek at a notebook's cells) */
+  --color-kw: var(--kw);
+  --color-ctl: var(--ctl);
+  --color-str: var(--str);
+  --color-num: var(--num);
+  --color-bool: var(--bool);
+  --color-fn: var(--fn);
+  --color-cmt: var(--cmt);
+  --color-punc: var(--punc);
+  --color-sel: var(--sel);
+  --color-tip-bg: var(--tip-bg);
+  --color-tip-fg: var(--tip-fg);
+  --color-tip-rule: var(--tip-rule);
+  --color-scrim: var(--scrim);
+  --font-sans: var(--font);
+  --font-mono: var(--mono);
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* the type scale at the 16 px root: 11 (meta), 12 (interface), 13 (code and names), 18 (titles); 14 and
+     15 for prose and the markdown headings 18, 22 and 28 px */
+  --text-kbd: 0.6875rem;
+  --text-tiny: 0.6875rem;
+  --text-meta: 0.6875rem;
+  --text-small: 0.75rem;
+  --text-code: 0.8125rem;
+  --text-name: 0.8125rem;
+  --text-ui: 0.75rem;
+  --text-title: 0.875rem;
+  --text-prose: 0.9375rem;
+  --text-h3: 1.125rem;
+  --text-h2: 1.375rem;
+  --text-h1: 1.75rem;
+  --leading-tight: 1.2;
+  --leading-ui: 1.45;
+  --leading-code: 1.6;
+  --leading-row: 1;
+  --radius-small: 0.25rem;
+  --radius-control: var(--radius-control);
+  --radius-card: var(--radius-card);
+  --radius-pill: var(--radius-pill);
+  --shadow-card: var(--shadow);
+  --shadow-pop: var(--shadow-pop);
+  --default-transition-duration: var(--dur);
+  --default-transition-timing-function: var(--ease-out);
+  --ease-out: var(--ease-out);
+  --animate-enter: jsnb-ui-enter var(--dur) var(--ease-out);
+  --animate-spin: jsnb-ui-spin 1s linear infinite;
+}
+
+/* A button's or a field's font from its context, which the browser's defaults do not give (output-view's twin). */
+@utility font-inherit {
+  font-family: inherit;
+  font-size: inherit;
+  font-style: inherit;
+  font-weight: inherit;
+  line-height: inherit;
+}
+
+/* Text for a screen reader alone (Tailwind's sr-only sizes in px and hides overflow, which 08 §7 refuses). */
+@utility visually-hidden {
+  position: absolute;
+  inline-size: 0.0625rem;
+  block-size: 0.0625rem;
+  padding: 0;
+  margin: -0.0625rem;
+  overflow: clip;
+  white-space: nowrap;
+  clip-path: inset(50%);
+  border-width: 0;
+}
+
+/* One line cut with an ellipsis, clipped rather than hidden (08 §7: overflow is clip unless it
+   scrolls); Tailwind's truncate hides. */
+@utility ellipsis {
+  overflow: clip;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* While a cell is dragged (cells/useCellDrag.ts) the page shows the grabbing hand and selects no text; the attribute sits
+   on .jsnb-ui and a client cell's live container is left as it is (08 §7). */
+.jsnb-ui[data-dragging] {
+  user-select: none;
+}
+
+.jsnb-ui[data-dragging] :not([data-live], [data-live] *) {
+  cursor: grabbing;
+}
+
+.jsnb-ui[data-dragging] [data-part="add-gap"]:not([data-live], [data-live] *),
+.jsnb-ui[data-dragging] [data-part="agent-card"]:not([data-live], [data-live] *) {
+  visibility: hidden;
+}
+
+/* The selected cell as VS Code draws it: a blue outline with round corners around the cell and a blue bar in the
+   list's gutter beside it, both drawn over the cell so a selection moves nothing; the outline's shadow paints the ground
+   over the corners its round leaves outside, and the bar runs beside a stuck header. Editing, the editor is framed in
+   blue too (CellEditor). The cells of a ⇧↑ ⇧↓ range lie on a blue ground. */
+@utility cell-block {
+  position: relative;
+
+  &[data-current]::before {
+    position: absolute;
+    inset-block: 0;
+    inset-inline-start: calc(-1 * (var(--cell-bar) + var(--cell-bar-gap)));
+    inline-size: var(--cell-bar);
+    pointer-events: none;
+    content: "";
+    background: var(--focus);
+    border-radius: var(--radius-pill);
+  }
+
+  &[data-current]::after {
+    position: absolute;
+    z-index: var(--z-toolbar);
+    inset: 0;
+    pointer-events: none;
+    content: "";
+    border: 1px solid var(--focus);
+    border-radius: var(--radius-cell);
+    box-shadow: 0 0 0 var(--radius-cell) var(--ground);
+    clip-path: inset(0);
+  }
+
+  &[data-selected]:not([data-current]),
+  :where(ol:has(> li > [data-selected]:not([data-current]))) &[data-current] {
+    --head: var(--range-head);
+    --code: var(--range-code);
+    --result: var(--range-result);
+  }
+}

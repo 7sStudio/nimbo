@@ -1,0 +1,516 @@
+[
+  {
+    "name": "string",
+    "source": "\"hello\"",
+    "json": "hello",
+    "repr": "'hello'",
+    "truncated": false
+  },
+  {
+    "name": "number",
+    "source": "42.5",
+    "json": 42.5,
+    "repr": "42.5",
+    "truncated": false
+  },
+  {
+    "name": "negative zero",
+    "source": "-0",
+    "json": {
+      "$type": "number",
+      "value": "-0"
+    },
+    "repr": "-0",
+    "truncated": false
+  },
+  {
+    "name": "NaN",
+    "source": "NaN",
+    "json": {
+      "$type": "number",
+      "value": "NaN"
+    },
+    "repr": "NaN",
+    "truncated": false
+  },
+  {
+    "name": "Infinity",
+    "source": "Infinity",
+    "json": {
+      "$type": "number",
+      "value": "Infinity"
+    },
+    "repr": "Infinity",
+    "truncated": false
+  },
+  {
+    "name": "-Infinity",
+    "source": "-Infinity",
+    "json": {
+      "$type": "number",
+      "value": "-Infinity"
+    },
+    "repr": "-Infinity",
+    "truncated": false
+  },
+  {
+    "name": "boolean",
+    "source": "true",
+    "json": true,
+    "repr": "true",
+    "truncated": false
+  },
+  {
+    "name": "null",
+    "source": "null",
+    "json": null,
+    "repr": "null",
+    "truncated": false
+  },
+  {
+    "name": "bigint",
+    "source": "12345678901234567890n",
+    "json": {
+      "$type": "bigint",
+      "value": "12345678901234567890"
+    },
+    "repr": "12345678901234567890n",
+    "truncated": false
+  },
+  {
+    "name": "symbol",
+    "source": "Symbol(\"tag\")",
+    "json": {
+      "$type": "undefined"
+    },
+    "repr": "Symbol(tag)",
+    "truncated": false
+  },
+  {
+    "name": "nested undefined",
+    "source": "({ present: 1, missing: undefined })",
+    "json": {
+      "present": 1,
+      "missing": {
+        "$type": "undefined"
+      }
+    },
+    "repr": "{ present: 1, missing: undefined }",
+    "truncated": false
+  },
+  {
+    "name": "$-prefixed keys",
+    "source": "({ $type: \"user\", $$id: 1 })",
+    "json": {
+      "$$type": "user",
+      "$$$id": 1
+    },
+    "repr": "{ '$type': 'user', '$$id': 1 }",
+    "truncated": false
+  },
+  {
+    "name": "Date",
+    "source": "new Date(\"2026-10-12T08:00:00.000Z\")",
+    "json": {
+      "$type": "date",
+      "iso": "2026-10-12T08:00:00.000Z"
+    },
+    "repr": "2026-10-12T08:00:00.000Z",
+    "truncated": false
+  },
+  {
+    "name": "invalid Date",
+    "source": "new Date(\"not a date\")",
+    "json": {
+      "$type": "date",
+      "iso": null
+    },
+    "repr": "Invalid Date",
+    "truncated": false
+  },
+  {
+    "name": "RegExp",
+    "source": "/ab+c/gi",
+    "json": {
+      "$type": "regexp",
+      "source": "ab+c",
+      "flags": "gi"
+    },
+    "repr": "/ab+c/gi",
+    "truncated": false
+  },
+  {
+    "name": "Map with primitive keys",
+    "source": "new Map([[\"a\", 1], [\"b\", 2]])",
+    "json": {
+      "$type": "map",
+      "entries": [
+        ["a", 1],
+        ["b", 2]
+      ]
+    },
+    "repr": "Map(2) { 'a' => 1, 'b' => 2 }",
+    "truncated": false
+  },
+  {
+    "name": "Map with object keys",
+    "source": "new Map<object, string>([[{ id: 1 }, \"one\"]])",
+    "json": {
+      "$type": "map",
+      "entries": [
+        [
+          {
+            "id": 1
+          },
+          "one"
+        ]
+      ]
+    },
+    "repr": "Map(1) { { id: 1 } => 'one' }",
+    "truncated": false
+  },
+  {
+    "name": "Set",
+    "source": "new Set<unknown>([1, \"two\", 3n])",
+    "json": {
+      "$type": "set",
+      "values": [
+        1,
+        "two",
+        {
+          "$type": "bigint",
+          "value": "3"
+        }
+      ]
+    },
+    "repr": "Set(3) { 1, 'two', 3n }",
+    "truncated": false
+  },
+  {
+    "name": "Set of Map",
+    "source": "new Set([new Map([[\"k\", \"v\"]])])",
+    "json": {
+      "$type": "set",
+      "values": [
+        {
+          "$type": "map",
+          "entries": [["k", "v"]]
+        }
+      ]
+    },
+    "repr": "Set(1) { Map(1) { 'k' => 'v' } }",
+    "truncated": false
+  },
+  {
+    "name": "cycle",
+    "source": "const node: Record<string, unknown> = { name: \"root\" }\nnode.self = node\nnode",
+    "json": {
+      "name": "root",
+      "self": {
+        "$type": "ref",
+        "path": []
+      }
+    },
+    "repr": "<ref *1> { name: 'root', self: [Circular *1] }",
+    "truncated": false
+  },
+  {
+    "name": "repeated reference",
+    "source": "const shared = { v: 1 };\n({ a: shared, b: shared })",
+    "json": {
+      "a": {
+        "v": 1
+      },
+      "b": {
+        "$type": "ref",
+        "path": ["a"]
+      }
+    },
+    "repr": "{ a: { v: 1 }, b: { v: 1 } }",
+    "truncated": false
+  },
+  {
+    "name": "array with holes",
+    "source": "[1, , 3]",
+    "json": [
+      1,
+      {
+        "$type": "undefined"
+      },
+      3
+    ],
+    "repr": "[ 1, <1 empty item>, 3 ]",
+    "truncated": false
+  },
+  {
+    "name": "class instance",
+    "source": "class Point {\n  constructor(public x: number, public y: number) {}\n}\nnew Point(1, 2)",
+    "json": {
+      "$class": "Point",
+      "x": 1,
+      "y": 2
+    },
+    "repr": "Point { x: 1, y: 2 }",
+    "truncated": false
+  },
+  {
+    "name": "null-prototype object",
+    "source": "Object.assign(Object.create(null), { a: 1 })",
+    "json": {
+      "a": 1
+    },
+    "repr": "[Object: null prototype] { a: 1 }",
+    "truncated": false
+  },
+  {
+    "name": "Error",
+    "source": "const error = new TypeError(\"bad input\")\nerror.stack = \"TypeError: bad input\"\nerror",
+    "json": {
+      "$type": "error",
+      "name": "TypeError",
+      "message": "bad input"
+    },
+    "repr": "[TypeError: bad input]",
+    "truncated": false
+  },
+  {
+    "name": "named function",
+    "source": "(function total(a: number, b: number) { return a + b })",
+    "json": {
+      "$type": "function",
+      "name": "total"
+    },
+    "repr": "[Function: total]",
+    "truncated": false
+  },
+  {
+    "name": "anonymous function",
+    "source": "[() => 1][0]",
+    "json": {
+      "$type": "function",
+      "name": ""
+    },
+    "repr": "[Function (anonymous)]",
+    "truncated": false
+  },
+  {
+    "name": "async function",
+    "source": "(async function load() {})",
+    "json": {
+      "$type": "function",
+      "name": "load"
+    },
+    "repr": "[AsyncFunction: load]",
+    "truncated": false
+  },
+  {
+    "name": "class",
+    "source": "(class Shape {})",
+    "json": {
+      "$type": "function",
+      "name": "Shape"
+    },
+    "repr": "[class Shape]",
+    "truncated": false
+  },
+  {
+    "name": "Buffer",
+    "source": "Buffer.from(\"hi\")",
+    "json": {
+      "$type": "bytes",
+      "length": 2,
+      "base64": "aGk="
+    },
+    "repr": "<Buffer 68 69>",
+    "truncated": false
+  },
+  {
+    "name": "Uint8Array",
+    "source": "new Uint8Array([1, 2, 255])",
+    "json": {
+      "$type": "bytes",
+      "length": 3,
+      "base64": "AQL/"
+    },
+    "repr": "Uint8Array(3) [ 1, 2, 255 ]",
+    "truncated": false
+  },
+  {
+    "name": "Float64Array",
+    "source": "new Float64Array([1.5])",
+    "json": {
+      "$type": "bytes",
+      "length": 8,
+      "base64": "AAAAAAAA+D8="
+    },
+    "repr": "Float64Array(1) [ 1.5 ]",
+    "truncated": false
+  },
+  {
+    "name": "ArrayBuffer",
+    "source": "new Uint8Array([7, 8]).buffer",
+    "json": {
+      "$type": "bytes",
+      "length": 2,
+      "base64": "Bwg="
+    },
+    "repr": "ArrayBuffer { [Uint8Contents]: <07 08>, [byteLength]: 2 }",
+    "truncated": false
+  },
+  {
+    "name": "DataView",
+    "source": "new DataView(new Uint8Array([9]).buffer)",
+    "json": {
+      "$type": "bytes",
+      "length": 1,
+      "base64": "CQ=="
+    },
+    "repr": "DataView {\n  [byteLength]: 1,\n  [byteOffset]: 0,\n  [buffer]: ArrayBuffer { [Uint8Contents]: <09>, [byteLength]: 1 }\n}",
+    "truncated": false
+  },
+  {
+    "name": "WeakMap",
+    "source": "new WeakMap()",
+    "json": {
+      "$class": "WeakMap"
+    },
+    "repr": "WeakMap { <items unknown> }",
+    "truncated": false
+  },
+  {
+    "name": "nested Promise",
+    "source": "({ pending: Promise.resolve(1) })",
+    "json": {
+      "pending": {
+        "$class": "Promise"
+      }
+    },
+    "repr": "{ pending: Promise { 1 } }",
+    "truncated": false
+  },
+  {
+    "name": "depth limit",
+    "source": "let deep: unknown = \"bottom\"\nfor (let i = 0; i < 12; i += 1) deep = { next: deep }\ndeep",
+    "json": {
+      "next": {
+        "next": {
+          "next": {
+            "next": {
+              "next": {
+                "next": {
+                  "next": {
+                    "next": {
+                      "next": {
+                        "next": {
+                          "$type": "truncated"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "repr": "{\n  next: { next: { next: { next: [Object] } } }\n}",
+    "truncated": true
+  },
+  {
+    "name": "records for the grid",
+    "source": "[\n  { id: 1, email: \"a@example.com\", paid: true },\n  { id: 2, email: \"b@example.com\", paid: false },\n  { id: 3, email: \"c@example.com\", paid: true },\n]",
+    "json": [
+      {
+        "id": 1,
+        "email": "a@example.com",
+        "paid": true
+      },
+      {
+        "id": 2,
+        "email": "b@example.com",
+        "paid": false
+      },
+      {
+        "id": 3,
+        "email": "c@example.com",
+        "paid": true
+      }
+    ],
+    "repr": "[\n  { id: 1, email: 'a@example.com', paid: true },\n  { id: 2, email: 'b@example.com', paid: false },\n  { id: 3, email: 'c@example.com', paid: true }\n]",
+    "truncated": false
+  },
+  {
+    "name": "matrix",
+    "source": "[[1, 2, 3], [4, 5, 6]]",
+    "json": [
+      [1, 2, 3],
+      [4, 5, 6]
+    ],
+    "repr": "[ [ 1, 2, 3 ], [ 4, 5, 6 ] ]",
+    "truncated": false
+  },
+  {
+    "name": "1 500-character string",
+    "source": "\"x\".repeat(1500)",
+    "json": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+    "repr": "'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'... 1000 more characters",
+    "truncated": false
+  },
+  {
+    "name": "URL string",
+    "source": "\"https://dashboard.stripe.com/test/payments/pi_3Q0abc\"",
+    "json": "https://dashboard.stripe.com/test/payments/pi_3Q0abc",
+    "repr": "'https://dashboard.stripe.com/test/payments/pi_3Q0abc'",
+    "truncated": false
+  },
+  {
+    "name": "JSON-looking string",
+    "source": "'{\"id\":\"evt_1\",\"type\":\"payment_intent.succeeded\"}'",
+    "json": "{\"id\":\"evt_1\",\"type\":\"payment_intent.succeeded\"}",
+    "repr": "'{\"id\":\"evt_1\",\"type\":\"payment_intent.succeeded\"}'",
+    "truncated": false
+  },
+  {
+    "name": "unix time",
+    "source": "1760256000",
+    "json": 1760256000,
+    "repr": "1760256000",
+    "truncated": false
+  },
+  {
+    "name": "ISO date string",
+    "source": "\"2026-10-12T08:00:00.000Z\"",
+    "json": "2026-10-12T08:00:00.000Z",
+    "repr": "'2026-10-12T08:00:00.000Z'",
+    "truncated": false
+  },
+  {
+    "name": "Stripe-like object",
+    "source": "({\n  id: \"pi_3Q0abc\",\n  object: \"payment_intent\",\n  amount: 2000,\n  currency: \"usd\",\n  status: \"succeeded\",\n  created: 1760256000,\n  metadata: { order_id: \"ord_42\" },\n  charges: { object: \"list\", data: [{ id: \"ch_1\", paid: true, amount: 2000 }], has_more: false },\n})",
+    "json": {
+      "id": "pi_3Q0abc",
+      "object": "payment_intent",
+      "amount": 2000,
+      "currency": "usd",
+      "status": "succeeded",
+      "created": 1760256000,
+      "metadata": {
+        "order_id": "ord_42"
+      },
+      "charges": {
+        "object": "list",
+        "data": [
+          {
+            "id": "ch_1",
+            "paid": true,
+            "amount": 2000
+          }
+        ],
+        "has_more": false
+      }
+    },
+    "repr": "{\n  id: 'pi_3Q0abc',\n  object: 'payment_intent',\n  amount: 2000,\n  currency: 'usd',\n  status: 'succeeded',\n  created: 1760256000,\n  metadata: { order_id: 'ord_42' },\n  charges: {\n    object: 'list',\n    data: [ { id: 'ch_1', paid: true, amount: 2000 } ],\n    has_more: false\n  }\n}",
+    "truncated": false
+  }
+]

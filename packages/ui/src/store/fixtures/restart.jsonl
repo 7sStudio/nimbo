@@ -1,0 +1,20 @@
+{"notebook":"flow.jsnb","seq":3,"ts":"2026-11-02T15:47:04.512Z","type":"cell.added","data":{"cell":{"id":"c_m0izya","type":"server","source":"export const r = 1; r","index":0,"meta":{"lastEdit":{"by":"agent","client":"cli","at":"2026-11-02T15:47:04.512Z"}},"status":"idle","stale":false,"lastExecution":null}}}
+{"notebook":"flow.jsnb","seq":4,"ts":"2026-11-02T15:47:04.512Z","type":"cell.status","data":{"cell":"c_m0izya","execution":"x_mpfzgh5e","status":"queued"}}
+{"notebook":"flow.jsnb","seq":5,"ts":"2026-11-02T15:47:04.620Z","type":"notebook.saved","data":{"savedAt":"2026-11-02T15:47:04.620Z"}}
+{"notebook":"flow.jsnb","seq":6,"ts":"2026-11-02T15:47:04.762Z","type":"kernel.status","data":{"state":"idle","pid":98848,"startedAt":"2026-11-02T15:47:04.762Z","executing":null,"inspectorUrl":"ws://127.0.0.1:54753/2c1918b8-552e-48a8-8f6f-f8fe269fa3f4"}}
+{"notebook":"flow.jsnb","seq":7,"ts":"2026-11-02T15:47:04.762Z","type":"kernel.status","data":{"state":"busy","pid":98848,"startedAt":"2026-11-02T15:47:04.762Z","executing":"c_m0izya","inspectorUrl":"ws://127.0.0.1:54753/2c1918b8-552e-48a8-8f6f-f8fe269fa3f4"}}
+{"notebook":"flow.jsnb","seq":8,"ts":"2026-11-02T15:47:04.765Z","type":"cell.status","data":{"cell":"c_m0izya","execution":"x_mpfzgh5e","status":"running"}}
+{"notebook":"flow.jsnb","seq":9,"ts":"2026-11-02T15:47:04.766Z","type":"cell.output","data":{"cell":"c_m0izya","execution":"x_mpfzgh5e","output":{"kind":"value","json":1,"repr":"1","truncated":false}}}
+{"notebook":"flow.jsnb","seq":10,"ts":"2026-11-02T15:47:04.766Z","type":"cell.status","data":{"cell":"c_m0izya","execution":"x_mpfzgh5e","status":"ok"}}
+{"notebook":"flow.jsnb","seq":11,"ts":"2026-11-02T15:47:04.766Z","type":"kernel.status","data":{"state":"idle","pid":98848,"startedAt":"2026-11-02T15:47:04.762Z","executing":null,"inspectorUrl":"ws://127.0.0.1:54753/2c1918b8-552e-48a8-8f6f-f8fe269fa3f4"}}
+{"notebook":"flow.jsnb","seq":12,"ts":"2026-11-02T15:47:04.770Z","type":"routes.changed","data":{"routes":[]}}
+{"notebook":"flow.jsnb","seq":13,"ts":"2026-11-02T15:47:04.771Z","type":"kernel.status","data":{"state":"starting","pid":null,"startedAt":null,"executing":null,"inspectorUrl":null}}
+{"notebook":"flow.jsnb","seq":14,"ts":"2026-11-02T15:47:05.017Z","type":"kernel.status","data":{"state":"idle","pid":98849,"startedAt":"2026-11-02T15:47:05.017Z","executing":null,"inspectorUrl":"ws://127.0.0.1:54755/4e9e0524-f684-4946-9214-6c25dde00ebd"}}
+{"notebook":"flow.jsnb","seq":15,"ts":"2026-11-02T15:47:05.018Z","type":"cell.status","data":{"cell":"c_m0izya","execution":"x_mpfzgh5e","status":"idle"}}
+{"notebook":"flow.jsnb","seq":16,"ts":"2026-11-02T15:47:05.019Z","type":"cell.added","data":{"cell":{"id":"c_85h2er","type":"server","source":"1 + 1","index":1,"meta":{"lastEdit":{"by":"agent","client":"cli","at":"2026-11-02T15:47:05.018Z"}},"status":"idle","stale":false,"lastExecution":null}}}
+{"notebook":"flow.jsnb","seq":17,"ts":"2026-11-02T15:47:05.019Z","type":"cell.status","data":{"cell":"c_85h2er","execution":"x_a61flsa7","status":"queued"}}
+{"notebook":"flow.jsnb","seq":18,"ts":"2026-11-02T15:47:05.020Z","type":"kernel.status","data":{"state":"busy","pid":98849,"startedAt":"2026-11-02T15:47:05.017Z","executing":"c_85h2er","inspectorUrl":"ws://127.0.0.1:54755/4e9e0524-f684-4946-9214-6c25dde00ebd"}}
+{"notebook":"flow.jsnb","seq":19,"ts":"2026-11-02T15:47:05.023Z","type":"cell.status","data":{"cell":"c_85h2er","execution":"x_a61flsa7","status":"running"}}
+{"notebook":"flow.jsnb","seq":20,"ts":"2026-11-02T15:47:05.023Z","type":"cell.output","data":{"cell":"c_85h2er","execution":"x_a61flsa7","output":{"kind":"value","json":2,"repr":"2","truncated":false}}}
+{"notebook":"flow.jsnb","seq":21,"ts":"2026-11-02T15:47:05.023Z","type":"cell.status","data":{"cell":"c_85h2er","execution":"x_a61flsa7","status":"ok"}}
+{"notebook":"flow.jsnb","seq":22,"ts":"2026-11-02T15:47:05.023Z","type":"kernel.status","data":{"state":"idle","pid":98849,"startedAt":"2026-11-02T15:47:05.017Z","executing":null,"inspectorUrl":"ws://127.0.0.1:54755/4e9e0524-f684-4946-9214-6c25dde00ebd"}}

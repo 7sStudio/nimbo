@@ -1,0 +1,5 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`the bridge error data > keep the identifiers 1`] = `"Argument 1 of f(...) is a Socket and cannot be sent to the server."`;
+
+exports[`the bridge error data > render several arguments, strings and undefined in a timeout 1`] = `"f("a", undefined, {"b":1}) did not answer within 1.5s. The server cell may be blocked; try kernel.interrupt."`;

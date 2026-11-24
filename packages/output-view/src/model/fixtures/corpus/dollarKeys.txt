@@ -1,0 +1,30 @@
+view: tree (switch: tree, raw)
+summary: Object, 5 keys, 58 B
+rows:
+▾ Object
+    $type: "user"
+    $class: "x"
+    $: 1
+    $$: 2
+    plain: "p"
+  }
+hints:
+exports: json, ndjson, js, text, html
+--- json
+{
+  "$type": "user",
+  "$class": "x",
+  "$": 1,
+  "$$": 2,
+  "plain": "p"
+}
+--- ndjson
+{"$type":"user","$class":"x","$":1,"$$":2,"plain":"p"}
+--- js
+{
+  $type: "user",
+  $class: "x",
+  $: 1,
+  $$: 2,
+  plain: "p",
+}

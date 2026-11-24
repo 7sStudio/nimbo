@@ -1,0 +1,105 @@
+/* The page's own tokens. The palette and the values the output viewer shares
+   (type, corners, motion, layers) are @jsnb/tokens' page.css, which main.css imports before this file and which this
+   file never redefines on :root (tokens.test.ts): here are the color scheme, the older token names some components
+   read, the shell's sizes and the selected header's deeper ink. */
+@layer tokens {
+  :root {
+    color-scheme: light dark;
+  }
+
+  :root[data-theme="light"] {
+    color-scheme: light;
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  :root {
+    /* the older token names some components read, on the palette: a control's or a menu's surface is
+       the code's white, its hover the header's tone, and the accent is ink (orange never marks a selection) */
+    --bg: var(--code);
+    --bg-2: var(--code-2);
+    --surface: var(--code);
+    --surface-2: var(--head);
+    --surface-3: var(--well);
+    --border: var(--well);
+    --border-2: var(--grip);
+    --accent: var(--fg);
+    --accent-fg: var(--chip-fg);
+    --accent-soft: color-mix(in oklch, var(--fg) 8%, transparent);
+    --server-soft: color-mix(in oklch, var(--server) 12%, transparent);
+    --client-soft: color-mix(in oklch, var(--client) 12%, transparent);
+    --md-soft: color-mix(in oklch, var(--md) 12%, transparent);
+    --ok-soft: color-mix(in oklch, var(--ok) 12%, transparent);
+    --warn-soft: color-mix(in oklch, var(--warn) 12%, transparent);
+    --err-soft: light-dark(oklch(50.13% 0.1783 28.7 / 7%), oklch(76.81% 0.137 26.1 / 10%));
+    --accent-text: var(--fg);
+    --server-text: var(--server);
+    --client-text: var(--client);
+    --md-text: var(--md);
+    --ok-text: var(--ok);
+    --warn-text: var(--warn);
+    --err-text: var(--err);
+    --tip-bg: var(--pop);
+    --tip-fg: var(--pop-fg);
+    --tip-rule: color-mix(in oklch, var(--tip-fg) 20%, transparent);
+
+    /* a cell header stuck to the top of the page while it scrolls through an expanded result: a soft edge below */
+    --shadow-stick: 0 0.375rem 0.625rem -0.375rem var(--shade);
+
+    /* the selected cell's blue, an azure kept apart from the client cell's indigo, and the blue a selected surface
+       mixes in, deeper in dark so a tint adds hue there rather than light */
+    --focus: light-dark(oklch(52% 0.16 248), oklch(70% 0.14 248));
+    --focus-fg: light-dark(oklch(100% 0 0), oklch(20.09% 0.0081 274.5));
+    --focus-tint: light-dark(oklch(52% 0.16 248), oklch(55% 0.17 252));
+
+    /* a cell of a range: its surfaces on the blue ground */
+    --range-head: light-dark(
+      color-mix(in oklab, var(--focus-tint) 20%, var(--head)),
+      color-mix(in oklab, var(--focus-tint) 30%, var(--head))
+    );
+    --range-code: light-dark(
+      color-mix(in oklab, var(--focus-tint) 9%, var(--code)),
+      color-mix(in oklab, var(--focus-tint) 14%, var(--code))
+    );
+    --range-result: light-dark(
+      color-mix(in oklab, var(--focus-tint) 12%, var(--result)),
+      color-mix(in oklab, var(--focus-tint) 18%, var(--result))
+    );
+
+    --shadow-pop: light-dark(
+      0 0.5rem 1.5rem oklch(20.09% 0.0081 274.5 / 22%),
+      0 0.625rem 1.75rem oklch(0% 0 0 / 65%)
+    );
+
+    /* the shell's sizes: the design's figures at the 16 px root, relative where a width is a default */
+    --bar: 2.75rem; /* top bar, icon bar */
+    --footer: 1.75rem;
+    --hit: 1.75rem; /* toolbar hit area */
+    --gap: 0.5rem; /* the gap between two panels, which is their resize grip */
+    --side-width: clamp(13rem, 18vw, 22rem); /* the side panel beside the icon bar */
+    --inspector-width: clamp(14rem, 19vw, 24rem);
+    --bottom-height: clamp(8rem, 24vh, 18rem);
+
+    /* the cell header's columns, shared by the one column header above the notebook: run control, cell number, runs
+       in, name, state, time, actions */
+    --cell-columns: 1.5rem 1.75rem 6.75rem minmax(0, 1fr) 8.5rem 5.5rem;
+    --cell-gap: 0.6875rem; /* between two cell blocks */
+    --cell-gutter: 3.25rem; /* run control and number: the editor's line numbers end under the cell number */
+    --cell-inset: 4.25rem; /* where a cell's text starts: its code, its result and its prose share the edge */
+    --cell-bar: 0.1875rem; /* the selected cell's bar, in the list's gutter */
+    --cell-bar-gap: 0.375rem; /* between the bar and the cell */
+    --cell-margin: calc(0.25rem + var(--cell-bar) + var(--cell-bar-gap)); /* the list's gutter */
+    --radius-cell: 0.375rem; /* the selected cell's outline */
+  }
+
+  /* A selected cell's header, on the blue ground in a range, keeps 4.5:1 for its quiet ink and its three state colors:
+     quiet words take the second ink, and orange, red and green each take a deeper shade. */
+  .jsnb-ui [data-part="head"][data-selected]:not([data-live], [data-live] *) {
+    --muted: var(--fg-2);
+    --hot: var(--hot-deep);
+    --err: var(--err-deep);
+    --ok: var(--ok-deep);
+  }
+}

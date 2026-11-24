@@ -1,0 +1,13 @@
+view: primitive (switch: none)
+summary: string, 93 characters
+rows:
+  "{\"type\":\"invoice.paid\",\"id\":\"evt_1Q4eZ1\",\"data\":{\"object\":{\"amount_paid\":12900,\"$type\":\"x\"}}}"
+hints:
+  $: json
+exports: json, ndjson, js, text, html
+--- json
+"{\"type\":\"invoice.paid\",\"id\":\"evt_1Q4eZ1\",\"data\":{\"object\":{\"amount_paid\":12900,\"$type\":\"x\"}}}"
+--- ndjson
+"{\"type\":\"invoice.paid\",\"id\":\"evt_1Q4eZ1\",\"data\":{\"object\":{\"amount_paid\":12900,\"$type\":\"x\"}}}"
+--- js
+"{\"type\":\"invoice.paid\",\"id\":\"evt_1Q4eZ1\",\"data\":{\"object\":{\"amount_paid\":12900,\"$type\":\"x\"}}}"

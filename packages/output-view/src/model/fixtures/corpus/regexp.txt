@@ -1,0 +1,12 @@
+view: primitive (switch: none)
+summary: RegExp
+rows:
+  /^pi_/i
+hints:
+exports: json, ndjson, js, text, html
+--- json
+"/^pi_/i"
+--- ndjson
+"/^pi_/i"
+--- js
+/^pi_/i

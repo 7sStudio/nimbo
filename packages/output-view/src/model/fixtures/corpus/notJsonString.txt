@@ -1,0 +1,12 @@
+view: primitive (switch: none)
+summary: string, 10 characters
+rows:
+  "{not json}"
+hints:
+exports: json, ndjson, js, text, html
+--- json
+"{not json}"
+--- ndjson
+"{not json}"
+--- js
+"{not json}"

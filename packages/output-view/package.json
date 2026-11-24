@@ -1,0 +1,84 @@
+{
+  "name": "@jsnb/output-view",
+  "version": "0.0.0",
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      },
+      "./model": {
+        "types": "./dist/model/index.d.ts",
+        "import": "./dist/model/index.js"
+      },
+      "./theme.css": "./dist/theme.css",
+      "./style.css": "./dist/style.css"
+    }
+  },
+  "type": "module",
+  "sideEffects": [
+    "**/*.css"
+  ],
+  "files": [
+    "dist"
+  ],
+  "exports": {
+    ".": {
+      "development": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./model": {
+      "development": "./src/model/index.ts",
+      "types": "./dist/model/index.d.ts",
+      "import": "./dist/model/index.js"
+    },
+    "./theme.css": {
+      "development": "./src/theme.css",
+      "default": "./dist/theme.css"
+    },
+    "./style.css": {
+      "development": "./src/style.css",
+      "default": "./dist/style.css"
+    }
+  },
+  "scripts": {
+    "build": "tsc -b tsconfig.build.json && vite build && vue-tsc -p tsconfig.dts.json && rollup -c rollup.dts.config.mjs",
+    "test": "vitest run"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.26"
+  },
+  "dependencies": {
+    "@codemirror/autocomplete": "^6.20.3",
+    "@codemirror/lang-json": "^6.0.2",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.14",
+    "@lezer/highlight": "^1.2.5",
+    "@tanstack/vue-table": "^9.2.8",
+    "@tanstack/vue-virtual": "^3.13.40",
+    "reka-ui": "^2.11.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@jsnb/core": "workspace:*",
+    "@jsnb/style-gate": "workspace:*",
+    "@jsnb/tokens": "workspace:*",
+    "@tailwindcss/node": "^4.3.3",
+    "@tailwindcss/vite": "^4.3.3",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "axe-core": "^4.14.0",
+    "fast-check": "^4.10.2",
+    "postcss": "^8.5.29",
+    "rollup": "^4.64.0",
+    "rollup-plugin-dts": "^6.5.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.4",
+    "vue": "^3.5.26",
+    "vue-tsc": "^3.3.13"
+  }
+}

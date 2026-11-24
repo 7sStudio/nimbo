@@ -1,0 +1,12 @@
+view: primitive (switch: none)
+summary: Date
+rows:
+  Date Invalid Date
+hints:
+exports: json, ndjson, js, text, html
+--- json
+null
+--- ndjson
+null
+--- js
+new Date(NaN)

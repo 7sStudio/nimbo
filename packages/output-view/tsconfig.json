@@ -1,0 +1,17 @@
+{
+  "// owns": "Full project of @jsnb/output-view (sources, tests, the Vite config) for typecheck, lint and editors; emits nothing. vue-tsc checks the .vue files through it.",
+  "// types": "node for the tests, which read the shared fixtures with node:fs, and for vite.config.ts; ESLint keeps src/model free of Node, DOM and Vue.",
+  "extends": "../../tsconfig.bundler.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": ["node"],
+    "erasableSyntaxOnly": true
+  },
+  "include": ["env.d.ts", "src", "vite.config.ts", "tailwindScope.ts"],
+  "references": [
+    { "path": "../core/tsconfig.build.json" },
+    { "path": "../tokens/tsconfig.build.json" },
+    { "path": "../../fixtures" },
+    { "path": "../../tools/style-gate/tsconfig.build.json" }
+  ]
+}

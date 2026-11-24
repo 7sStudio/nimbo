@@ -1,0 +1,72 @@
+{
+  "start": {
+    "path": "flow.jsnb",
+    "cells": [],
+    "kernel": {
+      "state": "starting",
+      "pid": null,
+      "startedAt": null,
+      "executing": null,
+      "inspectorUrl": null
+    },
+    "realm": {
+      "attached": false,
+      "kind": null,
+      "attachedAt": null
+    },
+    "savedAt": null,
+    "dirty": false
+  },
+  "startSeq": 2,
+  "end": {
+    "path": "flow.jsnb",
+    "cells": [
+      {
+        "id": "c_mpfzgh",
+        "type": "client",
+        "source": "a + 2",
+        "index": 0,
+        "meta": {
+          "lastEdit": {
+            "by": "agent",
+            "client": "cli",
+            "at": "2026-11-02T15:47:04.045Z"
+          }
+        },
+        "status": "idle",
+        "stale": true,
+        "lastExecution": null
+      },
+      {
+        "id": "c_5e85h2",
+        "type": "markdown",
+        "source": "# Title",
+        "index": 1,
+        "meta": {
+          "lastEdit": {
+            "by": "agent",
+            "client": "cli",
+            "at": "2026-11-02T15:47:04.042Z"
+          }
+        },
+        "status": "idle",
+        "stale": false,
+        "lastExecution": null
+      }
+    ],
+    "kernel": {
+      "state": "starting",
+      "pid": null,
+      "startedAt": null,
+      "executing": null,
+      "inspectorUrl": null
+    },
+    "realm": {
+      "attached": false,
+      "kind": null,
+      "attachedAt": null
+    },
+    "savedAt": null,
+    "dirty": true
+  }
+}

@@ -1,0 +1,79 @@
+/* The output viewer's tokens, scoped under .jsnb-ov so the viewer also works alone: the
+   shared palette, type, corners, motion and layers of @jsnb/tokens, then what is the viewer's own. */
+
+/* Inside the app .jsnb-ov inherits color-scheme from the page's data-theme; options.theme sets data-theme on the root. */
+@layer properties, tokens, base, components, utilities;
+
+/* On .jsnb-ov itself when the viewer is alone; inside a page that declares them on its root and says so with
+   data-jsnb-tokens (the notebook page), the viewer reads the page's. The build inlines the sheet into dist/theme.css. */
+@import "@jsnb/tokens/viewer.css";
+
+@layer tokens {
+  .jsnb-ov[data-theme="light"] {
+    color-scheme: light;
+  }
+
+  .jsnb-ov[data-theme="dark"] {
+    color-scheme: dark;
+  }
+
+  /* the named ANSI colors of streams: VS Code's terminal colors at 4.5:1 on --bg, the result tone (palette.ts
+     ansiPalettes). They are the viewer's own wherever it shows. */
+  .jsnb-ov {
+    --ansi-0: light-dark(oklch(0% 0 0), oklch(60.32% 0 0));
+    --ansi-1: light-dark(oklch(55.92% 0.1927 26.08), oklch(62.64% 0.1924 26.2));
+    --ansi-2: light-dark(oklch(52.56% 0.1788 142.5), oklch(70.18% 0.16 158.77));
+    --ansi-3: light-dark(oklch(53.92% 0.1185 110.97), oklch(89.26% 0.1926 109.74));
+    --ansi-4: light-dark(oklch(44.58% 0.151 256.3), oklch(60.59% 0.152 254.07));
+    --ansi-5: light-dark(oklch(55.91% 0.255 328.35), oklch(63.19% 0.2128 328.05));
+    --ansi-6: light-dark(oklch(53.71% 0.1035 226.81), oklch(67.85% 0.1224 221.43));
+    --ansi-7: light-dark(oklch(44.95% 0 0), oklch(92.19% 0 0));
+    --ansi-8: light-dark(oklch(51.03% 0 0), oklch(60.32% 0 0));
+    --ansi-9: light-dark(oklch(55.92% 0.1927 26.08), oklch(64.91% 0.2018 24.74));
+    --ansi-10: light-dark(oklch(52.56% 0.1788 142.5), oklch(76.21% 0.1669 159.47));
+    --ansi-11: light-dark(oklch(53.92% 0.1185 110.97), oklch(94.1% 0.1861 109.5));
+    --ansi-12: light-dark(oklch(44.58% 0.151 256.3), oklch(64.1% 0.1596 253.5));
+    --ansi-13: light-dark(oklch(55.91% 0.255 328.35), oklch(69.72% 0.1788 327.28));
+    --ansi-14: light-dark(oklch(53.71% 0.1035 226.81), oklch(72.61% 0.1233 219.34));
+    --ansi-15: light-dark(oklch(54.52% 0 0), oklch(92.19% 0 0));
+  }
+
+  /* The viewer's names on the shared tones (palette.ts viewerTones, which a test compares): a result sits on --result,
+     one step under the code, alone as in the app; its surfaces are the code's white, the header's tone and the well,
+     its accent is ink. The names the palette shares (--fg, --muted, the states, the syntax colors) are the palette's. */
+  .jsnb-ov {
+    --bg: var(--result);
+    --bg-2: var(--result);
+    --surface: var(--code);
+    --surface-2: var(--head);
+    --surface-3: var(--well);
+    --border: var(--well);
+    --border-2: var(--grip);
+    --accent: var(--fg);
+    --accent-fg: var(--chip-fg);
+    --tip-bg: var(--pop);
+    --tip-fg: var(--pop-fg);
+
+    /* the -soft twins, the search highlight (warn at 30 %), the selection and the rule around a tooltip's shortcut,
+       the viewer's own: they come after the palette's --match and --sel, so they win over them */
+    --accent-soft: color-mix(in oklch, var(--accent) 12%, transparent);
+    --client-soft: color-mix(in oklch, var(--client) 12%, transparent);
+    --ok-soft: color-mix(in oklch, var(--ok) 12%, transparent);
+    --warn-soft: color-mix(in oklch, var(--warn) 12%, transparent);
+    --err-soft: color-mix(in oklch, var(--err) 12%, transparent);
+    --match: color-mix(in oklch, var(--warn) 30%, transparent);
+    --sel: color-mix(in oklch, var(--accent) 20%, transparent);
+    --tip-rule: color-mix(in oklch, var(--tip-fg) 20%, transparent);
+  }
+}
+
+/* The viewer paints its own background: every syntax token passes 4.5:1 against --bg. */
+@layer base {
+  .jsnb-ov {
+    background-color: var(--bg);
+    color: var(--fg);
+    font-family: var(--font);
+    font-size: var(--text-ui);
+    line-height: 1.45;
+  }
+}

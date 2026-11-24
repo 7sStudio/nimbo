@@ -1,0 +1,12 @@
+view: primitive (switch: none)
+summary: function
+rows:
+  ƒ (anonymous)
+hints:
+exports: json, ndjson, js, text, html
+--- json
+null
+--- ndjson
+null
+--- js
+function () {}

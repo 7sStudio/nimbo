@@ -1,0 +1,13 @@
+view: primitive (switch: none)
+summary: string, 9 characters
+rows:
+  "[1, 2, 3]"
+hints:
+  $: json
+exports: json, ndjson, js, text, html
+--- json
+"[1, 2, 3]"
+--- ndjson
+"[1, 2, 3]"
+--- js
+"[1, 2, 3]"

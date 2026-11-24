@@ -1,0 +1,12 @@
+view: bytes (switch: none)
+summary: bytes, 16 B
+rows:
+  bytes(16) [1f 8b 08 00 00 00 00 00 …]
+hints:
+exports: json, ndjson, js, text, html
+--- json
+"H4sIAAAAAAAAA8tIzcnJBw=="
+--- ndjson
+"H4sIAAAAAAAAA8tIzcnJBw=="
+--- js
+new Uint8Array([31, 139, 8, 0, 0, 0, 0, 0, 0, 3, 203, 72, 205, 201, 201, 7])

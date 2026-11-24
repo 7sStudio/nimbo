@@ -1,0 +1,35 @@
+{
+  "// owns": "Build-order project of @jsnb/ui under tsc -b; Vite emits the page, so this one only checks src.",
+  "// exactOptionalPropertyTypes": "off for ui only: the shadcn-vue copies forward optional props to Reka UI, whose prop types are not exact-optional clean (39 vue-tsc errors otherwise); every other 08 \u00a76 flag applies.",
+  "extends": "../../tsconfig.bundler.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+    "exactOptionalPropertyTypes": false
+  },
+  "include": ["env.d.ts", "src"],
+  "exclude": ["src/**/*.test.ts", "src/**/fixtures"],
+  "references": [
+    {
+      "path": "../core/tsconfig.build.json"
+    },
+    {
+      "path": "../client/tsconfig.build.json"
+    },
+    {
+      "path": "../output-view/tsconfig.build.json"
+    },
+    {
+      "path": "../query-json/tsconfig.build.json"
+    },
+    {
+      "path": "../query-sql/tsconfig.build.json"
+    },
+    {
+      "path": "../runtime-web/tsconfig.build.json"
+    }
+  ]
+}

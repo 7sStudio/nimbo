@@ -1,0 +1,18 @@
+{
+  "start": [],
+  "end": {
+    "notebooks": [
+      {
+        "path": "c.jsnb",
+        "open": false
+      },
+      {
+        "path": "d.jsnb",
+        "open": true
+      }
+    ],
+    "kernels": {
+      "d.jsnb": "idle"
+    }
+  }
+}

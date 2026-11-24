@@ -1,0 +1,169 @@
+{
+  "version": 1,
+  "cells": [
+    {
+      "id": "c_ra0001",
+      "type": "markdown",
+      "source": [
+        "# Routes and agents: a small API",
+        "",
+        "Serve a small HTTP API from a notebook and follow its requests: routes you call with curl, the Activity log and the Console, errors and how to recover from them, and how an agent's edit shows up for you to review.",
+        "",
+        "What you will learn: `route()` and `routeUrl()`, where requests and logs show, what a failing cell gives you to fix it, and how to review a change an agent made. It takes about 15 minutes. Nothing here needs a package, and nothing leaves this computer.",
+        "",
+        "Run all (Cmd Shift Enter; Ctrl instead of Cmd off a Mac), then follow the steps."
+      ]
+    },
+    {
+      "id": "c_ra0002",
+      "type": "markdown",
+      "source": [
+        "## Step 1: the data",
+        "",
+        "A task list kept in the kernel. Server cells share the names they declare, so the routes below read and change `tasks`. Restarting the kernel (Restart in the notebook's toolbar) forgets it; Run all makes it again."
+      ]
+    },
+    {
+      "id": "c_ra0003",
+      "type": "server",
+      "source": [
+        "type Task = { id: number; title: string; done: boolean };",
+        "const tasks: Task[] = [",
+        "  { id: 1, title: \"Write the API\", done: true },",
+        "  { id: 2, title: \"Call it with curl\", done: false },",
+        "  { id: 3, title: \"Review the agent's edit\", done: false },",
+        "];",
+        "let nextTask = 4;",
+        "tasks"
+      ]
+    },
+    {
+      "id": "c_ra0004",
+      "type": "markdown",
+      "source": [
+        "## Step 2: the routes",
+        "",
+        "Three routes: list the tasks, add one, mark one done. A handler takes a standard `Request` and returns a `Response`, a plain object (sent as JSON) or a string. A request for a task that is not there answers 404 with the reason, and a body that cannot be read answers 400.",
+        "",
+        "The result under the cell shows each route's address with Copy URL, then one row for each request it answers. Running the cell again replaces the routes rather than adding new ones."
+      ]
+    },
+    {
+      "id": "c_ra0005",
+      "type": "server",
+      "source": [
+        "route(\"GET /tasks\", () => tasks);",
+        "",
+        "route(\"POST /tasks\", async (request) => {",
+        "  const body = await request.json().catch(() => null);",
+        "  if (typeof body?.title !== \"string\" || body.title.trim() === \"\")",
+        "    return Response.json({ error: 'Send JSON with a title, like {\"title\": \"Ship it\"}' }, { status: 400 });",
+        "  const task = { id: nextTask++, title: body.title.trim(), done: false };",
+        "  tasks.push(task);",
+        "  console.log(`added task ${String(task.id)}: ${task.title}`);",
+        "  return Response.json(task, { status: 201 });",
+        "});",
+        "",
+        "route(\"POST /tasks/done\", (request) => {",
+        "  const id = Number(new URL(request.url).searchParams.get(\"id\"));",
+        "  const task = tasks.find((each) => each.id === id);",
+        "  if (task === undefined) return Response.json({ error: `No task ${String(id)}` }, { status: 404 });",
+        "  task.done = true;",
+        "  console.log(`task ${String(id)} done`);",
+        "  return task;",
+        "});"
+      ]
+    },
+    {
+      "id": "c_ra0006",
+      "type": "markdown",
+      "source": [
+        "## Step 3: call it",
+        "",
+        "From a terminal, with the address the result above shows (Copy URL copies it; the part after `/n/` is this notebook's name):",
+        "",
+        "```bash",
+        "curl http://127.0.0.1:<port>/n/04-routes-and-agents/tasks",
+        "curl -X POST http://127.0.0.1:<port>/n/04-routes-and-agents/tasks -H 'content-type: application/json' -d '{\"title\":\"Ship it\"}'",
+        "curl -X POST 'http://127.0.0.1:<port>/n/04-routes-and-agents/tasks/done?id=2'",
+        "curl -X POST http://127.0.0.1:<port>/n/04-routes-and-agents/tasks -d 'not json'",
+        "```",
+        "",
+        "The last one answers 400 with its reason. No token is needed on these paths: they are your code's, and anything on this computer can call them.",
+        "",
+        "A server cell can call them too, with `fetch`; `routeUrl()` gives the address:"
+      ]
+    },
+    {
+      "id": "c_ra0007",
+      "type": "server",
+      "source": [
+        "const listed = await fetch(routeUrl(\"/tasks\"));",
+        "const refused = await fetch(routeUrl(\"/tasks\"), { method: \"POST\", body: \"not json\" });",
+        "({",
+        "  list: { status: listed.status, tasks: await listed.json() },",
+        "  bad: { status: refused.status, answer: await refused.json() },",
+        "})"
+      ]
+    },
+    {
+      "id": "c_ra0008",
+      "type": "markdown",
+      "source": [
+        "## Step 4: the Activity log and the Console",
+        "",
+        "Open the bottom panel with Cmd J.",
+        "",
+        "- **Activity** lists every cell run and every request to a route: when, what it was, who sent it (curl, the page, a server cell), the status and how long the handler took. The requests the cell above made are there, one answered 200 and one 400.",
+        "- **Console** holds every line the cells printed, `console.log` in a handler included, with the cell it came from. Its filter and its level switches narrow it.",
+        "- **Kernel log** is the kernel process's own log, for when something below the cells goes wrong."
+      ]
+    },
+    {
+      "id": "c_ra0009",
+      "type": "markdown",
+      "source": [
+        "## Step 5: when a cell fails",
+        "",
+        "Add a server cell under this one (hover the gap between two cells and click Server, or press B with this cell selected) and paste:",
+        "",
+        "```ts",
+        "const overdue = tasks.filter((task) => !task.done).map((task) => task.due.toUpperCase());",
+        "```",
+        "",
+        "Run it with Shift Enter. It fails: tasks have no `due`, so `task.due` is undefined. The cell's state says \"failed at line 1\", the error block under it says what went wrong in plain words and quotes the failing line, and the bottom panel's **Problems** tab (Cmd Shift M) lists the cell. Change `task.due` to `task.title` and run it again: the error goes, and so does the problem.",
+        "",
+        "A loop that never ends is stopped, not waited out. Run `while (true) {}` in a cell, then click Interrupt in the notebook's toolbar (or press I twice with the cell selected): the cell ends interrupted, and the kernel keeps every name it had. Restart in the toolbar (or 0 pressed twice) starts a fresh kernel when you want one."
+      ]
+    },
+    {
+      "id": "c_ra0010",
+      "type": "markdown",
+      "source": [
+        "## Step 6: an agent's edit, for you to review",
+        "",
+        "An agent (Claude Code, a script, a CI job) works on the same notebook through the CLI or MCP, and the page shows each change as it happens. Make one yourself, from a terminal in the workspace folder (the folder Home shows at the top):",
+        "",
+        "```bash",
+        "nimbo cell add -n 04-routes-and-agents.jsnb --type server --source 'tasks.filter((task) => !task.done)'",
+        "```",
+        "",
+        "Use this notebook's file name if Home gave the copy another one. The new cell appears at the end with violet line numbers: lines an agent changed that no one has reviewed yet. Hover them to see who changed what and when. The **Agent** view on the left lists every edit to review, with Mark reviewed, Revert and Full diff, and Home's preview says \"1 agent edit to review\" for this notebook until you do.",
+        "",
+        "`nimbo ls -n 04-routes-and-agents.jsnb` lists the cells with their ids, and `nimbo cell update` changes one the same way."
+      ]
+    },
+    {
+      "id": "c_ra0011",
+      "type": "markdown",
+      "source": [
+        "## Try this next",
+        "",
+        "- Add `DELETE /tasks/done` that removes the finished tasks, and call it with `curl -X DELETE`.",
+        "- Read the API from a client cell: `await (await fetch(\"/n/04-routes-and-agents/tasks\")).json()`, the same address on the page's own host.",
+        "- Connect an agent over MCP (`claude mcp add nimbo -- nimbo mcp`), ask it to add a route, then review its edit in the Agent view.",
+        "- Open the **Backend and frontend** example in Home's Examples for a webhook from Stripe."
+      ]
+    }
+  ]
+}

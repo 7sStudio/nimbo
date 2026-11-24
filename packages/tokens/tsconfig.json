@@ -1,0 +1,9 @@
+{
+  "// owns": "Full project of @jsnb/tokens (sources, tests and the stylesheet generator) for typecheck, lint and editors; emits nothing.",
+  "extends": "../../tsconfig.node.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": ["src", "scripts"],
+  "references": []
+}
