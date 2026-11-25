@@ -171,7 +171,8 @@ function decide(proc: object, put: Aside, delivered: boolean, memory: Memory): H
 function probed(
   proc: object,
   put: readonly Aside[],
-  { listeners, memory }: { readonly listeners: Listeners; readonly memory: Memory },
+  listeners: Listeners,
+  memory: Memory,
   runAs: RunAs,
 ): Promise<readonly HookFinding[]> {
   return new NativePromise((resolve) => {
@@ -219,7 +220,7 @@ export function captureProcessHooks(proc: HookedProcess): ProcessHooks {
     const put = [aside(proc, tick, memory, again), aside(proc, emit, memory, again)].filter(
       (one) => one !== undefined,
     );
-    return put.length === 0 ? undefined : probed(proc, put, { listeners, memory }, runAs);
+    return put.length === 0 ? undefined : probed(proc, put, listeners, memory, runAs);
   };
   return {
     withNodeNextTick: (fn) => underNodeTick(proc, tick, fn),

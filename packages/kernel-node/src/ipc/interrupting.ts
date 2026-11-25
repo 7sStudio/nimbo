@@ -42,10 +42,10 @@ function settle(waiters: readonly InterruptWaiter[], refusal: InterruptRefusal |
  * (`again` counts them): another inspector client's evaluate run right behind the first can take its termination in
  * the cell's place, and the second call stops the cell then. It stops only code that runs for those executions, or
  * code a call of the hook terminated that has not yielded since (by its store), so a request to another cell's export
- * queued behind the cell, whose user code may be running by then, is never stopped by it. Any evaluate the daemon sends can itself reach the kernel while the one
- * before it still has its termination pending and take it, the interrupts asked for meanwhile and a second call alike;
- * it then fails, so every evaluate that fails is followed by a second call, sent again when it fails, a few times at
- * most. The interrupts an evaluate carries settle once their last evaluate answered, with its refusal, if any (a
+ * queued behind the cell, whose user code may be running by then, is never stopped by it. Any evaluate the daemon sends
+ * can itself reach the kernel while the one before it still has its termination pending and take it, the interrupts
+ * asked for meanwhile and a second call alike; it then fails, so every evaluate that fails is followed by a second call,
+ * sent again when it fails, a few times at most. The interrupts an evaluate carries settle once their last evaluate answered, with its refusal, if any (a
  * refusal ends the calls); when interrupts asked for meanwhile wait, their evaluate replaces the second call, since it
  * stops whatever user code runs.
  */

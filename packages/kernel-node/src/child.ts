@@ -6,7 +6,6 @@
 import { url } from "node:inspector";
 
 import { departure } from "./departure.js";
-import type { Channel } from "./ipc/channel.js";
 import { createChannel } from "./ipc/channel.js";
 import { ChildConfig } from "./ipc/messages.js";
 import { notice } from "./ipc/notice.js";
@@ -15,11 +14,9 @@ import { patchStdio } from "./outputs/stdio.js";
 import type { Runtime } from "./runtime.js";
 import { startUserCode, userCodeFrame } from "./builtins/userCode.js";
 import { pushedContext } from "./asyncContexts.js";
-import type { Interrupts } from "./interruptHook.js";
 import { connectTerminate, createInterrupts, installHook } from "./interruptHook.js";
 import { cellOnStack, outsideFramesOnStack, userCodeOnStack } from "./stackReads.js";
 import { ownCodeDirectories } from "./kernelFiles.js";
-import type { ProcessHooks } from "./processHooks.js";
 import { captureProcessHooks } from "./processHooks.js";
 import { createRuntime } from "./runtime.js";
 import { warmUp } from "./warmUp.js";
@@ -91,41 +88,6 @@ const checkEvery = (ms: number, check: () => void): void => {
   repeat(check, ms).unref();
 };
 
-type Stdio = ReturnType<typeof patchStdio>;
-
-/** What the runtime is wired to: the patched stdio, the IPC channel, the interrupt hook's executions, the exit. */
-type Wiring = {
-  readonly stdio: Stdio;
-  readonly channel: Channel;
-  readonly interrupts: Interrupts;
-  readonly hooks: ProcessHooks;
-  readonly exit: (code: number) => void;
-};
-
-/** The runtime over the workspace of `proc`; runs the hook interrupted never start. */
-function runtimeFor(proc: KernelProcess, options: StartOptions, wiring: Wiring): Runtime {
-  const { stdio, channel, interrupts, hooks, exit } = wiring;
-  return createRuntime({
-    config: ChildConfig.parse(JSON.parse(proc.argv[2] ?? "null")),
-    workspace: proc.cwd(),
-    processEnv: proc.env,
-    interrupted: interrupts.has,
-    send: channel.send,
-    log: stdio.log,
-    load: options.load ?? ((specifier) => import(specifier)),
-    schedule: options.schedule ?? flushLater,
-    defer: options.defer ?? ((turn) => nextTurn(turn)),
-    clock: options.clock ?? (() => new NativeDate().toISOString()),
-    hooks,
-    exit,
-    end: (code) => {
-      channel.afterLastSend(() => {
-        exit(code);
-      });
-    },
-  });
-}
-
 function listen(proc: KernelProcess, runtime: Runtime, depart: () => void): void {
   proc.on("message", (message) => {
     runtime.receive(message);
@@ -139,34 +101,6 @@ function listen(proc: KernelProcess, runtime: Runtime, depart: () => void): void
   // The daemon is gone: nothing would ever stop this kernel otherwise, nor what its cells started (departure.ts).
   proc.on("disconnect", () => {
     depart();
-  });
-}
-
-/** The runtime, once created: the interrupt hook's executions exist before it, which reads them. */
-type Late = { runtime?: Runtime };
-
-/**
- * The interrupt hook's executions over the calibrated user-code frame, with a notice when none was found; what the
- * hook reads of the code running now (its store, its cell) and its notices go through `late.runtime`.
- */
-function interruptsFor(options: StartOptions, stdio: Stdio, late: Late): Interrupts {
-  const frame = userCodeFrame;
-  if (frame === undefined) {
-    const text =
-      "the user-code frame was not found: an interrupt stops cell code only, not the module code a cell calls";
-    stdio.log("stderr", `${notice(text)}\n`);
-  }
-  return createInterrupts({
-    userCodeRunning: () => userCodeOnStack(frame),
-    outsideFrames: () => outsideFramesOnStack(ownCodeDirectories),
-    reportOutside: (frames) => late.runtime?.reportOutside(frames),
-    pushedContext,
-    runningCell: () => cellOnStack((url) => late.runtime?.cellOf(url)),
-    runningStore: () => late.runtime?.runningStore(),
-    terminate: options.terminate ?? connectTerminate(),
-    afterYield: (forget) => {
-      nextTurn(forget);
-    },
   });
 }
 
@@ -189,9 +123,46 @@ export function startKernel(proc: KernelProcess, options: StartOptions = {}): Pr
       stdio.log("stderr", `${notice("a send failed", { error: error.message })}\n`);
     },
   );
-  const late: Late = {};
-  const interrupts = interruptsFor(options, stdio, late);
-  const runtime = runtimeFor(proc, options, { stdio, channel, interrupts, hooks, exit });
+  // The interrupt hook's executions exist before the runtime, which reads them: what the hook reads of the code running
+  // now (its store, its cell) and its notices go through `late.runtime`.
+  const late: { runtime?: Runtime } = {};
+  const frame = userCodeFrame;
+  if (frame === undefined) {
+    const text =
+      "the user-code frame was not found: an interrupt stops cell code only, not the module code a cell calls";
+    stdio.log("stderr", `${notice(text)}\n`);
+  }
+  const interrupts = createInterrupts({
+    userCodeRunning: () => userCodeOnStack(frame),
+    outsideFrames: () => outsideFramesOnStack(ownCodeDirectories),
+    reportOutside: (frames) => late.runtime?.reportOutside(frames),
+    pushedContext,
+    runningCell: () => cellOnStack((url) => late.runtime?.cellOf(url)),
+    runningStore: () => late.runtime?.runningStore(),
+    terminate: options.terminate ?? connectTerminate(),
+    afterYield: (forget) => {
+      nextTurn(forget);
+    },
+  });
+  const runtime = createRuntime({
+    config: ChildConfig.parse(JSON.parse(proc.argv[2] ?? "null")),
+    workspace: proc.cwd(),
+    processEnv: proc.env,
+    interrupted: interrupts.has,
+    send: channel.send,
+    log: stdio.log,
+    load: options.load ?? ((specifier) => import(specifier)),
+    schedule: options.schedule ?? flushLater,
+    defer: options.defer ?? ((turn) => nextTurn(turn)),
+    clock: options.clock ?? (() => new NativeDate().toISOString()),
+    hooks,
+    exit,
+    end: (code) => {
+      channel.afterLastSend(() => {
+        exit(code);
+      });
+    },
+  });
   late.runtime = runtime;
   take = runtime.write;
   listen(proc, runtime, departure(proc, exit));
