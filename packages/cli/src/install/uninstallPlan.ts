@@ -4,7 +4,7 @@
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-import { productName } from "@jsnb/core";
+import { productName, xdgDir } from "@jsnb/core";
 
 import type { Registration } from "./agents.js";
 import { versionsDirOf } from "./local.js";
@@ -31,10 +31,7 @@ export function withoutProfileLine(text: string): string {
 export function candidateProfiles(env: Readonly<Record<string, string | undefined>>): string[] {
   const home = env.HOME ?? homedir();
   const zdot = env.ZDOTDIR === undefined || env.ZDOTDIR === "" ? home : env.ZDOTDIR;
-  const config =
-    env.XDG_CONFIG_HOME === undefined || env.XDG_CONFIG_HOME === ""
-      ? join(home, ".config")
-      : env.XDG_CONFIG_HOME;
+  const config = xdgDir(env, "XDG_CONFIG_HOME", home);
   return [
     join(zdot, ".zshrc"),
     join(home, ".bashrc"),

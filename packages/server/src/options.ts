@@ -4,11 +4,10 @@
 // and the daemon's own timeouts for a route request and a /npm/ build (30 s each by default).
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
-import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import type { IdGenerator } from "@jsnb/core";
-import { InvalidParams, randomIds } from "@jsnb/core";
+import { InvalidParams, productConfigDir, randomIds } from "@jsnb/core";
 import type { KernelEntry } from "@jsnb/kernel-node";
 import { z } from "zod";
 
@@ -100,9 +99,7 @@ function builtEntry(): string | undefined {
 
 /** The user config folder of 07-file-format §6. */
 export function defaultUserConfigDir(env: NodeJS.ProcessEnv = process.env): string {
-  if (process.platform === "win32" && env.APPDATA) return join(env.APPDATA, "nimbo");
-  const xdg = env.XDG_CONFIG_HOME;
-  return xdg ? join(xdg, "nimbo") : join(homedir(), ".config", "nimbo");
+  return productConfigDir(env, env.HOME ?? homedir(), process.platform);
 }
 
 /** The daemon's own limits: 30 s for a route and for a bundle, 10 minutes for an install, 10 s for a kernel's or a
