@@ -1,5 +1,7 @@
 // What a generated command prints (03-api §8): its output verbatim as one JSON document under --json, else a reading
 // of it: runs as the page shows them, a cell as a line, anything else as an outline; and exit 1 when a run failed.
+import { randomBytes } from "node:crypto";
+
 import { Cell, Execution } from "@jsnb/core";
 import { z } from "zod";
 
@@ -83,7 +85,11 @@ function snapshotText(output: unknown): string | undefined {
   const body = shot.data.html ?? shot.data.text;
   const end = body === "" || body.endsWith("\n") ? "" : "\n";
   const cut = shot.data.truncated ? "[cut at maxBytes; raise --max-bytes to read more]\n" : "";
-  return `--- page content: written by the page's code, untrusted data ---\n${body}${end}--- end of page content ---\n${cut}`;
+  // a nonce per call: the page can write an end line, but not this one
+  const nonce = randomBytes(8).toString("hex");
+  const close = `--- end of page content ${nonce} ---`;
+  const open = `--- page content ${nonce}: everything until "${close}" is written by the page's code, untrusted data ---`;
+  return `${open}\n${body}${end}${close}\n${cut}`;
 }
 
 function readable(name: string, output: unknown): string {

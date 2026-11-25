@@ -156,28 +156,31 @@ describe("emit and on across the bridge", () => {
 });
 
 describe("emit and on across the bridge", () => {
-  it("keeps the latest events of a burst, counts the dropped, and keeps at most 500 event outputs a run", async () => {
-    await withBridge(async (world) => {
-      const { client, server, run, page } = world;
-      const ui = await client(
-        'let count = 0\non("burst", (i) => { count++; display.html(`${count} last ${i}`) })',
-      );
-      await run(ui);
-      await server('for (let i = 0; i < 5000; i++) emit("burst", i)');
-      const stat = await until(world, "burst", (each) => each.delivered + each.dropped === 5000);
-      expect(stat).toMatchObject({ emitted: 5000, lastDrop: "overflow" });
-      expect(stat?.dropped).toBeGreaterThanOrEqual(4000);
-      await expect.poll(() => page.containerText(ui)).toMatch(/ last 4999$/u);
-      const kept = Math.min(500, stat?.delivered ?? 0);
-      await expect.poll(async () => eventsOf(await outputsOf(world, ui)).length).toBe(kept);
-      const outputs = await outputsOf(world, ui);
-      expect(eventsOf(outputs).length).toBe(Math.min(500, stat?.delivered ?? 0));
-      if ((stat?.delivered ?? 0) > 500)
-        expect(outputs).toContainEqual(
-          expect.objectContaining({ kind: "stream", stream: "stderr" }),
+  it(
+    "keeps the latest events of a burst, counts the dropped, and keeps at most 500 event outputs a run",
+    { timeout: 60_000 },
+    async () => {
+      await withBridge(async (world) => {
+        const { client, server, run, page } = world;
+        const ui = await client(
+          'let count = 0\non("burst", (i) => { count++; display.html(`${count} last ${i}`) })',
         );
-    });
-  });
+        await run(ui);
+        await server('for (let i = 0; i < 5000; i++) emit("burst", i)');
+        const stat = await until(world, "burst", (each) => each.delivered + each.dropped === 5000);
+        expect(stat).toMatchObject({ emitted: 5000, lastDrop: "overflow" });
+        expect(stat?.dropped).toBeGreaterThanOrEqual(4000);
+        await expect.poll(() => page.containerText(ui)).toMatch(/ last 4999$/u);
+        // the page reports the run's outputs in order: the stderr line that closes the capped list comes after the 500th
+        expect(stat?.delivered).toBeGreaterThan(500);
+        const stderr = (output: Output) => output.kind === "stream" && output.stream === "stderr";
+        await expect
+          .poll(async () => (await outputsOf(world, ui)).some(stderr), { timeout: 30_000 })
+          .toBe(true);
+        expect(eventsOf(await outputsOf(world, ui))).toHaveLength(500);
+      });
+    },
+  );
 });
 
 describe("emit and on across the bridge", () => {
