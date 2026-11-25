@@ -18,7 +18,7 @@ The rules every package follows, enforced by a tool where one exists; the rest s
 | Size | `tools/size.mjs` for the page bundle (§10) | contract stage |
 
 - Every committed rule is `error` or off; `--max-warnings 0`.
-- A rule with false positives is fixed or removed, not disabled inline. An `eslint-disable` comment carries its reason on the same line; `tools/check-disables.mjs` fails when `packages/` and `tools/` hold more than twenty.
+- A rule with false positives is fixed or removed, not disabled inline. An `eslint-disable` comment carries its reason on the same line.
 - The pre-commit hook (`simple-git-hooks` + `lint-staged`) runs Prettier and Stylelint on staged files only; the type-checked ESLint runs in the pipeline's lint stage (`tools/ci.sh`: `pnpm lint`, `format:check`, `knip`, `depcruise`).
 
 ## 2. Files
