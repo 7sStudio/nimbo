@@ -207,88 +207,116 @@ function attributesOf(element: Element, room: number): (readonly [string, string
   return list;
 }
 
+type WriterState = {
+  readonly out: string[];
+  readonly closes: string[];
+  used: number;
+  owed: number;
+  full: boolean;
+  cut: boolean;
+};
+
+/** The HTML being written under `maxBytes`, with room kept for every close tag still owed. */
+function createWriter(maxBytes: number) {
+  const state: WriterState = {
+    out: [],
+    closes: [],
+    used: 0,
+    owed: 0,
+    full: false,
+    cut: false,
+  };
+  const room = (): number => maxBytes - state.used - state.owed;
+  const push = (part: string): void => {
+    state.out.push(part);
+    state.used += bytesOf(part);
+  };
+  return {
+    state,
+    room,
+    push,
+    /** `raw` escaped and cut to the room left less `reserve`; a cut ends the walk. */
+    text: (raw: string, escape: (text: string) => string, reserve = 0): void => {
+      const fit = fitted(raw, room() - reserve, escape);
+      if (fit.cut) state.full = true;
+      push(fit.text);
+    },
+    owe: (close: string): void => {
+      state.closes.push(close);
+      state.owed += bytesOf(close);
+    },
+    close: (): void => {
+      const close = state.closes.pop() ?? "";
+      state.owed -= bytesOf(close);
+      push(close);
+    },
+    html: (): string => [...state.out, ...state.closes.toReversed()].join(""),
+  };
+}
+
+type Writer = ReturnType<typeof createWriter>;
+
+/** `<name a="…">`, its values cut to fit, or undefined when even the bare tag and its close do not fit. */
+function tagOf(writer: Writer, element: Element, close: string): string | undefined {
+  const name = element.localName;
+  let tag = `<${name}`;
+  let left = writer.room() - bytesOf(`<${name}>`) - bytesOf(close);
+  if (left < 0) return undefined;
+  for (const [key, value] of attributesOf(element, left)) {
+    const frame = bytesOf(` ${key}=""`);
+    if (frame > left) {
+      writer.state.cut = true;
+      break;
+    }
+    const fit = fitted(value, left - frame, escapeValue);
+    if (fit.cut) writer.state.cut = true;
+    tag += ` ${key}="${fit.text}"`;
+    left -= frame + bytesOf(fit.text);
+  }
+  return `${tag}>`;
+}
+
 /**
  * The HTML, always well formed: a tag is written whole with room kept for every close tag still owed, an attribute
- * value or a text is cut to the room left (`cut`), and the walk stops once nothing more fits.
+ * value or a text is cut to the room left, and the walk stops once nothing more fits.
  */
 function htmlVisitor(maxBytes: number) {
-  const out: string[] = [];
-  const closes: string[] = [];
-  let used = 0;
-  let owed = 0;
-  let full = false;
-  let cut = false;
+  const writer = createWriter(maxBytes);
   const open = new WeakSet<Element>();
-  const room = (): number => maxBytes - used - owed;
-  const push = (part: string): void => {
-    out.push(part);
-    used += bytesOf(part);
-  };
-  /** `<name a="…">`, its values cut to fit, or undefined when even the bare tag and its close do not fit. */
-  const tagOf = (element: Element, close: string): string | undefined => {
-    const name = element.localName;
-    let tag = `<${name}`;
-    let left = room() - bytesOf(`<${name}>`) - bytesOf(close);
-    if (left < 0) return undefined;
-    for (const [key, value] of attributesOf(element, left)) {
-      const frame = bytesOf(` ${key}=""`);
-      if (frame > left) {
-        cut = true;
-        break;
-      }
-      const fit = fitted(value, left - frame, escapeValue);
-      if (fit.cut) cut = true;
-      tag += ` ${key}="${fit.text}"`;
-      left -= frame + bytesOf(fit.text);
-    }
-    return `${tag}>`;
-  };
   const visitor: Visitor = {
     enter: (element) => {
       if (droppedWithContent(element)) return "skip";
       const kind = emittedElement(element);
-      if (kind === "skip") return "skip";
-      if (kind === "unwrap") return "children";
+      if (kind !== "emit") return kind === "unwrap" ? "children" : "skip";
       const image = imageNote(element);
       if (image !== undefined) {
-        visitor.text(document.createTextNode(image));
+        writer.text(image, escapeText);
         return "skip";
       }
       const close = isVoid(element) ? "" : `</${element.localName}>`;
-      const tag = tagOf(element, close);
-      if (tag === undefined) {
-        full = true;
-        return "skip";
-      }
-      push(tag);
+      const tag = tagOf(writer, element, close);
+      if (tag === undefined) writer.state.full = true;
+      if (tag === undefined) return "skip";
+      writer.push(tag);
       if (close === "") return "skip";
       if (element instanceof HTMLTextAreaElement) {
-        const fit = fitted(element.value, room() - bytesOf(close), escapeText);
-        if (fit.cut) full = true;
-        push(`${fit.text}${close}`);
+        writer.text(element.value, escapeText, bytesOf(close));
+        writer.push(close);
         return "skip";
       }
-      closes.push(close);
+      writer.owe(close);
       open.add(element);
-      owed += bytesOf(close);
       return "children";
     },
     leave: (element) => {
-      if (!open.delete(element)) return;
-      const close = closes.pop() ?? "";
-      owed -= bytesOf(close);
-      push(close);
+      if (open.delete(element)) writer.close();
     },
     text: (node) => {
-      const fit = fitted(node.data, room(), escapeText);
-      if (fit.cut) full = true;
-      push(fit.text);
+      writer.text(node.data, escapeText);
     },
-    full: () => full,
+    full: () => writer.state.full,
   };
-  /** The HTML with every close tag still owed. */
-  const html = (): string => [...out, ...closes.toReversed()].join("");
-  return { visitor, html, cut: () => cut || full };
+  return { visitor, html: writer.html, cut: () => writer.state.cut || writer.state.full };
 }
 
 /** `text` cut to at most `maxBytes` of UTF-8, at a character boundary. */

@@ -203,7 +203,7 @@ describe("agentSnapshot's HTML under its budget", () => {
     if (!area) throw new Error("no textarea");
     area.value = "</textarea> typed text that runs on";
     for (let maxBytes = 1; maxBytes <= 200; maxBytes += 1) {
-      const { html } = await read(root, maxBytes);
+      const { html = "" } = await read(root, maxBytes);
       expect(new TextEncoder().encode(html).length).toBeLessThanOrEqual(maxBytes);
       const parsed = document.createElement("template");
       parsed.innerHTML = `${html}<i id="after">after</i>`;
