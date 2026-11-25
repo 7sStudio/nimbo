@@ -1,0 +1,59 @@
+# Homebrew tap: once a release is published, copies its formula (nimbo.rb, checked against the release's SHA256SUMS)
+# to 7sStudio/homebrew-nimbo, with a deploy key that can write to that repository only. Safe to run again.
+name: homebrew-tap
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: The release's tag, such as v0.1.1
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: homebrew-tap
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Formula of the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          set -euo pipefail
+          case "$TAG" in v[0-9]*.[0-9]*.[0-9]*) ;; *) echo "unexpected tag: $TAG" >&2; exit 1 ;; esac
+          mkdir release
+          gh release download "$TAG" --pattern nimbo.rb --pattern SHA256SUMS --dir release
+          (cd release && grep -E '  nimbo\.rb$' SHA256SUMS | sha256sum --check --strict -)
+          grep -q "releases/download/${TAG}/" release/nimbo.rb
+          ruby -c release/nimbo.rb
+      - name: Push to the tap
+        env:
+          TAP_DEPLOY_KEY: ${{ secrets.TAP_DEPLOY_KEY }}
+          TAG: ${{ github.event.release.tag_name || inputs.tag }}
+        run: |
+          set -euo pipefail
+          install -m 700 -d "$RUNNER_TEMP/ssh"
+          (umask 077 && printf '%s\n' "$TAP_DEPLOY_KEY" > "$RUNNER_TEMP/ssh/key")
+          # GitHub's own host keys, from its API over TLS, so the push cannot go to an impostor
+          curl -fsSL https://api.github.com/meta | jq -r '.ssh_keys[] | "github.com \(.)"' > "$RUNNER_TEMP/ssh/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/ssh/key -o IdentitiesOnly=yes -o UserKnownHostsFile=$RUNNER_TEMP/ssh/known_hosts -o StrictHostKeyChecking=yes"
+          git clone -q --depth 1 git@github.com:7sStudio/homebrew-nimbo.git tap
+          cp release/nimbo.rb tap/Formula/nimbo.rb
+          cd tap
+          if git diff --quiet; then echo "the tap is already at ${TAG}"; else
+            git config user.name 7sStudio
+            git config user.email "43743206+7sStudio@users.noreply.github.com"
+            git commit -qam "nimbo ${TAG#v}"
+            git push -q origin HEAD:main
+            echo "the tap is now at ${TAG}"
+          fi
+          rm -rf "$RUNNER_TEMP/ssh"
