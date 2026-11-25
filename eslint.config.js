@@ -111,10 +111,10 @@ export default defineConfig([
     rules: {
       // 08 §2 files and sizes
       "max-lines": ["error", { max: 400, skipBlankLines: true, skipComments: true }],
-      "max-lines-per-function": ["error", { max: 40, skipBlankLines: true, skipComments: true }],
-      complexity: ["error", 10],
-      "max-depth": ["error", 3],
-      "max-params": ["error", 4],
+      "max-lines-per-function": ["error", { max: 100, skipBlankLines: true, skipComments: true }],
+      complexity: ["error", 20],
+      "max-depth": ["error", 4],
+      "max-params": ["error", 5],
       // 08 §5 errors
       "no-empty": "error",
       "@typescript-eslint/only-throw-error": "error",

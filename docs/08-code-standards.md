@@ -26,12 +26,13 @@ The rules every package follows, enforced by a tool where one exists; the rest s
 | Rule | Number | Enforced by |
 |---|---|---|
 | Lines per file (blank and comment lines excluded) | 400 | `max-lines: 400` |
-| Lines per function | 40 | `max-lines-per-function` |
-| Cyclomatic complexity | 10 | `complexity` |
-| Nesting depth | 3 | `max-depth` |
-| Parameters | 4; beyond that an options object | `max-params` |
+| Lines per function | 100 | `max-lines-per-function` |
+| Cyclomatic complexity | 20 | `complexity` |
+| Nesting depth | 4 | `max-depth` |
+| Parameters | 5; beyond that an options object | `max-params` |
 | Exports per file | one concept | review |
 
+- The numbers are guards against a runaway file or function, not targets: code is never bent to fit one (no object spread or `Object.assign` to save lines, no helper whose only reason is the count). Readable beats short.
 - A directory is a feature or a layer, never a kind of thing (`cells/`, `format/`, `model/`; never `utils/`, `helpers/`, `types/`). Shared types sit next to their owner, in a `types.ts` only when several files of one directory share them.
 - `index.ts` only at a package root and for a declared subpath export (`@jsnb/output-view/model`). No barrels inside packages.
 - Tests beside the file (`reduce.ts`, `reduce.test.ts`); fixtures in `fixtures/` beside them; golden files checked in.
