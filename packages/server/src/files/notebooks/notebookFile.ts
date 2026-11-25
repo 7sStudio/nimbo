@@ -9,6 +9,7 @@ import { InvalidParams, JsnbError } from "@jsnb/core";
 import { validateNotebookRef } from "@jsnb/kernel-node";
 
 import type { FileIdentity } from "../atomicWrite.js";
+import type { raced } from "../atomicWrite.js";
 import { isSymbolicLink, writeAtomically } from "../atomicWrite.js";
 import { readRegularFile } from "../regularFile.js";
 
@@ -215,9 +216,10 @@ export async function writeNotebook(
   path: string,
   text: string,
   root: string,
-): Promise<FileIdentity> {
+  replaces?: (current: string | undefined) => boolean,
+): Promise<FileIdentity | typeof raced> {
   if (!(await isFolder(root))) throw new WorkspaceGone({ root });
   await mkdir(dirname(path), { recursive: true });
   if (await isSymbolicLink(path)) throw new NotebookBecameLink({ path });
-  return writeAtomically(path, text);
+  return writeAtomically(path, text, replaces === undefined ? {} : { replaces });
 }

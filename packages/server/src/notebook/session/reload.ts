@@ -4,6 +4,7 @@
 import type { CellId, StaleMap } from "@jsnb/core";
 import { afterDelete, afterEdit, NotebookNotFound } from "@jsnb/core";
 
+import { identityOf } from "../../files/atomicWrite.js";
 import { readNotebook } from "../../files/notebooks/notebookFile.js";
 import type { SessionContext } from "./context.js";
 import { loadDocument } from "./fileForm.js";
@@ -103,6 +104,7 @@ export function applyRecords(
 export async function reloadSession(context: SessionContext): Promise<void> {
   const read = await readNotebook(context.path);
   if (read.kind === "missing") throw new NotebookNotFound({ path: context.ref });
+  context.identity = (await identityOf(context.path)) ?? context.identity; // editors and git replace the inode
   const loaded = loadDocument(read.text, context.ref, context.ids);
   for (const warning of loaded.warnings) context.log.warn({ notebook: context.ref }, warning);
   context.header = loaded.header;

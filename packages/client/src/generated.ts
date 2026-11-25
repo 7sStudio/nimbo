@@ -146,7 +146,7 @@ const cell = (call: Caller) =>
     add: bind(call, cellAdd),
     /** One cell by id, with its status and last execution summary. */
     get: bind(call, cellGet),
-    /** Change the source, the type or the meta (merged; a null key removes it; meta.title names the cell). Dependents become stale when the source changes. */
+    /** Change the source, the type or the meta (merged; a null key removes it; meta.title names the cell). Dependents become stale when the source changes. base, the textHash of the source the edit was made on, makes a source that changed on disk since then a conflict instead of a silent overwrite. */
     update: bind(call, cellUpdate),
     /** Put back the code an agent's edits replaced (the source and type before the first edit no one reviewed), as an edit of its own; a cell with no such edit is left as it is. */
     revert: bind(call, cellRevert),

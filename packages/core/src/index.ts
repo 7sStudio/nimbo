@@ -6,6 +6,7 @@
 export * from "./product.js";
 
 // model
+export * from "./model/textHash.js";
 export * from "./model/ids.js";
 export * from "./model/cell.js";
 export * from "./model/execution.js";

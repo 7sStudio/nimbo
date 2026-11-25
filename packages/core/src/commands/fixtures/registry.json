@@ -4669,7 +4669,7 @@
   },
   {
     "name": "cell.update",
-    "description": "Change the source, the type or the meta (merged; a null key removes it; meta.title names the cell). Dependents become stale when the source changes.",
+    "description": "Change the source, the type or the meta (merged; a null key removes it; meta.title names the cell). Dependents become stale when the source changes. base, the textHash of the source the edit was made on, makes a source that changed on disk since then a conflict instead of a silent overwrite.",
     "tags": {
       "mutating": true,
       "destructive": false,
@@ -4692,6 +4692,10 @@
         },
         "source": {
           "type": "string"
+        },
+        "base": {
+          "type": "string",
+          "minLength": 1
         },
         "type": {
           "type": "string",
@@ -5604,6 +5608,10 @@
         },
         "source": {
           "type": "string"
+        },
+        "base": {
+          "type": "string",
+          "minLength": 1
         },
         "wait": {
           "default": true,

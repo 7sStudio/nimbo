@@ -1,10 +1,9 @@
 // The daemon's notebook session (02-architecture §2, §4): one per open notebook, holding the notebook file's state, the
 // cells' status, the graph and stale flags, the autosave, the kernel and the queries; its parts share its context.
 import type { Cell, CellId, NotebookState } from "@jsnb/core";
+import { textHash } from "@jsnb/core";
 
-import { stat } from "node:fs/promises";
-
-import type { FileIdentity } from "../../files/atomicWrite.js";
+import { identityOf } from "../../files/atomicWrite.js";
 import { kernelLogPath } from "../../files/logs/kernelLog.js";
 import { DebugSession } from "../debug/session.js";
 import type { SessionRealm } from "../realm/realm.js";
@@ -21,7 +20,8 @@ import { addCell, deleteCell, markReviewed, moveCell, revertCell, updateCell } f
 import type { Editor } from "./provenance.js";
 import type { ExportRequest } from "./exported.js";
 import { compareCell, exportNotebook } from "./exported.js";
-import { reconcileExternal } from "./external.js";
+import type { ExternalState } from "./external.js";
+import { conflictOn, externalState, reconcileExternal, staleEdit } from "./external.js";
 import { savesOutputs, textOf } from "./fileForm.js";
 import { readNotebook } from "../../files/notebooks/notebookFile.js";
 import { diffDisk } from "../git/bodies.js";
@@ -98,41 +98,41 @@ function removeCell(
   void disposeDeleted(context, cell, ended);
 }
 
-/** How long after the page's last edit of a cell a change of it on disk counts as one under the user's caret: a
- * conflict, not a replacement (07 §5). */
-const editingMs = 3000;
-
-/** The cell edits of the session, each answered in the API's form; `typed` hears the cells the page edits. */
-function edits(context: SessionContext, typed: Map<CellId, number>) {
+/** The cell edits of the session, each answered in the API's form. A page edit made on a text the file replaced
+ * since holds its cell in conflict (external.ts); any other edit of the code ends what the session knew of the
+ * file's text for that cell. */
+function edits(context: SessionContext, state: ExternalState) {
   const api = (record: Parameters<typeof context.cells.api>[0]) => context.cells.api(record);
-  const noted = <T extends { readonly id: CellId }>(editor: Editor, record: T): T => {
-    if (editor.client === "ui") typed.set(record.id, Date.now());
+  const own = <T extends { readonly id: CellId }>(record: T): T => {
+    state.fromDisk.delete(record.id);
     return record;
   };
   return {
     cell: (cell: CellId) => api(context.cells.require(cell)),
-    add: (input: AddCell, editor: Editor) => api(noted(editor, addCell(context, input, editor))),
-    update: (input: UpdateCell, editor: Editor) =>
-      api(noted(editor, updateCell(context, input, editor))),
-    revert: (cell: CellId, editor: Editor) => api(noted(editor, revertCell(context, cell, editor))),
+    add: (input: AddCell, editor: Editor) => api(addCell(context, input, editor)),
+    update: (input: UpdateCell, editor: Editor) => {
+      const stale = staleEdit(context, state, input);
+      const record = updateCell(context, input, editor);
+      if (stale) conflictOn(context, [input.cell]);
+      return api(input.source === undefined && input.type === undefined ? record : own(record));
+    },
+    revert: (cell: CellId, editor: Editor) => api(own(revertCell(context, cell, editor))),
     markReviewed: (cell: CellId) => api(markReviewed(context, cell)),
     move: (cell: CellId, after: CellId | null) => moveCell(context, cell, after),
   };
 }
 
-/** The identity of the file at `path`, undefined when it cannot be read. */
-const identityOf = (path: string): Promise<FileIdentity | undefined> =>
-  stat(path).then(
-    (stats) => ({ dev: stats.dev, ino: stats.ino }),
-    () => undefined,
-  );
-
-/** The context of a session that knows its file (07 §5): by its identity at open, then by each save's. */
-function identifiedContext(options: SessionOptions): ReturnType<typeof contextOf> {
+/** The context of a session that knows its file (07 §5): by its identity at open, then by each save's and each
+ * read's; a write that finds the file changed asks `external` for the merge. */
+function identifiedContext(
+  options: SessionOptions,
+  external: { run: () => Promise<"merged" | "conflict" | "off"> },
+): ReturnType<typeof contextOf> {
   const context = contextOf(options, {
     written: (identity) => {
       context.identity = identity;
     },
+    external: () => external.run(),
     ...(options.missing ? { missing: options.missing } : {}),
   });
   void identityOf(options.path).then((identity) => {
@@ -187,27 +187,60 @@ function debuggerOf(options: SessionOptions, context: SessionContext): DebugSess
   return debug;
 }
 
-/** The watch on the notebook's file that merges another program's edits into the session (07 §5), unless
- * files.mergeExternalChanges is off. */
-function externalWatch(
+/** The merge of another program's edits into the session (07 §5), unless files.mergeExternalChanges is off: run by
+ * the watch on the file, and by a write that finds the file changed. */
+function externalParts(
   options: SessionOptions,
   context: SessionContext,
-  parts: { readonly runs: SessionRuns; readonly typed: ReadonlyMap<CellId, number> },
-): FileWatch {
-  const hooks = {
-    busy: (cell: CellId) => Date.now() - (parts.typed.get(cell) ?? -Infinity) < editingMs,
-    removing: (cell: CellId) => void parts.runs.dropRuns(cell),
+  parts: {
+    readonly runs: SessionRuns;
+    readonly hook: { run: () => Promise<"merged" | "conflict" | "off"> };
+  },
+) {
+  const state = externalState();
+  const merge = () => reconcileExternal(context, state, (cell) => void parts.runs.dropRuns(cell));
+  const on = () => context.settings()["files.mergeExternalChanges"];
+  parts.hook.run = async () => {
+    if (!on()) return "off";
+    const outcome = await merge();
+    return outcome === "conflict" || outcome === "unreadable" ? "conflict" : "merged";
   };
-  return watchFile({
+  const watch = watchFile({
     path: () => context.path,
     log: context.log,
     debounceMs: options.watchDebounceMs ?? 100,
     everyMs: options.fileCheckMs ?? 2000,
     check: async () => {
-      if (!context.settings()["files.mergeExternalChanges"]) return;
-      await context.autosave.exclusive(() => reconcileExternal(context, hooks));
+      if (on()) await context.autosave.exclusive(merge);
     },
   });
+  return { state, watch };
+}
+
+/** notebook.reload: the file's text in place of the session's; the cells whose text it changed are the file's (a page
+ * edit still made on their old text is a conflict), and the conflict is over. */
+async function reloaded(context: SessionContext, state: ExternalState): Promise<void> {
+  const before = new Map(
+    context.cells.list().map((r) => [r.id, { source: r.source, type: r.type }]),
+  );
+  await context.autosave.exclusive(() => reloadSession(context)); // after the write under way
+  state.held.clear();
+  state.order = false;
+  for (const record of context.cells.list()) {
+    const was = before.get(record.id);
+    if (was !== undefined && was.source !== record.source)
+      state.fromDisk.set(record.id, { hash: textHash(record.source), before: was });
+  }
+}
+
+/** notebook.save; a forced one ends the conflict with the session's text. */
+async function saved(context: SessionContext, state: ExternalState, force: boolean) {
+  const at = await context.autosave.save(force);
+  if (force) {
+    state.held.clear();
+    state.order = false;
+  }
+  return at;
 }
 
 /** notebook.compareDisk: the notebook's file against the text a save would write now. */
@@ -247,14 +280,14 @@ async function closeSession(
 
 /** The session of an opened notebook; its kernel starts now, without waiting for `ready`. */
 export function createSession(options: SessionOptions): Session {
-  const context = identifiedContext(options);
+  const hook = { run: () => Promise.resolve<"merged" | "conflict" | "off">("off") };
+  const context = identifiedContext(options, hook);
   void context.kernel.ready().catch(() => undefined); // a failed start is logged and reported as kernel.status dead
   const realm = createRealm(context, options.realm);
   const runs = createRuns(context, realm);
   const query = queryParts(options, context);
   const debug = debuggerOf(options, context);
-  const typed = new Map<CellId, number>();
-  const watch = externalWatch(options, context, { runs, typed });
+  const { state, watch } = externalParts(options, context, { runs, hook });
   return {
     ...runs,
     get ref() {
@@ -266,15 +299,14 @@ export function createSession(options: SessionOptions): Session {
     },
     context,
     state: () => stateOf(context, realm.status(), debug.state()),
-    ...edits(context, typed),
+    ...edits(context, state),
     remove: (cell) => {
       removeCell(context, runs, cell);
     },
-    save: (force) => context.autosave.save(force),
+    save: (force) => saved(context, state, force),
     compareDisk: (content) => compareDisk(options, context, content),
     reload: async () => {
-      await context.autosave.exclusive(() => reloadSession(context)); // after the write under way
-      typed.clear(); // the page's text gave way to the file's: nothing is under its caret any more
+      await reloaded(context, state);
       return stateOf(context, realm.status(), debug.state());
     },
     ...readers(options, context, query),

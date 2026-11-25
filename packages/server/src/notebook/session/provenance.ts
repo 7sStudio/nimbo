@@ -42,7 +42,11 @@ export function stamped(
   const info = editInfo(editor, at);
   if (info.by === "user") return info;
   const base = last?.review ?? { previousSource: before.source, previousType: before.type };
-  if (base.previousSource === after.source && base.previousType === after.type) return info;
+  const back = base.previousSource === after.source && base.previousType === after.type;
+  // the file undoing an agent's edit no one reviewed: the mark stays, the agent's code the one a revert brings back
+  if (back && info.by === "external" && last?.review !== undefined)
+    return { ...info, review: { previousSource: before.source, previousType: before.type } };
+  if (back) return info;
   return {
     ...info,
     review: { previousSource: base.previousSource, previousType: base.previousType },

@@ -30,7 +30,7 @@ type Case = {
   readonly fromTheirs?: readonly string[];
   readonly removed?: readonly string[];
   readonly keepsOurs?: boolean;
-  readonly busy?: readonly string[];
+  readonly held?: readonly string[];
 };
 
 const cases: readonly Case[] = [
@@ -85,11 +85,18 @@ const cases: readonly Case[] = [
     conflicts: [{ cell: "c_a", reason: "bothChanged" }],
   },
   {
-    name: "source on one side and type on the other merge",
+    name: "source on one side and type on the other is a conflict",
     base: ["a"],
     ours: ["a=x"],
-    theirs: [{ id: "a", source: "a", type: "client" }],
-    result: [{ id: "a", source: "x", type: "client" }],
+    theirs: [{ id: "a", source: "a", type: "markdown" }],
+    conflicts: [{ cell: "c_a", reason: "bothChanged" }],
+  },
+  {
+    name: "type and source both from one side merge",
+    base: ["a", "b"],
+    ours: ["a", "b=y"],
+    theirs: [{ id: "a", source: "# A", type: "markdown" }, "b"],
+    result: [{ id: "a", source: "# A", type: "markdown" }, "b=y"],
     fromTheirs: ["c_a"],
     keepsOurs: true,
   },
@@ -211,29 +218,29 @@ const cases: readonly Case[] = [
     conflicts: [{ cell: null, reason: "order" }],
   },
   {
-    name: "a busy cell changed on disk is a conflict even when ours matches the base",
+    name: "a held cell changed on disk is a conflict even when ours matches the base",
     base: ["a", "b"],
     ours: ["a", "b"],
     theirs: ["a=x", "b"],
-    busy: ["c_a"],
+    held: ["c_a"],
     conflicts: [{ cell: "c_a", reason: "bothChanged" }],
   },
   {
-    name: "a busy cell the disk left alone merges",
+    name: "a held cell the disk left alone merges",
     base: ["a", "b"],
     ours: ["a", "b"],
     theirs: ["a", "b=y"],
-    busy: ["c_a"],
+    held: ["c_a"],
     result: ["a", "b=y"],
     fromTheirs: ["c_b"],
     keepsOurs: false,
   },
   {
-    name: "a busy cell removed on disk is a conflict",
+    name: "a held cell removed on disk is a conflict",
     base: ["a", "b"],
     ours: ["a", "b"],
     theirs: ["b"],
-    busy: ["c_a"],
+    held: ["c_a"],
     conflicts: [{ cell: "c_a", reason: "removedOnDisk" }],
   },
   {
@@ -249,7 +256,7 @@ const cases: readonly Case[] = [
 describe("mergeCells", () => {
   it.each(cases)("$name", (c) => {
     const merged = mergeCells(cells(c.base), cells(c.ours), cells(c.theirs), {
-      busy: new Set(c.busy ?? []),
+      held: new Set(c.held ?? []),
     });
     expect(merged.conflicts).toEqual(c.conflicts ?? []);
     if (c.result !== undefined) expect(merged.cells).toEqual(cells(c.result));

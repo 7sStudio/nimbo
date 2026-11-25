@@ -3,7 +3,7 @@
 // Explorer. Where the system watches a tree in one handle (macOS, Windows), the folder's events ask for a check, a
 // branch switch's hundreds of them batched by the debounce; everywhere, the list is read again every `everyMs`, which
 // is all Linux gets (a recursive watch there is one inotify handle per folder, node_modules included). A check
-// announces only a list that differs from the last one it saw.
+// announces only a list whose notebooks or open ones differ from the last it saw (a save changes neither).
 import type { FSWatcher } from "node:fs";
 import { watch } from "node:fs";
 
@@ -54,7 +54,8 @@ export function watchNotebookList(options: ListWatchOptions): () => void {
   let last: string | undefined;
   const check = async (): Promise<void> => {
     try {
-      const now = JSON.stringify(await notebookList(options.root, options.openRefs()));
+      const list = await notebookList(options.root, options.openRefs());
+      const now = JSON.stringify(list.map((each) => [each.path, each.open])); // what the Explorer shows
       if (last !== undefined && now !== last) await options.announce();
       last = now;
     } catch (error) {

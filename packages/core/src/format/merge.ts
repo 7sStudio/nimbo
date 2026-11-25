@@ -25,8 +25,8 @@ export type CellMerge = {
 };
 
 export type MergeOptions = {
-  /** Cells counted as changed in ours whatever their content (a cell being edited right now). */
-  readonly busy?: ReadonlySet<string>;
+  /** Cells of an open conflict: they stay in conflict while theirs differs from both the base and ours. */
+  readonly held?: ReadonlySet<string>;
 };
 
 type Meta = DocumentCell["meta"];
@@ -88,14 +88,25 @@ function mergeMeta(base: Meta, ours: Meta, theirs: Meta): Merged<Meta> {
   return FileCellMeta.parse(lastEdit === undefined ? out : { ...out, lastEdit });
 }
 
+/** The type changed on one side and the source on the other: merged, a markdown cell would hold code. */
+function splitCode(base: DocumentCell, ours: DocumentCell, theirs: DocumentCell): boolean {
+  const typed = (cell: DocumentCell) => cell.type !== base.type;
+  const sourced = (cell: DocumentCell) => cell.source !== base.source;
+  return (
+    (typed(ours) && !typed(theirs) && sourced(theirs) && !sourced(ours)) ||
+    (typed(theirs) && !typed(ours) && sourced(ours) && !sourced(theirs))
+  );
+}
+
 /** One cell both sides kept: each field from the side that changed it, or a conflict. */
 function mergeCell(
   base: DocumentCell,
   ours: DocumentCell,
   theirs: DocumentCell,
-  busy: boolean,
+  held: boolean,
 ): Merged<DocumentCell> {
-  if (busy && changed(base, theirs) && changed(theirs, ours)) return conflicted;
+  if (held && changed(base, theirs) && changed(theirs, ours)) return conflicted;
+  if (splitCode(base, ours, theirs)) return conflicted;
   const type = pick(base.type, ours.type, theirs.type);
   const source = pick(base.source, ours.source, theirs.source);
   const extra = pick(base.extra, ours.extra, theirs.extra);
@@ -137,22 +148,22 @@ function removed(
   base: DocumentCell,
   ours: DocumentCell | undefined,
   theirs: DocumentCell | undefined,
-  busy: boolean,
+  held: boolean,
 ): CellOutcome {
   if (ours !== undefined)
-    return changed(base, ours) || busy ? conflict("removedOnDisk") : drop(true);
+    return changed(base, ours) || held ? conflict("removedOnDisk") : drop(true);
   if (theirs !== undefined && changed(base, theirs)) return conflict("removedHere");
   return drop(false);
 }
 
 /** What becomes of the cell `id`, by which sides have it. */
-function outcomeOf(sides: Sides, id: string, busy: boolean): CellOutcome {
+function outcomeOf(sides: Sides, id: string, held: boolean): CellOutcome {
   const base = sides.base.get(id);
   const ours = sides.ours.get(id);
   const theirs = sides.theirs.get(id);
   if (base === undefined) return added(ours, theirs);
-  if (ours === undefined || theirs === undefined) return removed(base, ours, theirs, busy);
-  const cell = mergeCell(base, ours, theirs, busy);
+  if (ours === undefined || theirs === undefined) return removed(base, ours, theirs, held);
+  const cell = mergeCell(base, ours, theirs, held);
   if (cell === conflicted) return conflict("bothChanged");
   return keep(cell, cell.source !== ours.source || cell.type !== ours.type);
 }
@@ -209,10 +220,10 @@ type Outcomes = {
 };
 
 /** Every cell's outcome; a conflicting cell stays as ours has it until the conflict is resolved. */
-function outcomes(sides: Sides, all: readonly string[], busy: ReadonlySet<string>): Outcomes {
+function outcomes(sides: Sides, all: readonly string[], held: ReadonlySet<string>): Outcomes {
   const out: Outcomes = { kept: new Map(), conflicts: [], fromTheirs: [], removed: [] };
   for (const id of all) {
-    const outcome = outcomeOf(sides, id, busy.has(id));
+    const outcome = outcomeOf(sides, id, held.has(id));
     if (outcome.kind === "conflict") {
       out.conflicts.push({ cell: id, reason: outcome.reason });
       const ours = sides.ours.get(id);
@@ -244,7 +255,7 @@ export function mergeCells(
   const byId = (cells: readonly DocumentCell[]) => new Map(cells.map((cell) => [cell.id, cell]));
   const sides: Sides = { base: byId(base), ours: byId(ours), theirs: byId(theirs) };
   const all = [...new Set([...ids(base), ...ids(ours), ...ids(theirs)])];
-  const found = outcomes(sides, all, options.busy ?? new Set());
+  const found = outcomes(sides, all, options.held ?? new Set());
   const orders = { base: ids(base), ours: ids(ours), theirs: ids(theirs) };
   const { order, conflict: reordered } = orderOf(orders, new Set(found.kept.keys()));
   const conflicts = reordered

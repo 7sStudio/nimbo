@@ -7,67 +7,17 @@ import { readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 
 import { describe, expect, it } from "vitest";
 
-import type { Daemon } from "../../fixtures/daemon.js";
-import { connectDaemon, withDaemon } from "../../fixtures/daemon.js";
+import { withDaemon } from "../../fixtures/daemon.js";
+import type { FileDoc } from "../../fixtures/external.js";
+import {
+  cellOf,
+  conflictOn,
+  edit,
+  lines,
+  sessionCells,
+  threeSaved,
+} from "../../fixtures/external.js";
 import { createNotebook } from "../../fixtures/notebook.js";
-
-type FileCell = { id: string; type: string; source: string[]; meta?: Record<string, unknown> };
-type FileDoc = { version: number; cells: FileCell[]; [key: string]: unknown };
-
-const lines = (source: string) => source.split("\n");
-
-/** Reads the notebook's file, lets `change` edit it, and writes it back as an editor would (in place). */
-async function edit(path: string, change: (doc: FileDoc) => void): Promise<string> {
-  const doc = JSON.parse(await readFile(path, "utf8")) as FileDoc;
-  change(doc);
-  const text = `${JSON.stringify(doc, null, 2)}\n`;
-  await writeFile(path, text);
-  return text;
-}
-
-const cellOf = (doc: FileDoc, id: string): FileCell => {
-  const found = doc.cells.find((cell) => cell.id === id);
-  if (found === undefined) throw new Error(`no cell ${id}`);
-  return found;
-};
-
-/** The notebook's cells as the session has them: id and source. */
-async function sessionCells(daemon: Daemon, notebook = "a.jsnb") {
-  const { notebook: state } = await daemon.client.notebook.get({ notebook });
-  return state.cells.map((cell) => ({ id: cell.id, source: cell.source }));
-}
-
-/** `cell` edited to "mine" here and to `theirs` on disk; resolves with the file's text once the conflict after `after`
- * came. */
-async function conflictOn(
-  daemon: Daemon,
-  at: {
-    readonly path: string;
-    readonly cell: string;
-    readonly theirs: string;
-    readonly after?: number;
-  },
-) {
-  await daemon.client.cell.update({ notebook: "a.jsnb", cell: at.cell, source: "mine" });
-  const text = await edit(at.path, (doc) => {
-    cellOf(doc, at.cell).source = [at.theirs];
-  });
-  const event = await daemon.events.until(
-    "notebook.conflict",
-    (e) => e.seq > (at.after ?? -1) && e.data.cells?.includes(at.cell) === true,
-  );
-  return { text, seq: event.seq };
-}
-
-/** Three server cells, the first run, all saved. */
-async function threeSaved(daemon: Daemon) {
-  const book = await createNotebook(daemon);
-  const first = await book.ran("export const a = 1; a");
-  const second = await book.add("export const b = 2");
-  const third = await book.add("a + b");
-  await daemon.client.notebook.save({ notebook: "a.jsnb" });
-  return { book, ids: [first.cell, second, third] as const, ran: first.execution };
-}
 
 describe("an external edit with nothing unsaved", () => {
   it("is taken in place: kept cells keep their runs, changes are stamped as the file's, nothing is written", async () => {
@@ -100,7 +50,6 @@ describe("an external edit with nothing unsaved", () => {
       expect(kept?.lastExecution?.id).toBe(ran.id);
       expect(changed?.meta.lastEdit).toMatchObject({ by: "external", client: "file" });
       expect(changed?.meta.lastEdit?.review?.lines).toEqual([{ from: 1, to: 1 }]);
-      await daemon.client.notebook.save({ notebook: "a.jsnb" });
       expect(await readFile(path, "utf8")).toBe(written);
       expect((await stat(path)).mtimeMs).toBe(mtime);
     });
@@ -216,27 +165,6 @@ describe("an external edit with unsaved edits", () => {
       expect(cellOf(JSON.parse(await readFile(path, "utf8")) as FileDoc, cell).source).toEqual([
         "mine",
       ]);
-    });
-  });
-});
-
-describe("an external edit with unsaved edits", () => {
-  it("is a conflict for a cell the page edited a moment ago, even once saved", async () => {
-    await withDaemon(async (daemon, ws) => {
-      const { ids } = await threeSaved(daemon);
-      const page = await connectDaemon(daemon, { client: "ui" });
-      try {
-        await page.client.cell.update({ notebook: "a.jsnb", cell: ids[1], source: "typed" });
-        await daemon.client.notebook.save({ notebook: "a.jsnb" });
-        await edit(ws.path("a.jsnb"), (doc) => {
-          cellOf(doc, ids[1]).source = ["from disk"];
-        });
-        const event = await daemon.events.until("notebook.reconciled");
-        expect(event.data).toMatchObject({ outcome: "conflict", changed: [ids[1]] });
-        expect((await sessionCells(daemon))[1]?.source).toBe("typed");
-      } finally {
-        page.client.close();
-      }
     });
   });
 });

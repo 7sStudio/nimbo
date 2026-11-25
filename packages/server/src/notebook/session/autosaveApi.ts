@@ -37,6 +37,9 @@ export type AutosaveOptions = {
   readonly written?: (identity: FileIdentity) => void;
   /** Called inside a write when nothing is at `path`: it may follow the file to where it moved, changing `path`. */
   readonly missing?: () => Promise<void>;
+  /** Called inside a write when the file changed since the base: merges it into the state (07 §5), `off` when merging
+   * is off (the write is a conflict then). */
+  readonly external?: () => Promise<"merged" | "conflict" | "off">;
 };
 
 export type Autosaver = {
@@ -44,8 +47,12 @@ export type Autosaver = {
   readonly touched: () => void;
   /** notebook.save: writes now; NOTEBOOK_CONFLICT on a conflict unless `force`; SaveFailed when the write fails. */
   readonly save: (force: boolean) => Promise<string>;
-  /** notebook.reload read `text` from the file: the conflict is over, and the state is a version of its own. */
+  /** The session took `text` from the file (notebook.reload, a merge): the conflict is over, and the state is a version
+   * of its own; `dirty` when the state still differs from it (a write follows as the policy says, and nothing says
+   * saved). */
   readonly reloaded: (text: string, dirty: boolean) => void;
+  /** An open conflict's merge took the file's other cells: `text` is the base from now on, the conflict stays. */
+  readonly rebased: (text: string) => void;
   /**
    * Runs `work` (notebook.reload's read) in the queue of the file's writes: after the write under
    * way, before any later one, so a reload never reads a file a write is about to replace.

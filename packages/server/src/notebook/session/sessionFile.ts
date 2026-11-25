@@ -14,7 +14,7 @@ import type { LoadedDocument } from "./fileForm.js";
 export type Place = { readonly ref: string; readonly path: string };
 
 /** What the autosave of a session calls back: a write's file identity, and a file gone from its path. */
-export type FileHooks = Pick<AutosaveOptions, "written" | "missing">;
+export type FileHooks = Pick<AutosaveOptions, "written" | "missing" | "external">;
 
 /** The place `of()` names at each read: the session's context, which a move changes. */
 export const livePlace = (of: () => Place): Place => ({
