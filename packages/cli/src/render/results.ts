@@ -30,7 +30,7 @@ function executionsOf(output: unknown): readonly Execution[] {
 
 const skipWords: Readonly<Record<AutoRunReport["skipped"][number]["reason"], string>> = {
   manual: "manual",
-  notRun: "not run yet",
+  notRun: "its code has not run",
   cycle: "in a cycle",
   noPage: "no page attached",
   upstream: "held back",

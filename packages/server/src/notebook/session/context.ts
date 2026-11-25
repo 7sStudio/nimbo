@@ -45,6 +45,8 @@ export type SessionHooks = {
   debugResumed: () => Promise<void>;
   /** A cell's code or type changed (an edit, a revert, a reload): it leaves an auto-run cascade (04-kernel §4.1). */
   edited: (cell: CellId) => void;
+  /** A cell is about to be deleted: waiting in a cascade, it leaves it, and what depends on it is held back. */
+  deleting: (cell: CellId) => void;
   /** The kernel ended (died, restarted, closed) or the page's realm was reset: what ran there is gone. */
   realmEnded: (realm: "server" | "client") => void;
   /** NotebookState.autoRun: the cascade under way. */

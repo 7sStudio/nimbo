@@ -138,6 +138,7 @@ const defaultHooks = (): SessionHooks => ({
   debugPause: () => Promise.resolve({ reason: "pause" }),
   debugResumed: () => Promise.resolve(),
   edited: () => undefined,
+  deleting: () => undefined,
   realmEnded: () => undefined,
   autoRunState: () => ({ running: null, pending: [] }),
 });

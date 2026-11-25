@@ -14,7 +14,7 @@ import { queuedRun } from "./queue.js";
 type Skip = { readonly cell: CellId; readonly reason: AutoRunSkip; readonly by?: CellId };
 
 /** One cell.run's share of the cascade: its dependents not decided yet, those it started and those it left alone. */
-export type Ticket = {
+type Ticket = {
   readonly from: ExecutionRecord;
   readonly undecided: Set<CellId>;
   readonly started: QueuedRun[];
@@ -36,6 +36,8 @@ export type AutoRun = {
   readonly stop: () => void;
   /** The ticket a cell.run's run got, once it ended well with the setting on. */
   readonly ticket: (run: QueuedRun) => Ticket | undefined;
+  /** A cell is about to be deleted. */
+  readonly deleting: (cell: CellId) => void;
   /** The kernel ended or the page's realm was reset: the cascade stops, and what ran there no longer counts. */
   readonly realmEnded: (realm: "server" | "client") => void;
   /** NotebookState.autoRun: the dependent running and those waiting, in run order. */
@@ -57,6 +59,8 @@ type State = {
   readonly held: Set<CellId>;
   /** Every cell this cascade planned: one whose latest run did not end well holds its dependents back. */
   readonly seen: Set<CellId>;
+  /** Waiting cells that depended on a waiting cell deleted since (the graph no longer shows the edge). */
+  readonly orphans: Map<CellId, CellId>;
   running: { readonly run: QueuedRun; edited: boolean } | undefined;
   /** What the page was last told (cells.autoRun): the running cell and the waiting ones. */
   shown: { running: CellId | null; pending: Set<CellId> };
@@ -123,6 +127,7 @@ function forgetIfDone(state: State): void {
   if (state.pending.size > 0 || state.running) return;
   state.held.clear();
   state.seen.clear();
+  state.orphans.clear();
 }
 
 function skip(cell: CellId, entry: Pending, reason: AutoRunSkip, by?: CellId): void {
@@ -149,7 +154,7 @@ function reasonFor(
   if (record.last !== entry.last || cells.stale()[record.id] !== true) return { reason: "ran" };
   if (record.meta.manual === true) return { reason: "manual" };
   const node = graph.cells.find((c) => c.id === record.id);
-  const by = node?.dependsOn.find((id) => holds(state, id));
+  const by = state.orphans.get(record.id) ?? node?.dependsOn.find((id) => holds(state, id));
   if (by !== undefined) return { reason: "upstream", by };
   if (!hasRun(record)) return { reason: "notRun" };
   return realmGone(state, record);
@@ -315,6 +320,16 @@ function ended(state: State, run: QueuedRun): void {
   if (run.trigger === true && status === "ok" && settingOn(state)) plan(state, run);
 }
 
+function deleting(state: State, cell: CellId): void {
+  const entry = state.pending.get(cell);
+  if (!entry) return;
+  state.pending.delete(cell);
+  skip(cell, entry, "deleted");
+  for (const id of dependentsOf(state.context.cells.graph(), cell))
+    if (state.pending.has(id) && !state.orphans.has(id)) state.orphans.set(id, cell);
+  show(state);
+}
+
 function realmEnded(state: State, realm: "server" | "client"): void {
   for (const record of state.context.cells.list())
     if (record.type === realm) record.ran = undefined;
@@ -343,6 +358,7 @@ const newState = (
   tickets: new WeakMap(),
   held: new Set(),
   seen: new Set(),
+  orphans: new Map(),
   running: undefined,
   shown: { running: null, pending: new Set() },
   flushing: false,
@@ -369,6 +385,9 @@ export function createAutoRun(
       stop(state);
     },
     ticket: (run) => state.tickets.get(run),
+    deleting: (cell) => {
+      deleting(state, cell);
+    },
     realmEnded: (realm) => {
       realmEnded(state, realm);
     },

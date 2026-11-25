@@ -277,24 +277,28 @@ describe("execution.autoRunDependents", () => {
     await withDaemon(async (daemon) => {
       const book = await createNotebook(daemon);
       const { notebook } = book;
-      const [a, slow, gone, after] = await ranCells(daemon, book, [
+      const [a, slow, gone, after, orphan] = await ranCells(daemon, book, [
         "let a = 1",
         "const s = a\nif (a > 1) await new Promise((r) => setTimeout(r, 300))",
         "const g = a + 1",
         "const h = s + 1",
+        "const k = g + 1",
       ]);
       await on(daemon);
       const answer = daemon.client.cell.run({ notebook, cell: a ?? "", source: "let a = 2" });
       await daemon.events.until("cells.autoRun", (e) => e.data.running === slow);
       const { notebook: state } = await daemon.client.notebook.get({ notebook });
-      expect(state.autoRun).toEqual({ running: slow, pending: [gone, after] });
+      expect(state.autoRun).toEqual({ running: slow, pending: [gone, after, orphan] });
       await daemon.client.cell.delete({ notebook, cell: gone ?? "" });
       const ran = await answer;
       expect(statuses(ran.autoRun)).toEqual([
         [slow, "ok"],
         [after, "ok"],
       ]);
-      expect(ran.autoRun?.skipped).toEqual([{ cell: gone, reason: "deleted" }]);
+      expect(ran.autoRun?.skipped).toEqual([
+        { cell: gone, reason: "deleted" },
+        { cell: orphan, reason: "upstream", by: gone },
+      ]);
     });
   });
 });

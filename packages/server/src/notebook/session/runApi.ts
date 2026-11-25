@@ -175,6 +175,7 @@ export function createRuns(context: SessionContext, realm: RealmPart): SessionRu
   const { queue, autoRun: cascade } = queueOf(context, realm);
   context.hooks.edited = cascade.edited;
   context.hooks.realmEnded = cascade.realmEnded;
+  context.hooks.deleting = cascade.deleting;
   context.hooks.autoRunState = cascade.state;
   lateOutputs(context);
   const runs = { queue, realmAttached: realm.attached, autoRun: cascade };
