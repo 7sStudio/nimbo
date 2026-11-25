@@ -1,6 +1,7 @@
 // The whole-file writes: stage, unstage, discard, commit (and amend) and init, as git does them, with
 // the open notebooks kept in step: staged and committed notebooks are saved first, so what git takes is what the page
-// shows; a discarded one is reloaded by the daemon itself, so the page sees no conflict for a change the app made.
+// shows; a discarded one is saved first and its file merged back by the daemon itself (the watch's merge), so the page
+// sees no conflict for a change the app made.
 // Every path is taken literally (--literal-pathspecs: `glob[1].txt` is a name, not a pattern) and follows `--`.
 import { rm } from "node:fs/promises";
 import { join } from "node:path";
@@ -83,7 +84,7 @@ export async function discard(
     "--",
     ...tracked,
   ]);
-  for (const session of open) await session.reload();
+  for (const session of open) await session.mergeDisk();
 }
 
 type CommitInput = {

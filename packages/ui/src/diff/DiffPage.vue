@@ -1,4 +1,4 @@
-<!-- DiffPage: a changed file's diff in the main area, as VS Code opens one in an editor tab: the tab "demo.jsnb (Working Tree)" or "(Index)" with its close button; a toolbar with Previous and Next Change (Shift Alt F5, Alt F5), Inline or Side by Side, the notebook diff's gear and Open File; then the notebook diff (NotebookDiffView), a text diff (TextDiff), or one line for a binary or oversized file or a submodule (the commits each side records). The diff is read again when the repository's status changes (a save, a stage). -->
+<!-- DiffPage: a changed file's diff in the main area, as VS Code opens one in an editor tab: the tab "demo.jsnb (Working Tree)" or "(Index)", or "(On Disk ↔ Yours)" for a conflict's Compare (the open notebook's file against the page's state, notebook.compareDisk), with its close button; a toolbar with Previous and Next Change (Shift Alt F5, Alt F5), Inline or Side by Side, the notebook diff's gear and Open File; then the notebook diff (NotebookDiffView), a text diff (TextDiff), or one line for a binary or oversized file or a submodule (the commits each side records). The diff is read again when the repository's status changes (a save, a stage), or the file is merged or saved. -->
 <script setup lang="ts">
 import { ArrowDown, ArrowUp, Columns2, GitCompare, NotebookText, Rows2, X } from "@lucide/vue";
 import { computed, ref, shallowRef, watch } from "vue";
@@ -6,6 +6,7 @@ import { computed, ref, shallowRef, watch } from "vue";
 import IconButton from "../primitives/icon-button/IconButton.vue";
 import { diffTitle } from "../panel/scmRows";
 import { useGitStore } from "../store/git";
+import { useNotebookStore } from "../store/notebook";
 import { useSettingsStore } from "../store/settings";
 import { useUiStore } from "../store/ui";
 import DiffGear from "./DiffGear.vue";
@@ -16,6 +17,7 @@ import { languageOfPath } from "./mergeSetup";
 const emit = defineEmits<{ command: [id: string, args?: Record<string, unknown>] }>();
 const ui = useUiStore();
 const git = useGitStore();
+const book = useNotebookStore();
 const settings = useSettingsStore();
 type Answer = NonNullable<Awaited<ReturnType<typeof git.diff>>>;
 const answer = shallowRef<Answer | null>(null);
@@ -30,7 +32,7 @@ async function load(): Promise<void> {
   const now = target.value;
   if (now === null) return;
   const mine = (asked += 1);
-  const got = await git.diff(now);
+  const got = now.disk === true ? await git.compareDisk(now.path) : await git.diff(now);
   if (mine !== asked) return; // a later file or status took over
   failed.value = got === undefined;
   const before = answer.value;
@@ -39,7 +41,13 @@ async function load(): Promise<void> {
   answer.value = got ?? null;
 }
 // Side effect: the diff follows the file it names and the repository's status (a save, a stage, a commit elsewhere).
-watch([target, () => git.repo], () => void load(), { immediate: true });
+watch(
+  [target, () => git.repo, () => book.mirror.external, () => book.mirror.saveState],
+  () => void load(),
+  {
+    immediate: true,
+  },
+);
 
 const body = ref<HTMLElement | null>(null);
 const text = ref<InstanceType<typeof TextDiff> | null>(null);

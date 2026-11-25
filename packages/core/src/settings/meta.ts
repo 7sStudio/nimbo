@@ -43,6 +43,10 @@ export const settingsMeta: Readonly<Record<SettingsKey, SettingMeta>> = {
     "Auto save interval",
     "interval: the time between saves, in milliseconds.",
   ),
+  "files.mergeExternalChanges": stable(
+    "Merge external changes",
+    "Merge edits made to an open notebook's file outside nimbo (an editor, git) into the page; off shows Changed on disk at the next save.",
+  ),
   "kernel.nodePath": stable(
     "Node path",
     "The Node binary that runs kernels; null means the Node that runs the daemon.",

@@ -1,7 +1,8 @@
 // Edit provenance of 03-api §5: `meta.lastEdit` stamped from the connection's declaration on every
-// cell.add and cell.update that changes the code; the ui is the user, every other client (cli, mcp, file, an undeclared
-// one) an agent. An agent's edit waits for review: its stamp keeps the code from before the first edit no one reviewed,
-// until the user edits the cell (whoever edits a cell has it in front of them), marks it reviewed, or the code is back.
+// cell.add and cell.update that changes the code; the ui is the user, the file (an edit made on disk outside nimbo,
+// 07 §5) is external, every other client (cli, mcp, an undeclared one) an agent. An agent's or an external edit waits
+// for review: its stamp keeps the code from before the first edit no one reviewed, until the user edits the cell
+// (whoever edits a cell has it in front of them), marks it reviewed, or the code is back.
 import type { CellType, EditInfo, FileEditInfo } from "@jsnb/core";
 import { changedLines } from "@jsnb/core";
 
@@ -17,7 +18,7 @@ type Stamp = Omit<FileEditInfo, "review">;
 /** The EditInfo of a change by `editor` at `at`, without a review. */
 function editInfo(editor: Editor, at: string): Stamp {
   return {
-    by: editor.client === "ui" ? "user" : "agent",
+    by: editor.client === "ui" ? "user" : editor.client === "file" ? "external" : "agent",
     client: editor.client,
     ...(editor.agent === undefined ? {} : { agent: editor.agent }),
     at,
@@ -40,7 +41,11 @@ export function stamped(
 ): FileEditInfo {
   const info = editInfo(editor, at);
   if (info.by === "user") return info;
-  const base = last?.review ?? { previousSource: before.source, previousType: before.type };
+  const replaced = { previousSource: before.source, previousType: before.type };
+  // the file replacing an agent's code no one reviewed: the agent's code is what a revert brings back
+  if (info.by === "external" && last?.by === "agent" && last.review !== undefined)
+    return { ...info, review: replaced };
+  const base = last?.review ?? replaced;
   if (base.previousSource === after.source && base.previousType === after.type) return info;
   return {
     ...info,

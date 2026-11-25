@@ -45,10 +45,12 @@ function valueIndex(last: Execution | null, at: ValueAt): number {
 export function runHandlers({ workspace }: Services): readonly Bound[] {
   const session = (notebook: string) => workspace.notebooks.require(notebook);
   return [
-    bind(cellRun, async ({ notebook, cell, source, ...waiting }, { declaration }) => {
+    bind(cellRun, async ({ notebook, cell, source, base, ...waiting }, { declaration }) => {
       const open = await session(notebook);
-      if (source !== undefined) open.update({ cell, source }, declaration);
-      return open.runWithDependents(cell, { ...waiting, by: declaration });
+      const notice = source === undefined ? undefined : open.diskNotice({ cell, source, base });
+      if (source !== undefined) open.update({ cell, source, base }, declaration);
+      const ran = await open.runWithDependents(cell, { ...waiting, by: declaration });
+      return notice === undefined ? ran : { ...ran, notice };
     }),
     bind(cellOutputs, async ({ notebook, cell }) => ({
       execution: (await session(notebook)).outputs(cell),

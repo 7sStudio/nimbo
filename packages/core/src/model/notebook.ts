@@ -41,6 +41,15 @@ export const NotebookState = z
     realm: RealmStatus,
     savedAt: z.string().nullable(),
     dirty: z.boolean(),
+    /** An open conflict between the file and the session (07-file-format §5): the cells held in it (none when a save
+     * found the file changed with merging off); absent when there is none. */
+    conflict: z
+      .object({ cells: z.array(CellId).readonly() })
+      .readonly()
+      .optional(),
+    /** The session took unsaved text from the recovery copy a previous session left (07-file-format §7): when it was
+     * written. */
+    recovered: z.string().optional(),
     /** The debugger's state: breakpoints, and where a paused kernel stopped (03-api §4.9). */
     debug: DebugState.optional(),
     /** execution.autoRunDependents at work: the dependent running and those waiting, in run order (04-kernel §4.1). */

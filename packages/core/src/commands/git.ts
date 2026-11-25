@@ -73,7 +73,7 @@ export const gitUnstage = defineCommand({
 export const gitDiscard = defineCommand({
   name: "git.discard",
   description:
-    "Changes the working tree: discard the changes to files, a tracked file going back to the index, an untracked one deleted; an open notebook reloads. Cannot be undone, so it refuses without confirm: true.",
+    "Changes the working tree: discard the changes to files, a tracked file going back to the index, an untracked one deleted; an open notebook is saved, then takes the file back by cell. Cannot be undone, so it refuses without confirm: true.",
   input: z.object({ paths, confirm: gitConfirm }),
   output: z.object({}),
   tags: { mutating: true, destructive: true },

@@ -1,10 +1,9 @@
 // The daemon's notebook session (02-architecture §2, §4): one per open notebook, holding the notebook file's state, the
 // cells' status, the graph and stale flags, the autosave, the kernel and the queries; its parts share its context.
 import type { Cell, CellId, NotebookState } from "@jsnb/core";
+import { textHash } from "@jsnb/core";
 
-import { stat } from "node:fs/promises";
-
-import type { FileIdentity } from "../../files/atomicWrite.js";
+import { identityOf } from "../../files/atomicWrite.js";
 import { kernelLogPath } from "../../files/logs/kernelLog.js";
 import { DebugSession } from "../debug/session.js";
 import type { SessionRealm } from "../realm/realm.js";
@@ -21,12 +20,28 @@ import { addCell, deleteCell, markReviewed, moveCell, revertCell, updateCell } f
 import type { Editor } from "./provenance.js";
 import type { ExportRequest } from "./exported.js";
 import { compareCell, exportNotebook } from "./exported.js";
+import type { ExternalOutcome, ExternalState } from "./external.js";
+import {
+  conflictOn,
+  diskNotice,
+  externalState,
+  ownEdit,
+  reconcileExternal,
+  staleEdit,
+} from "./external.js";
+import { savesOutputs, textOf } from "./fileForm.js";
+import { moveRecovery } from "../../files/notebooks/recovery.js";
+import { recoverOnOpen, recoveryKeeper } from "./recoveryCopy.js";
+import { readNotebook } from "../../files/notebooks/notebookFile.js";
+import { diffDisk } from "../git/bodies.js";
 import { reloadSession } from "./reload.js";
 import { disposeDeleted } from "./runs/disposeDeleted.js";
 import type { SessionRuns } from "./runApi.js";
 import { createRuns } from "./runApi.js";
 import type { ErrorsView, GraphView } from "./views.js";
 import { errorsOf, graphOf, stateOf } from "./views.js";
+import type { FileWatch } from "./watch.js";
+import { watchFile } from "./watch.js";
 
 export type { SessionOptions } from "./assemble.js";
 
@@ -35,21 +50,26 @@ export type Session = SessionRuns & {
   readonly ref: string;
   /** The notebook's file moved to `path`, the ref `to`: its events, kernel log and saves follow, its kernel runs on. */
   readonly moveTo: (to: string, path: string) => Promise<void>;
+  /** Settles once a recovery copy left by an earlier session was taken back (07 §7). */
+  readonly opened: Promise<void>;
   readonly context: SessionContext;
   readonly state: () => NotebookState;
   readonly cell: (cell: CellId) => Cell;
   readonly add: (input: AddCell, editor: Editor) => Cell;
   readonly update: (input: UpdateCell, editor: Editor) => Cell;
+  /** For an edit sent without `base` over a source the file on disk set: what to tell its caller (07 §5). */
+  readonly diskNotice: (input: UpdateCell) => string | undefined;
   /** cell.revert: the code from before the agent edits no one reviewed, put back as an edit by `editor`. */
   readonly revert: (cell: CellId, editor: Editor) => Cell;
   readonly markReviewed: (cell: CellId) => Cell;
   readonly move: (cell: CellId, after: CellId | null) => readonly CellId[];
   readonly remove: (cell: CellId) => void;
   readonly save: (force: boolean) => Promise<string>;
+  /** notebook.compareDisk: the file on disk against the text a save would write now. */
+  readonly compareDisk: (content: boolean) => Promise<ReturnType<typeof diffDisk>>;
   readonly reload: () => Promise<NotebookState>;
-  /** Reads the file again unless the notebook holds edits not on disk (checked once the file is read, with no wait
-   * before the reconcile); false when it held some and nothing changed. */
-  readonly reloadUnlessEdited: () => Promise<boolean>;
+  /** A git operation of the app rewrote the file: merged now, as the watch would (07 §5), with merging on or off. */
+  readonly mergeDisk: () => Promise<ExternalOutcome>;
   readonly graph: () => GraphView;
   readonly errors: () => ErrorsView;
   readonly outputQuery: (request: OutputQueryRequest) => Promise<OutputQueryAnswer>;
@@ -93,32 +113,56 @@ function removeCell(
   void disposeDeleted(context, { cell, type }, ended);
 }
 
-/** The cell edits of the session, each answered in the API's form. */
-function edits(context: SessionContext) {
+/** The cell edits of the session, each answered in the API's form. An edit whose base is not the cell's text holds
+ * its cell in conflict (external.ts); any other edit of the code ends what the session knew of the
+ * file's text for that cell. */
+function edits(context: SessionContext, state: ExternalState) {
   const api = (record: Parameters<typeof context.cells.api>[0]) => context.cells.api(record);
+  const own = <T extends { readonly id: CellId }>(record: T): T => {
+    state.fromDisk.delete(record.id);
+    return record;
+  };
   return {
     cell: (cell: CellId) => api(context.cells.require(cell)),
     add: (input: AddCell, editor: Editor) => api(addCell(context, input, editor)),
-    update: (input: UpdateCell, editor: Editor) => api(updateCell(context, input, editor)),
-    revert: (cell: CellId, editor: Editor) => api(revertCell(context, cell, editor)),
+    update: (input: UpdateCell, editor: Editor) => {
+      const stale = staleEdit(context, state, input, editor);
+      const before = textHash(context.cells.require(input.cell).source);
+      const record = updateCell(context, input, editor);
+      if (textHash(record.source) !== before)
+        ownEdit(context, state, { cell: input.cell, before, stale }, editor);
+      if (stale) conflictOn(context, [input.cell], [...state.held.keys()]);
+      return api(input.source === undefined && input.type === undefined ? record : own(record));
+    },
+    revert: (cell: CellId, editor: Editor) => api(own(revertCell(context, cell, editor))),
     markReviewed: (cell: CellId) => api(markReviewed(context, cell)),
     move: (cell: CellId, after: CellId | null) => moveCell(context, cell, after),
   };
 }
 
-/** The identity of the file at `path`, undefined when it cannot be read. */
-const identityOf = (path: string): Promise<FileIdentity | undefined> =>
-  stat(path).then(
-    (stats) => ({ dev: stats.dev, ino: stats.ino }),
-    () => undefined,
-  );
+/** The session's answers to its autosave, set once the session's parts exist. */
+type FileHookSlots = {
+  run: () => Promise<"merged" | "conflict" | "unreadable" | "off">;
+  recovery: (needed: boolean, now?: boolean) => Promise<boolean>;
+};
 
-/** The context of a session that knows its file (07 §5): by its identity at open, then by each save's. */
-function identifiedContext(options: SessionOptions): ReturnType<typeof contextOf> {
+const fileHookSlots = (): FileHookSlots => ({
+  run: () => Promise.resolve("off"),
+  recovery: () => Promise.resolve(false),
+});
+
+/** The context of a session that knows its file (07 §5): by its identity at open, then by each save's and each
+ * read's; a write that finds the file changed asks `external` for the merge. */
+function identifiedContext(
+  options: SessionOptions,
+  hooks: FileHookSlots,
+): ReturnType<typeof contextOf> {
   const context = contextOf(options, {
     written: (identity) => {
       context.identity = identity;
     },
+    external: () => hooks.run(),
+    recovery: (needed, now) => hooks.recovery(needed, now),
     ...(options.missing ? { missing: options.missing } : {}),
   });
   void identityOf(options.path).then((identity) => {
@@ -137,6 +181,10 @@ async function moveSession(
 ): Promise<void> {
   const from = context.ref;
   await context.moveLog(to);
+  if (options.recoveryDir !== undefined)
+    await moveRecovery(options.recoveryDir, from, to).catch((error: unknown) => {
+      context.log.warn({ err: error, from, to }, "the recovery copy could not follow the notebook");
+    });
   context.emit("notebook.moved", { path: from, to });
   options.bus.moveStream(from, to);
   Object.assign(context, { ref: to, path, logPath: kernelLogPath(options.logsDir, to) });
@@ -173,51 +221,161 @@ function debuggerOf(options: SessionOptions, context: SessionContext): DebugSess
   return debug;
 }
 
-/** notebook.reload: after the write under way. */
-const reloaded = (context: Session["context"]): Promise<boolean> =>
-  context.autosave.exclusive(() => reloadSession(context));
+/** The merge of another program's edits into the session (07 §5), unless files.mergeExternalChanges is off: run by
+ * the watch on the file, and by a write that finds the file changed. */
+function externalParts(
+  options: SessionOptions,
+  context: SessionContext,
+  parts: {
+    readonly runs: SessionRuns;
+    readonly hook: FileHookSlots;
+  },
+) {
+  const state = externalState();
+  const merge = () => reconcileExternal(context, state, (cell) => void parts.runs.dropRuns(cell));
+  const on = () => context.settings()["files.mergeExternalChanges"];
+  parts.hook.run = async () => {
+    if (!on()) return "off";
+    const outcome = await merge();
+    return outcome === "conflict" || outcome === "unreadable" ? outcome : "merged";
+  };
+  const watch = watchFile({
+    path: () => context.path,
+    log: context.log,
+    debounceMs: options.watchDebounceMs ?? 100,
+    everyMs: options.fileCheckMs ?? 2000,
+    check: async () => {
+      if (on()) await context.autosave.exclusive(merge);
+    },
+  });
+  // the app's own git operations: brought in step whatever files.mergeExternalChanges says of other programs' edits
+  const mergeNow = (): Promise<ExternalOutcome> => context.autosave.exclusive(merge);
+  return { state, watch, mergeNow };
+}
 
-/** notebook.reload for a git operation: skipped, with no wait between the check and the reconcile, when the notebook
- * holds edits not on disk. */
-const reloadUnlessEdited = (context: Session["context"]): Promise<boolean> =>
-  context.autosave.exclusive(() => reloadSession(context, () => context.autosave.state().mutated));
+/** notebook.reload: the file's text in place of the session's; the cells whose text it changed are the file's (a page
+ * edit still made on their old text is a conflict), and the conflict is over. */
+async function reloaded(context: SessionContext, state: ExternalState): Promise<void> {
+  const before = new Map(
+    context.cells.list().map((r) => [r.id, { source: r.source, type: r.type }]),
+  );
+  await context.autosave.exclusive(() => reloadSession(context)); // after the write under way
+  state.held.clear();
+  state.order = false;
+  for (const record of context.cells.list()) {
+    const was = before.get(record.id);
+    if (was !== undefined && was.source !== record.source)
+      state.fromDisk.set(record.id, { hash: textHash(record.source), before: was });
+  }
+}
+
+/** notebook.save; a forced one ends the conflict with the session's text. */
+async function saved(context: SessionContext, state: ExternalState, force: boolean) {
+  const at = await context.autosave.save(force);
+  if (force) {
+    state.held.clear();
+    state.order = false;
+  }
+  return at;
+}
+
+/** notebook.compareDisk: the notebook's file against the text a save would write now. */
+async function compareDisk(
+  options: SessionOptions,
+  context: SessionContext,
+  content: boolean,
+): Promise<ReturnType<typeof diffDisk>> {
+  const read = await readNotebook(context.path);
+  const text = sessionText(options, context);
+  return diffDisk({ path: context.ref, content }, read.kind === "read" ? read.text : null, text);
+}
+
+/** The file text a save would write now. */
+function sessionText(options: SessionOptions, context: SessionContext): string {
+  const save = savesOutputs(context.settings(), context.header);
+  return textOf(context.header, context.cells.list(), { save, redact: options.realm.redact });
+}
+
+/** The recovery copy (07 §7): kept by the autosave's hook, taken back at open; `opened` once that is done. */
+function recoveryParts(
+  options: SessionOptions,
+  context: SessionContext,
+  parts: { readonly state: ExternalState; readonly hook: FileHookSlots },
+): Promise<void> {
+  const dir = options.recoveryDir;
+  if (dir === undefined) return Promise.resolve();
+  const keeper = recoveryKeeper(dir, context, () => sessionText(options, context));
+  parts.hook.recovery = keeper.keep;
+  return context.autosave
+    .exclusive(async () => {
+      if (await recoverOnOpen(dir, context, parts.state)) keeper.found();
+    })
+    .catch((error: unknown) => {
+      context.log.warn({ err: error }, "the notebook's recovery copy could not be read");
+    });
+}
+
+/** The session's close: the watch, the debugger, the last write, the page, the runs, the engines, the log. */
+async function closeSession(
+  context: ReturnType<typeof contextOf>,
+  parts: {
+    readonly watch: FileWatch;
+    readonly debug: DebugSession;
+    readonly realm: SessionRealm;
+    readonly runs: SessionRuns;
+    readonly query: QueryParts;
+  },
+): Promise<void> {
+  parts.watch.close();
+  await parts.debug.close();
+  await context.autosave.flush();
+  context.autosave.close();
+  parts.realm.close();
+  await parts.runs.stop();
+  context.runs.retained.clear(); // what the JSON engines hold of this notebook goes with it
+  await parts.query.sql.dispose();
+  context.closeLog();
+  context.emit("notebook.closed", { path: context.ref });
+}
 
 /** The session of an opened notebook; its kernel starts now, without waiting for `ready`. */
 export function createSession(options: SessionOptions): Session {
-  const context = identifiedContext(options);
+  const hook = fileHookSlots();
+  const context = identifiedContext(options, hook);
   void context.kernel.ready().catch(() => undefined); // a failed start is logged and reported as kernel.status dead
   const realm = createRealm(context, options.realm);
   const runs = createRuns(context, realm);
   const query = queryParts(options, context);
   const debug = debuggerOf(options, context);
+  const { state, watch, mergeNow } = externalParts(options, context, { runs, hook });
+  const opened = recoveryParts(options, context, { state, hook });
   return {
     ...runs,
     get ref() {
       return context.ref;
     },
-    moveTo: (to, path) => moveSession(options, context, to, path),
+    opened,
+    moveTo: async (to, path) => {
+      await moveSession(options, context, to, path);
+      watch.rearm();
+    },
     context,
     state: () => stateOf(context, realm.status(), debug.state()),
-    ...edits(context),
+    ...edits(context, state),
+    diskNotice: (input) => diskNotice(context, state, input),
     remove: (cell) => {
       removeCell(context, runs, cell);
     },
-    save: (force) => context.autosave.save(force),
-    reloadUnlessEdited: () => reloadUnlessEdited(context),
-    reload: () => reloaded(context).then(() => stateOf(context, realm.status(), debug.state())),
+    save: (force) => saved(context, state, force),
+    compareDisk: (content) => compareDisk(options, context, content),
+    reload: async () => {
+      await reloaded(context, state);
+      return stateOf(context, realm.status(), debug.state());
+    },
+    mergeDisk: mergeNow,
     ...readers(options, context, query),
     realm: { ...realm, restart: runs.restartRealm },
     debug,
-    close: async () => {
-      await debug.close();
-      await context.autosave.flush();
-      context.autosave.close();
-      realm.close();
-      await runs.stop();
-      context.runs.retained.clear(); // what the JSON engines hold of this notebook goes with it
-      await query.sql.dispose();
-      context.closeLog();
-      context.emit("notebook.closed", { path: context.ref });
-    },
+    close: () => closeSession(context, { watch, debug, realm, runs, query }),
   };
 }

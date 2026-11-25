@@ -3,6 +3,7 @@
 // draft is dropped once the cell's source equals it, so the editor never shows the old text in between; an update
 // refused or failed keeps its draft, sent again once the page may write again.
 import type { CellId } from "@jsnb/core";
+import { textHash } from "@jsnb/core";
 import { onBeforeUnmount, watch } from "vue";
 
 import { runsOff } from "../app/useShell.js";
@@ -77,6 +78,21 @@ function onFocusLost(save: () => Promise<unknown>): () => void {
   };
 }
 
+/** cell.update with the draft and the text it was typed on; true once the daemon took it. A draft sent before this
+ * one's answer is typed on this one's text, as the daemon has it by then: drafts in flight chain, however many. */
+async function sendDraft(
+  store: ReturnType<typeof useNotebookStore>,
+  ui: ReturnType<typeof useUiStore>,
+  cell: CellId,
+  text: string,
+): Promise<boolean> {
+  const typedOn = ui.draftBaseOf(cell) ?? store.byId.get(cell)?.source ?? "";
+  ui.draftSent(cell, text);
+  const done = (await store.update(cell, { source: text, base: textHash(typedOn) })) !== undefined;
+  if (!done) ui.draftRefused(cell, text, typedOn);
+  return done;
+}
+
 /** The draft sender of useDrafts. */
 function sender(
   store: ReturnType<typeof useNotebookStore>,
@@ -98,7 +114,7 @@ function sender(
     // writes off (the socket away, a view-only tab): kept for resendWhenBack, as the editor is read-only meanwhile
     if (runsOff(store)) return false;
     sent.set(cell, text);
-    const done = (await store.update(cell, { source: text })) !== undefined;
+    const done = await sendDraft(store, ui, cell, text);
     if (!done && sent.get(cell) === text) sent.delete(cell);
     return done;
   };
@@ -115,7 +131,7 @@ export function useDrafts(
   const flush = sender(store, ui, timers, sent);
 
   function change(cell: CellId, text: string): void {
-    ui.setDraft(cell, text);
+    ui.setDraft(cell, text, store.byId.get(cell)?.source);
     clearTimeout(timers.get(cell));
     timers.set(
       cell,

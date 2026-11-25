@@ -24,6 +24,8 @@ export const eventTypes = [
   "notebook.saved",
   "notebook.saveFailed",
   "notebook.conflict",
+  "notebook.reconciled",
+  "notebook.conflictEnded",
   "cell.added",
   "cell.updated",
   "cell.moved",
@@ -68,7 +70,27 @@ export const eventData = {
       error: z.object({ code: z.string(), message: z.string() }).readonly(),
     })
     .readonly(),
-  "notebook.conflict": path,
+  /** The file changed on disk since the session's last write: `cells` are those both sides changed (none when the
+   * conflict was found at a save, 07 §5). */
+  "notebook.conflict": z
+    .object({ path: z.string(), cells: z.array(CellId).readonly().optional() })
+    .readonly(),
+  /** An external edit of the file was merged into the session (07 §5): `merged` with the cells it changed, added or
+   * removed and whether the session's unsaved edits stay on top (`kept`, a save follows); `conflict` when the same
+   * cells changed on both sides (notebook.conflict follows); `unreadable` when the file did not parse (`error`). */
+  /** The conflict is over: resolved by the user, or ended by itself when the file stopped differing (07 §5). */
+  "notebook.conflictEnded": path,
+  "notebook.reconciled": z
+    .object({
+      path: z.string(),
+      outcome: z.enum(["merged", "conflict", "unreadable"]),
+      changed: z.array(CellId).readonly(),
+      added: z.array(CellId).readonly(),
+      removed: z.array(CellId).readonly(),
+      kept: z.boolean(),
+      error: z.string().optional(),
+    })
+    .readonly(),
   "cell.added": z.object({ cell: Cell }).readonly(),
   "cell.updated": z.object({ cell: Cell }).readonly(),
   "cell.moved": z.object({ order: z.array(CellId).readonly() }).readonly(),
@@ -159,6 +181,8 @@ export const EventEnvelope = z.discriminatedUnion("type", [
   envelope("notebook.saved"),
   envelope("notebook.saveFailed"),
   envelope("notebook.conflict"),
+  envelope("notebook.reconciled"),
+  envelope("notebook.conflictEnded"),
   envelope("cell.added"),
   envelope("cell.updated"),
   envelope("cell.moved"),

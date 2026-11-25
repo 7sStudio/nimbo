@@ -10,6 +10,8 @@ export type BannerFacts = {
   readonly kernelExit: string | null;
   readonly save: "saved" | "writing" | "failed" | "conflict";
   readonly saveError: string | null;
+  /** The session took unsaved text from a recovery copy written then (ISO time), or null. */
+  readonly recovered?: string | null;
   readonly connection: "connecting" | "live" | "reconnecting" | "closed" | "viewOnly";
   /** Some tab holds the notebook's page (the mirror's realm.attached). */
   readonly pageAttached: boolean;
@@ -57,15 +59,31 @@ const saveFailed = (error: string | null): BannerModel => ({
   actions: [{ label: "Retry", command: "notebook.save" }],
 });
 
-const conflict: BannerModel = {
-  id: "conflict",
-  tone: "warn",
-  title: "Changed on disk",
-  text: "The file changed outside nimbo since it was last saved.",
-  actions: [
-    { label: "Reload from disk", command: "notebook.reload", primary: true },
-    { label: "Overwrite with mine", command: "notebook.save", args: { force: true } },
-  ],
+/** Compare first: the one choice that loses nothing; a view-only tab cannot resolve it and compares only. A
+ * conflict a recovery copy reopened says when that text was left. */
+const conflict = (notebook: string, viewOnly: boolean, recovered: string | null): BannerModel => {
+  const compare = {
+    label: "Compare",
+    command: "ui.diff.open",
+    args: { path: notebook, disk: true },
+    primary: true,
+  };
+  return {
+    id: "conflict",
+    tone: "warn",
+    title: recovered === null ? "Changed on disk" : "Recovered unsaved text",
+    text:
+      recovered === null
+        ? "The file and this page both changed."
+        : `Left unsaved ${recovered.slice(0, 16).replace("T", " ")} UTC; differs from the file.`,
+    actions: viewOnly
+      ? [compare]
+      : [
+          compare,
+          { label: "Reload from disk", command: "notebook.reload" },
+          { label: "Overwrite with mine", command: "notebook.save", args: { force: true } },
+        ],
+  };
 };
 
 const noPage = (error: string | null): BannerModel => ({
@@ -160,7 +178,9 @@ export function bannersOf(facts: BannerFacts): readonly BannerModel[] {
     ...connectionBanners(facts),
     facts.kernelExit === null || facts.closed ? null : kernelExited(facts.kernelExit),
     facts.save === "failed" ? saveFailed(facts.saveError) : null,
-    facts.save === "conflict" ? conflict : null,
+    facts.save === "conflict"
+      ? conflict(facts.notebook, facts.connection === "viewOnly", facts.recovered ?? null)
+      : null,
     pageMissing(facts) ? noPage(facts.attachError) : null,
     facts.connection === "viewOnly" ? viewOnly(facts.takenOver === true) : null,
     facts.installing === null ? null : installing(facts.installing),

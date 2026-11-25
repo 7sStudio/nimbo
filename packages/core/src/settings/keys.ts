@@ -14,6 +14,7 @@ export const settingsKeys = [
   "files.autoSaveDelay",
   "files.autoSaveMaxWait",
   "files.autoSaveInterval",
+  "files.mergeExternalChanges",
   "kernel.nodePath",
   "packages.manager",
   "outputs.maxValueBytes",

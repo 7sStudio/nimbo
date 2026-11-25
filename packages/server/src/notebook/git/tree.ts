@@ -1,17 +1,16 @@
-// Operations that rewrite the working tree under open notebooks (a pull, a switch, a stash, an abort). Before: every
-// open notebook's edits are written, so git refuses an overwrite rather than losing an edit, and their autosaves are
-// held, so no write lands while git works. After, reconcileOpen: a notebook whose file git left as the session last
-// wrote or read is untouched; one whose file changed is read again only when nothing was edited during the
-// operation, else its edits stay and it enters the conflict path (autosave suspended, notebook.conflict, the page's
-// banner to reload or keep them); a notebook whose file is gone closes unless it holds such edits. Nothing typed
-// during an operation is dropped. The workspace file watcher, once it lands, takes reconcileOpen over.
+// Operations that rewrite the working tree under open notebooks (a pull, a switch, a stash, an abort). While git works,
+// every open notebook's autosave is held, so no write lands under it; edits not on disk stay in the sessions (a stash
+// saves them first, saveEdited, so it takes what the page shows). After, each open notebook's file is merged into its
+// session by cell, the watch's own merge (07-file-format §5), whatever files.mergeExternalChanges says of other
+// programs' edits: the cells git changed change in place, a cell also edited in the session is held in conflict with
+// the session's text (the banner, the recovery copy), and the watch's event for the same change finds nothing left to
+// merge. A notebook whose file is gone closes unless it holds edits of its own.
 import type { GitReason } from "@jsnb/core";
 import { GitFailed, NotebookConflict } from "@jsnb/core";
 
 import type { Session } from "../session/session.js";
 import type { GitContext } from "./context.js";
 import { sessionOf } from "./context.js";
-import { worktree } from "./content.js";
 
 export const refusal = (
   command: string,
@@ -20,11 +19,12 @@ export const refusal = (
 ): GitFailed =>
   new GitFailed({ command, code: null, message, ...(reason === undefined ? {} : { reason }) });
 
-/** Saves every open notebook holding edits; one whose file changed on disk meanwhile refuses the operation. */
-async function saveEvery(context: GitContext, command: string): Promise<void> {
+/** Saves every open notebook holding edits, as an IDE does before a stash, so the stash takes what the page shows; one
+ * whose file also changed on disk refuses the operation. */
+export async function saveEdited(context: GitContext, command: string): Promise<void> {
   for (const ref of context.notebooks.openRefs()) {
     const session = await sessionOf(context, ref);
-    // a notebook only normalized by its load is not an edit: writing it would show as a change git refuses over
+    // a notebook only normalized by its load is not an edit: writing it would show as a change to stash
     if (session?.context.autosave.state().mutated !== true) continue;
     try {
       await session.save(false);
@@ -53,30 +53,18 @@ async function holdWrites(context: GitContext, released: Promise<void>): Promise
   return held;
 }
 
-/** After a git operation: each open notebook brought in step with its file without losing an edit. */
+/** After a git operation: each open notebook's file merged into its session without losing an edit. */
 async function reconcileOpen(context: GitContext, held: readonly Held[]): Promise<void> {
   for (const { ref, session } of held) {
     if (!context.notebooks.openRefs().includes(ref)) continue;
-    const { autosave } = session.context;
-    if (await autosave.inSync()) continue;
-    const disk = await worktree(context.root, ref);
-    if (autosave.state().mutated) autosave.conflicted();
-    else if (disk.kind === "none") await context.notebooks.close(ref).catch(() => undefined);
-    else {
-      // conflict markers fail the read: the state stays and its autosave suspends at the next edit
-      const reloaded = await session.reloadUnlessEdited().catch(() => true);
-      if (!reloaded) autosave.conflicted();
-    }
+    const outcome = await session.mergeDisk().catch(() => "unreadable" as const);
+    if (outcome === "missing" && !session.context.autosave.state().mutated)
+      await context.notebooks.close(ref).catch(() => undefined);
   }
 }
 
-/** Runs `work` with the open notebooks saved and their writes held, then reconciled with what git left. */
-export async function treeChange<T>(
-  context: GitContext,
-  command: string,
-  work: () => Promise<T>,
-): Promise<T> {
-  await saveEvery(context, command);
+/** Runs `work` with the open notebooks' writes held, then merges what git left into them. */
+export async function treeChange<T>(context: GitContext, work: () => Promise<T>): Promise<T> {
   let release = (): void => undefined;
   const released = new Promise<void>((resolve) => {
     release = resolve;

@@ -9,11 +9,24 @@ import {
   cellRevert,
   cellUpdate,
   RealmNotAttached,
+  textHash,
 } from "@jsnb/core";
 
+import type { Session } from "../../notebook/session/session.js";
 import type { Bound } from "../bind.js";
 import { bind } from "../bind.js";
 import type { Services } from "../services.js";
+
+/** cell.update's answer: the cell, and a notice for an edit sent without base over the file's source. */
+function updated(
+  open: Session,
+  input: Parameters<Session["update"]>[0],
+  declaration: Parameters<Session["update"]>[1],
+) {
+  const notice = open.diskNotice(input);
+  const cell = open.update(input, declaration);
+  return { cell, ...(notice === undefined ? {} : { notice }) };
+}
 
 export function cellHandlers({ workspace }: Services): readonly Bound[] {
   const session = (notebook: string) => workspace.notebooks.require(notebook);
@@ -32,10 +45,13 @@ export function cellHandlers({ workspace }: Services): readonly Bound[] {
       });
       return { cell: open.cell(cell.id), execution };
     }),
-    bind(cellGet, async ({ notebook, cell }) => ({ cell: (await session(notebook)).cell(cell) })),
-    bind(cellUpdate, async ({ notebook, ...input }, { declaration }) => ({
-      cell: (await session(notebook)).update(input, declaration),
-    })),
+    bind(cellGet, async ({ notebook, cell }) => {
+      const found = (await session(notebook)).cell(cell);
+      return { cell: found, textHash: textHash(found.source) };
+    }),
+    bind(cellUpdate, async ({ notebook, ...input }, { declaration }) =>
+      updated(await session(notebook), input, declaration),
+    ),
     bind(cellRevert, async ({ notebook, cell }, { declaration }) => ({
       cell: (await session(notebook)).revert(cell, declaration),
     })),

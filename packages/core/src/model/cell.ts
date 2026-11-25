@@ -24,7 +24,7 @@ export const EditReview = z
 export type EditReview = z.infer<typeof EditReview>;
 
 const editInfoShape = {
-  by: z.enum(["user", "agent"]),
+  by: z.enum(["user", "agent", "external"]),
   client: z.enum(["ui", "cli", "mcp", "file"]),
   agent: z.string().optional(),
   at: z.string(),

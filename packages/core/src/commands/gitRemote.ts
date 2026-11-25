@@ -22,7 +22,7 @@ export const gitFetch = defineCommand({
 export const gitPull = defineCommand({
   name: "git.pull",
   description:
-    "Changes the branch and the working tree: git pull from the upstream with the user's configured strategy (branch.<name>.rebase, else pull.rebase, pull.ff), or rebase: true / false to choose. Open notebooks are saved first and reloaded after. With changes in the working tree it needs confirm: true (an abort may not restore them). Answers the strategy used and the result; a pull that stops on conflicts answers result conflicts with the files (resolve and commit or git.continue, or git.abort) and is not an error. Divergent branches without a configured strategy fail with reason diverged.",
+    "Changes the branch and the working tree: git pull from the upstream with the user's configured strategy (branch.<name>.rebase, else pull.rebase, pull.ff), or rebase: true / false to choose. Open notebooks keep their unsaved edits; each file it rewrites is merged into its open notebook by cell after (a cell both changed is a conflict). With changes in the working tree it needs confirm: true (an abort may not restore them). Answers the strategy used and the result; a pull that stops on conflicts answers result conflicts with the files (resolve and commit or git.continue, or git.abort) and is not an error. Divergent branches without a configured strategy fail with reason diverged.",
   input: z.object({ rebase: z.boolean().optional(), confirm: gitConfirm }),
   output: GitPullOutcome,
   tags: { mutating: true, streaming: true },
@@ -67,7 +67,7 @@ export const gitCancel = defineCommand({
 export const gitAbort = defineCommand({
   name: "git.abort",
   description:
-    "Changes the working tree: abort the merge, rebase, cherry-pick or revert under way, back to where it started; resolutions made are lost, so it refuses without confirm: true. Open notebooks reload.",
+    "Changes the working tree: abort the merge, rebase, cherry-pick or revert under way, back to where it started; resolutions made are lost, so it refuses without confirm: true. Open notebooks take their files' changes by cell.",
   input: z.object({ confirm: gitConfirm }),
   output: z.object({ aborted: z.enum(["merge", "rebase", "cherryPick", "revert"]) }),
   tags: { mutating: true, destructive: true },

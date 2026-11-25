@@ -14,7 +14,7 @@ import type { LoadedDocument } from "./fileForm.js";
 export type Place = { readonly ref: string; readonly path: string };
 
 /** What the autosave of a session calls back: a write's file identity, and a file gone from its path. */
-export type FileHooks = Pick<AutosaveOptions, "written" | "missing">;
+export type FileHooks = Pick<AutosaveOptions, "written" | "missing" | "external" | "recovery">;
 
 /** The place `of()` names at each read: the session's context, which a move changes. */
 export const livePlace = (of: () => Place): Place => ({
@@ -42,6 +42,22 @@ const policyOf = (settings: Settings): AutosavePolicy => ({
   intervalMs: settings["files.autoSaveInterval"],
 });
 
+/** A write's outcomes as the notebook's events. */
+const eventsOf = (emit: Emit, place: Place) => ({
+  saved: (savedAt: string) => {
+    emit("notebook.saved", { savedAt });
+  },
+  failed: (error: { readonly code: string; readonly message: string }) => {
+    emit("notebook.saveFailed", { path: place.ref, error });
+  },
+  conflictEnded: () => {
+    emit("notebook.conflictEnded", { path: place.ref });
+  },
+  conflict: (cells?: readonly string[]) => {
+    emit("notebook.conflict", { path: place.ref, ...(cells === undefined ? {} : { cells }) });
+  },
+});
+
 /** The notebook's autosave, its outcomes as events; its file and ref read from `place` at each write. */
 export function autosaverOf(
   options: AutosaveFrom,
@@ -66,17 +82,7 @@ export function autosaverOf(
     Object.assign(where, {
       ...{ root: options.root, now: options.now, log: parts.log, text, ...parts.files },
       policy: () => policyOf(options.settings()),
-      events: {
-        saved: (savedAt: string) => {
-          emit("notebook.saved", { savedAt });
-        },
-        failed: (error: { readonly code: string; readonly message: string }) => {
-          emit("notebook.saveFailed", { path: place.ref, error });
-        },
-        conflict: () => {
-          emit("notebook.conflict", { path: place.ref });
-        },
-      },
+      events: eventsOf(emit, place),
     }),
     { text: options.fileText, dirty: options.loaded.dirty },
   );

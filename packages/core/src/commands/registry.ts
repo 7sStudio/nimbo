@@ -67,6 +67,7 @@ import {
 import {
   notebookClearOutputs,
   notebookClose,
+  notebookCompareDisk,
   notebookCreate,
   notebookDelete,
   notebookErrors,
@@ -119,6 +120,7 @@ export const commands: readonly AnyCommand[] = [
   notebookGet,
   notebookSave,
   notebookReload,
+  notebookCompareDisk,
   notebookClose,
   notebookDelete,
   notebookRename,

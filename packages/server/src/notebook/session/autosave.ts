@@ -10,6 +10,7 @@
 // and a close writes until the file holds the last state.
 import { NotebookConflict } from "@jsnb/core";
 
+import { raced } from "../../files/atomicWrite.js";
 import { hashOf, hashOnDisk, writeNotebook } from "../../files/notebooks/notebookFile.js";
 import type { AutosaveOptions, AutosavePolicy, Autosaver } from "./autosaveApi.js";
 import { SaveFailed, codeOf } from "./saveFailed.js";
@@ -27,6 +28,7 @@ type Saver = {
   /** Counts the mutations: a write that took its text at one count clears `dirty` only if none came after. */
   version: number;
   conflict: boolean;
+  conflictCells: readonly string[];
   savedAt: string | null;
   failure: SaveFailed | undefined;
   timer: ReturnType<typeof setTimeout> | undefined;
@@ -38,10 +40,20 @@ type Saver = {
 
 const later = (run: () => void, ms: number) => setTimeout(run, ms).unref();
 
-function enterConflict(saver: Saver): Outcome {
-  if (!saver.conflict) saver.options.events.conflict();
+function enterConflict(saver: Saver, cells?: readonly string[]): Outcome {
+  if (!saver.conflict || cells !== undefined) saver.options.events.conflict(cells);
   saver.conflict = true;
+  saver.conflictCells = cells ?? saver.conflictCells;
+  void saver.options.recovery?.(true);
   return "conflict";
+}
+
+/** The conflict is over, whoever ended it: the page hears it before what follows (a save, a write). */
+function endConflict(saver: Saver): void {
+  if (!saver.conflict) return;
+  saver.conflict = false;
+  saver.conflictCells = [];
+  saver.options.events.conflictEnded?.();
 }
 
 function failed(saver: Saver, error: unknown): Outcome {
@@ -49,6 +61,7 @@ function failed(saver: Saver, error: unknown): Outcome {
   saver.failure = new SaveFailed({ path: options.ref, code: codeOf(error) }, { cause: error });
   options.log.warn({ err: error, notebook: options.ref }, "the notebook could not be saved");
   options.events.failed({ code: saver.failure.data.code, message: saver.failure.message });
+  if (saver.dirty) void options.recovery?.(true);
   saver.retry ??= later(() => {
     saver.retry = undefined;
     if (saver.mutated) void enqueue(saver, false); // a failure again is reported again
@@ -68,10 +81,12 @@ function saved(
   written: { readonly text: string; readonly version: number },
 ): Outcome {
   const { text, version } = written;
-  Object.assign(saver, { text, hash: hashOf(text), conflict: false, failure: undefined });
+  endConflict(saver);
+  Object.assign(saver, { text, hash: hashOf(text), failure: undefined });
   caughtUp(saver, version);
   saver.savedAt = saver.options.now().toISOString();
   saver.options.events.saved(saver.savedAt);
+  if (!saver.dirty) void saver.options.recovery?.(false);
   return "saved";
 }
 
@@ -83,34 +98,88 @@ async function diskHash(options: AutosaveOptions): Promise<string | undefined> {
   return hashOnDisk(options.path);
 }
 
-/** Writes `text` to the notebook's file, telling `written` the file it made. */
-async function writeFile(options: AutosaveOptions, text: string): Promise<void> {
-  const identity = await writeNotebook(options.path, text, options.root);
+/** Writes `text` to the notebook's file, telling `written` the file it made; `raced` when another program wrote it
+ * since the base was read (left as it wrote it). A forced write replaces whatever is there. */
+async function writeFile(saver: Saver, text: string, force: boolean): Promise<boolean> {
+  const { options } = saver;
+  const base = saver.hash;
+  // a file deleted meanwhile is written again where it was, as a save after a delete is
+  const replaces = (current: string | undefined) =>
+    current === undefined || hashOf(current) === base;
+  const identity = await writeNotebook(
+    options.path,
+    text,
+    options.root,
+    force ? undefined : replaces,
+  );
+  if (identity === raced) return false;
   options.written?.(identity); // a statement of its own: `?.` would skip the write with it
+  return true;
+}
+
+/** The file holds the state: the same text, or, for a write no one asked for, nothing changed since it was read or
+ * written (the text then differs only by the stamps of external edits, 07 §5). */
+const holds = (
+  saver: Saver,
+  now: { readonly text: string; readonly disk: string | undefined },
+  explicit: boolean,
+): boolean =>
+  now.disk === saver.hash &&
+  (now.text === saver.text || (!explicit && !saver.dirty && !saver.mutated));
+
+/** How many times a write merges another program's edit and tries again before it leaves the conflict to the user. */
+const writeRounds = 3;
+
+/** The file changed since the base: merged first (07 §5), or a conflict when merging is off, the merge found one, or
+ * the file does not parse (the write waits, with its recovery copy, until the file reads again: external.ts resumes). */
+async function changedOnDisk(saver: Saver): Promise<Outcome | undefined> {
+  const merged = (await saver.options.external?.()) ?? "off";
+  if (merged === "off" || merged === "unreadable") return enterConflict(saver);
+  return merged === "conflict" ? "conflict" : undefined;
+}
+
+/** One round of a write: `again` when another program's edit was merged first, or raced the replace. */
+async function round(saver: Saver, force: boolean, explicit: boolean): Promise<Outcome | "again"> {
+  if (saver.conflict && !force) return "conflict";
+  const version = saver.version;
+  const text = saver.options.text();
+  const disk = await diskHash(saver.options);
+  if (!force && disk !== undefined && disk !== saver.hash)
+    return (await changedOnDisk(saver)) ?? "again";
+  if (!force && holds(saver, { text, disk }, explicit)) {
+    caughtUp(saver, version);
+    return "unchanged";
+  }
+  if (!(await writeFile(saver, text, force))) return "again";
+  return written(saver, { text, version, force });
+}
+
+/** The write is done: saved, unless it was not forced and a conflict began while it wrote (a stale edit), which
+ * stays; the file holds the text it took then, the rest is unsaved. */
+function written(
+  saver: Saver,
+  done: { readonly text: string; readonly version: number; readonly force: boolean },
+): Outcome {
+  if (done.force || !saver.conflict) return saved(saver, done);
+  Object.assign(saver, { text: done.text, hash: hashOf(done.text) });
+  return "conflict";
 }
 
 /** One write; never rejects: whatever fails (the serializer included) is the save's failure, reported and retried. */
-async function write(saver: Saver, force: boolean): Promise<Outcome> {
-  if (saver.conflict && !force) return "conflict";
-  const version = saver.version;
-  let text: string;
+async function write(saver: Saver, force: boolean, explicit: boolean): Promise<Outcome> {
   try {
-    text = saver.options.text();
-    const disk = await diskHash(saver.options);
-    if (!force && disk !== undefined && disk !== saver.hash) return enterConflict(saver);
-    if (!force && text === saver.text && disk === saver.hash) {
-      caughtUp(saver, version);
-      return "unchanged";
+    for (let count = 0; count < writeRounds; count += 1) {
+      const outcome = await round(saver, force, explicit);
+      if (outcome !== "again") return outcome;
     }
-    await writeFile(saver.options, text);
   } catch (error) {
     return failed(saver, error);
   }
-  return saved(saver, { text, version });
+  return enterConflict(saver); // the file kept changing under every write
 }
 
-function enqueue(saver: Saver, force: boolean): Promise<Outcome> {
-  const next = saver.chain.then(() => write(saver, force));
+function enqueue(saver: Saver, force: boolean, explicit = false): Promise<Outcome> {
+  const next = saver.chain.then(() => write(saver, force, explicit));
   saver.chain = next;
   return next;
 }
@@ -164,11 +233,12 @@ function touched(saver: Saver): void {
   saver.version += 1;
   saver.dirty = true;
   saver.mutated = true;
+  if (saver.conflict || saver.failure !== undefined) void saver.options.recovery?.(true);
   if (!saver.conflict) schedule(saver);
 }
 
 async function save(saver: Saver, force: boolean): Promise<string> {
-  const outcome = await enqueue(saver, force);
+  const outcome = await enqueue(saver, force, true);
   if (outcome === "conflict") throw new NotebookConflict({ path: saver.options.ref });
   if (outcome === "failed" && saver.failure) throw saver.failure;
   saver.savedAt ??= saver.options.now().toISOString();
@@ -190,29 +260,45 @@ async function flush(saver: Saver): Promise<void> {
     if (outcome === "conflict" || outcome === "failed") break;
   }
   const reason = outcome === "conflict" || outcome === "failed" ? outcome : "still changing";
+  const kept = (await saver.options.recovery?.(true, true)) === true;
   saver.options.log.warn(
-    { notebook: saver.options.ref, reason },
-    "the notebook closed with changes that are not on disk (reload or force-save before closing)",
+    { notebook: saver.options.ref, reason, recoveryCopy: kept },
+    kept
+      ? "the notebook closed with changes that are not on disk; they are kept in its recovery copy"
+      : "the notebook closed with changes that are not on disk, and its recovery copy could not be written: they are lost",
   );
 }
 
-/** What a git operation that rewrote the file asks of the saver: is the file still its own, and the conflict. */
-const diskSide = (saver: Saver) => ({
-  inSync: async () => (await hashOnDisk(saver.options.path)) === saver.hash,
-  conflicted: () => {
-    enterConflict(saver);
-  },
-});
-
-/** The file was read again: what it holds is the state, and the timer of the changes before it is cancelled. */
+/** The state took `text` from the file; saved, as the page will say, only when the file holds the state. */
 function reloaded(saver: Saver, text: string, dirty: boolean): void {
-  clearTimeout(saver.timer);
+  clearTimeout(saver.timer); // the timer of the changes before it
   Object.assign(saver, { timer: undefined, burst: undefined });
   saver.version += 1; // a write that took its text before the reload clears nothing
-  Object.assign(saver, { text, hash: hashOf(text), conflict: false, dirty, mutated: false });
+  endConflict(saver);
+  Object.assign(saver, { text, hash: hashOf(text), dirty, mutated: dirty });
+  if (dirty) {
+    schedule(saver);
+    return;
+  }
   saver.savedAt = saver.options.now().toISOString();
   saver.options.events.saved(saver.savedAt);
+  void saver.options.recovery?.(false);
 }
+
+/** A conflict an external edit's merge found: no write is scheduled until it ends. */
+function conflicted(saver: Saver, cells: readonly string[]): void {
+  clearTimeout(saver.timer);
+  saver.timer = undefined;
+  enterConflict(saver, cells);
+}
+
+const stateOf = (saver: Saver) => ({
+  savedAt: saver.savedAt,
+  dirty: saver.dirty,
+  mutated: saver.mutated,
+  conflict: saver.conflict,
+  conflictCells: saver.conflictCells,
+});
 
 /** An autosaver whose file holds `initial.text` (as read or written), dirty when the state differs already. */
 export function createAutosaver(
@@ -225,7 +311,7 @@ export function createAutosaver(
       text: initial.text,
       hash: initial.text === undefined ? undefined : hashOf(initial.text),
     },
-    ...{ dirty: initial.dirty, mutated: false, version: 0, conflict: false },
+    ...{ dirty: initial.dirty, mutated: false, version: 0, conflict: false, conflictCells: [] },
     ...{ savedAt: null, failure: undefined },
     ...{ timer: undefined, burst: undefined, retry: undefined, chain: Promise.resolve() },
   };
@@ -238,13 +324,14 @@ export function createAutosaver(
     reloaded: (text, dirty) => {
       reloaded(saver, text, dirty);
     },
-    ...diskSide(saver),
-    state: () => ({
-      savedAt: saver.savedAt,
-      dirty: saver.dirty,
-      mutated: saver.mutated,
-      conflict: saver.conflict,
-    }),
+    rebased: (text) => {
+      Object.assign(saver, { text, hash: hashOf(text) });
+    },
+    base: () => ({ text: saver.text, hash: saver.hash }),
+    conflicted: (cells) => {
+      conflicted(saver, cells);
+    },
+    state: () => stateOf(saver),
     flush: () => flush(saver),
     close: () => {
       clearTimeout(saver.timer);

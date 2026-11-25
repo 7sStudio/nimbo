@@ -20,7 +20,7 @@ const applied = z.object({
 export const gitStash = defineCommand({
   name: "git.stash",
   description:
-    "Changes the working tree: stash the changes (git stash push), with message, and untracked files too with untracked. Open notebooks are saved first and reloaded after. Answers created: false when there was nothing to stash.",
+    "Changes the working tree: stash the changes (git stash push), with message, and untracked files too with untracked. Open notebooks' unsaved edits are saved first, so the stash takes what the page shows; each file it rewrites is merged into its open notebook by cell after. Answers created: false when there was nothing to stash.",
   input: z.object({
     message: z.string().optional(),
     untracked: z.boolean().default(false),
@@ -39,7 +39,7 @@ export const gitStashList = defineCommand({
 export const gitStashApply = defineCommand({
   name: "git.stashApply",
   description:
-    "Changes the working tree: apply a stash and keep it. Changes it would overwrite make git refuse (reason localChanges); a conflict answers result conflicts. Open notebooks reload.",
+    "Changes the working tree: apply a stash and keep it. Changes it would overwrite make git refuse (reason localChanges); a conflict answers result conflicts. Open notebooks take their files' changes by cell.",
   input: entry,
   output: applied,
   tags: { mutating: true },
@@ -48,7 +48,7 @@ export const gitStashApply = defineCommand({
 export const gitStashPop = defineCommand({
   name: "git.stashPop",
   description:
-    "Changes the working tree: apply a stash and drop it, unless it conflicts (result conflicts, the stash kept). Open notebooks reload.",
+    "Changes the working tree: apply a stash and drop it, unless it conflicts (result conflicts, the stash kept). Open notebooks take their files' changes by cell.",
   input: entry,
   output: applied,
   tags: { mutating: true },

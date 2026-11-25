@@ -84,6 +84,7 @@ function bannerFacts(notebook: Notebook, workspace: Workspace, reconnectingLong:
     kernelExit: state?.kernel.state === "dead" ? (exitOf(state.kernel) ?? "") : null,
     save: notebook.mirror.saveState,
     saveError: notebook.mirror.saveError?.message ?? null,
+    recovered: notebook.mirror.recovered,
     connection: notebook.connection,
     pageAttached: state?.realm.attached ?? true,
     installing:

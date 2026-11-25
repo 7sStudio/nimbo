@@ -3,6 +3,7 @@
 // and the output's find and query bar, on the selected cell (run, type, copy and cut on a marked range). Each sends its
 // registry command through the store.
 import type { Cell, CellType } from "@jsnb/core";
+import { textHash } from "@jsnb/core";
 
 import { copyText } from "../store/clipboard.js";
 import { typeInto } from "../store/typed.js";
@@ -14,16 +15,25 @@ import { titleCommands } from "./titles.js";
 import type { OnCell } from "./selected.js";
 import { onSelected } from "./selected.js";
 import { moveBlock, sectionCommands } from "./sections.js";
+
 import type { Command } from "./command.js";
 import { stringArg } from "./command.js";
 
 type Store = ReturnType<typeof useNotebookStore>;
 type Ui = ReturnType<typeof useUiStore>;
 
-/** Runs a code cell with `source` (the editor's unsent text), or saves a markdown cell's and so renders it. */
-const runOrSave = async (store: Store, cell: Cell, source: string | undefined) => {
-  if (cell.type !== "markdown") await store.run(cell.id, source);
-  else if (source !== undefined) await store.update(cell.id, { source });
+/** Runs a code cell with its unsent text (`args.source`, else the editor's draft, named by the text it was typed on),
+ * or saves a markdown cell's and so renders it. */
+const runOrSave = async (
+  store: Store,
+  ui: Ui,
+  cell: Cell,
+  args: Readonly<Record<string, unknown>> | undefined,
+) => {
+  const source = stringArg(args, "source") ?? ui.draftOf(cell.id);
+  const base = source === undefined ? undefined : textHash(ui.draftBaseOf(cell.id) ?? cell.source);
+  if (cell.type !== "markdown") await store.run(cell.id, source, base);
+  else if (source !== undefined) await store.update(cell.id, { source, ...(base ? { base } : {}) });
 };
 
 /** Runs the marked code cells in one notebook.run; a marked markdown cell has nothing to run. */
@@ -47,7 +57,7 @@ function advance(store: Store, ui: Ui): OnCell {
     if (next !== undefined) ui.select(next.id);
     else if (marked.length > 1) ui.select(last.id);
     if (marked.length > 1) await runMarked(store, marked);
-    else await runOrSave(store, cell, stringArg(args, "source") ?? ui.draftOf(cell.id));
+    else await runOrSave(store, ui, cell, args);
   };
 }
 
@@ -66,7 +76,7 @@ function runAndInsert(store: Store, ui: Ui): OnCell {
     try {
       ui.setMode("command");
       if (marked.length > 1) await runMarked(store, marked);
-      else await runOrSave(store, cell, stringArg(args, "source") ?? ui.draftOf(cell.id));
+      else await runOrSave(store, ui, cell, args);
       const added = await store.add(last.type, last.id);
       if (added !== undefined && ui.selected === cell.id) {
         ui.select(added.id);
@@ -84,7 +94,7 @@ function runCommands(store: Store, ui: Ui): readonly Command[] {
   const runOrRender: OnCell = async (cell, args) => {
     const marked = store.markedCells;
     if (marked.length > 1) await runMarked(store, marked);
-    else await runOrSave(store, cell, stringArg(args, "source") ?? ui.draftOf(cell.id));
+    else await runOrSave(store, ui, cell, args);
     // the draft stays until the cell's source catches up with it (cells/useDrafts.ts), so the editor never shows the
     // old text in between
     ui.setMode("command");

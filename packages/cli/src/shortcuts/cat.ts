@@ -12,7 +12,8 @@ const help = `nimbo cat <cell> [-n <notebook>]: print a cell's source, exactly a
 
 Flags:
 ${notebookFlagHelp}
-  --json                  print cell.get's output ({ cell }) as JSON
+  --json                  print cell.get's output ({ cell, textHash }) as JSON; textHash is what
+                          nimbo cell update --base takes, so an edit over a change made on disk is a conflict
 `;
 
 async function run(argv: readonly string[], io: Io): Promise<ExitCode> {

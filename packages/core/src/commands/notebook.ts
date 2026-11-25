@@ -8,6 +8,7 @@ import { ErrorInfo } from "../model/output.js";
 import { Selection } from "../model/selection.js";
 import { NotebookSummary } from "../model/summary.js";
 import { defineCommand } from "./define.js";
+import { gitDiff } from "./git.js";
 
 const state = z.object({ notebook: NotebookState });
 
@@ -50,6 +51,14 @@ export const notebookReload = defineCommand({
   input: z.object({ notebook: NotebookRef }),
   output: state,
   tags: { mutating: true },
+});
+
+export const notebookCompareDisk = defineCommand({
+  name: "notebook.compareDisk",
+  description:
+    "An open notebook's file on disk against its session (the page's state, unsaved edits included), cell by cell as git.diff answers: what Reload from disk would take and Overwrite with mine would write. A file that does not parse is diffed as text.",
+  input: z.object({ notebook: NotebookRef, content: z.boolean().default(false) }),
+  output: gitDiff.output,
 });
 
 export const notebookClose = defineCommand({

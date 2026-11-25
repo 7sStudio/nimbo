@@ -412,7 +412,7 @@
                         "properties": {
                           "by": {
                             "type": "string",
-                            "enum": ["user", "agent"]
+                            "enum": ["user", "agent", "external"]
                           },
                           "client": {
                             "type": "string",
@@ -612,6 +612,25 @@
             },
             "dirty": {
               "type": "boolean"
+            },
+            "conflict": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "cells": {
+                  "readOnly": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^c_[0-9a-z]{6}$"
+                  }
+                }
+              },
+              "required": ["cells"],
+              "additionalProperties": false
+            },
+            "recovered": {
+              "type": "string"
             },
             "debug": {
               "readOnly": true,
@@ -865,7 +884,7 @@
                         "properties": {
                           "by": {
                             "type": "string",
-                            "enum": ["user", "agent"]
+                            "enum": ["user", "agent", "external"]
                           },
                           "client": {
                             "type": "string",
@@ -1065,6 +1084,25 @@
             },
             "dirty": {
               "type": "boolean"
+            },
+            "conflict": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "cells": {
+                  "readOnly": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^c_[0-9a-z]{6}$"
+                  }
+                }
+              },
+              "required": ["cells"],
+              "additionalProperties": false
+            },
+            "recovered": {
+              "type": "string"
             },
             "debug": {
               "readOnly": true,
@@ -1318,7 +1356,7 @@
                         "properties": {
                           "by": {
                             "type": "string",
-                            "enum": ["user", "agent"]
+                            "enum": ["user", "agent", "external"]
                           },
                           "client": {
                             "type": "string",
@@ -1518,6 +1556,25 @@
             },
             "dirty": {
               "type": "boolean"
+            },
+            "conflict": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "cells": {
+                  "readOnly": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^c_[0-9a-z]{6}$"
+                  }
+                }
+              },
+              "required": ["cells"],
+              "additionalProperties": false
+            },
+            "recovered": {
+              "type": "string"
             },
             "debug": {
               "readOnly": true,
@@ -1809,7 +1866,7 @@
                         "properties": {
                           "by": {
                             "type": "string",
-                            "enum": ["user", "agent"]
+                            "enum": ["user", "agent", "external"]
                           },
                           "client": {
                             "type": "string",
@@ -2010,6 +2067,25 @@
             "dirty": {
               "type": "boolean"
             },
+            "conflict": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "cells": {
+                  "readOnly": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^c_[0-9a-z]{6}$"
+                  }
+                }
+              },
+              "required": ["cells"],
+              "additionalProperties": false
+            },
+            "recovered": {
+              "type": "string"
+            },
             "debug": {
               "readOnly": true,
               "type": "object",
@@ -2127,6 +2203,649 @@
         }
       },
       "required": ["notebook"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "notebook.compareDisk",
+    "description": "An open notebook's file on disk against its session (the page's state, unsaved edits included), cell by cell as git.diff answers: what Reload from disk would take and Overwrite with mine would write. A file that does not parse is diffed as text.",
+    "tags": {
+      "mutating": false,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "notebook": {
+          "type": "string",
+          "minLength": 1
+        },
+        "content": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": ["notebook"]
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "path": {
+          "type": "string"
+        },
+        "renamedFrom": {
+          "type": "string"
+        },
+        "from": {
+          "type": "string"
+        },
+        "to": {
+          "type": "string"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["notebook", "text", "binary", "tooLarge", "submodule"]
+        },
+        "submodule": {
+          "type": "object",
+          "properties": {
+            "before": {
+              "type": ["string", "null"]
+            },
+            "after": {
+              "type": ["string", "null"]
+            }
+          },
+          "required": ["before", "after"],
+          "additionalProperties": false
+        },
+        "reason": {
+          "type": "string",
+          "const": "notebookUnreadable"
+        },
+        "notebook": {
+          "readOnly": true,
+          "type": "object",
+          "properties": {
+            "header": {
+              "readOnly": true,
+              "type": "array",
+              "items": {
+                "readOnly": true,
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "from": {},
+                  "to": {}
+                },
+                "required": ["key"],
+                "additionalProperties": false
+              }
+            },
+            "rows": {
+              "readOnly": true,
+              "type": "array",
+              "items": {
+                "readOnly": true,
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": ["unchanged", "added", "removed", "modified"]
+                  },
+                  "moved": {
+                    "readOnly": true,
+                    "type": "object",
+                    "properties": {
+                      "from": {
+                        "type": "number"
+                      },
+                      "to": {
+                        "type": "number"
+                      }
+                    },
+                    "required": ["from", "to"],
+                    "additionalProperties": false
+                  },
+                  "before": {
+                    "readOnly": true,
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": ["server", "client", "markdown"]
+                      },
+                      "source": {
+                        "type": "string"
+                      },
+                      "meta": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      }
+                    },
+                    "required": ["id", "index", "type", "meta"],
+                    "additionalProperties": false
+                  },
+                  "after": {
+                    "readOnly": true,
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "index": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": ["server", "client", "markdown"]
+                      },
+                      "source": {
+                        "type": "string"
+                      },
+                      "meta": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string"
+                        },
+                        "additionalProperties": {}
+                      }
+                    },
+                    "required": ["id", "index", "type", "meta"],
+                    "additionalProperties": false
+                  },
+                  "changes": {
+                    "readOnly": true,
+                    "type": "object",
+                    "properties": {
+                      "source": {
+                        "readOnly": true,
+                        "type": "object",
+                        "properties": {
+                          "hunks": {
+                            "readOnly": true,
+                            "type": "array",
+                            "items": {
+                              "readOnly": true,
+                              "type": "array",
+                              "items": {
+                                "oneOf": [
+                                  {
+                                    "readOnly": true,
+                                    "type": "object",
+                                    "properties": {
+                                      "kind": {
+                                        "type": "string",
+                                        "const": "same"
+                                      },
+                                      "text": {
+                                        "type": "string"
+                                      },
+                                      "before": {
+                                        "type": "number"
+                                      },
+                                      "after": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "required": ["kind", "text", "before", "after"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "readOnly": true,
+                                    "type": "object",
+                                    "properties": {
+                                      "kind": {
+                                        "type": "string",
+                                        "const": "removed"
+                                      },
+                                      "text": {
+                                        "type": "string"
+                                      },
+                                      "before": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "required": ["kind", "text", "before"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "readOnly": true,
+                                    "type": "object",
+                                    "properties": {
+                                      "kind": {
+                                        "type": "string",
+                                        "const": "added"
+                                      },
+                                      "text": {
+                                        "type": "string"
+                                      },
+                                      "after": {
+                                        "type": "number"
+                                      }
+                                    },
+                                    "required": ["kind", "text", "after"],
+                                    "additionalProperties": false
+                                  }
+                                ]
+                              }
+                            }
+                          },
+                          "added": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          },
+                          "removed": {
+                            "type": "integer",
+                            "minimum": 0,
+                            "maximum": 9007199254740991
+                          }
+                        },
+                        "required": ["hunks", "added", "removed"],
+                        "additionalProperties": false
+                      },
+                      "type": {
+                        "readOnly": true,
+                        "type": "object",
+                        "properties": {
+                          "from": {
+                            "type": "string",
+                            "enum": ["server", "client", "markdown"]
+                          },
+                          "to": {
+                            "type": "string",
+                            "enum": ["server", "client", "markdown"]
+                          }
+                        },
+                        "required": ["from", "to"],
+                        "additionalProperties": false
+                      },
+                      "meta": {
+                        "readOnly": true,
+                        "type": "array",
+                        "items": {
+                          "readOnly": true,
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "from": {},
+                            "to": {}
+                          },
+                          "required": ["key"],
+                          "additionalProperties": false
+                        }
+                      },
+                      "outputs": {
+                        "readOnly": true,
+                        "type": "object",
+                        "properties": {
+                          "before": {
+                            "type": "string",
+                            "enum": ["idle", "queued", "running", "ok", "error", "interrupted"]
+                          },
+                          "after": {
+                            "type": "string",
+                            "enum": ["idle", "queued", "running", "ok", "error", "interrupted"]
+                          },
+                          "comparison": {
+                            "type": "object",
+                            "properties": {
+                              "same": {
+                                "type": "boolean"
+                              },
+                              "status": {
+                                "type": "object",
+                                "properties": {
+                                  "before": {
+                                    "type": "string",
+                                    "enum": [
+                                      "idle",
+                                      "queued",
+                                      "running",
+                                      "ok",
+                                      "error",
+                                      "interrupted"
+                                    ]
+                                  },
+                                  "after": {
+                                    "type": "string",
+                                    "enum": [
+                                      "idle",
+                                      "queued",
+                                      "running",
+                                      "ok",
+                                      "error",
+                                      "interrupted"
+                                    ]
+                                  }
+                                },
+                                "required": ["before", "after"],
+                                "additionalProperties": false
+                              },
+                              "durationMs": {
+                                "type": "object",
+                                "properties": {
+                                  "before": {
+                                    "type": "number"
+                                  },
+                                  "after": {
+                                    "type": "number"
+                                  }
+                                },
+                                "additionalProperties": false
+                              },
+                              "value": {
+                                "anyOf": [
+                                  {
+                                    "type": "object",
+                                    "properties": {
+                                      "changes": {
+                                        "readOnly": true,
+                                        "type": "array",
+                                        "items": {
+                                          "oneOf": [
+                                            {
+                                              "type": "object",
+                                              "properties": {
+                                                "kind": {
+                                                  "type": "string",
+                                                  "const": "added"
+                                                },
+                                                "path": {
+                                                  "type": "string"
+                                                },
+                                                "after": {}
+                                              },
+                                              "required": ["kind", "path", "after"],
+                                              "additionalProperties": false
+                                            },
+                                            {
+                                              "type": "object",
+                                              "properties": {
+                                                "kind": {
+                                                  "type": "string",
+                                                  "const": "removed"
+                                                },
+                                                "path": {
+                                                  "type": "string"
+                                                },
+                                                "before": {}
+                                              },
+                                              "required": ["kind", "path", "before"],
+                                              "additionalProperties": false
+                                            },
+                                            {
+                                              "type": "object",
+                                              "properties": {
+                                                "kind": {
+                                                  "type": "string",
+                                                  "const": "changed"
+                                                },
+                                                "path": {
+                                                  "type": "string"
+                                                },
+                                                "before": {},
+                                                "after": {}
+                                              },
+                                              "required": ["kind", "path", "before", "after"],
+                                              "additionalProperties": false
+                                            }
+                                          ]
+                                        }
+                                      },
+                                      "more": {
+                                        "type": "integer",
+                                        "minimum": -9007199254740991,
+                                        "maximum": 9007199254740991
+                                      },
+                                      "truncated": {
+                                        "type": "boolean"
+                                      }
+                                    },
+                                    "required": ["changes", "more", "truncated"],
+                                    "additionalProperties": false
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "text": {
+                                "readOnly": true,
+                                "type": "array",
+                                "items": {
+                                  "oneOf": [
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "const": "same"
+                                        },
+                                        "text": {
+                                          "type": "string"
+                                        },
+                                        "before": {
+                                          "type": "number"
+                                        },
+                                        "after": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": ["kind", "text", "before", "after"],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "const": "removed"
+                                        },
+                                        "text": {
+                                          "type": "string"
+                                        },
+                                        "before": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": ["kind", "text", "before"],
+                                      "additionalProperties": false
+                                    },
+                                    {
+                                      "type": "object",
+                                      "properties": {
+                                        "kind": {
+                                          "type": "string",
+                                          "const": "added"
+                                        },
+                                        "text": {
+                                          "type": "string"
+                                        },
+                                        "after": {
+                                          "type": "number"
+                                        }
+                                      },
+                                      "required": ["kind", "text", "after"],
+                                      "additionalProperties": false
+                                    }
+                                  ]
+                                }
+                              },
+                              "error": {
+                                "type": "object",
+                                "properties": {
+                                  "before": {
+                                    "type": "string"
+                                  },
+                                  "after": {
+                                    "type": "string"
+                                  }
+                                },
+                                "additionalProperties": false
+                              }
+                            },
+                            "required": ["same", "status", "durationMs", "value", "text", "error"],
+                            "additionalProperties": false
+                          }
+                        },
+                        "required": ["comparison"],
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["status", "changes"],
+                "additionalProperties": false
+              }
+            },
+            "stats": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "added": {
+                  "type": "number"
+                },
+                "removed": {
+                  "type": "number"
+                },
+                "modified": {
+                  "type": "number"
+                },
+                "moved": {
+                  "type": "number"
+                },
+                "unchanged": {
+                  "type": "number"
+                }
+              },
+              "required": ["added", "removed", "modified", "moved", "unchanged"],
+              "additionalProperties": false
+            }
+          },
+          "required": ["header", "rows", "stats"],
+          "additionalProperties": false
+        },
+        "text": {
+          "readOnly": true,
+          "type": "object",
+          "properties": {
+            "hunks": {
+              "readOnly": true,
+              "type": "array",
+              "items": {
+                "readOnly": true,
+                "type": "array",
+                "items": {
+                  "oneOf": [
+                    {
+                      "readOnly": true,
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "const": "same"
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "before": {
+                          "type": "number"
+                        },
+                        "after": {
+                          "type": "number"
+                        }
+                      },
+                      "required": ["kind", "text", "before", "after"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "readOnly": true,
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "const": "removed"
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "before": {
+                          "type": "number"
+                        }
+                      },
+                      "required": ["kind", "text", "before"],
+                      "additionalProperties": false
+                    },
+                    {
+                      "readOnly": true,
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "const": "added"
+                        },
+                        "text": {
+                          "type": "string"
+                        },
+                        "after": {
+                          "type": "number"
+                        }
+                      },
+                      "required": ["kind", "text", "after"],
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              }
+            },
+            "added": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "removed": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            }
+          },
+          "required": ["hunks", "added", "removed"],
+          "additionalProperties": false
+        },
+        "before": {
+          "type": "string"
+        },
+        "after": {
+          "type": "string"
+        }
+      },
+      "required": ["path", "from", "to", "kind"],
       "additionalProperties": false
     }
   },
@@ -2312,7 +3031,7 @@
                         "properties": {
                           "by": {
                             "type": "string",
-                            "enum": ["user", "agent"]
+                            "enum": ["user", "agent", "external"]
                           },
                           "client": {
                             "type": "string",
@@ -3656,7 +4375,7 @@
                   "properties": {
                     "by": {
                       "type": "string",
-                      "enum": ["user", "agent"]
+                      "enum": ["user", "agent", "external"]
                     },
                     "client": {
                       "type": "string",
@@ -4095,7 +4814,7 @@
   },
   {
     "name": "cell.get",
-    "description": "One cell by id, with its status and last execution summary.",
+    "description": "One cell by id, with its status and last execution summary; textHash names its source as the base of a later cell.update.",
     "tags": {
       "mutating": false,
       "destructive": false,
@@ -4219,7 +4938,7 @@
                   "properties": {
                     "by": {
                       "type": "string",
-                      "enum": ["user", "agent"]
+                      "enum": ["user", "agent", "external"]
                     },
                     "client": {
                       "type": "string",
@@ -4329,6 +5048,9 @@
           },
           "required": ["id", "type", "source", "index", "meta", "status", "stale", "lastExecution"],
           "additionalProperties": false
+        },
+        "textHash": {
+          "type": "string"
         }
       },
       "required": ["cell"],
@@ -4337,7 +5059,7 @@
   },
   {
     "name": "cell.update",
-    "description": "Change the source, the type or the meta (merged; a null key removes it; meta.title names the cell). Dependents become stale when the source changes.",
+    "description": "Change the source, the type or the meta (merged; a null key removes it; meta.title names the cell). Dependents become stale when the source changes. Pass base, the textHash cell.get gave for the source the edit was made on: a source changed since then (by the file on disk, the page or another agent) makes the cell a conflict instead of a silent overwrite. Without base, notice says when the cell's source had come from the file on disk: read it again.",
     "tags": {
       "mutating": true,
       "destructive": false,
@@ -4360,6 +5082,10 @@
         },
         "source": {
           "type": "string"
+        },
+        "base": {
+          "type": "string",
+          "minLength": 1
         },
         "type": {
           "type": "string",
@@ -4573,7 +5299,7 @@
                   "properties": {
                     "by": {
                       "type": "string",
-                      "enum": ["user", "agent"]
+                      "enum": ["user", "agent", "external"]
                     },
                     "client": {
                       "type": "string",
@@ -4683,6 +5409,9 @@
           },
           "required": ["id", "type", "source", "index", "meta", "status", "stale", "lastExecution"],
           "additionalProperties": false
+        },
+        "notice": {
+          "type": "string"
         }
       },
       "required": ["cell"],
@@ -4815,7 +5544,7 @@
                   "properties": {
                     "by": {
                       "type": "string",
-                      "enum": ["user", "agent"]
+                      "enum": ["user", "agent", "external"]
                     },
                     "client": {
                       "type": "string",
@@ -5057,7 +5786,7 @@
                   "properties": {
                     "by": {
                       "type": "string",
-                      "enum": ["user", "agent"]
+                      "enum": ["user", "agent", "external"]
                     },
                     "client": {
                       "type": "string",
@@ -5284,6 +6013,10 @@
         },
         "source": {
           "type": "string"
+        },
+        "base": {
+          "type": "string",
+          "minLength": 1
         },
         "wait": {
           "default": true,
@@ -6001,6 +6734,9 @@
           },
           "required": ["executions", "pending", "skipped"],
           "additionalProperties": false
+        },
+        "notice": {
+          "type": "string"
         }
       },
       "required": ["execution"],
@@ -9271,6 +10007,7 @@
             "files.autoSaveDelay",
             "files.autoSaveMaxWait",
             "files.autoSaveInterval",
+            "files.mergeExternalChanges",
             "kernel.nodePath",
             "packages.manager",
             "outputs.maxValueBytes",
@@ -9360,6 +10097,7 @@
             "files.autoSaveDelay",
             "files.autoSaveMaxWait",
             "files.autoSaveInterval",
+            "files.mergeExternalChanges",
             "kernel.nodePath",
             "packages.manager",
             "outputs.maxValueBytes",
@@ -11284,7 +12022,7 @@
   },
   {
     "name": "git.discard",
-    "description": "Changes the working tree: discard the changes to files, a tracked file going back to the index, an untracked one deleted; an open notebook reloads. Cannot be undone, so it refuses without confirm: true.",
+    "description": "Changes the working tree: discard the changes to files, a tracked file going back to the index, an untracked one deleted; an open notebook is saved, then takes the file back by cell. Cannot be undone, so it refuses without confirm: true.",
     "tags": {
       "mutating": true,
       "destructive": true,
@@ -11408,7 +12146,7 @@
   },
   {
     "name": "git.pull",
-    "description": "Changes the branch and the working tree: git pull from the upstream with the user's configured strategy (branch.<name>.rebase, else pull.rebase, pull.ff), or rebase: true / false to choose. Open notebooks are saved first and reloaded after. With changes in the working tree it needs confirm: true (an abort may not restore them). Answers the strategy used and the result; a pull that stops on conflicts answers result conflicts with the files (resolve and commit or git.continue, or git.abort) and is not an error. Divergent branches without a configured strategy fail with reason diverged.",
+    "description": "Changes the branch and the working tree: git pull from the upstream with the user's configured strategy (branch.<name>.rebase, else pull.rebase, pull.ff), or rebase: true / false to choose. Open notebooks keep their unsaved edits; each file it rewrites is merged into its open notebook by cell after (a cell both changed is a conflict). With changes in the working tree it needs confirm: true (an abort may not restore them). Answers the strategy used and the result; a pull that stops on conflicts answers result conflicts with the files (resolve and commit or git.continue, or git.abort) and is not an error. Divergent branches without a configured strategy fail with reason diverged.",
     "tags": {
       "mutating": true,
       "destructive": false,
@@ -11609,7 +12347,7 @@
   },
   {
     "name": "git.abort",
-    "description": "Changes the working tree: abort the merge, rebase, cherry-pick or revert under way, back to where it started; resolutions made are lost, so it refuses without confirm: true. Open notebooks reload.",
+    "description": "Changes the working tree: abort the merge, rebase, cherry-pick or revert under way, back to where it started; resolutions made are lost, so it refuses without confirm: true. Open notebooks take their files' changes by cell.",
     "tags": {
       "mutating": true,
       "destructive": true,
@@ -11854,7 +12592,7 @@
   },
   {
     "name": "git.switch",
-    "description": "Changes the working tree: switch to branch, a local branch or a remote one (origin/feature makes a local feature tracking it). Open notebooks are saved first and reloaded after. When changes in the working tree would be overwritten git refuses (reason localChanges, the files named); stash: true stashes every change first, untracked files too (git stash push -u), and leaves the stash for git.stashPop.",
+    "description": "Changes the working tree: switch to branch, a local branch or a remote one (origin/feature makes a local feature tracking it). Open notebooks keep their unsaved edits; each file it rewrites is merged into its open notebook by cell after (a cell both changed is a conflict). When changes in the working tree would be overwritten git refuses (reason localChanges, the files named); stash: true stashes every change first, untracked files too (git stash push -u), and leaves the stash for git.stashPop.",
     "tags": {
       "mutating": true,
       "destructive": false,
@@ -11978,7 +12716,7 @@
   },
   {
     "name": "git.stash",
-    "description": "Changes the working tree: stash the changes (git stash push), with message, and untracked files too with untracked. Open notebooks are saved first and reloaded after. Answers created: false when there was nothing to stash.",
+    "description": "Changes the working tree: stash the changes (git stash push), with message, and untracked files too with untracked. Open notebooks' unsaved edits are saved first, so the stash takes what the page shows; each file it rewrites is merged into its open notebook by cell after. Answers created: false when there was nothing to stash.",
     "tags": {
       "mutating": true,
       "destructive": false,
@@ -12065,7 +12803,7 @@
   },
   {
     "name": "git.stashApply",
-    "description": "Changes the working tree: apply a stash and keep it. Changes it would overwrite make git refuse (reason localChanges); a conflict answers result conflicts. Open notebooks reload.",
+    "description": "Changes the working tree: apply a stash and keep it. Changes it would overwrite make git refuse (reason localChanges); a conflict answers result conflicts. Open notebooks take their files' changes by cell.",
     "tags": {
       "mutating": true,
       "destructive": false,
@@ -12112,7 +12850,7 @@
   },
   {
     "name": "git.stashPop",
-    "description": "Changes the working tree: apply a stash and drop it, unless it conflicts (result conflicts, the stash kept). Open notebooks reload.",
+    "description": "Changes the working tree: apply a stash and drop it, unless it conflicts (result conflicts, the stash kept). Open notebooks take their files' changes by cell.",
     "tags": {
       "mutating": true,
       "destructive": false,

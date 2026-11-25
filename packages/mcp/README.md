@@ -45,6 +45,14 @@ that stops reading ends it at once, quietly.
   the exact call that reads the same thing in parts, per family of tools (`src/tools/advice.ts`, `sliceAdvice.ts`, `gitDiffAdvice.ts`), with the real notebook,
   cell and output (`git_diff`: the changed cells, read one at a time with `cell`); a tool that changes something says
   the call was carried out.
+- Editing the file directly is supported: an agent that writes an open notebook's `.jsnb` file with its own file tools
+  sees the edit merged into the session by cell id (07-file-format §5): `notebook_get`, `nimbo ls`, `git_diff` and
+  `git_status` agree with it at once, the changed cells carry `meta.lastEdit { by: "external", client: "file" }`, and
+  `notebook.reconciled` reports it on the event stream. A cell the page changed too is a conflict the user resolves;
+  `notebook_compareDisk` shows it. The cell tools stay the better path: they keep outputs and run cells. Pass
+  `base` (the `textHash` from `cell_get`) to `cell_update` and `cell_run`: an edit over a source changed since (by the
+  file, the page or another agent) is then a conflict, and without it the answer's `notice` says the cell had changed
+  on disk.
 - Source Control: `git_status`, `git_diff` (a notebook cell by cell, hunks only; `commit` for a commit's change),
   `git_log`, `git_show`, `git_branches`, `git_stashList` (read-only); `git_stage`, `git_unstage`, `git_commit` (with
   `amend`), `git_fetch`, `git_pull`, `git_push`, `git_publish`, `git_sync`, `git_cancel`, `git_continue`,

@@ -9,7 +9,7 @@ import { failureOf } from "./exec.js";
 import { checkMessage } from "./paths.js";
 import { conflictsNow } from "./refs.js";
 import type { RepoLocation } from "./status.js";
-import { refusal, treeChange } from "./tree.js";
+import { refusal, saveEdited, treeChange } from "./tree.js";
 
 type Entry = { readonly index: number; readonly oid?: string | undefined };
 
@@ -26,7 +26,8 @@ export async function stashPush(
     ...(input.untracked ? ["--include-untracked"] : []),
     ...(message === "" ? [] : [`--message=${message}`]),
   ];
-  return treeChange(context, "stash", async () => {
+  await saveEdited(context, "stash");
+  return treeChange(context, async () => {
     const run = await context.run(found.top, args);
     return {
       created: !(run.stdout.toString("utf8") + run.stderr).includes("No local changes to save"),
@@ -75,7 +76,7 @@ async function entryRef(
 async function applyEntry(context: GitContext, entry: Entry, verb: "apply" | "pop") {
   const found = await required(context);
   const { ref } = await entryRef(context, found, entry, "stash");
-  return treeChange(context, "stash", async () => {
+  return treeChange(context, async () => {
     const run = await context.run(found.top, ["stash", verb, ref], { allowFailure: true });
     const conflicts = await conflictsNow(context, found);
     if (run.code !== 0 && conflicts.length === 0)

@@ -8,6 +8,7 @@ import {
   notebookGet,
   notebookGraph,
   notebookOpen,
+  notebookCompareDisk,
   notebookReload,
   notebookSave,
 } from "@jsnb/core";
@@ -32,6 +33,9 @@ export function notebookHandlers({ workspace }: Services): readonly Bound[] {
     bind(notebookReload, async ({ notebook }) => ({
       notebook: await (await notebooks.require(notebook)).reload(),
     })),
+    bind(notebookCompareDisk, async ({ notebook, content }) =>
+      (await notebooks.require(notebook)).compareDisk(content),
+    ),
     bind(notebookClose, async ({ notebook }) => {
       await notebooks.close(notebook);
       return {};

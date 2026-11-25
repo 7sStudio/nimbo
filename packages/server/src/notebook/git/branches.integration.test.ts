@@ -1,6 +1,6 @@
 // Branches and stash against the real git: list with upstream and counts, create from a start point, switch (a remote
-// branch tracked, local changes refused then stashed, an open notebook's unsaved edit saved and the notebook read
-// again), rename, delete (unmerged refused, force only with confirm), names that look like options refused, a path
+// branch tracked, saved local changes refused then stashed, an open notebook's file merged around its unsaved edit),
+// rename, delete (unmerged refused, force only with confirm), names that look like options refused, a path
 // with spaces and unicode; then a stash round trip and a conflicting pop that keeps its stash.
 import { readFile, writeFile } from "node:fs/promises";
 
@@ -96,41 +96,56 @@ it("deletes a merged branch, refuses an unmerged one, and force-deletes only wit
   });
 });
 
-it("refuses a switch that would overwrite changes, stashes them on request, and keeps unsaved notebook edits", async () => {
+const twoCells = (a: string, b: string) =>
+  notebookText([
+    { id: "c_aaaaaa", source: a },
+    { id: "c_bbbbbb", source: b },
+  ]);
+
+/** main and a branch other changing the text file and cell b of n.jsnb; main checked out. */
+async function twoBranches(ws: { dir: string; path: (...parts: string[]) => string }) {
+  await makeRepo(ws.dir, {
+    "dir with space/ünï.txt": "1\n",
+    "n.jsnb": twoCells("const a = 1;", "const b = 1;"),
+  });
+  sh(ws.dir, "switch", "-q", "-c", "other");
+  await writeFile(ws.path("dir with space", "ünï.txt"), "2\n");
+  await writeFile(ws.path("n.jsnb"), twoCells("const a = 1;", "const b = 9;"));
+  sh(ws.dir, "commit", "-q", "-am", "other");
+  sh(ws.dir, "switch", "-q", "main");
+}
+
+it("refuses a switch that would overwrite saved changes, stashes them on request, and merges an open notebook around its unsaved edit", async () => {
   await withWorkspace(async (ws) => {
-    await makeRepo(ws.dir, {
-      "dir with space/ünï.txt": "1\n",
-      "n.jsnb": notebookText([{ id: "c_aaaaaa", source: "const a = 1;" }]),
-    });
-    sh(ws.dir, "switch", "-q", "-c", "other");
-    await writeFile(ws.path("dir with space", "ünï.txt"), "2\n");
-    await writeFile(ws.path("n.jsnb"), notebookText([{ id: "c_aaaaaa", source: "const a = 9;" }]));
-    sh(ws.dir, "commit", "-q", "-am", "other");
-    sh(ws.dir, "switch", "-q", "main");
+    await twoBranches(ws);
     const { client } = await startDaemon(ws);
+    await client.settings.set({ key: "files.autoSave", value: "off" });
     await client.notebook.open({ path: "n.jsnb" });
     await client.cell.update({ notebook: "n.jsnb", cell: "c_aaaaaa", source: "const a = 2;" });
+    await writeFile(ws.path("dir with space", "ünï.txt"), "local\n");
     const refused: unknown = await client.git.switch({ branch: "other" }).catch((e: unknown) => e);
     expect(refused).toMatchObject({
-      data: { reason: "localChanges", message: expect.stringContaining("n.jsnb") as unknown },
+      data: { reason: "localChanges", message: expect.stringContaining("ünï.txt") as unknown },
     });
-    expect(await readFile(ws.path("n.jsnb"), "utf8")).toContain("const a = 2;");
+    expect(await readFile(ws.path("n.jsnb"), "utf8")).toContain("const a = 1;"); // nothing saved behind the user
     expect(current(ws.dir)).toBe("main");
 
     expect(await client.git.switch({ branch: "other", stash: true })).toEqual({
       branch: "other",
       stashed: true,
     });
-    const { cell } = await client.cell.get({ notebook: "n.jsnb", cell: "c_aaaaaa" });
-    expect(cell.source).toBe("const a = 9;");
+    const sources = async () =>
+      (await client.notebook.get({ notebook: "n.jsnb" })).notebook.cells.map((c) => c.source);
+    expect(await sources()).toEqual(["const a = 2;", "const b = 9;"]); // and no conflict
     const { stashes } = await client.git.stashList({});
     expect(stashes).toEqual([
       expect.objectContaining({ index: 0, message: "On main: nimbo: before switching to other" }),
     ]);
     await client.git.switch({ branch: "main" });
+    expect(await sources()).toEqual(["const a = 2;", "const b = 1;"]);
     expect(await client.git.stashPop({ index: 0 })).toEqual({ result: "applied", conflicts: [] });
-    const back = await client.cell.get({ notebook: "n.jsnb", cell: "c_aaaaaa" });
-    expect(back.cell.source).toBe("const a = 2;");
+    expect(await readFile(ws.path("dir with space", "ünï.txt"), "utf8")).toBe("local\n");
+    expect(await sources()).toEqual(["const a = 2;", "const b = 1;"]);
   });
 });
 

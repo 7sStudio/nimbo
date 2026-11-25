@@ -20,6 +20,7 @@ import type { CellModel } from "./models";
 import { cellLabel } from "./models";
 import { outputHostKey } from "./outputHost";
 import { useAgentEdits } from "./useAgentEdits";
+import { useExternalEdits } from "./useExternalEdits";
 import { useCellDrag } from "./useCellDrag";
 import { useCells } from "./useCells";
 import { blockEnd } from "../store/sections";
@@ -43,6 +44,7 @@ const drafts = useDrafts(store, ui);
 useLanguage({ ...stores, dispatcher, off: () => off.value });
 const values = useValues(store);
 useAgentEdits(store, ui);
+useExternalEdits(store, ui);
 
 const shown = computed(() =>
   ui.filter === "agentEdits"

@@ -1,6 +1,6 @@
 // The branches (03-api §4.15): read with for-each-ref, created, switched, renamed and deleted with git's own commands,
-// every name checked and placed after --end-of-options. A switch runs under treeChange: open notebooks saved first,
-// so git refuses an overwrite instead of losing an edit, and read again after.
+// every name checked and placed after --end-of-options. A switch runs under treeChange: open notebooks' writes held,
+// and their files merged into them after, edits not on disk kept.
 import type { GitLocalBranch, GitRemote, GitRemoteBranch } from "@jsnb/core";
 import { GitFailed, InvalidParams } from "@jsnb/core";
 
@@ -129,7 +129,7 @@ export async function createBranch(
     await context.run(found.top, ["branch", "--end-of-options", name, ...start]);
     return { branch: name };
   }
-  await treeChange(context, "switch", () =>
+  await treeChange(context, () =>
     context.run(found.top, ["switch", "-c", name, "--end-of-options", ...start]),
   );
   return { branch: name };
@@ -160,7 +160,7 @@ export async function switchBranch(
   if (input.branch.startsWith("-")) throw notFound(input.branch);
   await checkBranchName(context.root, input.branch, "branch");
   const { args, name } = await switchArgs(context, found, input.branch);
-  return treeChange(context, "switch", async () => {
+  return treeChange(context, async () => {
     const stashed = input.stash ? await stashFor(context, found, name) : null;
     try {
       await context.run(found.top, args);

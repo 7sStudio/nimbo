@@ -147,13 +147,18 @@ export function appCommands(): readonly Command[] {
   ];
 }
 
-/** The diff page of `path`: the working tree's (the index's with staged), a commit's, or a commit's against the working
- * tree (base). */
+/** The diff page of `path`: the working tree's (the index's with staged), a commit's, a commit's against the working
+ * tree (base), or an open notebook's file on disk against the page (disk). */
 function openDiff(store: ReturnType<typeof useUiStore>, args: Args | undefined): void {
   const path = stringArg(args, "path");
   if (path === undefined) return;
   store.closePalette();
   store.overlay = null;
+  if (args?.disk === true) {
+    store.diff = { path, staged: false, disk: true };
+    store.page = "diff";
+    return;
+  }
   const commit = stringArg(args, "commit");
   const base = stringArg(args, "base");
   store.diff = {

@@ -25,6 +25,8 @@ export type AddCell = {
 export type UpdateCell = {
   readonly cell: CellId;
   readonly source?: string | undefined;
+  /** The textHash of the source the edit was made on (07 §5). */
+  readonly base?: string | undefined;
   readonly type?: CellType | undefined;
   readonly meta?: Readonly<Record<string, unknown>> | undefined;
 };

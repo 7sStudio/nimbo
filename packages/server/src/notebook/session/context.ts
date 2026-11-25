@@ -85,6 +85,8 @@ export type SessionContext = {
   logPath: string;
   /** Which file `path` names (device and inode) as last opened or written; how a moved file is found (07 §5). */
   identity: FileIdentity | undefined;
+  /** The session took unsaved text from a recovery copy written at this time (recovery.ts, 07 §7). */
+  recovered?: string | undefined;
   /** The ref the session opened under: the stable prefix of the query engines' held keys, whatever moves follow. */
   readonly holdKey: string;
   /** The workspace folder: the kernel's cwd and where pre-flight looks for packages. */

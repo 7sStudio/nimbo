@@ -123,14 +123,21 @@ function runner<T>(
   };
 }
 
-/** The workspace stream's events this store follows: the installs', and kernel.nodePath's change, after which
- * workspace.info says again which Node the kernels run on. */
+/** The workspace stream's events this store follows: the installs', kernel.nodePath's change, after which
+ * workspace.info says again which Node the kernels run on, and notebooks.changed, the Explorer's list (a file created,
+ * deleted or renamed, in nimbo or outside it). */
 const workspaceEvents =
-  (installs: (event: EventEnvelope) => void, refreshInfo: () => Promise<void>) =>
+  (
+    installs: (event: EventEnvelope) => void,
+    refreshInfo: () => Promise<void>,
+    info: Ref<WorkspaceInfo | null>,
+  ) =>
   (event: EventEnvelope): void => {
     installs(event);
     if (event.type === "settings.changed" && event.data.key === "kernel.nodePath")
       void refreshInfo();
+    if (event.type === "notebooks.changed" && info.value !== null)
+      info.value = { ...info.value, notebooks: event.data.notebooks };
   };
 
 /** The failures of an add or a remove that its packages.done already announced in a toast: the page's report
@@ -210,12 +217,12 @@ export const useWorkspaceStore = defineStore("workspace", () => {
   const runs: Runs = { installing, own: [], failure };
   const secrets = ref<readonly string[]>([]);
   const client = () => session.session().client;
-
   const { refreshPackages, refreshSecrets, refreshInfo, readInfo } = reads(
     (call) => attempt(() => call(client())),
     { packages, secrets, info },
   );
-  const onEvent = workspaceEvents(installEvents(runs, ui.toast, refreshPackages), refreshInfo);
+  const installs = installEvents(runs, ui.toast, refreshPackages);
+  const onEvent = workspaceEvents(installs, refreshInfo, info);
 
   return {
     ...{ info, packages, installing, failure, secrets, onEvent, refreshPackages, refreshSecrets },

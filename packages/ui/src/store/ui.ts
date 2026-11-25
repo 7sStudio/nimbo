@@ -58,18 +58,19 @@ function settingsDrafts() {
   };
 }
 
-/** What the diff page compares: a working file (staged: the index's side), a commit's change, or a commit against the
- * working tree (base). */
+/** What the diff page compares: a working file (staged: the index's side), a commit's change, a commit against the
+ * working tree (base), or an open notebook's file on disk against the page's state (disk: a conflict's Compare). */
 export type DiffTarget = {
   readonly path: string;
   readonly staged: boolean;
   readonly commit?: string;
   readonly base?: string;
+  readonly disk?: boolean;
 };
 
 /** The diff page's state. */
 const diffState = () => ({
-  /** The file the diff editor shows: its path and whether it is the index's side (Staged). */
+  /** The file the diff editor shows (DiffTarget). */
   diff: ref<DiffTarget | null>(null),
   /** A step asked of the diff editor (Next or Previous Change); `at` tells a repeat apart. */
   diffStep: ref<{ readonly by: 1 | -1; readonly at: number } | null>(null),
@@ -184,13 +185,31 @@ export type CopiedCell = {
  * so a view shows the draft until the cell's source catches up (cells/useDrafts.ts clears it then). */
 function draftState() {
   const drafts = reactive(new Map<CellId, string>());
+  /** The cell's text each draft was typed on, as the daemon had it: an edit names it (cell.update's `base`), so one
+   * made on a text the file replaced since is a conflict (07-file-format §5). */
+  const bases = new Map<CellId, string>();
   return {
-    /** CellEditor records its text here on every change; it is cleared once the cell's source equals it. */
-    setDraft: (cell: CellId, source: string | null) => {
-      if (source === null) drafts.delete(cell);
-      else drafts.set(cell, source);
+    /** CellEditor records its text here on every change, on the cell's text `base` the first time; the draft is
+     * cleared once the cell's source equals it. */
+    setDraft: (cell: CellId, source: string | null, base?: string) => {
+      if (source === null) {
+        drafts.delete(cell);
+        bases.delete(cell);
+        return;
+      }
+      drafts.set(cell, source);
+      if (!bases.has(cell) && base !== undefined) bases.set(cell, base);
     },
     draftOf: (cell: CellId): string | undefined => drafts.get(cell),
+    /** The text the cell's next draft is typed on: the last one sent, as the daemon will have it once it takes it. */
+    draftBaseOf: (cell: CellId): string | undefined => bases.get(cell),
+    draftSent: (cell: CellId, sent: string) => {
+      if (drafts.has(cell)) bases.set(cell, sent);
+    },
+    /** The daemon refused the draft `sent`: the next one is typed on `typedOn` again, unless a later one was sent. */
+    draftRefused: (cell: CellId, sent: string, typedOn: string) => {
+      if (bases.get(cell) === sent) bases.set(cell, typedOn);
+    },
     /** Set by the cell list (cells/useDrafts.ts): sends every unsent draft; the dispatcher awaits it before a command
      * that writes, so a run, a save or a restart never acts on a cell's older source. */
     flushDrafts: { run: (): Promise<unknown> => Promise.resolve() },

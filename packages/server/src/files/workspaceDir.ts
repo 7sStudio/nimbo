@@ -1,6 +1,7 @@
 // The workspace directory `.jsnb/` of 07-file-format §7: created with its .gitignore when missing, with logs/,
-// cache/npm/ and cache/sql/, each a real folder (a symbolic link among them, as `.jsnb` itself, is WorkspaceUnusable:
-// a workspace from someone else could point it elsewhere); the paths of everything the daemon keeps there.
+// recovery/, cache/npm/ and cache/sql/, each a real folder (a symbolic link among them, as `.jsnb` itself, is
+// WorkspaceUnusable: a workspace from someone else could point it elsewhere); the paths of everything the daemon keeps
+// there.
 import { lstat, mkdir, readFile, realpath, stat, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -18,6 +19,7 @@ export type JsnbDir = {
   readonly serverFile: string;
   readonly settingsFile: string;
   readonly logs: string;
+  readonly recovery: string;
   readonly npmCache: string;
   readonly sqlCache: string;
 };
@@ -31,6 +33,7 @@ function jsnbDirOf(root: string): JsnbDir {
     serverFile: join(dir, "server.json"),
     settingsFile: join(dir, settingsFileName),
     logs: join(dir, "logs"),
+    recovery: join(dir, "recovery"),
     npmCache: join(dir, "cache", "npm"),
     sqlCache: join(dir, "cache", "sql"),
   };
@@ -114,7 +117,13 @@ export async function prepareJsnbDir(root: string): Promise<JsnbDir> {
   try {
     await ensureFolder(paths.dir);
     await ensureGitignore(paths.dir);
-    for (const folder of [paths.logs, join(paths.dir, "cache"), paths.npmCache, paths.sqlCache]) {
+    for (const folder of [
+      paths.logs,
+      paths.recovery,
+      join(paths.dir, "cache"),
+      paths.npmCache,
+      paths.sqlCache,
+    ]) {
       await ensureFolder(folder);
     }
   } catch (error) {

@@ -10,6 +10,7 @@ export const expected: readonly string[] = [
   "notebook.get",
   "notebook.save",
   "notebook.reload",
+  "notebook.compareDisk",
   "notebook.close",
   "notebook.delete",
   "notebook.rename",

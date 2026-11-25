@@ -88,7 +88,7 @@ Two runtimes, no shared memory: shared scope within a kind, a **bridge** across 
 
 ### 3.2 Not built yet
 
-A file watcher for external `.jsnb` edits, a headless client realm for agent-only sessions, debugging client cells in the page, add-ons. Open work is in [12-roadmap.md](12-roadmap.md).
+A headless client realm for agent-only sessions, debugging client cells in the page, add-ons. Open work is in [12-roadmap.md](12-roadmap.md).
 
 ### 3.3 Out of scope
 
@@ -129,7 +129,7 @@ A local web app launched by the CLI: `nimbo open my.jsnb` runs the workspace dae
 5. One daemon per workspace folder, one kernel per open notebook. Notebooks in a folder share `package.json`, `node_modules`, `.env`, the port and `.jsnb/server.json` (port, token, pid).
 6. Authenticated local API: bearer token from `server.json`, `127.0.0.1` only, `Host` and `Origin` checks, no CORS (03 §7.1).
 7. Client cells need a page: a client cell runs only while a tab has the notebook attached; otherwise `REALM_NOT_ATTACHED`. One attached realm per notebook; other tabs are view-only until one takes over.
-8. Agents edit through the API; direct file edits are not reconciled into a running session.
+8. Agents edit through the API by preference; a direct edit of an open notebook's file is merged into its session by cell id (07 §5).
 
 ### 4.8 Stack
 

@@ -51,7 +51,8 @@ export async function sessionOf(context: GitContext, path: string): Promise<Sess
 /** The working tree's side of `path`: an open notebook's state as its file would hold it, else the file. */
 export async function workingSide(context: GitContext, path: string): Promise<Side> {
   const session = await sessionOf(context, path);
-  if (session === undefined) return worktree(context.root, path);
+  // a session with nothing unsaved is its file, whose stamps of external edits (07 §5) are not written yet
+  if (session?.context.autosave.state().dirty !== true) return worktree(context.root, path);
   const { header, cells } = session.context;
   return { kind: "bytes", bytes: Buffer.from(textOf(header, cells.list())) };
 }

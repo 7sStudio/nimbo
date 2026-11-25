@@ -1,6 +1,6 @@
 // The branches of Source Control (03-api §4.15): list, create, switch, rename and delete, as VS Code's branch picker
 // and JetBrains' Branches popup do them. A name is checked as git check-ref-format --branch does, and never starts
-// with `-`. A switch saves open notebooks first and reloads them after, so no unsaved edit is lost.
+// with `-`. A switch merges each file it rewrites into its open notebook by cell, so no unsaved edit is lost.
 import { z } from "zod";
 
 import { GitLocalBranch, GitRemote, GitRemoteBranch } from "../model/gitHistory.js";
@@ -34,7 +34,7 @@ export const gitBranchCreate = defineCommand({
 export const gitSwitch = defineCommand({
   name: "git.switch",
   description:
-    "Changes the working tree: switch to branch, a local branch or a remote one (origin/feature makes a local feature tracking it). Open notebooks are saved first and reloaded after. When changes in the working tree would be overwritten git refuses (reason localChanges, the files named); stash: true stashes every change first, untracked files too (git stash push -u), and leaves the stash for git.stashPop.",
+    "Changes the working tree: switch to branch, a local branch or a remote one (origin/feature makes a local feature tracking it). Open notebooks keep their unsaved edits; each file it rewrites is merged into its open notebook by cell after (a cell both changed is a conflict). When changes in the working tree would be overwritten git refuses (reason localChanges, the files named); stash: true stashes every change first, untracked files too (git stash push -u), and leaves the stash for git.stashPop.",
   input: z.object({ branch: name, stash: z.boolean().default(false) }),
   output: z.object({ branch: z.string(), stashed: z.boolean() }),
   tags: { mutating: true },

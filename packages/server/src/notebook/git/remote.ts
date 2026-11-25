@@ -100,7 +100,7 @@ export async function pull(
         ? "rebase"
         : "merge";
   const flags = input.rebase === undefined ? [] : [input.rebase ? "--rebase" : "--no-rebase"];
-  return treeChange(context, "pull", async () => {
+  return treeChange(context, async () => {
     const before = await headOid(context, found);
     const run = await context.run(found.top, ["pull", "--progress", ...flags], {
       ...long,
@@ -210,7 +210,7 @@ export async function abortOperation(
       "confirm",
       `aborting the ${operation.git} loses the resolutions made so far: abort with confirm`,
     );
-  await treeChange(context, "abort", () => context.run(found.top, [operation.git, "--abort"]));
+  await treeChange(context, () => context.run(found.top, [operation.git, "--abort"]));
   return { aborted: operation.name };
 }
 
@@ -221,7 +221,7 @@ export async function continueOperation(context: GitContext): Promise<{
 }> {
   const { found, operation } = await underWay(context, "continue");
   const args = operation.name === "merge" ? ["commit", "--no-edit"] : [operation.git, "--continue"];
-  return treeChange(context, "continue", async () => {
+  return treeChange(context, async () => {
     const run = await context.run(found.top, args, { allowFailure: true });
     const conflicts = await conflictsNow(context, found);
     if (run.code !== 0 && conflicts.length === 0)

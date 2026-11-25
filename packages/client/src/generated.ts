@@ -73,6 +73,7 @@ import {
   notebookBridge,
   notebookClearOutputs,
   notebookClose,
+  notebookCompareDisk,
   notebookCreate,
   notebookDelete,
   notebookDiagnostics,
@@ -135,6 +136,8 @@ const notebook = (call: Caller) =>
     save: bind(call, notebookSave),
     /** Re-read the file and reconcile by cell id: same ids keep their outputs, new cells start idle, removed cells disappear. */
     reload: bind(call, notebookReload),
+    /** An open notebook's file on disk against its session (the page's state, unsaved edits included), cell by cell as git.diff answers: what Reload from disk would take and Overwrite with mine would write. A file that does not parse is diffed as text. */
+    compareDisk: bind(call, notebookCompareDisk),
     /** Stop the kernel and detach the realm. */
     close: bind(call, notebookClose),
     /** Delete the file of a notebook that is not open (close it first). Nothing else in its folder is touched. */
@@ -169,9 +172,9 @@ const cell = (call: Caller) =>
   ({
     /** Add a cell after another (or at the end); with run, run it and wait. An explicit id must be unused. */
     add: bind(call, cellAdd),
-    /** One cell by id, with its status and last execution summary. */
+    /** One cell by id, with its status and last execution summary; textHash names its source as the base of a later cell.update. */
     get: bind(call, cellGet),
-    /** Change the source, the type or the meta (merged; a null key removes it; meta.title names the cell). Dependents become stale when the source changes. */
+    /** Change the source, the type or the meta (merged; a null key removes it; meta.title names the cell). Dependents become stale when the source changes. Pass base, the textHash cell.get gave for the source the edit was made on: a source changed since then (by the file on disk, the page or another agent) makes the cell a conflict instead of a silent overwrite. Without base, notice says when the cell's source had come from the file on disk: read it again. */
     update: bind(call, cellUpdate),
     /** Put back the code an agent's edits replaced (the source and type before the first edit no one reviewed), as an edit of its own; a cell with no such edit is left as it is. */
     revert: bind(call, cellRevert),
@@ -315,13 +318,13 @@ const git = (call: Caller) =>
     stage: bind(call, gitStage),
     /** Changes the index: unstage whole files (git restore --staged); the working tree keeps its changes. */
     unstage: bind(call, gitUnstage),
-    /** Changes the working tree: discard the changes to files, a tracked file going back to the index, an untracked one deleted; an open notebook reloads. Cannot be undone, so it refuses without confirm: true. */
+    /** Changes the working tree: discard the changes to files, a tracked file going back to the index, an untracked one deleted; an open notebook is saved, then takes the file back by cell. Cannot be undone, so it refuses without confirm: true. */
     discard: bind(call, gitDiscard),
     /** Changes the repository: commit the index with a message, as git commit does (hooks, signing and identity apply); with all, stage every change under the workspace folder first. Open notebooks are saved first. amend replaces the last commit with the index (its message kept when message is left out); amending a commit the upstream already has needs confirm: true. */
     commit: bindOptional(call, gitCommit, {}),
     /** Changes remote-tracking refs: fetch from the current branch's remote (else origin), from remote, or from every remote with all; prune removes refs whose remote branch is gone. Progress arrives as git.progress events; git.cancel stops it. A credential or network failure is GitFailed with reason auth or network and git's own line. */
     fetch: bindOptional(call, gitFetch, {}),
-    /** Changes the branch and the working tree: git pull from the upstream with the user's configured strategy (branch.<name>.rebase, else pull.rebase, pull.ff), or rebase: true / false to choose. Open notebooks are saved first and reloaded after. With changes in the working tree it needs confirm: true (an abort may not restore them). Answers the strategy used and the result; a pull that stops on conflicts answers result conflicts with the files (resolve and commit or git.continue, or git.abort) and is not an error. Divergent branches without a configured strategy fail with reason diverged. */
+    /** Changes the branch and the working tree: git pull from the upstream with the user's configured strategy (branch.<name>.rebase, else pull.rebase, pull.ff), or rebase: true / false to choose. Open notebooks keep their unsaved edits; each file it rewrites is merged into its open notebook by cell after (a cell both changed is a conflict). With changes in the working tree it needs confirm: true (an abort may not restore them). Answers the strategy used and the result; a pull that stops on conflicts answers result conflicts with the files (resolve and commit or git.continue, or git.abort) and is not an error. Divergent branches without a configured strategy fail with reason diverged. */
     pull: bindOptional(call, gitPull, {}),
     /** Changes the remote: push the current branch to its upstream (git push, the user's push.default). No upstream fails with reason noUpstream (git.publish it); a rejected push (the remote has commits this branch lacks) with reason rejected: pull first. Never forces. */
     push: bindOptional(call, gitPush, {}),
@@ -331,7 +334,7 @@ const git = (call: Caller) =>
     sync: bindOptional(call, gitSync, {}),
     /** Stop the git write under way (a pull or push, or a commit, switch or stash whose hook is slow): its git is stopped, the locks it left removed, and the call fails GitFailed with reason cancelled, naming the state it left (merging, rebasing). Answers its name, or null when none ran. */
     cancel: bindOptional(call, gitCancel, {}),
-    /** Changes the working tree: abort the merge, rebase, cherry-pick or revert under way, back to where it started; resolutions made are lost, so it refuses without confirm: true. Open notebooks reload. */
+    /** Changes the working tree: abort the merge, rebase, cherry-pick or revert under way, back to where it started; resolutions made are lost, so it refuses without confirm: true. Open notebooks take their files' changes by cell. */
     abort: bindOptional(call, gitAbort, {}),
     /** Changes the repository: once every conflict is resolved and staged, continue the merge, rebase, cherry-pick or revert under way (its message as git prepared it). A rebase that stops again answers result conflicts with the files. */
     continue: bindOptional(call, gitContinue, {}),
@@ -339,19 +342,19 @@ const git = (call: Caller) =>
     branches: bindOptional(call, gitBranches, {}),
     /** Changes the repository: create branch name at start (a branch, a remote branch such as origin/main, which becomes its upstream, or a commit; HEAD by default) and switch to it unless switch: false. Fails with reason exists when the name is taken. */
     branchCreate: bind(call, gitBranchCreate),
-    /** Changes the working tree: switch to branch, a local branch or a remote one (origin/feature makes a local feature tracking it). Open notebooks are saved first and reloaded after. When changes in the working tree would be overwritten git refuses (reason localChanges, the files named); stash: true stashes every change first, untracked files too (git stash push -u), and leaves the stash for git.stashPop. */
+    /** Changes the working tree: switch to branch, a local branch or a remote one (origin/feature makes a local feature tracking it). Open notebooks keep their unsaved edits; each file it rewrites is merged into its open notebook by cell after (a cell both changed is a conflict). When changes in the working tree would be overwritten git refuses (reason localChanges, the files named); stash: true stashes every change first, untracked files too (git stash push -u), and leaves the stash for git.stashPop. */
     switch: bind(call, gitSwitch),
     /** Changes the repository: rename branch name (the current one by default) to to; its upstream is kept. Fails with reason exists when to is taken. */
     branchRename: bind(call, gitBranchRename),
     /** Changes the repository: delete local branch name (git branch -d). A branch whose commits are on no other branch or upstream fails with reason unmerged; force: true deletes it anyway (git branch -D), which can lose those commits, so force needs confirm: true. The current branch cannot be deleted. */
     branchDelete: bind(call, gitBranchDelete),
-    /** Changes the working tree: stash the changes (git stash push), with message, and untracked files too with untracked. Open notebooks are saved first and reloaded after. Answers created: false when there was nothing to stash. */
+    /** Changes the working tree: stash the changes (git stash push), with message, and untracked files too with untracked. Open notebooks' unsaved edits are saved first, so the stash takes what the page shows; each file it rewrites is merged into its open notebook by cell after. Answers created: false when there was nothing to stash. */
     stash: bindOptional(call, gitStash, {}),
     /** The stashes, newest first (index 0 is stash@{0}). */
     stashList: bindOptional(call, gitStashList, {}),
-    /** Changes the working tree: apply a stash and keep it. Changes it would overwrite make git refuse (reason localChanges); a conflict answers result conflicts. Open notebooks reload. */
+    /** Changes the working tree: apply a stash and keep it. Changes it would overwrite make git refuse (reason localChanges); a conflict answers result conflicts. Open notebooks take their files' changes by cell. */
     stashApply: bind(call, gitStashApply),
-    /** Changes the working tree: apply a stash and drop it, unless it conflicts (result conflicts, the stash kept). Open notebooks reload. */
+    /** Changes the working tree: apply a stash and drop it, unless it conflicts (result conflicts, the stash kept). Open notebooks take their files' changes by cell. */
     stashPop: bind(call, gitStashPop),
     /** Changes the repository: delete a stash. Cannot be undone, so it refuses without confirm: true. */
     stashDrop: bind(call, gitStashDrop),

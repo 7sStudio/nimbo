@@ -69,6 +69,9 @@ const writes = (
         ...(target.base === undefined ? {} : { base: target.base }),
       }),
     ),
+  /** An open notebook's file on disk against its session (a conflict's Compare). */
+  compareDisk: (notebook: string) =>
+    attempt(() => client().notebook.compareDisk({ notebook, content: true })),
 });
 
 /** The long operation under way (fetch, pull, push, publish, sync) and git's last progress line for it. */

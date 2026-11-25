@@ -10,6 +10,7 @@ import type { KernelEntry } from "@jsnb/kernel-node";
 import type { EventBus } from "../../events/bus.js";
 import { workspaceStream } from "../../events/bus.js";
 import type { Log } from "../../events/log.js";
+import { watchNotebookList } from "./listWatch.js";
 import { notebookList } from "../../files/notebooks/list.js";
 import type { JsnbDir } from "../../files/workspaceDir.js";
 import type { GitService } from "../git/service.js";
@@ -89,6 +90,8 @@ export type WorkspaceOptions = {
   readonly requestTimeoutMs?: number;
   /** How often the open notebooks' files are checked for a move (moves.ts); the daemon's rootCheckMs. */
   readonly moveCheckMs?: number;
+  /** How often the notebook list is read again for files created, deleted or renamed outside nimbo; default 5 s. */
+  readonly listCheckMs?: number;
   /** The language worker's options (the tests hear each worker started). */
   readonly languageWorker?: LanguageOptions["worker"];
 };
@@ -137,14 +140,16 @@ const both = (first: () => void, later: { readonly language: () => void }) => ()
 };
 
 /** Closes the workspace's services: js-debug (the kernels' debug sessions end with it), the language worker, the
- * installs, the notebooks, the engines. */
+ * installs, the notebooks, the engines; the notebook list's watch first. */
 async function closeAll(
   parts: Pick<
     Workspace,
     "language" | "packages" | "notebooks" | "engines" | "settings" | "keybindings" | "git"
   >,
   debugAdapter: Adapter,
+  stopListWatch: () => void,
 ): Promise<void> {
+  stopListWatch();
   debugAdapter.stop();
   await parts.git.close();
   await parts.language.close();
@@ -196,6 +201,17 @@ const packagesOf = (options: WorkspaceOptions, settings: SettingsService) =>
     timeoutMs: options.installTimeoutMs ?? 600_000,
   });
 
+/** The watch on the notebook list for files created, deleted or renamed outside nimbo (listWatch.ts). */
+const listWatchOf = (
+  options: WorkspaceOptions,
+  notebooks: Notebooks,
+  announce: () => Promise<void>,
+): (() => void) =>
+  watchNotebookList({
+    ...{ root: options.facts.root, openRefs: () => notebooks.openRefs(), announce },
+    ...{ log: options.log, debounceMs: 300, everyMs: options.listCheckMs ?? 5000 },
+  });
+
 /** Opens the workspace's services (the settings files are read and watched from here on). */
 export async function openWorkspace(options: WorkspaceOptions): Promise<Workspace> {
   const { facts, jsnb, bus, log } = options;
@@ -206,14 +222,17 @@ export async function openWorkspace(options: WorkspaceOptions): Promise<Workspac
   const secrets = createSecrets(join(facts.root, ".env"), onEnvWrite);
   const realm = { redact: options.redact, publicEnv: secrets.publicEnv };
   const debugAdapter = createAdapter({ log });
+  const listChanged = announcer(facts.root, () => notebooks.openRefs(), bus, log); // read once created
   const notebooks = createNotebooks({
     debugAdapter,
     ...{ root: facts.root, logsDir: jsnb.logs, bus, log, ids: options.ids, now: options.now },
     ...{ settings: settings.current, port: options.port, kernelEntry: options.kernelEntry },
     ...{ engines, sqlDirectory: jsnb.sqlCache, realm, requestTimeoutMs: requestTimeoutOf(options) },
-    listChanged: announcer(facts.root, () => notebooks.openRefs(), bus, log), // called once created
+    listChanged,
+    recoveryDir: jsnb.recovery,
     ...(options.moveCheckMs === undefined ? {} : { moveCheckMs: options.moveCheckMs }),
   });
+  const stopListWatch = listWatchOf(options, notebooks, listChanged);
   const nodeVersion = kernelNodeVersion(settings);
   const language = languageOf(options, { settings, secrets, notebooks });
   envWrites.language = language.envChanged;
@@ -229,7 +248,7 @@ export async function openWorkspace(options: WorkspaceOptions): Promise<Workspac
     git: createGitService({ root: facts.root, bus, notebooks, log }),
     info: () => infoOf(facts, notebooks, nodeVersion),
     clearCache: serialClear(jsnb.npmCache, log),
-    close: () => closeAll(workspace, debugAdapter),
+    close: () => closeAll(workspace, debugAdapter, stopListWatch),
   };
   return workspace;
 }

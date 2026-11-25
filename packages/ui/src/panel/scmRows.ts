@@ -63,14 +63,17 @@ export function rowOf(change: GitChange): ScmRow {
 }
 
 /** The diff tab's title, as VS Code's: `demo.jsnb (Working Tree)`, `(Index)` for a staged change, `(1a2b3c4)` for a
- * commit's change, `(1a2b3c4 ↔ Working Tree)` for a commit against the working tree. */
+ * commit's change, `(1a2b3c4 ↔ Working Tree)` for a commit against the working tree, `(On Disk ↔ Yours)` for an open
+ * notebook's file against the page's state. */
 export function diffTitle(target: {
   readonly path: string;
   readonly staged: boolean;
   readonly commit?: string;
   readonly base?: string;
+  readonly disk?: boolean;
 }): string {
   const name = target.path.slice(target.path.lastIndexOf("/") + 1);
+  if (target.disk === true) return `${name} (On Disk ↔ Yours)`;
   if (target.commit !== undefined) return `${name} (${target.commit.slice(0, 7)})`;
   if (target.base !== undefined) return `${name} (${target.base.slice(0, 7)} ↔ Working Tree)`;
   return `${name} (${target.staged ? "Index" : "Working Tree"})`;

@@ -1,5 +1,6 @@
 // What a generated command prints (03-api §8): its output verbatim as one JSON document under --json, else a reading
-// of it: runs as the page shows them, a cell as a line, anything else as an outline; and exit 1 when a run failed.
+// of it: runs as the page shows them, a cell as a line, a notice after them, anything else as an outline; and exit 1
+// when a run failed.
 import { randomBytes } from "node:crypto";
 
 import { AutoRunReport, Cell, Execution } from "@jsnb/core";
@@ -101,6 +102,12 @@ function cellHead(output: unknown): string {
   return cell?.success === true ? cellLine(cell.data) : "";
 }
 
+/** The output's `notice` (cell.update, cell.run: a source set from the file was replaced), or "" when it has none. */
+function noticeLine(output: unknown): string {
+  const notice = isRecord(output) ? output.notice : undefined;
+  return typeof notice === "string" ? `notice: ${notice}\n` : "";
+}
+
 /** The commands that run cells (03-api §8: exit 1 is for them): cell.add runs only with `run`, else it has no run. */
 const runCommands = new Set(["cell.run", "notebook.run", "cell.add"]);
 
@@ -142,6 +149,7 @@ function readable(name: string, output: unknown): string {
     ...runs.map((run) => executionText(run, limit)),
     autoRunText(output, limit),
     ...(notes ?? []),
+    noticeLine(output),
   ].join("");
   return text === "" ? "Done.\n" : text; // notebook.run of a selection with no cell in it
 }
