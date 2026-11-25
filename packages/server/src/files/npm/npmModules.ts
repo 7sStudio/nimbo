@@ -20,10 +20,10 @@ import type { Resolver } from "./bareImport.js";
 import type { Built } from "./bundle.js";
 import { transformFile } from "./bundle.js";
 import type { BuildQueue, Turns } from "./buildQueue.js";
-import { createBuildQueue, createTurns, defaultConcurrency } from "./buildQueue.js";
+import { BuildTimedOut, createBuildQueue, createTurns, defaultConcurrency } from "./buildQueue.js";
 import type { CachedSpec, NoteLog, Where } from "./cache.js";
 import { cachedBundle, heldBundle } from "./cache.js";
-import { createFailures } from "./groupMemory.js";
+import { createFailures, timedOutMs } from "./groupMemory.js";
 import { createGroups } from "./groups.js";
 import { installedAs, subpathAsWritten } from "./spelling.js";
 import { createPackageIndex } from "./packageIndex.js";
@@ -177,12 +177,11 @@ function standaloneOf(
     try {
       return await builds(`entry:${key}`, build, signal);
     } catch (error) {
-      if (!signal.aborted)
-        await known.failed.add(
-          key,
-          spec,
-          error instanceof Error ? error : new Error(String(error)),
-        );
+      if (!signal.aborted) {
+        const failure = error instanceof Error ? error : new Error(String(error));
+        const forMs = failure instanceof BuildTimedOut ? timedOutMs : Infinity; // a slow moment, tried again soon
+        await known.failed.add(key, spec, failure, forMs);
+      }
       throw error;
     }
   };

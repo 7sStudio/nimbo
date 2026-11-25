@@ -11,7 +11,7 @@ import { BuildTimedOut } from "./buildQueue.js";
 import type { CachedSpec, Where } from "./cache.js";
 import type { Held } from "./groupCache.js";
 import { cacheGroup, cacheUnsplit, heldChunk, heldEntry, heldUnsplit } from "./groupCache.js";
-import { createFailures, createRecent } from "./groupMemory.js";
+import { createFailures, createRecent, timedOutMs } from "./groupMemory.js";
 import { importsHold } from "./importsRecord.js";
 import { identitiesHold, identityOf } from "./inputs.js";
 import type { Group } from "./packageGroup.js";
@@ -23,7 +23,7 @@ import { isLinkedPackage } from "./spec.js";
 type GroupRun =
   | (Extract<Group, { ok: true }> & { readonly cached: boolean })
   | { readonly ok: false }
-  | { readonly failed: string };
+  | { readonly failed: string; readonly timedOut: boolean };
 
 const messageOf = (error: unknown): string =>
   error instanceof Error ? error.message : String(error);
@@ -59,7 +59,9 @@ async function buildGroup(
   const budget = { deadline: Date.now() + context.searchMs, trials: maxTrials };
   try {
     const group = await bundleGroupAround(pkg, where.resolver, { signal, budget });
-    if (!group.ok) return { failed: "a file it reads is not one a page may load" };
+    if (!group.ok) {
+      return { failed: "a file it reads is not one a page may load", timedOut: false };
+    }
     if (group.left.length > 0) {
       where.log.warn(
         { ...fields, left: group.left },
@@ -71,7 +73,8 @@ async function buildGroup(
   } catch (error) {
     // Every request went away: nothing learned. Past the build's limit: the package does not split, as below.
     if (signal.aborted && !(signal.reason instanceof BuildTimedOut)) throw error;
-    return { failed: messageOf(signal.aborted ? signal.reason : error) };
+    // Past the build's limit with no error of esbuild's: a slow machine's verdict, not the package's, kept briefly.
+    return { failed: messageOf(signal.aborted ? signal.reason : error), timedOut: signal.aborted };
   }
 }
 
@@ -133,8 +136,9 @@ function builder(where: Where, queue: BuildQueue<GroupRun>, memory: Memory, sear
           { dir: spec.dir, reason: made.failed },
           "a package's entries are built one by one",
         );
-        await memory.failures.add(spec.dir, spec, new Error(made.failed));
-        await cacheUnsplit(where, spec, made.failed);
+        const error = new Error(made.failed);
+        await memory.failures.add(spec.dir, spec, error, made.timedOut ? timedOutMs : Infinity);
+        if (!made.timedOut) await cacheUnsplit(where, spec, made.failed);
       }
       return undefined;
     }

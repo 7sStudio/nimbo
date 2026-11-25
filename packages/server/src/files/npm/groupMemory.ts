@@ -65,22 +65,29 @@ async function stampOf(spec: CachedSpec, root: string | undefined): Promise<stri
   return `${own}:${String(modules?.mtimeMs)}`;
 }
 
+/** How long a failure that only the time limit caused is kept: a page's burst of requests, not a slow minute's verdict. */
+export const timedOutMs = 60_000;
+
 /**
  * The builds that failed, by key, each with its reason, until the stamp of its package changes; with `root`, also
- * until the workspace's node_modules changes (an install may bring what the build lacked).
+ * until the workspace's node_modules changes (an install may bring what the build lacked). A failure given `forMs`
+ * (one only the time limit caused) is forgotten after that long, so the build is tried again.
  */
 export function createFailures(root?: string) {
-  const failures = new Map<string, { readonly stamp: string; readonly error: Error }>();
+  const failures = new Map<
+    string,
+    { readonly stamp: string; readonly error: Error; readonly until: number }
+  >();
   return {
     get: async (key: string, spec: CachedSpec): Promise<Error | undefined> => {
       const held = failures.get(key);
       if (held === undefined) return undefined;
-      if (held.stamp === (await stampOf(spec, root))) return held.error;
+      if (Date.now() < held.until && held.stamp === (await stampOf(spec, root))) return held.error;
       failures.delete(key);
       return undefined;
     },
-    add: async (key: string, spec: CachedSpec, error: Error): Promise<void> => {
-      failures.set(key, { stamp: await stampOf(spec, root), error });
+    add: async (key: string, spec: CachedSpec, error: Error, forMs = Infinity): Promise<void> => {
+      failures.set(key, { stamp: await stampOf(spec, root), error, until: Date.now() + forMs });
     },
     clear: (): void => {
       failures.clear();

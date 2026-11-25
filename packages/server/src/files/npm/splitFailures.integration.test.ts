@@ -166,3 +166,43 @@ describe("a standalone build that fails, and names that differ by case", () => {
     });
   });
 });
+
+describe("a split build stopped by its time limit alone", () => {
+  it("is not marked in the cache: a later daemon with a normal limit splits the package", async () => {
+    await withWorkspace(async (ws) => {
+      await writeFiles(ws, manyModules(200));
+      const hurried = await modulesOf(ws, { timeoutMs: 20 });
+      await hurried.get("many");
+      await hurried.get("many/m1"); // the same daemon does not try again at once
+      expect([hurried.noted("together"), hurried.noted("one by one")]).toEqual([1, 1]);
+      expect(existsSync(join(hurried.root, ".jsnb/cache/npm/many@1.0.0/unsplit.json"))).toBe(false);
+      const later = await modulesOf(ws);
+      expect(body(await later.get("many"))).toContain("/npm/many/.chunks/");
+      expect(later.noted("together")).toBe(1);
+    });
+  });
+});
+
+describe("an export key past a file name's length", () => {
+  it("is cached under a hashed name, read back by a later daemon", async () => {
+    await withWorkspace(async (ws) => {
+      const key = `x${"y".repeat(300)}`;
+      await writeFiles(ws, {
+        "node_modules/long/package.json": `${JSON.stringify({
+          name: "long",
+          version: "1.0.0",
+          type: "module",
+          exports: { ".": "./index.js", [`./${key}`]: "./other.js" },
+        })}\n`,
+        "node_modules/long/index.js": 'export const which = "main";\n',
+        "node_modules/long/other.js": 'export const which = "the long one";\n',
+      });
+      const modules = await modulesOf(ws);
+      expect(body(await modules.get(`long/${key}`))).toContain("the long one");
+      const later = await modulesOf(ws);
+      expect(body(await later.get(`long/${key}`))).toContain("the long one");
+      expect(body(await later.get("long"))).toContain('"main"');
+      expect(later.builds()).toBe(0);
+    });
+  });
+});

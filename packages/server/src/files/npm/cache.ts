@@ -10,6 +10,7 @@
 // file a later request serves. A bundle that cannot be cached is still served. Its files are read non-blocking and as
 // regular files only, and nothing in the cache is read, written or removed through a symbolic link
 // (cacheFiles.ts): a link planted in an entry's place is removed and the entry built again.
+import { createHash } from "node:crypto";
 import { lstat, rm } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -152,8 +153,16 @@ export const metaText = (name: string, version: string): string =>
  * with `@`, so the main's never meets one (a package exporting both `.` and `./index`), and names differing only by
  * case stay apart on a file system that ignores it.
  */
-export const bundleName = (subpath: string): string =>
-  subpath === "" ? "index.js" : `@${caseless(encodeURIComponent(subpath))}.js`;
+export function bundleName(subpath: string): string {
+  if (subpath === "") return "index.js";
+  const name = `@${caseless(encodeURIComponent(subpath))}.js`;
+  // `#` is escaped in every other name: a hashed one, for a key past a file name's 255 bytes, meets none of them.
+  if (Buffer.byteLength(name) <= maxNameBytes) return name;
+  return `@#${createHash("sha256").update(subpath).digest("hex")}.js`;
+}
+
+/** The longest name a bundle's file takes as it is, its records' suffix (`.imports.json`) left room. */
+const maxNameBytes = 200;
 
 /** `name` with each capital written `^` and its small letter (`^` is escaped by then): one file whatever case rules. */
 const caseless = (name: string): string =>
