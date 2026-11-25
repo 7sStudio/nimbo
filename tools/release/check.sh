@@ -3,10 +3,11 @@
 # ~/.local/bin and the system folders on PATH, so nothing of the machine's own Node, pnpm or config is used:
 #
 #   tools/release/check.sh smoke <release root> <version>       install with curl | sh from a local server, doctor,
-#                                                                 a notebook run headless, the installer's flags and
-#                                                                 refusals (bad versions, a forged manifest, a wrong
-#                                                                 checksum, a second installer at once), the MCP
-#                                                                 bundle without and with nimbo, uninstall
+#                                                                 a notebook run headless, a client cell in the
+#                                                                 headless realm (where a Chrome is), the installer's
+#                                                                 flags and refusals (bad versions, a forged manifest,
+#                                                                 a wrong checksum, a second installer at once), the
+#                                                                 MCP bundle without and with nimbo, uninstall
 #   tools/release/check.sh full <release root> <v1> <v2>         the whole flow: idempotent installs, a notebook
 #                                                                 package, SQL without and with DuckDB (command and page),
 #                                                                 the page with Playwright, upgrade under a running daemon,
@@ -119,6 +120,20 @@ n notebook create --path smoke.jsnb >/dev/null
 n cell add -n smoke.jsnb --type server --id c_a1b2c3 --source 'const answer = 6 * 7; answer' --run >/dev/null
 n outputs c_a1b2c3 -n smoke.jsnb --format json | tee "$work/answer"
 grep -q 42 "$work/answer" || fail "the server cell did not answer 42"
+
+say "a client cell in the headless realm, where this machine has Chrome, Chromium or Edge"
+n config set realm.headless true >/dev/null
+client='display.div().textContent = "headless"; 6 * 7'
+if n cell add -n smoke.jsnb --type client --id c_d4e5f6 --source "$client" --run >"$work/client" 2>&1; then
+  grep -q 42 "$work/client" || fail "the headless client cell did not answer 42"
+  n cell snapshot -n smoke.jsnb --cell c_d4e5f6 --image | tee "$work/shot"
+  grep -q "image: a" "$work/shot" || fail "the headless snapshot has no image"
+elif grep -qE "no Chrome, Chromium or Edge was found|cannot start with its sandbox" "$work/client"; then
+  echo "skipped: $(head -1 "$work/client")"
+else
+  cat "$work/client"
+  fail "the headless client cell did not run"
+fi
 
 say "the MCP bundle with nimbo installed"
 bundle_check installed "$v1"
