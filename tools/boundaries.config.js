@@ -1,7 +1,7 @@
 // The per-package layer table of 08-code-standards §4 as eslint-plugin-boundaries elements and policies.
 // Elements are folders named `<package>:<layer>`; a package's own src root (index.ts, main.ts) is `<package>:root`.
 // Imports inside one layer, to unknown local files (lib/, fixtures) and to packages are not this file's business:
-// dependency-cruiser owns the package graph. Over 150 lines because every table row is quoted next to its rule.
+// dependency-cruiser owns the package graph.
 // It also holds output-view's model rule (`outputViewModel`): 08 §4's "`model/` has no DOM and no Vue" as imports.
 
 import { builtinModules } from "node:module";

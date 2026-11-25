@@ -42,8 +42,12 @@ export async function buildHeadlessPage(dir: string): Promise<void> {
   await build({
     entryPoints: [headlessEntry],
     outfile: join(dir, "headless-page.js"),
-    ...{ bundle: true, format: "esm", platform: "browser", target: "es2024" },
-    ...{ conditions: ["development"], logLevel: "silent" },
+    bundle: true,
+    format: "esm",
+    platform: "browser",
+    target: "es2024",
+    conditions: ["development"],
+    logLevel: "silent",
   });
   await writeFile(join(dir, "headless.html"), headlessHtml);
 }
@@ -54,8 +58,12 @@ export async function buildRealmPage(dir: string): Promise<void> {
   await build({
     entryPoints: [pageEntry],
     outfile: join(dir, "realm-page.js"),
-    ...{ bundle: true, format: "esm", platform: "browser", target: "es2024" },
-    ...{ conditions: ["development"], logLevel: "silent" },
+    bundle: true,
+    format: "esm",
+    platform: "browser",
+    target: "es2024",
+    conditions: ["development"],
+    logLevel: "silent",
   });
   await writeFile(join(dir, "index.html"), html);
 }
