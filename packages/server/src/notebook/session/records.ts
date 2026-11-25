@@ -34,6 +34,8 @@ export type ExecutionRecord = {
   stoppedBy?: CellId;
   /** The connection that asked for the run (cell.run, notebook.run, cell.add with run). */
   readonly requestedBy?: Execution["requestedBy"];
+  /** execution.autoRunDependents started it after that run (04-kernel §4.1). */
+  readonly autoRun?: Execution["autoRun"];
   defines: readonly string[];
   /** Read from the file's saved outputs: a run of an earlier session. */
   readonly restored?: true;
@@ -53,6 +55,9 @@ export type CellRecord = {
   last: ExecutionRecord | undefined;
   /** The finished run before `last` (cell.compare's "previous run"); a saved run counts. */
   previous?: ExecutionRecord | undefined;
+  /** The code and type of the cell's last run that started in its realm, forgotten when the realm ends: what
+   * execution.autoRunDependents may run again (04-kernel §4.1). */
+  ran?: { readonly source: string; readonly type: CellType } | undefined;
 };
 
 export const terminalStatuses: ReadonlySet<ExecStatus> = new Set(["ok", "error", "interrupted"]);
@@ -97,6 +102,7 @@ export function toExecution(execution: ExecutionRecord): Execution {
     ...(execution.error === undefined ? {} : { error: execution.error }),
     ...(execution.stoppedBy === undefined ? {} : { stoppedBy: execution.stoppedBy }),
     ...(execution.requestedBy === undefined ? {} : { requestedBy: execution.requestedBy }),
+    ...(execution.autoRun === undefined ? {} : { autoRun: execution.autoRun }),
     ...(execution.restored ? { restored: true as const } : {}),
   };
 }

@@ -56,6 +56,7 @@ export const cellMetaKeys = [
   "outputQuery",
   "outputHeight",
   "outputColumns",
+  "manual",
   "lastEdit",
 ] as const;
 
@@ -83,6 +84,8 @@ export const editableMetaShape = {
       order: z.array(z.string()).readonly().optional(),
     })
     .readonly(),
+  /** Never run by execution.autoRunDependents: it runs only when asked, and its dependents wait for it (04 §4.1). */
+  manual: z.boolean(),
 };
 
 /** The shape behind CellMeta (the API's); the file format builds its unknown-keys-kept variant on fileCellMetaShape. */
@@ -96,6 +99,7 @@ export const cellMetaShape = {
   outputQuery: editableMetaShape.outputQuery.optional(),
   outputHeight: editableMetaShape.outputHeight.optional(),
   outputColumns: editableMetaShape.outputColumns.optional(),
+  manual: editableMetaShape.manual.optional(),
   lastEdit: EditInfo.optional(),
 };
 

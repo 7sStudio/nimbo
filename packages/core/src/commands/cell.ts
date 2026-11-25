@@ -5,7 +5,7 @@ import { z } from "zod";
 import { BindingValue } from "../model/binding.js";
 import { Cell, CellType, editableMetaShape, QueryMode } from "../model/cell.js";
 import { Chip } from "../model/chip.js";
-import { Execution } from "../model/execution.js";
+import { AutoRunReport, Execution } from "../model/execution.js";
 import { CellId, ExecutionId, NotebookRef } from "../model/ids.js";
 import { defineCommand } from "./define.js";
 import { RunComparisonSchema } from "../model/runComparison.js";
@@ -47,6 +47,7 @@ const editableMeta = z.strictObject({
   outputQuery: editableMetaShape.outputQuery.nullable().optional(),
   outputHeight: editableMetaShape.outputHeight.nullable().optional(),
   outputColumns: editableMetaShape.outputColumns.nullable().optional(),
+  manual: editableMetaShape.manual.nullable().optional(),
 });
 
 export const cellUpdate = defineCommand({
@@ -102,7 +103,7 @@ export const cellDelete = defineCommand({
 export const cellRun = defineCommand({
   name: "cell.run",
   description:
-    "Run one cell. With wait, returns when the run reaches a terminal status, timeoutMs elapses, or the kernel pauses in the debugger (then `paused` says where; go on with debug.resume).",
+    "Run one cell. With wait, returns when the run reaches a terminal status, timeoutMs elapses, or the kernel pauses in the debugger (then `paused` says where; go on with debug.resume). With execution.autoRunDependents on, `autoRun` lists the stale dependents the run started; waitAutoRun waits for them too, in the same timeoutMs.",
   input: z.object({
     ...ref,
     source: z.string().optional(),
@@ -110,8 +111,9 @@ export const cellRun = defineCommand({
     base: z.string().min(1).optional(),
     wait: z.boolean().default(true),
     timeoutMs: z.number().int().positive().default(30_000),
+    waitAutoRun: z.boolean().default(true),
   }),
-  output: z.object({ execution: Execution }),
+  output: z.object({ execution: Execution, autoRun: AutoRunReport.optional() }),
   tags: { mutating: true },
 });
 

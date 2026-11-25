@@ -39,7 +39,7 @@ Readable and diffable (JSON, fixed key order, one source line per array element)
 | `cells[].id` | `c_` + 6 lowercase base36, required, unique | 03-api §2; generated from `crypto.getRandomValues` |
 | `cells[].type` | `"server" \| "client" \| "markdown"` | |
 | `cells[].source` | string[] | one element per line, no `\n` inside an element, joined with `\n` on load; `[]` is empty, `[""]` is one empty line |
-| `cells[].meta` | object, optional, omitted when empty | the keys of `Cell.meta` (03-api §5) in this order: `title`, `showBindings`, `collapsed`, `headingCollapsed`, `outputsHidden`, `outputView`, `outputQuery`, `outputHeight`, `outputColumns`, `lastEdit`. `lastEdit.review` is stored as `{ previousSource, previousType }`, without the API's derived `lines`. `outputColumns` is `{ hidden?, order? }`, column keys as strings |
+| `cells[].meta` | object, optional, omitted when empty | the keys of `Cell.meta` (03-api §5) in this order: `title`, `showBindings`, `collapsed`, `headingCollapsed`, `outputsHidden`, `outputView`, `outputQuery`, `outputHeight`, `outputColumns`, `manual`, `lastEdit`. `lastEdit.review` is stored as `{ previousSource, previousType }`, without the API's derived `lines`. `outputColumns` is `{ hidden?, order? }`, column keys as strings |
 | `outputs` | object, optional | saved runs by cell id, in cell order (below) |
 | `meta` (notebook level) | reserved | not written |
 

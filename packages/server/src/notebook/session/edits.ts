@@ -98,6 +98,7 @@ export function updateCell(context: SessionContext, input: UpdateCell, editor: E
   if (code) {
     const old = afterEdit(before, context.cells.stale(), record.id);
     restale(context, afterEdit(context.cells.graph(), old, record.id));
+    context.hooks.edited(record.id, before);
   }
   context.autosave.touched();
   return record;
@@ -138,6 +139,7 @@ export function moveCell(
 
 export function deleteCell(context: SessionContext, cell: CellId): void {
   const before = context.cells.graph();
+  context.hooks.deleting(cell);
   context.cells.remove(cell);
   context.emit("cell.deleted", { cell });
   restale(context, afterDelete(before, context.cells.stale(), cell));

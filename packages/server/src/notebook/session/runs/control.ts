@@ -2,13 +2,14 @@
 // terminal status or at `timeoutMs` (`timedOut: true`, the run going on; a timeout is not an error); notebook.run
 // queues the selected cells in notebook order (markdown left out, client cells with no page listed as skipped) and
 // stops after an error when asked. A client cell run with no page is the call failure REALM_NOT_ATTACHED.
-import type { CellId, DebugPause, Execution, Selection } from "@jsnb/core";
+import type { AutoRunReport, CellId, DebugPause, Execution, Selection } from "@jsnb/core";
 import { RealmNotAttached, resolveSelection } from "@jsnb/core";
 
 import type { SessionContext } from "../context.js";
 import type { Editor } from "../provenance.js";
 import type { ExecutionRecord } from "../records.js";
 import { terminalStatuses, toExecution } from "../records.js";
+import type { AutoRun } from "./autoRun.js";
 import { createExecution } from "./executions.js";
 import type { Batch, RunQueue } from "./queue.js";
 import { queuedRun } from "./queue.js";
@@ -19,10 +20,13 @@ export type Waiting = {
   readonly timeoutMs: number;
   /** The connection that asked for the run, recorded on its execution. */
   readonly by?: Editor;
+  /** cell.run: the answer waits for the dependents the run started too (execution.autoRunDependents). */
+  readonly waitAutoRun?: boolean;
 };
 
 export type Runs = {
   readonly queue: RunQueue;
+  readonly autoRun: AutoRun;
   /** Whether a page is attached to run client cells. */
   readonly realmAttached: () => boolean;
 };
@@ -83,28 +87,46 @@ function enqueue(
   context: SessionContext,
   runs: Runs,
   cell: CellId,
-  options: { readonly batch?: Batch | undefined; readonly by?: Editor | undefined } = {},
+  options: {
+    readonly batch?: Batch | undefined;
+    readonly by?: Editor | undefined;
+    readonly trigger?: boolean;
+  } = {},
 ) {
   const record = context.cells.require(cell);
-  const execution = createExecution(context, cell, record.analysis.defines, requester(options.by));
-  const run = queuedRun(execution, options.batch);
+  const execution = createExecution(context, cell, record.analysis.defines, {
+    requestedBy: requester(options.by),
+  });
+  const run = queuedRun(execution, options.batch, options.trigger);
   runs.queue.push(run);
   return run;
 }
 
-/** cell.run (after the session applied `source`, when given). */
+export type CellRunAnswer = { readonly execution: Execution; readonly autoRun?: AutoRunReport };
+
+/** cell.run (after the session applied `source`, when given); `trigger` false for a run that starts no cascade
+ * (cell.add's). */
 export async function runCell(
   context: SessionContext,
   runs: Runs,
   cell: CellId,
-  waiting: Waiting,
-): Promise<Execution> {
+  waiting: Waiting & { readonly trigger?: boolean },
+): Promise<CellRunAnswer> {
   const record = context.cells.require(cell);
   if (record.type === "client" && !runs.realmAttached())
     throw new RealmNotAttached({ notebook: context.ref });
-  const run = enqueue(context, runs, cell, { by: waiting.by });
-  if (!waiting.wait) return toExecution(run.execution);
-  return answer(run.execution, await waited(context, run.done, waiting.timeoutMs));
+  const run = enqueue(context, runs, cell, { by: waiting.by, trigger: waiting.trigger ?? true });
+  if (!waiting.wait) return { execution: toExecution(run.execution) };
+  const all =
+    waiting.waitAutoRun === true ? run.done.then(() => runs.autoRun.ticket(run)?.done) : run.done;
+  const wait = await waited(context, all, waiting.timeoutMs);
+  const ticket = runs.autoRun.ticket(run);
+  return {
+    execution: answer(run.execution, wait),
+    ...(ticket === undefined
+      ? {}
+      : { autoRun: runs.autoRun.report(ticket, (execution) => answer(execution, wait)) }),
+  };
 }
 
 export type NotebookRun = Waiting & { readonly select: Selection; readonly stopOnError: boolean };

@@ -15,8 +15,8 @@ import type { useSettingsStore } from "../store/settings.js";
 import type { useUiStore } from "../store/ui.js";
 import type { CardPage } from "./card.js";
 import { useStates } from "./cardStates.js";
-import type { CellModel } from "./models.js";
-import { editedSince, routesOf, runFact, staleWhy } from "./models.js";
+import type { CellModel, RunContext } from "./models.js";
+import { autoRunOf, editedSince, routesOf, runFact, staleWhy } from "./models.js";
 import { aboutOf, nameOf, nameOptionsOf } from "./names.js";
 import type { OutputHost } from "./outputHost.js";
 import { capRem } from "./resultLines.js";
@@ -85,6 +85,19 @@ function shownOf({ store, ui, containers }: Stores, cell: Cell, about: string) {
   };
 }
 
+/** The last run's fact, and the cell's part in an auto-run cascade. */
+function runParts(
+  store: Stores["store"],
+  cell: Cell,
+  context: RunContext & { readonly numberOf: (cell: string) => number },
+): Pick<CellModel, "run" | "autoRun"> {
+  const last = store.lastExecutionOf(cell.id);
+  return {
+    run: runFact(cell, last, context),
+    autoRun: autoRunOf(cell.id, store.mirror.autoRun, last, context.numberOf),
+  };
+}
+
 /** One CellModel per cell, in order. */
 function useModels(stores: Stores, { numberOf, off }: Numbers) {
   const { store, ui } = stores;
@@ -120,7 +133,7 @@ function useModels(stores: Stores, { numberOf, off }: Numbers) {
         staleWhy: cell.stale ? staleWhy(entry, store.mirror.graph, numberOf) : null,
         editedSince: editedSince(cell),
         routes: routesOf(cell.id, store.mirror.routes),
-        run: runFact(cell, store.lastExecutionOf(cell.id), { ...clock(cell), numberOf }),
+        ...runParts(store, cell, { ...clock(cell), numberOf }),
         meta: cell.meta,
         ...shownOf(stores, cell, about),
       };

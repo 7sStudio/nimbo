@@ -42,6 +42,8 @@ export type Mirror = {
   /** The last edit made to the file outside nimbo that the daemon merged, or found unreadable or in conflict
    * (notebook.reconciled, 07-file-format §5), with its event's seq; null until one comes. */
   readonly external: (EventOf<"notebook.reconciled">["data"] & { readonly seq: number }) | null;
+  /** execution.autoRunDependents at work (cells.autoRun): the dependent running and those waiting, in order. */
+  readonly autoRun: { readonly running: CellId | null; readonly pending: readonly CellId[] };
 };
 
 export const emptyMirror: Mirror = {
@@ -55,6 +57,7 @@ export const emptyMirror: Mirror = {
   closed: false,
   diagnostics: new Map(),
   external: null,
+  autoRun: { running: null, pending: [] },
 };
 
 /** The mirror after a (re)hydrate: the full state replaces the cells; executions, graph and routes of cells that still
@@ -72,6 +75,7 @@ export function hydrated(mirror: Mirror, state: NotebookState, seq: number): Mir
     saveState: state.dirty ? "writing" : "saved",
     saveError: null,
     closed: false,
+    autoRun: state.autoRun ?? { running: null, pending: [] },
   };
 }
 

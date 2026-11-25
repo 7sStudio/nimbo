@@ -23,9 +23,9 @@ export const settingsMeta: Readonly<Record<SettingsKey, SettingMeta>> = {
     "Bridge byte limit",
     "The largest Uint8Array or Buffer that crosses the bridge whole, in either direction.",
   ),
-  "execution.autoRunDependents": planned(
+  "execution.autoRunDependents": stable(
     "Auto-run dependents",
-    "Re-run dependent cells after a run. Planned; not offered in Settings until it ships.",
+    "After a cell runs well, run its stale dependents in order; cells marked manual and their dependents wait.",
   ),
   "files.autoSave": stable(
     "Auto save",

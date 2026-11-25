@@ -11,6 +11,7 @@ import {
   ChevronsUp,
   CircleSlash,
   Copy,
+  Hand,
   ListTree,
   Monitor,
   Pencil,
@@ -98,28 +99,43 @@ const runItems = (code: boolean): (MenuItem | false)[] => [
   code && item("Run Cell and Below", "ui.run.below", undefined, { icon: ChevronsDown }),
 ];
 
+/** A code cell's view items: its values, its fold, the inspector and auto-run. */
+const viewItems = (state: {
+  values: boolean;
+  collapsed: boolean;
+  pinned?: boolean;
+  manual?: boolean;
+}): MenuItem[] => [
+  item(state.values ? "Hide Values" : "Show Values", "ui.cell.toggleValues", undefined, {
+    icon: ListTree,
+  }),
+  item(state.collapsed ? "Unfold" : "Fold", "ui.cell.toggleCollapse", undefined, {
+    icon: ChevronsDownUp,
+  }),
+  item(state.pinned === true ? "Unpin" : "Pin to Inspector", "ui.cell.pin", undefined, {
+    icon: Pin,
+  }),
+  item(
+    state.manual === true ? "Allow Auto-Run" : "Run Manually Only",
+    "ui.cell.toggleManual",
+    undefined,
+    {
+      icon: Hand,
+    },
+  ),
+];
+
 /** The cell menu of a cell of `type` (a markdown cell has no values view and nothing that depends on it). */
 export function cellMenuItems(
   type: CellType,
-  state: { values: boolean; collapsed: boolean; pinned?: boolean },
+  state: { values: boolean; collapsed: boolean; pinned?: boolean; manual?: boolean },
 ) {
   const code = type !== "markdown";
   const items: (MenuItem | false)[] = [
     ...runItems(code),
     separator,
     { kind: "sub", label: "Change Type", icon: Shapes, items: typeItems(type) },
-    code &&
-      item(state.values ? "Hide Values" : "Show Values", "ui.cell.toggleValues", undefined, {
-        icon: ListTree,
-      }),
-    code &&
-      item(state.collapsed ? "Unfold" : "Fold", "ui.cell.toggleCollapse", undefined, {
-        icon: ChevronsDownUp,
-      }),
-    code &&
-      item(state.pinned === true ? "Unpin" : "Pin to Inspector", "ui.cell.pin", undefined, {
-        icon: Pin,
-      }),
+    ...(code ? viewItems(state) : []),
     ...(code
       ? [
           item("Compare with Previous Run", "ui.cell.compare", undefined, { icon: GitCompare }),

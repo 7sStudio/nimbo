@@ -41,7 +41,7 @@ export const externalState = (): ExternalState => ({
 
 export type ExternalOutcome = "same" | "resumed" | "merged" | "conflict" | "unreadable" | "missing";
 
-export const documentCell = ({ id, type, source, meta, extra }: CellRecord): DocumentCell => ({
+const documentCell = ({ id, type, source, meta, extra }: CellRecord): DocumentCell => ({
   id,
   type,
   source,
