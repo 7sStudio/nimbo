@@ -30,8 +30,9 @@ export type AutoRun = {
   readonly ended: (run: QueuedRun) => void;
   /** The queue has nothing to run: the next dependent, if any. */
   readonly idle: () => void;
-  /** A cell's code changed: it leaves the cascade, and so does what depends on it. */
-  readonly edited: (cell: CellId) => void;
+  /** A cell's code or type changed (`before`, the graph before it): it leaves the cascade, and what depends on it
+   * waits. */
+  readonly edited: (cell: CellId, before: Graph) => void;
   /** Interrupt, restart, close or the setting turned off: every dependent still waiting stays stale. */
   readonly stop: () => void;
   /** The ticket a cell.run's run got, once it ended well with the setting on. */
@@ -320,13 +321,24 @@ function ended(state: State, run: QueuedRun): void {
   if (run.trigger === true && status === "ok" && settingOn(state)) plan(state, run);
 }
 
-function deleting(state: State, cell: CellId): void {
-  const entry = state.pending.get(cell);
-  if (!entry) return;
-  state.pending.delete(cell);
-  skip(cell, entry, "deleted");
-  for (const id of dependentsOf(state.context.cells.graph(), cell))
+/** The waiting dependents of `cell` in `graph` (the graph before a change that may cut the edges) wait on it. */
+function orphan(state: State, graph: Graph, cell: CellId): void {
+  for (const id of dependentsOf(graph, cell))
     if (state.pending.has(id) && !state.orphans.has(id)) state.orphans.set(id, cell);
+}
+
+/** A cell leaving the cascade by `reason` while waiting or running: what depends on it waits on it. */
+function leaves(state: State, graph: Graph, cell: CellId, reason: "deleted" | "edited"): void {
+  const running = state.running?.run.execution.cell === cell;
+  const entry = state.pending.get(cell);
+  if (!running && !entry) return;
+  if (state.running && running) state.running.edited = true;
+  if (entry) {
+    state.pending.delete(cell);
+    skip(cell, entry, reason);
+  }
+  state.held.add(cell);
+  orphan(state, graph, cell);
   show(state);
 }
 
@@ -334,16 +346,6 @@ function realmEnded(state: State, realm: "server" | "client"): void {
   for (const record of state.context.cells.list())
     if (record.type === realm) record.ran = undefined;
   if (state.pending.size > 0) stop(state);
-}
-
-function edited(state: State, cell: CellId): void {
-  if (state.running?.run.execution.cell === cell) state.running.edited = true;
-  const entry = state.pending.get(cell);
-  if (!entry) return;
-  state.pending.delete(cell);
-  skip(cell, entry, "edited");
-  state.held.add(cell);
-  show(state);
 }
 
 const newState = (
@@ -378,15 +380,15 @@ export function createAutoRun(
     idle: () => {
       idle(state);
     },
-    edited: (cell) => {
-      edited(state, cell);
+    edited: (cell, before) => {
+      leaves(state, before, cell, "edited");
     },
     stop: () => {
       stop(state);
     },
     ticket: (run) => state.tickets.get(run),
     deleting: (cell) => {
-      deleting(state, cell);
+      leaves(state, context.cells.graph(), cell, "deleted");
     },
     realmEnded: (realm) => {
       realmEnded(state, realm);

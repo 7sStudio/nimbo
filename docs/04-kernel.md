@@ -185,8 +185,9 @@ With `execution.autoRunDependents` on (03-api §4.10; off by default), a `cell.r
 | Cycles | the dependents in a cycle with each other or with the cell that ran are left alone, whichever cell of the cycle runs; what depends on them is held back. |
 | Held back | a dependent of a cell that failed, was interrupted or was left alone (`upstream`, with `by`); a failure stops its own descendants only. |
 | Precedence | the next dependent is queued only when the queue is empty, so every run anyone asks for meanwhile (a cell, Run All) goes first; only the dependent already running is waited for. |
-| Edit | a waiting dependent whose code or type changes leaves the cascade (`edited`) with what depends on it; one already running finishes with the code it started with, and what depends on it is held back. |
+| Edit, delete, move | a waiting dependent whose code or type changes leaves the cascade (`edited`), one deleted leaves it (`deleted`), and what depends on either is held back and stays stale; the same holds for the dependent running then, which finishes with the code it started with (a delete interrupts it). A move changes nothing. |
 | Stop | `kernel.interrupt`, `kernel.restart`, the kernel dying, a reset of the page's realm, closing the notebook and turning the setting off end the cascade; what is left stays stale (`stopped`). A cascade never starts a kernel. |
+| Page reload | not a reset of the client realm: a client cell that ran before the reload still counts as run. |
 | Debugging | a dependent with a breakpoint pauses as any run; no dependent starts while the kernel is paused. |
 
 A dependent that registers routes, timers or listeners registers them again on each run it gets, its previous run's disposers running first (§7), as any re-run does.

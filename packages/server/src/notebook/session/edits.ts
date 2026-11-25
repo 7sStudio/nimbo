@@ -96,7 +96,7 @@ export function updateCell(context: SessionContext, input: UpdateCell, editor: E
   if (code) {
     const old = afterEdit(before, context.cells.stale(), record.id);
     restale(context, afterEdit(context.cells.graph(), old, record.id));
-    context.hooks.edited(record.id);
+    context.hooks.edited(record.id, before);
   }
   context.autosave.touched();
   return record;

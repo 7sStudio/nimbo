@@ -302,3 +302,73 @@ describe("execution.autoRunDependents", () => {
     });
   });
 });
+
+type Running = {
+  readonly daemon: Daemon;
+  readonly notebook: string;
+  readonly s: string;
+  readonly sd: string;
+};
+
+/** a, then s (slow once a > 1) and sd = s + 1, all run; a's run with `let a = 2`, `change` made while s runs. */
+async function changedWhileRunning(change: (world: Running) => Promise<unknown>) {
+  return withDaemon(async (daemon) => {
+    const book = await createNotebook(daemon);
+    const { notebook } = book;
+    const [a, s, sd] = await ranCells(daemon, book, [
+      "let a = 1",
+      "await new Promise((r) => setTimeout(r, a > 1 ? 800 : 0))\nconst s = a * 100",
+      "const sd = s + 1",
+    ]);
+    await on(daemon);
+    const world = { daemon, notebook, s: s ?? "", sd: sd ?? "" };
+    const answer = daemon.client.cell.run({ notebook, cell: a ?? "", source: "let a = 2" });
+    await daemon.events.until("cells.autoRun", (e) => e.data.running === s);
+    await change(world);
+    const ran = await answer;
+    const stale = (await daemon.client.notebook.graph({ notebook })).cells.find(
+      (cell) => cell.id === sd,
+    )?.stale;
+    return { ...world, ran, stale };
+  });
+}
+
+describe("execution.autoRunDependents, the running dependent changed", () => {
+  it("deleted: interrupted, and what depends on it held back and stale", async () => {
+    const { ran, s, sd, stale } = await changedWhileRunning(({ daemon, notebook, s }) =>
+      daemon.client.cell.delete({ notebook, cell: s }),
+    );
+    expect(statuses(ran.autoRun)).toEqual([[s, "interrupted"]]);
+    expect(ran.autoRun?.skipped).toEqual([{ cell: sd, reason: "upstream", by: s }]);
+    expect(stale).toBe(true);
+  });
+
+  it("retyped to markdown: its run ends with its old code, what depends on it held back", async () => {
+    const { ran, s, sd, stale } = await changedWhileRunning(({ daemon, notebook, s }) =>
+      daemon.client.cell.update({ notebook, cell: s, type: "markdown" }),
+    );
+    expect(statuses(ran.autoRun)).toEqual([[s, "ok"]]);
+    expect(ran.autoRun?.skipped).toEqual([{ cell: sd, reason: "upstream", by: s }]);
+    expect(stale).toBe(true);
+  });
+
+  it("edited: what depends on it held back", async () => {
+    const { ran, s, sd, stale } = await changedWhileRunning(({ daemon, notebook, s }) =>
+      daemon.client.cell.update({ notebook, cell: s, source: "const s = a * 1000" }),
+    );
+    expect(statuses(ran.autoRun)).toEqual([[s, "ok"]]);
+    expect(ran.autoRun?.skipped).toEqual([{ cell: sd, reason: "upstream", by: s }]);
+    expect(stale).toBe(true);
+  });
+
+  it("moved: nothing changes", async () => {
+    const { ran, s, sd, stale } = await changedWhileRunning(({ daemon, notebook, s, sd }) =>
+      daemon.client.cell.move({ notebook, cell: s, after: sd }),
+    );
+    expect(statuses(ran.autoRun)).toEqual([
+      [s, "ok"],
+      [sd, "ok"],
+    ]);
+    expect(stale).toBe(false);
+  });
+});

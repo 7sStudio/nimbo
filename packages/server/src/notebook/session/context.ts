@@ -4,6 +4,7 @@ import type {
   CellId,
   DebugPause,
   EventType,
+  Graph,
   IdGenerator,
   NotebookState,
   Settings,
@@ -44,7 +45,9 @@ export type SessionHooks = {
   /** Settles once the debugger saw the kernel resume (a second at most): an interrupt resumes a paused kernel itself. */
   debugResumed: () => Promise<void>;
   /** A cell's code or type changed (an edit, a revert, a reload): it leaves an auto-run cascade (04-kernel §4.1). */
-  edited: (cell: CellId) => void;
+  edited: (cell: CellId, before: Graph) => void;
+  /** Settles once the run of `cell` under way, if any, ended (at once otherwise, after a microtask). */
+  runEnded: (cell: CellId) => Promise<void>;
   /** A cell is about to be deleted: waiting in a cascade, it leaves it, and what depends on it is held back. */
   deleting: (cell: CellId) => void;
   /** The kernel ended (died, restarted, closed) or the page's realm was reset: what ran there is gone. */
