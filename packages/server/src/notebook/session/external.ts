@@ -19,7 +19,6 @@ import { loadDocument, savesOutputs } from "./fileForm.js";
 import type { Editor } from "./provenance.js";
 import { stamped } from "./provenance.js";
 import type { CellRecord } from "./records.js";
-import type { Plan } from "./reload.js";
 import { applyRecords } from "./reload.js";
 
 type Code = { readonly source: string; readonly type: CellType };
@@ -83,11 +82,12 @@ function baseCells(
 function recordsOf(
   context: SessionContext,
   state: ExternalState,
-  merged: { readonly cells: readonly DocumentCell[]; readonly theirs: LoadedDocument },
-  fromTheirs: ReadonlySet<string>,
+  merged: CellMerge,
+  theirs: LoadedDocument,
 ): CellRecord[] {
   const at = context.now().toISOString();
-  const file = new Map(merged.theirs.records.map((record) => [record.id, record]));
+  const fromTheirs = new Set(merged.fromTheirs);
+  const file = new Map(theirs.records.map((record) => [record.id, record]));
   return merged.cells.flatMap((cell): CellRecord[] => {
     const old = context.cells.get(cell.id);
     const before = old ?? { source: "", type: cell.type };
@@ -193,47 +193,6 @@ function holding(
   return "conflict";
 }
 
-/** The session takes the merged cells; ours stay on top of the file's where the merge kept them. */
-function apply(
-  context: SessionContext,
-  state: ExternalState,
-  file: { readonly theirs: LoadedDocument; readonly merged: CellMerge },
-  removing: (cell: CellId) => void,
-) {
-  const { theirs, merged } = file;
-  const next = recordsOf(
-    context,
-    state,
-    { cells: merged.cells, theirs },
-    new Set(merged.fromTheirs),
-  );
-  context.header = theirs.header;
-  for (const cell of merged.removed) state.fromDisk.delete(cell);
-  return applyRecords(context, next, removing);
-}
-
-/** A clean merge: the conflict, if any, is over; the file's text is the base; a write follows when ours stays on top. */
-function merge(
-  context: SessionContext,
-  state: ExternalState,
-  found: { readonly text: string; readonly kept: boolean; readonly done: Plan },
-): void {
-  state.held.clear();
-  state.order = false;
-  const { text, kept, done } = found;
-  context.autosave.reloaded(text, kept);
-  const { changed, added, removed } = done;
-  if (changed.length + added.length + removed.length > 0 || kept)
-    context.emit("notebook.reconciled", {
-      path: context.ref,
-      outcome: "merged",
-      changed: [...changed],
-      added: [...added],
-      removed: [...removed],
-      kept,
-    });
-}
-
 /** Reads the notebook's file and merges what another program changed in it; see the file's head. */
 export async function reconcileExternal(
   context: SessionContext,
@@ -252,13 +211,29 @@ export async function reconcileExternal(
   const held = new Set(state.held.keys());
   const merged = mergeCells(baseDoc, ours, theirs.records.map(documentCell), { held });
   const { dirty } = context.autosave.state();
-  const done = apply(context, state, { theirs, merged }, removing);
+  // the session takes the merged cells; ours stay on top of the file's where the merge kept them
+  const next = recordsOf(context, state, merged, theirs);
+  context.header = theirs.header;
+  for (const cell of merged.removed) state.fromDisk.delete(cell);
+  const { changed, added, removed } = applyRecords(context, next, removing);
   if (merged.conflicts.length > 0)
     return holding(context, state, { merged, base: baseDoc, text: read.text });
-  // ours' edits on top, ids the file lacked, or runs the file keeps that it does not have yet: a write follows
+  // a clean merge: the conflict, if any, is over, and the file's text is the base; ours' edits on top, ids the file
+  // lacked, or runs the file keeps that it does not have yet: a write follows
   const kept =
     merged.keepsOurs || theirs.dirty || (dirty && savesOutputs(context.settings(), theirs.header));
-  merge(context, state, { text: read.text, kept, done });
+  state.held.clear();
+  state.order = false;
+  context.autosave.reloaded(read.text, kept);
+  if (changed.length + added.length + removed.length > 0 || kept)
+    context.emit("notebook.reconciled", {
+      path: context.ref,
+      outcome: "merged",
+      changed: [...changed],
+      added: [...added],
+      removed: [...removed],
+      kept,
+    });
   return "merged";
 }
 
@@ -283,20 +258,12 @@ export function staleEdit(
   if (record === undefined || edit.base === undefined || edit.source === undefined) return false;
   if (edit.source === record.source) return false;
   const now = textHash(record.source);
-  if (edit.base === now || ownText(state, { cell: edit.cell, now, base: edit.base }, editor))
-    return false;
+  // the cell's text is the page's own, and `base` one of the texts its edits went through
+  const own = state.own.get(edit.cell);
+  const ownText = editor.client === "ui" && own?.last === now && own.bases.includes(edit.base);
+  if (edit.base === now || ownText) return false;
   state.held.set(edit.cell, heldBase(state, record, { now, base: edit.base }));
   return true;
-}
-
-/** The cell's text `now` is `editor`'s own, and `base` one of the texts its edits went through. */
-function ownText(
-  state: ExternalState,
-  at: { readonly cell: CellId; readonly now: string; readonly base: string },
-  editor: Editor,
-): boolean {
-  const own = state.own.get(at.cell);
-  return editor.client === "ui" && own?.last === at.now && own.bases.includes(at.base);
 }
 
 /** The base a stale edit's cell is held against: the text before the file's change of it, when the edit was made on

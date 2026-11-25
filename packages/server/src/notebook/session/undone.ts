@@ -49,8 +49,12 @@ export function keepDeleted(context: SessionContext, graph: Graph, record: CellR
   const map = kept(context);
   map.delete(record.id);
   map.set(record.id, {
-    ...{ type: record.type, source: record.source, status: record.status },
-    ...{ last: record.last, previous: record.previous, ran: record.ran },
+    type: record.type,
+    source: record.source,
+    status: record.status,
+    last: record.last,
+    previous: record.previous,
+    ran: record.ran,
     stale: context.cells.stale()[record.id] === true,
     dependencies: dependenciesOf(context, graph, record.id),
   });
@@ -79,12 +83,10 @@ export function restoreDeleted(
   map.delete(record.id);
   if (was?.last === undefined || was.type !== record.type || was.source !== record.source)
     return stale;
-  Object.assign(record, {
-    last: was.last,
-    previous: was.previous,
-    ran: was.ran,
-    status: terminalStatuses.has(was.status) ? was.status : "idle",
-  });
+  record.last = was.last;
+  record.previous = was.previous;
+  record.ran = was.ran;
+  record.status = terminalStatuses.has(was.status) ? was.status : "idle";
   const now = dependenciesOf(context, context.cells.graph(), record.id);
   return { ...stale, [record.id]: was.stale || !sameDependencies(was.dependencies, now) };
 }

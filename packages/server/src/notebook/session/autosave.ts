@@ -10,10 +10,89 @@
 // and a close writes until the file holds the last state.
 import { NotebookConflict } from "@jsnb/core";
 
+import type { Log } from "../../events/log.js";
+import type { FileIdentity } from "../../files/atomicWrite.js";
 import { raced } from "../../files/atomicWrite.js";
 import { hashOf, hashOnDisk, writeNotebook } from "../../files/notebooks/notebookFile.js";
-import type { AutosaveOptions, AutosavePolicy, Autosaver } from "./autosaveApi.js";
 import { SaveFailed, codeOf } from "./saveFailed.js";
+
+type AutosaveEvents = {
+  readonly saved: (savedAt: string) => void;
+  readonly failed: (error: { readonly code: string; readonly message: string }) => void;
+  readonly conflict: (cells?: readonly string[]) => void;
+  readonly conflictEnded?: () => void;
+};
+
+/** VS Code's files.autoSave: after a pause in the changes (capped by a max wait while they go on), at a fixed interval,
+ * when the page loses focus (the page sends notebook.save), or only on an explicit save. */
+export type AutosavePolicy = {
+  readonly mode: "afterDelay" | "onFocusChange" | "interval" | "off";
+  readonly delayMs: number;
+  readonly maxWaitMs: number;
+  readonly intervalMs: number;
+};
+
+export type AutosaveOptions = {
+  /** The notebook's file, read at each write: a followed move changes it (07 §5). */
+  readonly path: string;
+  /** The workspace folder, which a save never recreates. */
+  readonly root: string;
+  /** The notebook ref, as messages name it. */
+  readonly ref: string;
+  /** The file text of the current state (core's deterministic serialize). */
+  readonly text: () => string;
+  readonly now: () => Date;
+  readonly events: AutosaveEvents;
+  readonly log: Log;
+  /** When writes happen (the files.autoSave settings, read at each change); without it, 100 ms after a change. */
+  readonly policy?: () => AutosavePolicy;
+  readonly retryMs?: number;
+  /** Hears the identity of each file a save wrote (the move follower knows the file by it, 07 §5). */
+  readonly written?: (identity: FileIdentity) => void;
+  /** Called inside a write when nothing is at `path`: it may follow the file to where it moved, changing `path`. */
+  readonly missing?: () => Promise<void>;
+  /** Called inside a write when the file changed since the base: merges it into the state (07 §5), `off` when merging
+   * is off, `unreadable` when the file does not parse (the write is a conflict then). */
+  readonly external?: () => Promise<"merged" | "conflict" | "unreadable" | "off">;
+  /** Whether the state needs its recovery copy (a conflict, a failing save, a close that could not write): kept up to
+   * date while needed, removed once the file holds the state; `now` writes it before resolving (a close), and answers
+   * whether it could. */
+  readonly recovery?: (needed: boolean, now?: boolean) => Promise<boolean>;
+};
+
+export type Autosaver = {
+  /** After every mutation: a write as the policy says, unless a conflict suspends autosave. */
+  readonly touched: () => void;
+  /** notebook.save: writes now; NOTEBOOK_CONFLICT on a conflict unless `force`; SaveFailed when the write fails. */
+  readonly save: (force: boolean) => Promise<string>;
+  /** The session took `text` from the file (notebook.reload, a merge): the conflict is over, and the state is a version
+   * of its own; `dirty` when the state still differs from it (a write follows as the policy says, and nothing says
+   * saved). */
+  readonly reloaded: (text: string, dirty: boolean) => void;
+  /** An open conflict's merge took the file's other cells: `text` is the base from now on, the conflict stays. */
+  readonly rebased: (text: string) => void;
+  /**
+   * Runs `work` (notebook.reload's read) in the queue of the file's writes: after the write under
+   * way, before any later one, so a reload never reads a file a write is about to replace.
+   */
+  readonly exclusive: <T>(work: () => Promise<T>) => Promise<T>;
+  /** The text the file held at the last read or write: the base of an external edit's merge (07 §5). */
+  readonly base: () => { readonly text: string | undefined; readonly hash: string | undefined };
+  /** An external edit changed `cells` on both sides: autosave stops until a reload or a forced save. */
+  readonly conflicted: (cells: readonly string[]) => void;
+  readonly state: () => {
+    readonly savedAt: string | null;
+    readonly dirty: boolean;
+    /** Changed by an edit since the load or the last save, not only by the load's normalization (07 §4). */
+    readonly mutated: boolean;
+    readonly conflict: boolean;
+    /** The cells of the open conflict (none for one a save found). */
+    readonly conflictCells: readonly string[];
+  };
+  /** Closing: writes the changes made since the load or the last save, unless a conflict suspends autosave. */
+  readonly flush: () => Promise<void>;
+  readonly close: () => void;
+};
 
 type Outcome = "saved" | "unchanged" | "conflict" | "failed";
 
@@ -82,7 +161,9 @@ function saved(
 ): Outcome {
   const { text, version } = written;
   endConflict(saver);
-  Object.assign(saver, { text, hash: hashOf(text), failure: undefined });
+  saver.text = text;
+  saver.hash = hashOf(text);
+  saver.failure = undefined;
   caughtUp(saver, version);
   saver.savedAt = saver.options.now().toISOString();
   saver.options.events.saved(saver.savedAt);
@@ -151,17 +232,10 @@ async function round(saver: Saver, force: boolean, explicit: boolean): Promise<O
     return "unchanged";
   }
   if (!(await writeFile(saver, text, force))) return "again";
-  return written(saver, { text, version, force });
-}
-
-/** The write is done: saved, unless it was not forced and a conflict began while it wrote (a stale edit), which
- * stays; the file holds the text it took then, the rest is unsaved. */
-function written(
-  saver: Saver,
-  done: { readonly text: string; readonly version: number; readonly force: boolean },
-): Outcome {
-  if (done.force || !saver.conflict) return saved(saver, done);
-  Object.assign(saver, { text: done.text, hash: hashOf(done.text) });
+  if (force || !saver.conflict) return saved(saver, { text, version });
+  // a conflict began while it wrote (a stale edit): it stays; the file holds the text it took then, the rest is unsaved
+  saver.text = text;
+  saver.hash = hashOf(text);
   return "conflict";
 }
 
@@ -272,10 +346,14 @@ async function flush(saver: Saver): Promise<void> {
 /** The state took `text` from the file; saved, as the page will say, only when the file holds the state. */
 function reloaded(saver: Saver, text: string, dirty: boolean): void {
   clearTimeout(saver.timer); // the timer of the changes before it
-  Object.assign(saver, { timer: undefined, burst: undefined });
+  saver.timer = undefined;
+  saver.burst = undefined;
   saver.version += 1; // a write that took its text before the reload clears nothing
   endConflict(saver);
-  Object.assign(saver, { text, hash: hashOf(text), dirty, mutated: dirty });
+  saver.text = text;
+  saver.hash = hashOf(text);
+  saver.dirty = dirty;
+  saver.mutated = dirty;
   if (dirty) {
     schedule(saver);
     return;
@@ -306,14 +384,20 @@ export function createAutosaver(
   initial: { readonly text: string | undefined; readonly dirty: boolean },
 ): Autosaver {
   const saver: Saver = {
-    ...{
-      options,
-      text: initial.text,
-      hash: initial.text === undefined ? undefined : hashOf(initial.text),
-    },
-    ...{ dirty: initial.dirty, mutated: false, version: 0, conflict: false, conflictCells: [] },
-    ...{ savedAt: null, failure: undefined },
-    ...{ timer: undefined, burst: undefined, retry: undefined, chain: Promise.resolve() },
+    options,
+    text: initial.text,
+    hash: initial.text === undefined ? undefined : hashOf(initial.text),
+    dirty: initial.dirty,
+    mutated: false,
+    version: 0,
+    conflict: false,
+    conflictCells: [],
+    savedAt: null,
+    failure: undefined,
+    timer: undefined,
+    burst: undefined,
+    retry: undefined,
+    chain: Promise.resolve(),
   };
   return {
     touched: () => {
@@ -325,7 +409,8 @@ export function createAutosaver(
       reloaded(saver, text, dirty);
     },
     rebased: (text) => {
-      Object.assign(saver, { text, hash: hashOf(text) });
+      saver.text = text;
+      saver.hash = hashOf(text);
     },
     base: () => ({ text: saver.text, hash: saver.hash }),
     conflicted: (cells) => {

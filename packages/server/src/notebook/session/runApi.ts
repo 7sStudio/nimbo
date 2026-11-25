@@ -94,60 +94,6 @@ export type SessionRuns = {
   readonly stop: () => Promise<void>;
 };
 
-function lateOutputs(context: SessionContext): void {
-  context.hooks.lateOutput = (late) => {
-    const execution = findExecution(context, late.execution);
-    if (execution) addOutput(context, execution, late.output, late.full);
-  };
-}
-
-/** What a session answers about its runs' outputs and its kernel. */
-function views(context: SessionContext, realm: RealmPart) {
-  return {
-    outputs: (cell: CellId) => {
-      const last = context.cells.require(cell).last;
-      return last ? toExecution(last) : null;
-    },
-    outputValue: async (request: ValueRequest) => {
-      await context.runs.retained.settled();
-      return outputValue(context, request);
-    },
-    fullValue: async (execution: ExecutionId, index: number) => {
-      await context.runs.retained.settled();
-      return fullValue(context, execution, index);
-    },
-    bindings: (cell: CellId) =>
-      context.cells.require(cell).type === "client"
-        ? Promise.resolve(realm.bindings(cell))
-        : serverBindings(context, cell),
-    scope: (which: "server" | "client") =>
-      which === "client" ? Promise.resolve(realm.scope()) : serverScope(context),
-    routes: () => routesOf(context),
-    kernelStatus: () => context.kernel.status(),
-    kernelLog: (lines: number) => readLogTail(context.logPath, lines),
-  };
-}
-
-/** kernel.restart (with `all`, the page's full reset first) and realm.restart over `queue` and `realm`. */
-const restarts = (
-  context: SessionContext,
-  queue: RunQueue,
-  realm: RealmPart,
-  autoRun: AutoRun,
-) => ({
-  restart: async (all: boolean) => {
-    autoRun.stop();
-    clearQueue(context, queue);
-    if (all) await realm.reset(true); // the page drops its client run first, as runtime-web reports it
-    await restartKernel(context, queue, realm.runs);
-    if (!all) await realm.reset(false);
-  },
-  restartRealm: async () => {
-    clearClientRuns(context, queue);
-    await realm.reset(true);
-  },
-});
-
 /** The session's queue, whose runs each end through the cascade of execution.autoRunDependents. */
 function queueOf(context: SessionContext, realm: RealmPart) {
   const cascade: { current?: AutoRun } = {};
@@ -187,10 +133,32 @@ export function createRuns(context: SessionContext, realm: RealmPart): SessionRu
     await (running?.execution.cell === cell ? running.done : undefined);
   };
   context.hooks.autoRunState = cascade.state;
-  lateOutputs(context);
+  context.hooks.lateOutput = (late) => {
+    const execution = findExecution(context, late.execution);
+    if (execution) addOutput(context, execution, late.output, late.full);
+  };
   const runs = { queue, realmReady: realm.ensure, autoRun: cascade };
   return {
-    ...views(context, realm),
+    outputs: (cell) => {
+      const last = context.cells.require(cell).last;
+      return last ? toExecution(last) : null;
+    },
+    outputValue: async (request) => {
+      await context.runs.retained.settled();
+      return outputValue(context, request);
+    },
+    fullValue: async (execution, index) => {
+      await context.runs.retained.settled();
+      return fullValue(context, execution, index);
+    },
+    bindings: (cell) =>
+      context.cells.require(cell).type === "client"
+        ? Promise.resolve(realm.bindings(cell))
+        : serverBindings(context, cell),
+    scope: (which) => (which === "client" ? Promise.resolve(realm.scope()) : serverScope(context)),
+    routes: () => routesOf(context),
+    kernelStatus: () => context.kernel.status(),
+    kernelLog: (lines) => readLogTail(context.logPath, lines),
     queue,
     realmAttached: realm.attached,
     realmReady: realm.ensure,
@@ -204,7 +172,18 @@ export function createRuns(context: SessionContext, realm: RealmPart): SessionRu
     },
     clearOutputs: (cells) => clearOutputs(context, cells),
     dropRuns: cellRunsDropper(context, queue, realm),
-    ...restarts(context, queue, realm, cascade),
+    // kernel.restart, with `all` the page's full reset first
+    restart: async (all) => {
+      cascade.stop();
+      clearQueue(context, queue);
+      if (all) await realm.reset(true); // the page drops its client run first, as runtime-web reports it
+      await restartKernel(context, queue, realm.runs);
+      if (!all) await realm.reset(false);
+    },
+    restartRealm: async () => {
+      clearClientRuns(context, queue);
+      await realm.reset(true);
+    },
     stop: async () => {
       cascade.stop();
       clearQueue(context, queue);

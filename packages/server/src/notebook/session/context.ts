@@ -15,7 +15,7 @@ import type { EventInput } from "../../events/bus.js";
 import type { Log } from "../../events/log.js";
 import type { FileIdentity } from "../../files/atomicWrite.js";
 import type { KernelSupervisor } from "../../kernel/supervisor.js";
-import type { Autosaver } from "./autosaveApi.js";
+import type { Autosaver } from "./autosave.js";
 import type { CellStore } from "./cells.js";
 import type { ExportsClock } from "./runs/exportsClock.js";
 import type { Retained } from "./runs/retained.js";

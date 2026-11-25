@@ -69,30 +69,25 @@ function folderWatch(options: WatchOptions, soon: () => void) {
 /** The signature after a check that failed: no stat has it, so the next poll asks for a check again. */
 const failedCheck = "failed";
 
-/** What the watch last knew of the file: the stat it checked, and the one a poll last asked a check for. */
-type Seen = { signature: string | undefined; asked: string | undefined };
-
-/** The check, one at a time; a failed one is asked again at the next poll, though the file did not change since. */
-function checkJob(options: WatchOptions, seen: Seen) {
-  return debounced(async () => {
+export function watchFile(options: WatchOptions): FileWatch {
+  // what the watch last knew of the file: the stat it checked, and the one a poll last asked a check for
+  let signature: string | undefined;
+  let asked: string | undefined;
+  // the check, one at a time; a failed one is asked again at the next poll, though the file did not change since
+  const job = debounced(async () => {
     try {
-      seen.signature = await signatureOf(options.path());
+      signature = await signatureOf(options.path());
       await options.check();
     } catch (error) {
       options.log.warn({ err: error }, "a notebook's file could not be checked for changes");
-      seen.signature = failedCheck;
-      seen.asked = undefined;
+      signature = failedCheck;
+      asked = undefined;
     }
   }, options.debounceMs);
-}
-
-export function watchFile(options: WatchOptions): FileWatch {
-  const seen: Seen = { signature: undefined, asked: undefined };
-  const job = checkJob(options, seen);
   const folder = folderWatch(options, job.ask);
   folder.arm();
   void signatureOf(options.path()).then((first) => {
-    seen.signature ??= first;
+    signature ??= first;
   });
   const poll =
     options.everyMs > 0
@@ -100,9 +95,8 @@ export function watchFile(options: WatchOptions): FileWatch {
           if (!folder.armed()) folder.arm();
           void signatureOf(options.path()).then((now) => {
             // asked once per change: a poll faster than the debounce would else put the check off for ever
-            if (seen.signature === undefined || now === seen.signature || now === seen.asked)
-              return;
-            seen.asked = now;
+            if (signature === undefined || now === signature || now === asked) return;
+            asked = now;
             job.ask();
           });
         }, options.everyMs)

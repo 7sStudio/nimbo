@@ -105,22 +105,16 @@ function kernelOf(
     return made;
   };
   return new KernelSupervisor({
-    ...{
-      workspace: options.root,
-      notebook: options.ref,
-      port: options.port,
-      entry: options.kernelEntry,
-    },
-    ...{ now: options.now, log: parts.log, config },
+    workspace: options.root,
+    notebook: options.ref,
+    port: options.port,
+    entry: options.kernelEntry,
+    now: options.now,
+    log: parts.log,
+    config,
     pageListening: () => parts.hooks.pageAttached(),
     sink: sinkOf(parts, writeLog),
   });
-}
-
-/** Where the session's notebook and its kernel log are (07-file-format §7). */
-function placeOf({ ref, path, root, logsDir, requestTimeoutMs }: SessionOptions) {
-  const logPath = kernelLogPath(logsDir, ref);
-  return { ref, path, root, logPath, requestTimeoutMs, identity: undefined, holdKey: ref };
 }
 
 /** The runs' shared state at the start: nothing retained, the budget from the settings. */
@@ -142,7 +136,6 @@ export type OwnedContext = SessionContext & {
   readonly moveLog: (to: string) => Promise<void>;
 };
 
-/** The session's hooks before the parts that use them are wired. */
 /** The hooks before the session's parts wire theirs. */
 const defaultHooks = (): SessionHooks => ({
   lateOutput: () => undefined,
@@ -177,10 +170,19 @@ export function contextOf(options: SessionOptions, hooks: FileHooks = {}): Owned
   const kernelLog = followingKernelLog(options.logsDir, options.ref, log);
   const parts = { emit, log, hooks: sessionHooks };
   const context: OwnedContext = {
-    ...placeOf(options),
-    ...{ cells, header: { ...options.loaded.header } },
+    ref: options.ref,
+    path: options.path,
+    root: options.root,
+    logPath: kernelLogPath(options.logsDir, options.ref),
+    requestTimeoutMs: options.requestTimeoutMs,
+    identity: undefined,
+    holdKey: options.ref,
+    cells,
+    header: { ...options.loaded.header },
     ...parts,
-    ...{ ids: options.ids, now, settings: options.settings },
+    ids: options.ids,
+    now,
+    settings: options.settings,
     closeLog: kernelLog.close,
     moveLog: (to) => kernelLog.move(context.ref, to),
     runs: runsOf(options),

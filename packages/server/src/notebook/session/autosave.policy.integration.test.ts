@@ -8,7 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { quiet } from "../../fixtures/workspace.js";
 import { createAutosaver } from "./autosave.js";
-import type { AutosavePolicy } from "./autosaveApi.js";
+import type { AutosavePolicy } from "./autosave.js";
 
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout", "Date"] });
@@ -32,8 +32,13 @@ async function saverIn(dir: string, path: string, rule: AutosavePolicy) {
   await writeFile(path, "v0\n");
   const saver = createAutosaver(
     {
-      ...{ path, root: dir, ref: "a.jsnb", text: () => `v${String(state)}\n` },
-      ...{ now: () => new Date(), log: quiet, policy: () => rule },
+      path,
+      root: dir,
+      ref: "a.jsnb",
+      text: () => `v${String(state)}\n`,
+      now: () => new Date(),
+      log: quiet,
+      policy: () => rule,
       events: {
         saved: () => {
           waiting.resolve(true);
