@@ -31,7 +31,11 @@ async function confirmed(
     return await send(input);
   } catch (error) {
     const asks = error instanceof GitFailed && error.data.reason === "confirm";
-    if (!asks || !io.isTTY || input.confirm === true) throw error;
+    if (!asks || input.confirm === true) throw error;
+    if (!io.isTTY) {
+      await write(io.stderr, `Run it again with --yes to go ahead.\n`);
+      throw error;
+    }
     await confirmAfter(io, command, error.data.message);
     return send({ ...input, confirm: true });
   }

@@ -2,14 +2,21 @@
 // rebase as configured, conflict then abort), sync, the refusals (no upstream, detached HEAD, local changes without
 // confirm, a rejected push), an unreachable remote failing at once with its URL's token redacted, one operation at a
 // time, and cancel.
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
 import { withWorkspace } from "@jsnb/test-tools/workspace";
 import { expect, it } from "vitest";
 
 import { startDaemon } from "../../fixtures/daemon.js";
-import { isolateGit, makeRepo, pushFrom, sh, withRemote } from "../../fixtures/git.js";
+import {
+  isolateGit,
+  makeRepo,
+  notebookText,
+  pushFrom,
+  sh,
+  withRemote,
+} from "../../fixtures/git.js";
 
 isolateGit();
 
@@ -182,5 +189,25 @@ it("runs one long operation at a time, answers busy, and cancels", async () => {
     expect(await running).toMatchObject({ data: { reason: "cancelled" } });
     expect(await client.git.cancel({})).toEqual({ cancelled: null });
     await client.git.stage({ paths: ["a.txt"] });
+  });
+});
+
+it("leaves an open notebook's state alone on a conflicted pull and diffs the file git wrote", async () => {
+  await withWorkspace(async (ws) => {
+    await makeRepo(ws.dir, { "n.jsnb": notebookText([{ id: "c_aaaaaa", source: "1" }]) });
+    await withRemote(ws.dir, async ({ other }) => {
+      await pushFrom(other, { "n.jsnb": notebookText([{ id: "c_aaaaaa", source: "theirs" }]) });
+      const { client } = await startDaemon(ws);
+      await client.notebook.open({ path: "n.jsnb" });
+      await client.cell.update({ notebook: "n.jsnb", cell: "c_aaaaaa", source: "mine" });
+      await client.git.commit({ message: "mine", all: true });
+      expect(await client.git.pull({ rebase: false })).toMatchObject({ result: "conflicts" });
+      const { cell } = await client.cell.get({ notebook: "n.jsnb", cell: "c_aaaaaa" });
+      expect(cell.source).toBe("mine");
+      const diff = await client.git.diff({ path: "n.jsnb" });
+      expect(diff).toMatchObject({ kind: "text", reason: "notebookUnreadable", from: "HEAD" });
+      await client.git.abort({ confirm: true });
+      expect(await readFile(ws.path("n.jsnb"), "utf8")).toContain("mine");
+    });
   });
 });

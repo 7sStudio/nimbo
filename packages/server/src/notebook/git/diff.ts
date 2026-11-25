@@ -7,7 +7,7 @@ import type { DiffCellSide, gitDiff, GitRepo, NotebookDiff, NotebookDocument } f
 import { CellNotFound, diffNotebooks, InvalidParams, parse, randomIds, textDiff } from "@jsnb/core";
 
 import type { Side } from "./content.js";
-import { blob, isBinary, textOfSide } from "./content.js";
+import { blob, isBinary, textOfSide, worktree } from "./content.js";
 import type { GitContext } from "./context.js";
 import { required, workingSide } from "./context.js";
 import { checkPath, checkRevision } from "./paths.js";
@@ -92,7 +92,9 @@ async function sidesOf(
   if (input.staged) return stagedSides(found, repo, path);
   const conflicted = repo.conflicts.some((change) => change.path === path);
   const before = await show(conflicted ? `HEAD:${at}` : `:0:${at}`);
-  return { from: conflicted ? "HEAD" : "index", before, to: "worktree", after: await working() };
+  // a conflicted file's side is the file git wrote, markers and all: an open notebook keeps its last parsed state
+  const after = conflicted ? await worktree(context.root, path) : await working();
+  return { from: conflicted ? "HEAD" : "index", before, to: "worktree", after };
 }
 
 const strip = (side: DiffCellSide | undefined): DiffCellSide | undefined =>
