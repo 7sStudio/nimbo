@@ -16,7 +16,7 @@ exports[`the API errors > undefined carries code 1002 and is a JsnbError 1`] = `
 
 exports[`the API errors > undefined carries code 1003 and is a JsnbError 1`] = `"The kernel is not running (exit code 1). Restart it with kernel.restart."`;
 
-exports[`the API errors > undefined carries code 1004 and is a JsnbError 1`] = `"No notebook page is open for demo.jsnb; open it in the browser to run client cells."`;
+exports[`the API errors > undefined carries code 1004 and is a JsnbError 1`] = `"No notebook page is open for demo.jsnb; open it in the browser to run client cells, or turn on the setting realm.headless to run them in a headless browser."`;
 
 exports[`the API errors > undefined carries code 1005 and is a JsnbError 1`] = `"demo.jsnb already exists. Open it with notebook.open or choose another path."`;
 
