@@ -33,7 +33,7 @@ export const cellGet = defineCommand({
   description:
     "One cell by id, with its status and last execution summary; textHash names its source as the base of a later cell.update.",
   input: z.object(ref),
-  output: z.object({ cell: Cell, textHash: z.string() }),
+  output: z.object({ cell: Cell, textHash: z.string().optional() }),
 });
 
 /** `meta.lastEdit` is server-owned: a client that sends it gets INVALID_PARAMS. Every other key may be `null`, which

@@ -4900,7 +4900,7 @@
           "type": "string"
         }
       },
-      "required": ["cell", "textHash"],
+      "required": ["cell"],
       "additionalProperties": false
     }
   },
