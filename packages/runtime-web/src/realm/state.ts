@@ -7,6 +7,7 @@ import { errorInfo } from "./errors.js";
 import type { CellFiles } from "./files.js";
 import { createCellFiles } from "./files.js";
 import { framesOf, userStackOf } from "./frames.js";
+import { createEventListeners } from "./events.js";
 import { createListenerRegistry } from "./listeners.js";
 import { loadModule } from "./imports.js";
 import type { ResolvedOptions } from "./options.js";
@@ -44,6 +45,7 @@ export function createState(options: ResolvedOptions): RealmState {
     env: env.env,
     containers,
     listeners: createListenerRegistry(),
+    events: createEventListeners(),
     reports,
     importModule: (specifier) => loadModule(options.importUrl(specifier)),
     pauses: options.pauses,

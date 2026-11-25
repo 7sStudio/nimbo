@@ -129,6 +129,8 @@ function reduceNotebook(mirror: Mirror, event: EventEnvelope): Mirror {
       return { ...mirror, closed: false };
     case "routes.changed":
       return { ...mirror, routes: event.data.routes };
+    case "bridge.activity":
+      return { ...mirror, bridgeActivity: event.data.at };
     case "kernel.status":
       return withNotebook(mirror, (notebook) => ({ ...notebook, kernel: event.data }));
     case "realm.status":

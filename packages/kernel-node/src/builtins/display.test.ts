@@ -1,6 +1,6 @@
-// Tests display (04-kernel §5.5) and emit (05-bridge §6, v1.x): the outputs display makes, the error emit throws.
+// Tests display (04-kernel §5.5): the outputs display makes.
 import type { Output } from "@jsnb/core";
-import { encode, NotAvailable } from "@jsnb/core";
+import { encode } from "@jsnb/core";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -8,7 +8,6 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 import { createDisplay } from "./display.js";
-import { emit } from "./emit.js";
 
 const redact = (text: string): string => text.replaceAll("secret-value", "***");
 
@@ -99,11 +98,5 @@ describe("display", () => {
     const { display } = capture();
     expect(Object.keys(display)).toEqual(["html", "json", "table", "image"]);
     expect(Object.isFrozen(display)).toBe(true);
-  });
-});
-
-describe("emit", () => {
-  it("is registered but not available in v1", () => {
-    expect(() => emit()).toThrow(new NotAvailable({ feature: "emit" }));
   });
 });

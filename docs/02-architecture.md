@@ -124,9 +124,9 @@ Every channel carries typed messages validated on arrival. Where the table says 
 |---|---|---|---|---|
 | UI, CLI, MCP → daemon | JSON-RPC 2.0: WebSocket `/rpc` or `POST /rpc` | one `domain.verb` command per call; the registry is the only interface, the UI has no private operations | the command's Zod input and output schemas (`server/src/commands/bind.ts`); the four-surface contract test (09 §4.1) | 03 §1, §3, §7 |
 | daemon → subscribers | JSON-RPC notifications on the WebSocket | events `{ notebook, seq, ts, type, data }`, `seq` per notebook | core's `Event` union | 03 §6, §4.2 below |
-| daemon ↔ page realm | requests both ways on the page's one WebSocket | daemon → page `realm.execute`, `realm.reset`, `realm.interrupt`; page → daemon `realm.attach`, `realm.detach`, `realm.report`, `bridge.call` (internal commands) | Zod on both sides | 05 §9, 03 §4.5 |
+| daemon ↔ page realm | requests both ways on the page's one WebSocket | daemon → page `realm.execute`, `realm.reset`, `realm.interrupt`, `realm.snapshot`, `realm.event`, `realm.dispose`; page → daemon `realm.attach`, `realm.detach`, `realm.report`, `bridge.call` (internal commands) | Zod on both sides | 05 §9, 03 §4.5 |
 | server realm ↔ client realm | through the daemon | only `export`ed plain data (copied) and `export`ed functions (async stubs); class instances and handles are refused with a named error; page → server only as call arguments | the serializer's strict mode, the error catalogue | 05 §1 to §7 |
-| daemon ↔ kernel | Node IPC, `serialization: "advanced"` | daemon → kernel `execute`, `call`, `snapshot`, `bindings`, `route`, `dispose`, `cancel`, `shutdown`; kernel → daemon `ready`, `output`, `status`, `result`, `exports`, `routes` | Zod on both sides (`kernel-node/src/ipc/messages.ts`) | 04 §2.1 |
+| daemon ↔ kernel | Node IPC, `serialization: "advanced"` | daemon → kernel `execute`, `call`, `snapshot`, `bindings`, `route`, `dispose`, `cancel`, `page`, `shutdown`; kernel → daemon `ready`, `output`, `status`, `result`, `exports`, `routes`, `events` | Zod on both sides (`kernel-node/src/ipc/messages.ts`) | 04 §2.1 |
 | daemon → kernel inspector | CDP over the inspector's WebSocket, `127.0.0.1`, random port | interrupt (`Runtime.evaluate` of the kernel's hook), `Debugger.enable`, resume | the `Kernel` interface in `core` | 04 §6, §9, §11 |
 | daemon ↔ js-debug | DAP over a Unix socket in a `0700` folder | breakpoints, pause, steps, stack, scopes, variables, evaluate | `server/src/kernel/debug/dap.ts` | 03 §4.9, 04 §9 |
 | js-debug → kernel | CDP, a second inspector client | the debugging session, with the transform's source maps | — | 04 §9 |
@@ -181,7 +181,7 @@ sequenceDiagram
 - Calls are not queued behind cell runs; the kernel refuses a call (`CallRefused`) while the export's cell is re-running.
 - `bridge.rpcTimeoutMs` applies on both sides (`RpcTimeout`); time the kernel spends paused in the debugger does not count.
 - `kernel.interrupt` stops a server function a call is running; the awaiting client cell ends `interrupted` (§5).
-- Server-to-page push events (`emit`, `on`) are not built (05 §6).
+- Push events: a server cell's `emit(name, data)` goes to the kernel's bounded queue, then to the daemon's, then to the page as `realm.event` batches, one at a time, where `on(name, callback)` listeners hear them; with no page attached they are counted and dropped, and `bridge.events` counts them by name (05 §6).
 
 ### 4.4 Save, autosave and conflict
 
@@ -455,4 +455,4 @@ The CLI (`packages/cli/src/run.ts`) tries `--help` and `--version`, then its sho
 - **Runtime**: Node 26 or later for the daemon and kernels (bundled in a release); macOS or Linux; a current Chromium-based browser, Firefox or Safari on a laptop or desktop.
 - **Network**: loopback only; online only for package installs, `sql.install` and `nimbo upgrade`; no telemetry, no account.
 - **Non-goals**: hosted or multi-user use, real-time collaboration, other languages than JavaScript and TypeScript (00 §3.3).
-- **Not built**: push events from the server to the page, a file watcher for external edits, a headless client realm, client-cell debugging in nimbo's view, add-ons, Windows, a desktop app (12).
+- **Not built**: a file watcher for external edits, a headless client realm, client-cell debugging in nimbo's view, add-ons, Windows, a desktop app (12).

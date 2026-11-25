@@ -13,6 +13,8 @@ export type Containers = {
   /** Emptied before the cell re-runs (04-kernel §7): a Vue app mounted in it is unmounted, its children go (a swapped-in iframe too) and its attributes are
    * its own again, so a style a run set does not outlive it. */
   readonly empty: (cell: string) => void;
+  /** A deleted cell's container leaves the registry and the DOM. */
+  readonly remove: (cell: string) => void;
   /** The full reset: every container leaves the registry and the DOM. */
   readonly removeAll: () => void;
 };
@@ -71,6 +73,13 @@ export function createContainers(mount: Mount): Containers {
       if (container) unmountApps(container);
       container?.replaceChildren();
       if (container) ownAttributes(container, cell);
+    },
+    remove: (cell) => {
+      const container = byCell.get(cell);
+      if (!container) return;
+      unmountApps(container);
+      container.remove();
+      byCell.delete(cell);
     },
     removeAll: () => {
       for (const container of byCell.values()) {

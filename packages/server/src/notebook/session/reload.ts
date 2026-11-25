@@ -8,7 +8,7 @@ import { readNotebook } from "../../files/notebooks/notebookFile.js";
 import type { SessionContext } from "./context.js";
 import { loadDocument } from "./fileForm.js";
 import { restale } from "./edits.js";
-import { disposeUnserved } from "./runs/disposeDeleted.js";
+import { disposeUnclient, disposeUnserved } from "./runs/disposeDeleted.js";
 import type { CellRecord } from "./records.js";
 
 const sameCell = (a: CellRecord, b: CellRecord): boolean =>
@@ -63,11 +63,22 @@ function emitChanges(context: SessionContext, done: Plan, keptBefore: readonly C
 }
 
 /** The ids of the server cells now. */
-const serverCells = (context: SessionContext): readonly CellId[] =>
+const cellsOf = (context: SessionContext, type: "server" | "client"): readonly CellId[] =>
   context.cells
     .list()
-    .filter((record) => record.type === "server")
+    .filter((record) => record.type === type)
     .map((record) => record.id);
+
+/** Read before the reload, run after it: a server cell the file removed or switched has its routes and timers end in
+ * the kernel, a client cell its timers and listeners end in the page. */
+function leftBehind(context: SessionContext): () => void {
+  const served = cellsOf(context, "server");
+  const clients = cellsOf(context, "client");
+  return () => {
+    for (const id of served) void disposeUnserved(context, id);
+    for (const id of clients) void disposeUnclient(context, id);
+  };
+}
 
 /** The stale cells after the reconcile: what depended on a removed, changed or added cell. */
 function restaleAfter(
@@ -96,7 +107,7 @@ export async function reloadSession(
   const before = context.cells.graph();
   const done = plan(context.cells.list(), loaded.records);
   const kept = context.cells.order().filter((id) => !done.removed.includes(id));
-  const served = serverCells(context);
+  const left = leftBehind(context);
   for (const id of done.removed) {
     const last = context.cells.get(id)?.last;
     if (last) context.runs.retained.drop(last.id); // a removed cell's run goes with it
@@ -106,8 +117,7 @@ export async function reloadSession(
   emitChanges(context, done, kept);
   restaleAfter(context, before, done);
   for (const id of done.changed) context.hooks.edited(id, before);
-  // a server cell the file removed or made a client or markdown cell: its routes and timers end in the kernel
-  for (const id of served) void disposeUnserved(context, id);
+  left();
   context.autosave.reloaded(read.text, loaded.dirty);
   return true;
 }

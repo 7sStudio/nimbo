@@ -126,6 +126,6 @@ describe("RealmReport", () => {
     expect(failed.durationMs).toBe(1.5);
     expect(RealmReset.parse({})).toEqual({});
     expect(RealmSnapshot.parse({ cell: "c_a1b2c3" }).cell).toBe("c_a1b2c3");
-    expect(BridgeEvent.parse({ name: "paid", data: { id: 1 } }).name).toBe("paid");
+    expect(BridgeEvent.parse({ name: "paid", data: { id: 1 }, at: "t" }).name).toBe("paid");
   });
 });

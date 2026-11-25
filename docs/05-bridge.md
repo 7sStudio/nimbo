@@ -1,6 +1,6 @@
 # 05 · Bridge: how server cells and client cells talk
 
-The contract behind the grid in 00-overview §2. Code: `packages/core` (types, errors in `errors/bridge.ts`), `packages/server` (`notebook/realm/`: resolution, RPC routing), `packages/kernel-node` (`call`, `snapshot`), `packages/runtime-web` (`bridge/`: stubs, the bridge layer).
+The contract behind the grid in 00-overview §2. Code: `packages/core` (types, errors in `errors/bridge.ts`), `packages/server` (`notebook/realm/`: resolution, RPC routing, events), `packages/kernel-node` (`call`, `snapshot`, `builtins/emit.ts`), `packages/runtime-web` (`bridge/`: stubs, the bridge layer; `realm/events.ts`: `on`).
 
 ## 1. The contract
 
@@ -76,8 +76,20 @@ Client cell X depends on server cell S when `uses(X) ∩ exports(S) ≠ ∅` (00
 - `notebook.run { withDependents: S }` runs X after S when a realm is attached, else lists X under `skipped` with `REALM_NOT_ATTACHED` (03-api §4.2).
 - A server cell that stops exporting a name (edited or deleted) marks its client dependents stale; X's next run fails `NotExported` at once (§3 step 2).
 
-## 6. Push events (planned)
-`emit(name, data)` on the server and `on(name, cb)` on the client exist as built-ins and throw `NotAvailable { feature }`. Planned shape: `emit` sends plain data as `bridge.event { name, data }` to the attached realm (dropped when none is); `on` registers `cb` with a disposer on the calling cell (04-kernel §7), so a re-run replaces it, and each delivery adds an `event` output on the client cell.
+## 6. Push events
+```ts
+// server cell                                   // client cell
+for (let i = 1; i <= 100; i++) {                 const bar = display.div()
+  emit("progress", { done: i, total: 100 })      on("progress", ({ done, total }) => {
+  await new Promise((r) => setTimeout(r, 50))      bar.textContent = `${done}/${total}`
+}                                                })
+```
+- `emit(name, data)` sends `data` to the page holding the client realm and returns at once. `data` follows a call result's rules (§2, §4.1): strict plain data, redacted, whole up to `bridge.maxBytesPerValue` (its JSON form counts); anything else throws `EventNotSerializable` in the emitting cell. `name` is a string of 1 to 200 characters.
+- `on(name, callback, { latest? })` in a client cell calls `callback(data)` for each event of that name (the same names as `emit`) and returns a function that stops it; with `latest: true` it gets only the newest event of the name in each batch, for a view that shows the current value. The listener belongs to the run: a re-run, a full reset, a detach, a page reload, the cell's deletion, its switch to server or markdown, or a `notebook.reload` that removes or switches it ends it (04-kernel §7); a kernel restart does not, nor does `kernel.interrupt`, which stops server code only: a loop of listener, bridge call and `emit` ends with a re-run of its client cell or with Restart Page (`realm.restart`). Several listeners of one name each get their own copy, in the order they were added. Each delivery is an `event` output `{ name, data, at }` on the listening run, its data cut to `outputs.maxValueBytes` as a value output's is, while the run has kept fewer than 500 of them and 1 MB of their data (then one `stderr` line; the listener still gets the rest); a throw in `callback` is an `error` output there. Deliveries run in slices that give the page its turn every 8 ms, so a slow listener holds the queue back, not the page.
+- Order: events arrive in the order they were emitted. No replay: an event emitted while no page is attached, or that no listener hears, is dropped. An event name is only a name: `__proto__` or `constructor` is counted and delivered like any other.
+- Back-pressure: the kernel flushes its queue every 16 ms and holds at most 1 000 events and 16 MB of data between flushes; while no page is attached the daemon tells it so, and it counts and drops each event at once without queuing its data. The daemon sends events to the page in batches (`realm.event`, at most 200 events and 4 MB), one batch at a time, and holds at most 1 000 more and 16 MB. A burst past any bound keeps the latest and drops the oldest.
+- `bridge.events` (03-api §4.2) counts, per name, what was emitted, delivered and dropped (`noPage`, `noListener`, `overflow`), for the 500 most recently emitted names (older ones together under `other`), filtered by prefix and limited; the Inspector's Bridge section lists the 50 most recent under the exports, read again when the daemon signals `bridge.activity` (03-api §6).
+- Only the tab holding the realm gets events; a view-only tab runs no client cells. An agent sees deliveries as `event` outputs (`cell.outputs`) of the listening client cell, which needs an open tab; with none, `bridge.events` shows the events dropped as `noPage`.
 
 A client-cell run with no page attached fails the call with `REALM_NOT_ATTACHED` (03-api §4.3.1): `No notebook page is open for demo.jsnb; open it in the browser to run client cells.`
 
@@ -94,6 +106,7 @@ These messages are the product: each names the thing and says what to do. Each i
 | `NotTransferable` (size) | bytes over `bridge.maxBytesPerValue` | `logo is a Buffer of 6291456 bytes, more than bridge.maxBytesPerValue (5242880 bytes) lets cross. Raise the setting, or export a function that returns part of it.` |
 | `ArgumentNotSerializable` | an RPC argument is not plain data, or too large (`… Raise the setting, or send it in parts.`) | `Argument 2 of createIntent(...) is an HTMLDivElement and cannot be sent to the server.` |
 | `ResultNotSerializable` | an RPC result is not plain data, or too large (`… Raise the setting, or return part of it.`) | `createIntent returned a Stripe instance, which cannot be sent to the browser. Return plain data.` |
+| `EventNotSerializable` | `emit` data is not plain data, or too large (`… Raise the setting, or emit part of it.`) | `The data of emit("progress", ...) is a Stripe and cannot be sent to the browser. Emit plain data.` |
 | `RpcTimeout` | no answer within the timeout | `createIntent(2000) did not answer within 60s. The server cell may be blocked; try kernel.interrupt.` |
 | `ExportNotRun` | the source exports it, the kernel does not hold it (§3) | `prices is exported by server cell 2, but the kernel does not have that export yet. Run server cell 2 to make it.` |
 | `KernelRestarted` | a stub or snapshot from before a restart (§8), a run after a restart before the server cell exported again, or a call a restart cut | `createIntent was defined before the kernel restarted. Re-run server cell 2.` |
@@ -117,7 +130,9 @@ These messages are the product: each names the thing and says what to do. Each i
 | page → daemon | `bridge.call` | `{ notebook, fn, args }` → `{ result, redacted? }` or a JSON-RPC error carrying `ErrorInfo` |
 | page → daemon | `realm.report` | `{ realmId, execution, output?, status?, error?, durationMs?, defines? }` (03-api §4.5) |
 | daemon → kernel | `snapshot` / `call` | 04-kernel §2.1 |
-| daemon → page | `bridge.event` | `{ name, data }` (planned, §6) |
+| daemon → page | `realm.event` | `{ events: { name, data, at, cell? }[] }` → `{ heard: { name, count }[] }`: the events in emit order, and per name how many had a listener (§6) |
+| daemon → page | `realm.dispose` | `{ cell }`: a deleted client cell's cleanups run, its container goes |
+| daemon → page | `realm.snapshot` | `{ cell, maxBytes?, html? }` → `{ text, html?, rendered, truncated }` (03-api `cell.snapshot`) |
 
 Encoding everywhere: the output serializer's JSON form (`devalue`-style), decoded by `runtime-web` into real `Date`/`Map`/`Set`/`BigInt` values.
 
@@ -132,4 +147,4 @@ Hover reads `const createIntent: (amount: number) => Promise<{ clientSecret: str
 
 ## 11. Tests
 
-End to end with a real kernel, daemon and page per test, in `packages/server/src/notebook/realm/suite/`: `stubs` (stubs, round-trips, `dom` output, calls not queued), `catalogue` (§7's errors, `window` names, server imports), `serverCell` (logs and errors on the defining cell, one stack), `calls` (concurrency, `RpcTimeout`, per-run limits), `redaction`, `graph` (§5), `restart` (§8), `interrupt` (02 §5), `record` (the daemon's record of the page's names). `runtime-web`'s browser tests cover the bridge layer, stubs, snapshots and reset in Chromium.
+End to end with a real kernel, daemon and page per test, in `packages/server/src/notebook/realm/suite/`: `stubs` (stubs, round-trips, `dom` output, calls not queued), `catalogue` (§7's errors, `window` names, server imports), `serverCell` (logs and errors on the defining cell, one stack), `calls` (concurrency, `RpcTimeout`, per-run limits), `redaction`, `graph` (§5), `restart` (§8), `interrupt` (02 §5), `record` (the daemon's record of the page's names), `events` (§6 and `cell.snapshot`). `runtime-web`'s browser tests cover the bridge layer, stubs, snapshots and reset in Chromium.
