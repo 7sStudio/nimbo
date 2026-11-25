@@ -28,72 +28,15 @@ export type VariableRules = {
   ): ts.Statement;
 };
 
-type Tools = {
-  readonly rewrite: Rewrite;
-  readonly visit: Visit;
-  readonly patterns: PatternContext;
-};
-
 function kindOf(list: ts.VariableDeclarationList): BindingKind {
   if (list.flags & ts.NodeFlags.Const) return "const";
   return list.flags & ts.NodeFlags.Let ? "let" : "var";
-}
-
-/** The assignment target of a declarator's name: `__scope.x` or a pattern; every name is declared on the way. */
-function target(name: ts.BindingName, kind: BindingKind, tools: Tools): ts.Expression {
-  for (const id of bindingIdentifiers(name)) declare(tools.rewrite, id, kind);
-  return ts.isIdentifier(name)
-    ? tools.rewrite.scoped(name.text, name)
-    : toAssignmentPattern(name, tools.patterns);
-}
-
-function assignments(list: ts.VariableDeclarationList, tools: Tools): ts.Expression[] {
-  const { factory } = tools.rewrite;
-  const kind = kindOf(list);
-  return list.declarations.map((declaration) => {
-    const left = target(declaration.name, kind, tools);
-    const { initializer, name } = declaration;
-    // `const f = () => 1` names the arrow "f"; `__scope.f = () => 1` would not (named.ts)
-    const right = initializer
-      ? ts.isIdentifier(name)
-        ? keepName(factory, name.text, initializer, tools.visit.expression(initializer))
-        : tools.visit.expression(initializer)
-      : factory.createIdentifier("undefined");
-    return ts.setSourceMapRange(factory.createAssignment(left, right), declaration);
-  });
 }
 
 function commaList(factory: ts.NodeFactory, expressions: ts.Expression[]): ts.Expression {
   const [first] = expressions;
   if (!first) return factory.createVoidZero();
   return expressions.length === 1 ? first : factory.createCommaListExpression(expressions);
-}
-
-function forLoop(statement: ts.ForStatement, list: ts.VariableDeclarationList, tools: Tools) {
-  const { factory } = tools.rewrite;
-  return factory.updateForStatement(
-    statement,
-    commaList(factory, assignments(list, tools)),
-    statement.condition && tools.visit.expression(statement.condition),
-    statement.incrementor && tools.visit.expression(statement.incrementor),
-    tools.visit.statement(statement.statement),
-  );
-}
-
-function forInOrOf(
-  statement: ts.ForInStatement | ts.ForOfStatement,
-  list: ts.VariableDeclarationList,
-  tools: Tools,
-): ts.Statement {
-  const { factory } = tools.rewrite;
-  const [declaration] = list.declarations;
-  if (!declaration) return statement;
-  const left = target(declaration.name, kindOf(list), tools);
-  const right = tools.visit.expression(statement.expression);
-  const body = tools.visit.statement(statement.statement);
-  return ts.isForInStatement(statement)
-    ? factory.updateForInStatement(statement, left, right, body)
-    : factory.updateForOfStatement(statement, statement.awaitModifier, left, right, body);
 }
 
 /** The variable rules of one cell, sharing the visitor so initializers and loop bodies are rewritten too. */
@@ -104,17 +47,58 @@ export function createVariableRules(rewrite: Rewrite, visit: Visit): VariableRul
     scoped: (name, range) => rewrite.scoped(name, range),
     visitExpression: (expression) => visit.expression(expression),
   };
-  const tools: Tools = { rewrite, visit, patterns };
+
+  /** The assignment target of a declarator's name: `__scope.x` or a pattern; every name is declared on the way. */
+  const target = (name: ts.BindingName, kind: BindingKind): ts.Expression => {
+    for (const id of bindingIdentifiers(name)) declare(rewrite, id, kind);
+    return ts.isIdentifier(name)
+      ? rewrite.scoped(name.text, name)
+      : toAssignmentPattern(name, patterns);
+  };
+
+  const assignments = (list: ts.VariableDeclarationList): ts.Expression[] => {
+    const kind = kindOf(list);
+    return list.declarations.map((declaration) => {
+      const left = target(declaration.name, kind);
+      const { initializer, name } = declaration;
+      let right: ts.Expression;
+      if (initializer) {
+        const value = visit.expression(initializer);
+        // `const f = () => 1` names the arrow "f"; `__scope.f = () => 1` would not (named.ts)
+        right = ts.isIdentifier(name) ? keepName(factory, name.text, initializer, value) : value;
+      } else {
+        right = factory.createIdentifier("undefined");
+      }
+      return ts.setSourceMapRange(factory.createAssignment(left, right), declaration);
+    });
+  };
+
   return {
-    assignments: (list) => assignments(list, tools),
+    assignments,
     nestedStatement: (statement) =>
       ts.setSourceMapRange(
         factory.createExpressionStatement(
-          commaList(factory, assignments(statement.declarationList, tools)),
+          commaList(factory, assignments(statement.declarationList)),
         ),
         statement,
       ),
-    forLoop: (statement, list) => forLoop(statement, list, tools),
-    forInOrOf: (statement, list) => forInOrOf(statement, list, tools),
+    forLoop: (statement, list) =>
+      factory.updateForStatement(
+        statement,
+        commaList(factory, assignments(list)),
+        statement.condition && visit.expression(statement.condition),
+        statement.incrementor && visit.expression(statement.incrementor),
+        visit.statement(statement.statement),
+      ),
+    forInOrOf: (statement, list) => {
+      const [declaration] = list.declarations;
+      if (!declaration) return statement;
+      const left = target(declaration.name, kindOf(list));
+      const right = visit.expression(statement.expression);
+      const body = visit.statement(statement.statement);
+      return ts.isForInStatement(statement)
+        ? factory.updateForInStatement(statement, left, right, body)
+        : factory.updateForOfStatement(statement, statement.awaitModifier, left, right, body);
+    },
   };
 }
