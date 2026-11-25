@@ -103,9 +103,23 @@ function patternMatch(key: string, spec: string): string | undefined {
   return spec.slice(head.length, spec.length - tail.length);
 }
 
+/** The first key with one `*` of an `exports` or `imports` map that matches `spec` in PATTERN_KEY_COMPARE order, and
+ * what its `*` matches. */
+export function patternEntry(
+  map: Readonly<Record<string, unknown>>,
+  spec: string,
+): { readonly key: string; readonly match: string } | undefined {
+  const patterns = Object.keys(map).filter((key) => key.split("*").length === 2);
+  for (const key of patterns.sort(patternKeyCompare)) {
+    const match = patternMatch(key, spec);
+    if (match !== undefined) return { key, match };
+  }
+  return undefined;
+}
+
 /**
- * The `imports` entry for `spec` as Node matches it: an exact key without `*`, else the first key with one `*` in
- * PATTERN_KEY_COMPARE order that matches `spec`, the match filling the target's `*`.
+ * The `imports` entry for `spec` as Node matches it: an exact key without `*`, else the first pattern key that matches
+ * `spec`, the match filling the target's `*`.
  */
 function importsTarget(
   imports: Readonly<Record<string, unknown>>,
@@ -114,12 +128,8 @@ function importsTarget(
 ) {
   if (!spec.includes("*") && Object.hasOwn(imports, spec))
     return targetOf(imports[spec], conditions);
-  const patterns = Object.keys(imports).filter((key) => key.split("*").length === 2);
-  for (const key of patterns.sort(patternKeyCompare)) {
-    const match = patternMatch(key, spec);
-    if (match !== undefined) return targetOf(imports[key], conditions)?.replaceAll("*", match);
-  }
-  return undefined;
+  const entry = patternEntry(imports, spec);
+  return entry && targetOf(imports[entry.key], conditions)?.replaceAll("*", entry.match);
 }
 
 /** A target that names the package's own file (or nothing usable) is esbuild's; one naming another package is it. */

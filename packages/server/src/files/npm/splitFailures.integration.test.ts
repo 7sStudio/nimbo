@@ -163,6 +163,15 @@ describe("a standalone build that fails, and names that differ by case", () => {
         // a file system that ignores case: refused by name rather than served under a second URL
         expect(misspelled.ok ? "" : misspelled.error?.message).toContain("spelled debounce.js");
       }
+      expect(body(await cached.get("addons/addons/controls/OrbitControls.js"))).toContain("orbit");
+      const patterned = await cached.get("addons/addons/controls/orbitControls.js");
+      expect(patterned.ok).toBe(false);
+      if (existsSync(ws.path("NODE_MODULES"))) {
+        expect([
+          patterned.ok ? 0 : patterned.status,
+          patterned.ok ? "" : patterned.error?.message,
+        ]).toEqual([500, expect.stringContaining("spelled addons/controls/OrbitControls.js")]);
+      }
     });
   });
 });
