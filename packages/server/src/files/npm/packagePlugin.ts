@@ -12,6 +12,7 @@
 // static import of a Node built-in that no installed package provides is a stand-in whose use throws an error naming
 // it (as Vite's browser-external does). Once the build's signal aborts, every callback answers at once with an error.
 import { isBuiltin } from "node:module";
+import { basename, dirname, extname, resolve } from "node:path";
 
 import type { ImportKind, OnResolveArgs, OnResolveResult, Plugin, PluginBuild } from "esbuild";
 
@@ -163,6 +164,28 @@ function onBare(resolver: Resolver, seen: Seen, own: (args: OnResolveArgs) => Pr
   };
 }
 
+/** The paths that may name an entry's file: the file, without its extension, and its folder for an index. */
+const nearPaths = new WeakMap<ReadonlyMap<string, string>, ReadonlySet<string>>();
+
+const withoutExtension = (path: string): string =>
+  path.slice(0, path.length - extname(path).length);
+
+/** Whether `path` (a relative import made absolute) may resolve to one of `entries`' files. */
+function nearEntry(entries: ReadonlyMap<string, string>, path: string): boolean {
+  let near = nearPaths.get(entries);
+  if (near === undefined) {
+    const paths = new Set<string>();
+    for (const file of entries.keys()) {
+      const bare = withoutExtension(file);
+      paths.add(file).add(bare);
+      if (basename(bare) === "index") paths.add(dirname(file));
+    }
+    near = paths;
+    nearPaths.set(entries, near);
+  }
+  return near.has(path) || near.has(withoutExtension(path));
+}
+
 /** A relative import that lands on another of the package's own entries: external under that entry's URL. */
 function onRelative(builder: PluginBuild, pkg: Bundling, seen: Seen, resolver: Resolver) {
   const entriesFor = (kind: ImportKind): Promise<ReadonlyMap<string, string>> => {
@@ -183,9 +206,12 @@ function onRelative(builder: PluginBuild, pkg: Bundling, seen: Seen, resolver: R
   };
   return async (args: OnResolveArgs): Promise<OnResolveResult | undefined> => {
     if (args.pluginData === inner || args.kind === "entry-point") return undefined;
+    const entries = await entriesFor(args.kind);
+    // Only an import whose path could name an entry's file is resolved here: a package's thousands of others are not.
+    if (!nearEntry(entries, resolve(args.resolveDir, args.path))) return undefined;
     const options = { kind: args.kind, resolveDir: args.resolveDir, pluginData: inner };
     const resolved = await builder.resolve(args.path, options);
-    const url = (await entriesFor(args.kind)).get(resolved.path);
+    const url = entries.get(resolved.path);
     if (url === undefined || url === `${pkg.base}${pkg.subpath}`) return undefined; // bundled as usual
     if (isRequire(args.kind)) seen.requires.push({ url, spec: args.path, found: true });
     return { path: url, external: true };

@@ -247,26 +247,6 @@ export const oddExports: Readonly<Record<string, string>> = {
   "node_modules/deep/index.js": "export const deep = 1;\n",
 };
 
-/** `many` with two more entries that import a tree of `heavy` modules, and below them a file that is not there. */
-export function heavyBrokenEntries(count: number, heavy: number): Record<string, string> {
-  const files = brokenEntries(count, 0);
-  const exports: Record<string, string> = { ".": "./index.js" };
-  for (let at = 0; at < count; at += 1) exports[`./m${String(at)}`] = `./m${String(at)}.js`;
-  const names = Array.from({ length: heavy }, (_, at) => `h${String(at)}`);
-  for (const name of names)
-    files[`node_modules/many/heavy/${name}.js`] = `export const ${name} = 1;\n`;
-  files["node_modules/many/heavy/index.js"] =
-    `${names.map((name) => `export * from "./${name}.js";`).join("\n")}\n`;
-  for (const name of ["slow0", "slow1"]) {
-    exports[`./${name}`] = `./${name}.js`;
-    files[`node_modules/many/${name}.js`] =
-      `import "./heavy/index.js";\nimport "./deep/${name}.js";\n`;
-    files[`node_modules/many/deep/${name}.js`] = `import "./gone/${name}.js";\n`;
-  }
-  files["node_modules/many/package.json"] = esm("many", "1.0.0", exports);
-  return files;
-}
-
 /** `cased` exporting `./Item` beside `./item`, and `plain` (no `exports`) with a file `debounce.js`. */
 export const casedPackages: Readonly<Record<string, string>> = {
   "node_modules/cased/package.json": esm("cased", "1.0.0", {

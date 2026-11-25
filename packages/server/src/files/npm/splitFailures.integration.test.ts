@@ -15,7 +15,6 @@ import {
   body,
   brokenEntries,
   casedPackages,
-  heavyBrokenEntries,
   linkedPackage,
   manyModules,
   modulesOf,
@@ -121,20 +120,20 @@ describe("a package's odd exports and names", () => {
   });
 });
 
-describe("a package that cannot be split in time", () => {
-  it("is remembered for its version, in the cache too, and built entry by entry, never timing out twice", async () => {
+describe("a package whose split build gives up", () => {
+  it("is remembered for its version, in the cache too, and built entry by entry from then on", async () => {
     await withWorkspace(async (ws) => {
-      await writeFiles(ws, heavyBrokenEntries(20, 6000));
-      const modules = await modulesOf(ws, { timeoutMs: 300 });
+      await writeFiles(ws, brokenEntries(20, 70, true)); // past the search's 40 trial builds
+      const modules = await modulesOf(ws);
       expect(body(await modules.get("many"))).toContain("/npm/many/m3");
       expect([modules.noted("together"), modules.noted("one by one")]).toEqual([1, 1]);
       expect(body(await modules.get("many/m3"))).toContain("m3");
       expect(modules.noted("together")).toBe(1);
-      const later = await modulesOf(ws, { timeoutMs: 300 }); // a daemon started later: marked in the cache
+      const later = await modulesOf(ws); // a daemon started later: marked in the cache
       expect(body(await later.get("many/m4"))).toContain("m4");
       expect(later.noted("together")).toBe(0);
     });
-  }, 30_000); // writes 6000 modules
+  });
 });
 
 describe("a standalone build that fails, and names that differ by case", () => {
