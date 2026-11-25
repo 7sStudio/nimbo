@@ -6,6 +6,7 @@ import type { CellId, ExecutionId, RealmStatus } from "@jsnb/core";
 import type { ExportEntry } from "@jsnb/kernel-node";
 
 import type { ExecutionRecord } from "../session/records.js";
+import type { HeadlessService } from "./headlessService.js";
 
 /** The page's socket as the realm uses it; the commands layer's Peer is one. */
 export type PageSocket = {
@@ -29,6 +30,8 @@ export type RealmDeps = {
   readonly redact: (text: string) => string;
   /** The client's public env, read again per run (04-kernel §8). */
   readonly publicEnv: () => Promise<Readonly<Record<string, string>>>;
+  /** The daemon's headless pages (realm.headless); undefined, no headless realm. */
+  readonly headless?: HeadlessService | undefined;
 };
 
 /** How a client run in flight is stopped, and when it started (`performance.now()`), for its duration. */
@@ -56,6 +59,8 @@ export type RealmState = {
   /** A reset no page was attached to take (a kernel restart, or Restart all, while the page was away): sent to the
    * next page that attaches, so a page that comes back holds no value of the kernel that went. */
   owed: "bridge" | "all" | undefined;
+  /** Hears every detach (the headless page closes with its own). */
+  onDetach?: (attachment: Attachment) => void;
 };
 
 export const createRealmState = (): RealmState => ({

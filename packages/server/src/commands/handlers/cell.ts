@@ -8,7 +8,6 @@ import {
   cellMove,
   cellRevert,
   cellUpdate,
-  RealmNotAttached,
   textHash,
 } from "@jsnb/core";
 
@@ -34,8 +33,7 @@ export function cellHandlers({ workspace }: Services): readonly Bound[] {
     bind(cellAdd, async ({ notebook, type, source, after, id, run }, { declaration }) => {
       const open = await session(notebook);
       // A client cell that cannot run is refused before it is added, so the call fails without a change.
-      if (run && type === "client" && !open.realmAttached())
-        throw new RealmNotAttached({ notebook });
+      if (run && type === "client") await open.realmReady();
       const cell = open.add({ type, source, after, id }, declaration);
       if (!run) return { cell };
       const execution = await open.run(cell.id, {

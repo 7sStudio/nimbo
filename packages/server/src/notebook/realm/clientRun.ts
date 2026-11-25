@@ -162,13 +162,24 @@ function prepare(context: SessionContext, state: RealmState, execution: Executio
   return { attachment, sent: { execution, code, map, resolution } };
 }
 
-/** Runs a client cell to its terminal status on the attached page. */
+/** Runs a client cell to its terminal status on the attached page, once `ensure` (the headless realm's) settled: its
+ * failure is the run's. */
 export async function runClientCell(
   context: SessionContext,
   state: RealmState,
   deps: RealmDeps,
-  execution: ExecutionRecord,
+  run: { readonly execution: ExecutionRecord; readonly ensure: () => Promise<void> },
 ): Promise<void> {
+  const { execution } = run;
+  const unready = await run.ensure().then(
+    () => undefined,
+    (error: unknown) => error,
+  );
+  if (terminalStatuses.has(execution.status)) return; // ended while the headless page started
+  if (unready !== undefined) {
+    failWith(context, execution, unready);
+    return;
+  }
   const ready = prepare(context, state, execution);
   if (!ready) return;
   hold(state, ready.sent.resolution.names);
