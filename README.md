@@ -423,7 +423,7 @@ nimbo examples copy --name 01-data && nimbo open 01-data.jsnb
 - The **page** is a client of the daemon and runs the client cells. The CLI and the MCP server are clients too; all
   three go through one registry of commands, so none can do what the others cannot.
 - A client cell's call to a server function goes page → daemon → kernel and back, its arguments and result copied and
-  redacted on the way.
+  the result redacted on the way.
 - The **`.jsnb`** file is plain JSON next to your code; secrets live in `.env`.
 
 ```mermaid
@@ -439,13 +439,14 @@ flowchart LR
   page <-->|"WebSocket, token"| daemon
   cli -->|"HTTP, token"| daemon
   mcp -->|"HTTP, token"| daemon
+  daemon <--> dbg["js-debug<br/>(the debugger)"]
   web -->|"/n/notebook/path"| daemon
   daemon <--> k1
   daemon <--> k2
   daemon --- files
 ```
 
-The specification lives in [docs/](docs/00-overview.md): architecture, API, kernel, bridge, file format and UI.
+The specification lives in [docs/](docs/00-overview.md): [architecture](docs/02-architecture.md), API, kernel, bridge, file format, code standards, testing and queries.
 
 ## Security and privacy
 

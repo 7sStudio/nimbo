@@ -58,7 +58,7 @@ The Playwright journeys in `packages/ui/e2e/`: `home-empty`, `load`, `cells-run`
 2. **Agent parity**: every keymap and palette entry resolves to a registry or UI command; every non-internal registry command is in the palette (08 §8 rule 3).
 3. **Redaction coverage**: a secret set with `secrets.set` comes out as `***` through every output kind, the bridge (argument, result, thrown error), the DOM snapshot, `cell.bindings`, the full-value download, the logger and the HTML export; the client realm's `env` has no non-public names.
 4. **Preflight isolation** (`isolation.spec.ts`): a client cell's `<h1>`, `<button>`, `<table>`, `<input>` compute as on a bare page in both themes; the chrome is unchanged after a cell injects global CSS; `document.body.innerHTML = ""` is recovered by a reload.
-5. **Reload safety**: a reload rebuilds every cell, output, status and stale marker from `notebook.get` and events; client cells re-run; a redirect flow does the same.
+5. **Reload safety**: a reload rebuilds every cell, output, status and stale marker from `notebook.get` and events; client cells keep their outputs and do not re-run; a redirect flow does the same.
 6. **Restart semantics**: `kernel.restart` clears the bridge layer only; client definitions survive; dependents go stale; a stale stub fails with `KernelRestarted`; `kernel.restart { all }` resets the realm (05-bridge §11).
 7. **Edit provenance**: `cell.add` and `cell.update` from `ui`, `cli`, `mcp` and an undeclared connection stamp the expected `lastEdit`; a client-sent `meta.lastEdit` is rejected.
 8. **Files**: autosave coalescing, atomic write under a simulated crash, conflict and reload, `.jsnb/.gitignore`, `server.json` cleanup, log rotation (07-file-format §10).
