@@ -73,6 +73,19 @@ export async function groupSubpaths(folder: string): Promise<readonly string[]> 
   return kept.flat();
 }
 
+/** The file each of `subpaths` names under the page's conditions, by subpath (none for the main without `exports`). */
+export async function entryFiles(folder: string, subpaths: readonly string[]) {
+  const read = await readRegularFile(join(folder, "package.json"), 1024 * 1024);
+  const map =
+    read.kind === "read" ? Exports.safeParse(parsedJson(read.text)).data?.exports : undefined;
+  const files = new Map<string, string>();
+  for (const subpath of subpaths) {
+    const target = map === undefined ? undefined : targetOf(map[`.${subpath}`], conditions);
+    if (target?.startsWith("./") === true) files.set(subpath, join(folder, target));
+  }
+  return files;
+}
+
 /** A package's split bundle: each entry's module by subpath, each chunk by hash, what it read and imported. */
 export type Group =
   | {
@@ -148,7 +161,7 @@ async function outputText(
 }
 
 /** The split bundle of `pkg`; rejects when it would hold a file outside the package, refused when the rule keeps one. */
-async function bundleGroup(
+export async function bundleGroup(
   pkg: GroupPackage,
   resolver: Resolver,
   signal: AbortSignal,
@@ -177,69 +190,6 @@ async function bundleGroup(
   const context = { pkg, requires: seen.requires, lookup, metafile: made.metafile };
   const { entries, chunks } = await sorted(made.files, outdir, context);
   return { ok: true, entries, chunks, inputs: checked.inputs, imports: seen.imports, left: [] };
-}
-
-/** More entries than this failing on their own: the package is built entry by entry. */
-const maxLeft = 8;
-
-/** The split build of `subpaths` alone, or the reason it cannot be made (a rule's refusal among them). */
-async function attempt(
-  pkg: GroupPackage,
-  resolver: Resolver,
-  signal: AbortSignal,
-): Promise<Group | Error> {
-  try {
-    const group = await bundleGroup(pkg, resolver, signal);
-    return group.ok ? group : new Error("a file it reads is not one a page may load");
-  } catch (error) {
-    signal.throwIfAborted(); // cancelled or past its limit: the request's failure, not the package's
-    return error instanceof Error ? error : new Error(String(error));
-  }
-}
-
-/**
- * The subpaths among `subpaths` (whose split build fails) that fail on their own, found by halves, added to `left`;
- * false once more than `maxLeft` do.
- */
-async function failing(
-  pkg: GroupPackage,
-  context: { readonly resolver: Resolver; readonly signal: AbortSignal },
-  left: string[],
-): Promise<boolean> {
-  const [only] = pkg.subpaths;
-  if (pkg.subpaths.length === 1 && only !== undefined) {
-    left.push(only);
-    return left.length <= maxLeft;
-  }
-  const half = Math.ceil(pkg.subpaths.length / 2);
-  for (const part of [pkg.subpaths.slice(0, half), pkg.subpaths.slice(half)]) {
-    const tried = await attempt({ ...pkg, subpaths: part }, context.resolver, context.signal);
-    if (tried instanceof Error && !(await failing({ ...pkg, subpaths: part }, context, left))) {
-      return false;
-    }
-  }
-  return true;
-}
-
-/**
- * The split bundle of `pkg`; when it cannot be made, the entries that fail on their own are found by halves and left
- * out (`left`), and the rest is built together. Rejects with the first failure when none fails on its own, when too
- * many do, or when the rest still fails together.
- */
-export async function bundleGroupAround(
-  pkg: GroupPackage,
-  resolver: Resolver,
-  signal: AbortSignal,
-): Promise<Group> {
-  const first = await attempt(pkg, resolver, signal);
-  if (!(first instanceof Error)) return first;
-  const left: string[] = [];
-  const found = await failing(pkg, { resolver, signal }, left);
-  const kept = pkg.subpaths.filter((subpath) => !left.includes(subpath));
-  if (!found || left.length === 0 || kept.length === 0) throw first;
-  const rest = await attempt({ ...pkg, subpaths: kept }, resolver, signal);
-  if (rest instanceof Error) throw first;
-  return rest.ok ? { ...rest, left } : rest;
 }
 
 /** The build's outputs, each shaped for the page: the entries by subpath, the chunks by hash. */

@@ -3,6 +3,7 @@
 // entries is built entry by entry, one bundle per import; cache.clear forgets that; the chunks of the build before stay
 // served; a cache that cannot be written still builds a package once; `.` beside `./index`, another spelling of a name,
 // conditions nested past reason.
+import { existsSync } from "node:fs";
 import { chmod, symlink, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -13,6 +14,8 @@ import { npmPage } from "../../fixtures/npmPage.js";
 import {
   body,
   brokenEntries,
+  casedPackages,
+  heavyBrokenEntries,
   linkedPackage,
   manyModules,
   modulesOf,
@@ -45,16 +48,17 @@ describe("an entry that does not build", () => {
     });
   });
 
-  it("among many makes its package built entry by entry, one bundle per import, until cache.clear", async () => {
+  it("among many makes its package built entry by entry, sharing state by URL, until cache.clear", async () => {
     await withWorkspace(async (ws) => {
-      await writeFiles(ws, brokenEntries(30, 9));
+      await writeFiles(ws, brokenEntries(30, 70, true)); // past the search's budget
       const modules = await modulesOf(ws);
       const page = npmPage(modules.npm, ws.path("page"));
-      expect(((await page.load("/npm/many")).m29 as () => number)()).toBe(1);
-      expect(page.fetched()).toEqual(["/npm/many"]);
+      const index = await page.load("/npm/many");
+      const m29 = await page.load("/npm/many/m29");
+      expect([(index.m29 as () => number)(), (m29.m29 as () => number)()]).toEqual([1, 2]);
+      expect(page.fetched().filter((url) => !/^\/npm\/many(?:\/m\d+)?$/.test(url))).toEqual([]);
       expect(modules.noted("one by one")).toBe(1);
-      expect(modules.noted("bundling a package for the page")).toBe(1);
-      expect(body(await modules.get("many/m3"))).toContain("m3");
+      expect(modules.noted("bundling a package for the page")).toBe(page.fetched().length);
       expect(modules.noted("together")).toBe(1);
       await clearNpmCache(join(modules.root, ".jsnb/cache/npm"));
       await modules.get("many/m3");
@@ -82,6 +86,8 @@ describe("a split bundle built again", () => {
       try {
         const page = npmPage(modules.npm, ws.path("page"));
         expect(((await page.load("/npm/many")).m1 as () => number)()).toBe(1);
+        expect(modules.noted("bundling a package's entries together")).toBe(3);
+        await npmPage(modules.npm, ws.path("again")).load("/npm/many"); // entries and chunks from memory
         expect(modules.noted("bundling a package's entries together")).toBe(3);
       } finally {
         await chmod(cache, 0o755);
@@ -111,6 +117,50 @@ describe("a package's odd exports and names", () => {
       expect([psSeconds("1:02.50"), psSeconds("01:02:03"), psSeconds("2-00:00:01")]).toEqual([
         62.5, 3723, 172_801,
       ]);
+    });
+  });
+});
+
+describe("a package that cannot be split in time", () => {
+  it("is remembered for its version and built entry by entry, never timing out twice", async () => {
+    await withWorkspace(async (ws) => {
+      await writeFiles(ws, heavyBrokenEntries(20, 6000));
+      const modules = await modulesOf(ws, { timeoutMs: 300 });
+      expect(body(await modules.get("many"))).toContain("/npm/many/m3");
+      expect([modules.noted("together"), modules.noted("one by one")]).toEqual([1, 1]);
+      expect(body(await modules.get("many/m3"))).toContain("m3");
+      expect(modules.noted("together")).toBe(1);
+    });
+  }, 30_000); // writes 6000 modules
+});
+
+describe("a standalone build that fails, and names that differ by case", () => {
+  it("answers a repeated failure at once until the package changes; keeps cases apart in the cache", async () => {
+    await withWorkspace(async (ws) => {
+      await writeFiles(ws, { ...brokenEntries(3, 1), ...casedPackages });
+      const modules = await modulesOf(ws);
+      const first = await modules.get("many/broken0");
+      const again = await modules.get("many/broken0");
+      expect([first.ok, again.ok, modules.noted("bundling a package for the page")]).toEqual([
+        false,
+        false,
+        1,
+      ]);
+      await writeFile(ws.path("node_modules/many/missing0.js"), "export const back = 1;\n");
+      expect(body(await modules.get("many/broken0"))).toContain("back");
+      expect([
+        body(await modules.get("cased/Item")),
+        body(await modules.get("cased/item")),
+      ]).toEqual([expect.stringContaining("Upper"), expect.stringContaining("lower")]);
+      const cached = await modulesOf(ws);
+      expect(body(await cached.get("cased/item"))).toContain("lower");
+      expect(body(await cached.get("plain/debounce.js"))).toContain("debounce");
+      const misspelled = await cached.get("plain/Debounce.js");
+      expect(misspelled.ok).toBe(false);
+      if (existsSync(ws.path("NODE_MODULES"))) {
+        // a file system that ignores case: refused by name rather than served under a second URL
+        expect(misspelled.ok ? "" : misspelled.error?.message).toContain("spelled debounce.js");
+      }
     });
   });
 });

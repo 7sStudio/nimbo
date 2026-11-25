@@ -177,14 +177,16 @@ describe("a build no one waits for", () => {
       expect(await buildCpuUntil(pause(300))).toBeLessThan(0.05); // nothing left running once its turn is free
       expect(existsSync(join(modules.root, ".jsnb/cache/npm/slow@1.0.0/index.js"))).toBe(false);
       const limited = await modulesOf(ws, { timeoutMs: 200, concurrency: 1 });
-      const timedOut = limited.get("slow");
-      const late = await buildCpuUntil(Promise.all([timedOut, limited.get("many")]));
-      const stopped = await timedOut;
+      const stopped = await limited.get("slow");
       expect(stopped.ok ? "" : stopped.error?.message).toBe(
         "The page cannot load slow: its build ran past the limit of 0.2 s and was stopped.",
       );
+      const again = limited.get("slow"); // the same package version: answered from memory, no build
+      expect(await buildCpuUntil(again)).toBeLessThan(0.05);
+      const repeated = await again;
+      expect(repeated.ok ? "" : repeated.error?.message).toContain("ran past the limit");
       const whole = await buildCpuUntil(modules.get("slow"));
-      expect([cancelled < whole / 2, late < whole / 2]).toEqual([true, true]);
+      expect(cancelled).toBeLessThan(whole / 2);
     });
   }, 60_000); // writes 12000 modules and builds them three times
 });

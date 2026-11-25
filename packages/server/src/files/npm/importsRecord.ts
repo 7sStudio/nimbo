@@ -41,9 +41,16 @@ export const importsText = (imports: readonly BareImport[]): string =>
 export async function importsUnchanged(resolver: Resolver, path: string): Promise<boolean> {
   const read = await readRegularFile(path, maxRecordBytes, { follow: false }); // a cache file: no link
   const record = read.kind === "read" ? Record.safeParse(parsedJson(read.text)).data : undefined;
-  if (record === undefined) return false;
+  return record !== undefined && importsHold(resolver, record.imports);
+}
+
+/** Whether every bare import of a bundle still resolves to the URL its build chose. */
+export async function importsHold(
+  resolver: Resolver,
+  imports: readonly BareImport[],
+): Promise<boolean> {
   const lookups = createLookups();
-  const lines = once(record.imports, (line) => JSON.stringify(line));
+  const lines = once(imports, (line) => JSON.stringify(line));
   const same = await Promise.all(
     lines.map(
       async ({ spec, from, url }) =>

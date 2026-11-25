@@ -164,11 +164,11 @@ export async function cacheGroup(
   where: Where,
   spec: CachedSpec,
   group: Extract<Group, { ok: true }>,
-) {
+): Promise<boolean> {
   try {
     const folder = await madeCacheFolder(where.cacheDir, spec.dir);
     const chunks = await madeCacheFolder(where.cacheDir, `${spec.dir}/chunks`);
-    if (folder === undefined || chunks === undefined) return; // not a folder the cache may use: served, not cached
+    if (folder === undefined || chunks === undefined) return false; // not a folder the cache may use: served
     await writeAll([
       ...[...group.chunks].map(([hash, text]) => [join(chunks, `${hash}.js`), text] as const),
       ...[...group.entries].map(
@@ -189,10 +189,12 @@ export async function cacheGroup(
     await writeAtomically(join(folder, "group.json"), `${JSON.stringify(manifest)}\n`);
     await writeAtomically(join(folder, "meta.json"), metaText(spec.name, spec.found.version));
     await prune(chunks, { ...previous, ...chunkSizes });
+    return true;
   } catch (error) {
     where.log.warn(
       { err: error, dir: spec.dir },
       "a split bundle could not be cached; it is built again next time",
     );
+    return false;
   }
 }

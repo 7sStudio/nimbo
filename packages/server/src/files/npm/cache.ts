@@ -35,7 +35,7 @@ export type NoteLog = {
 };
 
 /** The path rule's version a cached bundle passed: one cached under an earlier rule is built and checked again. */
-const pathRule = 8; // 8: a subpath's bundle named apart from the main's
+const pathRule = 9; // 9: a subpath's bundle named apart from the main's and from other cases
 
 /** A cached bundle's meta.json: the esbuild version and the rule that made it decide whether it is still good. */
 const CacheMeta = z.looseObject({ esbuild: z.string(), rule: z.number().optional() });
@@ -149,10 +149,15 @@ export const metaText = (name: string, version: string): string =>
 
 /**
  * The name of a subpath's bundle in its entry folder (`""` or `locale/fr`, no leading slash): a subpath's name starts
- * with `@`, so the main's never meets one (a package exporting both `.` and `./index`).
+ * with `@`, so the main's never meets one (a package exporting both `.` and `./index`), and names differing only by
+ * case stay apart on a file system that ignores it.
  */
 export const bundleName = (subpath: string): string =>
-  subpath === "" ? "index.js" : `@${encodeURIComponent(subpath)}.js`;
+  subpath === "" ? "index.js" : `@${caseless(encodeURIComponent(subpath))}.js`;
+
+/** `name` with each capital written `^` and its small letter (`^` is escaped by then): one file whatever case rules. */
+const caseless = (name: string): string =>
+  name.replaceAll(/[A-Z]/g, (capital) => `^${capital.toLowerCase()}`);
 
 /** The cached bundle of `spec` while it is still good; undefined when it is to be built. */
 export async function heldBundle(where: Where, spec: CachedSpec): Promise<string | undefined> {
