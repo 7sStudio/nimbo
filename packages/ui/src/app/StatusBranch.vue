@@ -38,7 +38,7 @@ const item =
     :title="git.progress === '' ? `${git.running}…` : git.progress"
     :class="item"
   >
-    <RefreshCw class="ui:motion-safe:animate-spin ui:block-3 ui:inline-3" aria-hidden="true" />
+    <RefreshCw class="ui:block-3 ui:inline-3 ui:motion-safe:animate-spin" aria-hidden="true" />
   </span>
   <button
     v-else-if="publish"

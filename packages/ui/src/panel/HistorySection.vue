@@ -85,7 +85,7 @@ watch(head, () => void history.reload());
               type="button"
               data-testid="scm-commit-row"
               :title="`${commit.short} · ${commit.author} · ${commit.date.slice(0, 16).replace('T', ' ')}\n${commit.subject}`"
-              class="ui:flex ui:inline-full ui:cursor-pointer ui:items-center ui:gap-1 ui:border-0 ui:bg-transparent ui:ps-1 ui:pe-2 ui:text-start ui:font-inherit ui:text-small ui:text-fg ui:block-5.5 ui:hover:bg-well"
+              class="ui:flex ui:cursor-pointer ui:items-center ui:gap-1 ui:border-0 ui:bg-transparent ui:ps-1 ui:pe-2 ui:text-start ui:font-inherit ui:text-small ui:text-fg ui:block-5.5 ui:inline-full ui:hover:bg-well"
               @click="history.toggle(commit.oid)"
             >
               <component
@@ -109,7 +109,7 @@ watch(head, () => void history.reload());
                 <button
                   type="button"
                   data-testid="scm-commit-file"
-                  class="ui:flex ui:inline-full ui:cursor-pointer ui:items-center ui:gap-1 ui:border-0 ui:bg-transparent ui:ps-9 ui:pe-2 ui:text-start ui:font-inherit ui:text-small ui:text-fg ui:block-5.5 ui:hover:bg-well"
+                  class="ui:flex ui:cursor-pointer ui:items-center ui:gap-1 ui:border-0 ui:bg-transparent ui:ps-9 ui:pe-2 ui:text-start ui:font-inherit ui:text-small ui:text-fg ui:block-5.5 ui:inline-full ui:hover:bg-well"
                   @click="openFile(commit.oid, file.path)"
                   @contextmenu="aimed = { oid: commit.oid, path: file.path }"
                 >
