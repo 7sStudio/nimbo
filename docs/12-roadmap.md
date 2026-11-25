@@ -6,14 +6,13 @@ What is open. Each item gets its design in the document that owns the topic when
 
 ## 1. Registered but not built
 
-These settings exist in the registry with their schemas as the contract and answer `NOT_AVAILABLE` (1009) until built (03 §3): the `planned` settings `editor.keymap: "vim"` and `secrets.allowLiveKeys`, and `cell.snapshot`'s `image`. Building one replaces its stub.
+These settings exist in the registry with their schemas as the contract and answer `NOT_AVAILABLE` (1009) until built (03 §3): the `planned` settings `editor.keymap: "vim"` and `secrets.allowLiveKeys`. Building one replaces its stub.
 
 Constraint on every UI item: the page's first load stays within its 500 KB budget; anything new on the page is a chunk loaded on first use.
 
 ## 2. Kernel, realms and execution
 
-- **Headless client realm** (L): client cells run without a tab, in the system's Chrome driven through `puppeteer-core`, opt-in by a setting; a human's tab always takes the realm over.
-- **`cell.snapshot` images** (M): a client cell's container as an image, with the headless client realm.
+- **Snapshot images from a tab** (S): `cell.snapshot { image }` comes from the headless realm only; a tab could render its container to a PNG in the page.
 - **Re-run client cells after a reload** (S): a reloaded or reconnected page runs again, in order, the client cells it had run, so their DOM and `on` listeners come back without a click.
 - **`cell.snapshot` HTML in other browsers** (S): the allowlist serialiser and its hostile-shape tests run in Chromium only; run them in Firefox and WebKit too.
 - **Named exports of opaque CommonJS packages** (S): a page's `import { chunk } from "lodash"` finds no `chunk`, as in Node: the names come from `cjs-module-lexer` at build time, and lodash assigns its exports inside an IIFE the lexer cannot read; finding them would mean running the package in the daemon. A per-package list of known names, or the default's keys exported at load through a generated facade, would cover the common ones.
@@ -22,7 +21,7 @@ Constraint on every UI item: the page's first load stays within its 500 KB budge
 
 ## 3. Debugging
 
-- **Client-cell debugging** (M): breakpoints and stepping in client cells, through the page's own DevTools protocol, in the same Debug view as server cells.
+- **Client-cell debugging** (M): breakpoints and stepping in client cells, in the same Debug view as server cells: js-debug attached (`pwa-chrome`) to the headless page's target beside the CDP session the daemon already owns (`kernel/headless/page.ts`), with the transform's source maps for the cells' URLs.
 
 ## 4. Product and distribution
 

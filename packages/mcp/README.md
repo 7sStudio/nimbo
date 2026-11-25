@@ -36,7 +36,10 @@ that stops reading ends it at once, quietly.
   that exists but is not open is opened first and the call made again (`openingClosed` of `@jsnb/client`).
 - A planned tool (none now), called by name, is answered `NotAvailable` (1009) from the registry once its arguments
   check, and never seeks, starts or asks a daemon. `cell_snapshot` answers a client cell's visible text (`html: true`
-  adds its sanitised HTML) from the tab holding the notebook; `bridge_events` counts the push events by name.
+  adds its sanitised HTML) from the page holding the notebook, a tab or, with the setting `realm.headless` on, the
+  daemon's headless Chrome; `image: true` adds the container's PNG from the headless page as an MCP image block after
+  the JSON (its cuts lowered so the result fits); `bridge_events` counts the push events by name. Client cells need a
+  page: a tab, or `realm.headless` (`settings_set`), which runs them with no tab.
 - A success is the output as `structuredContent` and the same JSON as text (what `nimbo … --json` prints). A failure is
   `isError: true` with `{ code, name, message, data }` as JSON text, and no `structuredContent`.
 - A result's whole frame (structuredContent and text) carries at most 128 KiB, about 64 KiB of text, under Claude Code's
