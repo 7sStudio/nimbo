@@ -5,7 +5,7 @@
 // carry the outputs and the terminal status, and its answer ends the wait; a page that goes away (detach, closed
 // socket) or a kernel.interrupt ends the run `interrupted`.
 import type { RealmLimits, Settings, SnapshotBinding } from "@jsnb/core";
-import { afterRun, MissingPackage, RealmNotAttached } from "@jsnb/core";
+import { afterRun, JsnbError, MissingPackage, RealmNotAttached } from "@jsnb/core";
 import { missingPackages } from "@jsnb/kernel-node";
 
 import { withTimeout } from "../../kernel/requests.js";
@@ -57,6 +57,36 @@ async function snapshotOf(
   );
 }
 
+/** What a run reads when the page holding it went away during it, by the detach's reason (attach.ts). */
+const goneWords: Readonly<Record<string, string>> = {
+  socket: "the page running it closed or lost its connection",
+  takenOver: "another tab took the notebook's client realm over",
+  detached: "the page running it detached",
+  "headless:gone": "the headless browser running it exited",
+  "headless:socket":
+    "the headless page running it lost its connection (its browser exited, or the page closed)",
+  "headless:detached": "the headless page running it went away",
+  "headless:unresponsive":
+    "the headless page did not answer and was closed (a client cell kept it busy)",
+  "headless:turned off": "realm.headless was turned off",
+  "headless:moved": "the notebook moved",
+  "headless:closed": "the notebook closed",
+  "headless:idle": "the headless page closed after realm.headlessIdleMs unused",
+};
+
+/** The error of a run cut because its page went away, or undefined when it did not (an interrupt, a restart). */
+function pageGone(context: SessionContext, attachment: Attachment): JsnbError | undefined {
+  if (!gone(attachment)) return undefined;
+  const given: unknown = attachment.detached.signal.reason;
+  const reason = given === "socket" && attachment.kind === "headless" ? "headless:socket" : given;
+  const why = (typeof reason === "string" ? goneWords[reason] : undefined) ?? goneWords.socket;
+  return new JsnbError({
+    name: "PageGone",
+    message: `The cell stopped: ${String(why)}. Run it again.`,
+    data: { notebook: context.ref, reason: typeof reason === "string" ? reason : "socket" },
+  });
+}
+
 /** The page detached or its socket closed. */
 const gone = (attachment: Attachment): boolean =>
   attachment.detached.signal.aborted || attachment.page.closed.aborted;
@@ -103,9 +133,11 @@ async function execute(
   const { execution, resolution } = sent;
   const { attachment, stop } = where;
   const interrupted = (): void => {
+    const away = pageGone(context, attachment);
     finish(context, execution, {
       status: "interrupted",
       durationMs: performance.now() - where.startedAt,
+      ...(away === undefined ? {} : { error: runError(away, execution.cell) }),
     });
   };
   // an interrupt, the page's going or a kernel restart while the kernel took the snapshot: the run never starts, and
@@ -162,13 +194,24 @@ function prepare(context: SessionContext, state: RealmState, execution: Executio
   return { attachment, sent: { execution, code, map, resolution } };
 }
 
-/** Runs a client cell to its terminal status on the attached page. */
+/** Runs a client cell to its terminal status on the attached page, once `ensure` (the headless realm's) settled: its
+ * failure is the run's. */
 export async function runClientCell(
   context: SessionContext,
   state: RealmState,
   deps: RealmDeps,
-  execution: ExecutionRecord,
+  run: { readonly execution: ExecutionRecord; readonly ensure: () => Promise<void> },
 ): Promise<void> {
+  const { execution } = run;
+  const unready = await run.ensure().then(
+    () => undefined,
+    (error: unknown) => error,
+  );
+  if (terminalStatuses.has(execution.status)) return; // ended while the headless page started
+  if (unready !== undefined) {
+    failWith(context, execution, unready);
+    return;
+  }
   const ready = prepare(context, state, execution);
   if (!ready) return;
   hold(state, ready.sent.resolution.names);

@@ -40,7 +40,7 @@ describe("Realm.attach and detach", () => {
     const error = await refused.handle("realm.execute", params).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(RealmNotAttached);
     expect((error as RealmNotAttached).message).toBe(
-      "No notebook page is open for demo.jsnb; open it in the browser to run client cells.",
+      "No notebook page is open for demo.jsnb; open it in the browser to run client cells, or turn on the setting realm.headless to run them in a headless browser.",
     );
   });
 });

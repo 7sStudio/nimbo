@@ -1,9 +1,10 @@
 // The run commands of 03-api §4.3.1 and §4.2 on a session: cell.run queues a run and, with `wait`, answers at its
 // terminal status or at `timeoutMs` (`timedOut: true`, the run going on; a timeout is not an error); notebook.run
 // queues the selected cells in notebook order (markdown left out, client cells with no page listed as skipped) and
-// stops after an error when asked. A client cell run with no page is the call failure REALM_NOT_ATTACHED.
+// stops after an error when asked. A client cell run with no page (and none the headless realm can open) is the call
+// failure REALM_NOT_ATTACHED.
 import type { AutoRunReport, CellId, DebugPause, Execution, Selection } from "@jsnb/core";
-import { RealmNotAttached, resolveSelection } from "@jsnb/core";
+import { resolveSelection } from "@jsnb/core";
 
 import type { SessionContext } from "../context.js";
 import type { Editor } from "../provenance.js";
@@ -27,8 +28,8 @@ export type Waiting = {
 export type Runs = {
   readonly queue: RunQueue;
   readonly autoRun: AutoRun;
-  /** Whether a page is attached to run client cells. */
-  readonly realmAttached: () => boolean;
+  /** A page holds the realm once it settles (realm.headless opens one), else RealmNotAttached. */
+  readonly realmReady: () => Promise<void>;
 };
 
 /** How a caller's wait for a run ended: the run settled, the time ran out, or the kernel is paused in the debugger. */
@@ -113,8 +114,7 @@ export async function runCell(
   waiting: Waiting & { readonly trigger?: boolean },
 ): Promise<CellRunAnswer> {
   const record = context.cells.require(cell);
-  if (record.type === "client" && !runs.realmAttached())
-    throw new RealmNotAttached({ notebook: context.ref });
+  if (record.type === "client") await runs.realmReady();
   const run = enqueue(context, runs, cell, { by: waiting.by, trigger: waiting.trigger ?? true });
   if (!waiting.wait) return { execution: toExecution(run.execution) };
   const all =
@@ -133,7 +133,11 @@ export type NotebookRun = Waiting & { readonly select: Selection; readonly stopO
 
 export type NotebookRunAnswer = {
   readonly executions: Execution[];
-  readonly skipped: { readonly cell: CellId; readonly code: "REALM_NOT_ATTACHED" }[];
+  readonly skipped: {
+    readonly cell: CellId;
+    readonly code: "REALM_NOT_ATTACHED";
+    readonly message?: string;
+  }[];
 };
 
 /** notebook.run. */
@@ -150,11 +154,23 @@ export async function runNotebook(
   const batch: Batch = { stopped: false };
   const skipped: NotebookRunAnswer["skipped"] = [];
   const queued = [];
+  const anyClient = selected.some((id) => cells.require(id).type === "client");
+  const refusal = anyClient
+    ? await runs.realmReady().then(
+        () => undefined,
+        (error: unknown) => (error instanceof Error ? error.message : String(error)),
+      )
+    : undefined;
+  const realm = anyClient && refusal === undefined;
   for (const id of selected) {
     const type = cells.require(id).type;
     if (type === "markdown") continue;
-    if (type === "client" && !runs.realmAttached())
-      skipped.push({ cell: id, code: "REALM_NOT_ATTACHED" });
+    if (type === "client" && !realm)
+      skipped.push({
+        cell: id,
+        code: "REALM_NOT_ATTACHED",
+        ...(refusal === undefined ? {} : { message: refusal }),
+      });
     else
       queued.push(
         enqueue(context, runs, id, { batch: input.stopOnError ? batch : undefined, by: input.by }),

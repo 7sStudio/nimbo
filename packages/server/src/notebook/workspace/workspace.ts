@@ -21,6 +21,8 @@ import type { Adapter } from "../../kernel/debug/adapter.js";
 import { createAdapter } from "../../kernel/debug/adapter.js";
 import type { JsonEngines } from "../query/engines.js";
 import { createJsonEngines } from "../query/engines.js";
+import type { HeadlessService } from "../realm/headlessService.js";
+import { createHeadlessService } from "../realm/headlessService.js";
 import { serialClear } from "./cacheClear.js";
 import { kernelNodeVersion } from "./nodeVersion.js";
 import type { Notebooks } from "./notebooks.js";
@@ -84,6 +86,8 @@ export type WorkspaceOptions = {
   readonly kernelEntry: KernelEntry | undefined;
   /** The daemon's redaction (its token and the .env secrets), for what a page reports. */
   readonly redact: (text: string) => string;
+  /** The token and the page key the headless realm's pages authenticate with; absent, no headless realm. */
+  readonly pageCredentials?: { readonly token: string; readonly pageKey: string };
   /** How long one packages.add may run; default 10 minutes. */
   readonly installTimeoutMs?: number;
   /** How long a session waits for its kernel's or its page's answer; default 10 s. */
@@ -140,21 +144,22 @@ const both = (first: () => void, later: { readonly language: () => void }) => ()
 };
 
 /** Closes the workspace's services: js-debug (the kernels' debug sessions end with it), the language worker, the
- * installs, the notebooks, the engines; the notebook list's watch first. */
+ * installs, the notebooks, the headless browser, the engines; the notebook list's watch first. */
 async function closeAll(
   parts: Pick<
     Workspace,
     "language" | "packages" | "notebooks" | "engines" | "settings" | "keybindings" | "git"
   >,
-  debugAdapter: Adapter,
+  services: { readonly debugAdapter: Adapter; readonly headless: HeadlessService | undefined },
   stopListWatch: () => void,
 ): Promise<void> {
   stopListWatch();
-  debugAdapter.stop();
+  services.debugAdapter.stop();
   await parts.git.close();
   await parts.language.close();
   await parts.packages.close();
   await parts.notebooks.closeAll();
+  await services.headless?.stop();
   await parts.engines.dispose();
   parts.settings.close();
   parts.keybindings.close();
@@ -212,6 +217,48 @@ const listWatchOf = (
     ...{ log: options.log, debounceMs: 300, everyMs: options.listCheckMs ?? 5000 },
   });
 
+/** The headless realm's browser pages, its profiles in `.jsnb/headless/`, when the daemon gave its page credentials. */
+function headlessOf(
+  options: WorkspaceOptions,
+  settings: SettingsService,
+): HeadlessService | undefined {
+  const credentials = options.pageCredentials;
+  if (credentials === undefined) return undefined;
+  return createHeadlessService({
+    dir: join(options.jsnb.dir, "headless"),
+    log: options.log,
+    credentials: { ...credentials, port: options.port },
+    settings: () => {
+      const current = settings.current();
+      return {
+        browser: current["realm.headlessBrowser"],
+        sandbox: current["realm.headlessSandbox"],
+      };
+    },
+  });
+}
+
+/** Turning realm.headless off closes the open notebooks' headless pages; returns the watch's end. */
+function watchHeadlessOff(
+  options: WorkspaceOptions,
+  settings: SettingsService,
+  notebooks: Notebooks,
+) {
+  const id = "headless-setting";
+  options.bus.subscribe({
+    id,
+    deliver: (event) => {
+      if (event.type !== "settings.changed" || settings.current()["realm.headless"]) return;
+      void notebooks.sessions().then((open) => {
+        for (const session of open) session.realm.headlessOff();
+      });
+    },
+  });
+  return (): void => {
+    options.bus.unsubscribe(id);
+  };
+}
+
 /** Opens the workspace's services (the settings files are read and watched from here on). */
 export async function openWorkspace(options: WorkspaceOptions): Promise<Workspace> {
   const { facts, jsnb, bus, log } = options;
@@ -220,7 +267,8 @@ export async function openWorkspace(options: WorkspaceOptions): Promise<Workspac
   const envWrites = { language: (): void => undefined };
   const onEnvWrite = both(options.onEnvWrite, envWrites);
   const secrets = createSecrets(join(facts.root, ".env"), onEnvWrite);
-  const realm = { redact: options.redact, publicEnv: secrets.publicEnv };
+  const headless = headlessOf(options, settings);
+  const realm = { redact: options.redact, publicEnv: secrets.publicEnv, headless };
   const debugAdapter = createAdapter({ log });
   const listChanged = announcer(facts.root, () => notebooks.openRefs(), bus, log); // read once created
   const notebooks = createNotebooks({
@@ -233,6 +281,7 @@ export async function openWorkspace(options: WorkspaceOptions): Promise<Workspac
     ...(options.moveCheckMs === undefined ? {} : { moveCheckMs: options.moveCheckMs }),
   });
   const stopListWatch = listWatchOf(options, notebooks, listChanged);
+  const stopHeadlessWatch = watchHeadlessOff(options, settings, notebooks);
   const nodeVersion = kernelNodeVersion(settings);
   const language = languageOf(options, { settings, secrets, notebooks });
   envWrites.language = language.envChanged;
@@ -248,7 +297,10 @@ export async function openWorkspace(options: WorkspaceOptions): Promise<Workspac
     git: createGitService({ root: facts.root, bus, notebooks, log }),
     info: () => infoOf(facts, notebooks, nodeVersion),
     clearCache: serialClear(jsnb.npmCache, log),
-    close: () => closeAll(workspace, debugAdapter, stopListWatch),
+    close: () => {
+      stopHeadlessWatch();
+      return closeAll(workspace, { debugAdapter, headless }, stopListWatch);
+    },
   };
   return workspace;
 }

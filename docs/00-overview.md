@@ -85,10 +85,11 @@ Two runtimes, no shared memory: shared scope within a kind, a **bridge** across 
 21. Markdown cells render as prose; the editor opens on Enter, double click or Edit.
 22. Variables panel and `kernel.scope`: what each realm defines, with previews.
 23. TypeScript language service in the editor: completions, hover, signature help, definition, diagnostics and rename, with cross-cell and bridge types.
+24. Headless client realm (`realm.headless`): with no tab open, client cells, `cell.snapshot` (with a PNG of the container) and push events run in the system's Chrome, Chromium or Edge, for an agent working alone; a tab that opens takes the realm over.
 
 ### 3.2 Not built yet
 
-A headless client realm for agent-only sessions, debugging client cells in the page, add-ons. Open work is in [12-roadmap.md](12-roadmap.md).
+Debugging client cells in the page, add-ons. Open work is in [12-roadmap.md](12-roadmap.md).
 
 ### 3.3 Out of scope
 

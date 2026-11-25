@@ -68,7 +68,7 @@ describe("the API errors", () => {
 
   it("uses the exact REALM_NOT_ATTACHED message of 05-bridge §6", () => {
     expect(new RealmNotAttached({ notebook: "demo.jsnb" }).message).toBe(
-      "No notebook page is open for demo.jsnb; open it in the browser to run client cells.",
+      "No notebook page is open for demo.jsnb; open it in the browser to run client cells, or turn on the setting realm.headless to run them in a headless browser.",
     );
   });
 
@@ -100,4 +100,12 @@ describe("InterruptRefused", () => {
       );
     },
   );
+});
+
+describe("REALM_NOT_ATTACHED with the headless realm on", () => {
+  it("says why the headless realm could not take the notebook", () => {
+    expect(new RealmNotAttached({ notebook: "demo.jsnb", headless: "no browser." }).message).toBe(
+      "No notebook page is open for demo.jsnb, and the headless browser could not take it: no browser.",
+    );
+  });
 });

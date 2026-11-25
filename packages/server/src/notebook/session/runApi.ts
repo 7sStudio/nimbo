@@ -41,6 +41,10 @@ import { readLogTail } from "../../files/logs/kernelLog.js";
 /** What the runs need from the session's client realm (the page). */
 export type RealmPart = {
   readonly attached: () => boolean;
+  /** Whether a run may count on a page: one is attached, or the headless realm can open one. */
+  readonly available: () => boolean;
+  /** A page holds the realm once it settles (the headless page opened when needed), else RealmNotAttached. */
+  readonly ensure: () => Promise<void>;
   readonly run: ClientRunner;
   readonly bindings: (cell: CellId) => BindingValue[];
   readonly scope: () => Binding[];
@@ -57,6 +61,8 @@ export type SessionRuns = {
   readonly queue: RunQueue;
   /** Whether a page is attached to run client cells. */
   readonly realmAttached: () => boolean;
+  /** A page holds the realm once it settles (realm.headless opens one), else RealmNotAttached. */
+  readonly realmReady: () => Promise<void>;
   readonly run: (cell: CellId, waiting: Waiting) => Promise<Execution>;
   /** cell.run's answer: the run and, with execution.autoRunDependents, the dependents it started. */
   readonly runWithDependents: (cell: CellId, waiting: Waiting) => Promise<CellRunAnswer>;
@@ -166,7 +172,7 @@ function queueOf(context: SessionContext, realm: RealmPart) {
     },
     () => cascade.current?.idle(),
   );
-  cascade.current = createAutoRun(context, queue, realm.attached);
+  cascade.current = createAutoRun(context, queue, realm.available);
   return { queue, autoRun: cascade.current };
 }
 
@@ -182,11 +188,12 @@ export function createRuns(context: SessionContext, realm: RealmPart): SessionRu
   };
   context.hooks.autoRunState = cascade.state;
   lateOutputs(context);
-  const runs = { queue, realmAttached: realm.attached, autoRun: cascade };
+  const runs = { queue, realmReady: realm.ensure, autoRun: cascade };
   return {
     ...views(context, realm),
     queue,
     realmAttached: realm.attached,
+    realmReady: realm.ensure,
     run: async (cell, waiting) =>
       (await runCell(context, runs, cell, { ...waiting, trigger: false })).execution,
     runWithDependents: (cell, waiting) => runCell(context, runs, cell, waiting),

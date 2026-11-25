@@ -41,7 +41,9 @@ const instructions =
   "nimbo notebook tools, one per command of the nimbo API (cell.run is cell_run). Notebook paths are from the workspace " +
   "root (the nearest folder up from where the server runs that holds .jsnb/); a notebook a tool names is opened " +
   "first when it is not open, and notebook_create makes one. A server cell runs in the daemon's Node kernel; a client " +
-  "cell runs in the page, so it needs the notebook open in a browser (`nimbo open <path>`). After an edit, " +
+  "cell runs in the page, so it needs the notebook open in a browser (`nimbo open <path>`), or the setting " +
+  "realm.headless on (settings_set), which runs it in a headless Chrome of the machine; cell_snapshot with image: true " +
+  "then shows a client cell's container as a PNG. After an edit, " +
   "notebook_diagnostics gives the type errors without running anything; language_rename renames a name across " +
   "cells; notebook_bridge lists the server functions client cells can call, with their signatures. A large value is read in parts: cell_outputValue, or cell_outputQuery (filter, JSONPath, jq, or SQL over " +
   "table t), both on the last value output unless told another. Results are the command's JSON, as `nimbo … --json` " +

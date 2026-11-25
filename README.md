@@ -313,8 +313,11 @@ Where next: run `nimbo` with no arguments to open Home, then open one of the [ex
 - Each cell records who edited it last. An agent's edit that you have not reviewed keeps the code it replaced, marks
   the changed lines and offers **Mark reviewed**, **Revert** and **Full diff**; the Agent view lists them all.
 - You watch the agent's cells appear and run live in the page.
-- An agent reads what a client cell renders without a screenshot: `nimbo cell snapshot <cell>` (MCP
-  `cell_snapshot`) answers its visible text, and its sanitised HTML with `--html`.
+- An agent reads what a client cell renders: `nimbo cell snapshot <cell>` (MCP `cell_snapshot`) answers its visible
+  text, its sanitised HTML with `--html`, and a PNG of it with `--image` from the headless realm.
+- An agent working alone runs client cells too: with `nimbo config set realm.headless true`, a client cell with no tab
+  open runs in your own Chrome, Chromium or Edge, headless, with a fresh profile, its sandbox on and no debugging
+  port; push events reach it, and when you open the notebook your tab takes over.
 
 <img alt="The Agent view lists one edit to review: cell 3, orderTotal, lines 1, 4 to 5 and 7 changed by claude-code over MCP, with Mark reviewed, Revert and Full diff; in the notebook those lines carry a purple bar." src="docs/assets/readme/agent-edit-review.png">
 
@@ -382,7 +385,7 @@ Then ask, for example:
 
 The agent reads and writes cells, runs them and gets the outputs as JSON, never by scraping the page. Its edits show
 in the page as they happen, marked with its name for you to review. Client cells run in the browser, so they need the
-notebook open in a tab.
+notebook open in a tab, or the setting `realm.headless` on, which runs them in a headless Chrome on your machine.
 
 ## Examples
 

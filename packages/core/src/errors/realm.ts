@@ -5,15 +5,23 @@ import { ApiError } from "./api.js";
 
 type Cause = { readonly cause?: unknown };
 
-const realmNotAttachedMessage = (notebook: string): string =>
-  `No notebook page is open for ${notebook}; open it in the browser to run client cells.`;
+type NotAttachedData = {
+  readonly notebook: string;
+  /** Why the headless realm (the setting realm.headless) did not take the notebook; absent while the setting is off. */
+  readonly headless?: string;
+};
+
+const realmNotAttachedMessage = ({ notebook, headless }: NotAttachedData): string =>
+  headless === undefined
+    ? `No notebook page is open for ${notebook}; open it in the browser to run client cells, or turn on the setting realm.headless to run them in a headless browser.`
+    : `No notebook page is open for ${notebook}, and the headless browser could not take it: ${headless}`;
 
 export class RealmNotAttached extends ApiError {
-  declare readonly data: { readonly notebook: string };
-  constructor(data: { readonly notebook: string }, options: Cause = {}) {
+  declare readonly data: NotAttachedData;
+  constructor(data: NotAttachedData, options: Cause = {}) {
     super(1004, {
       name: "RealmNotAttached",
-      message: realmNotAttachedMessage(data.notebook),
+      message: realmNotAttachedMessage(data),
       data,
       ...options,
     });

@@ -8,7 +8,7 @@ import type {
   RealmSnapshotAnswer,
   RealmStatus,
 } from "@jsnb/core";
-import { undefinedMarker } from "@jsnb/core";
+import { InvalidParams, undefinedMarker } from "@jsnb/core";
 import type { ExportEntry } from "@jsnb/kernel-node";
 
 import type { SessionContext } from "../session/context.js";
@@ -19,29 +19,38 @@ import type { CallAnswer } from "./bridgeCall.js";
 import { bridgeCall } from "./bridgeCall.js";
 import type { EventChannel } from "./events.js";
 import { createEventChannel } from "./events.js";
+import type { HeadlessRealm } from "./headless.js";
+import { createHeadlessRealm } from "./headless.js";
+import type { SnapshotRequest } from "./snapshot.js";
 import { snapshotCell } from "./snapshot.js";
 import { runClientCell } from "./clientRun.js";
 import { interruptClientRun } from "./interrupt.js";
 import { applyReport } from "./reports.js";
 import { resetRealm } from "./reset.js";
+import type { Shot } from "../../kernel/headless/page.js";
 import type { PageSocket, RealmDeps, RealmState } from "./state.js";
 import { createRealmState, realmStatusOf } from "./state.js";
 
 export type SessionRealm = RealmPart & {
   readonly status: () => RealmStatus;
-  readonly attach: (page: PageSocket, kind: "tab" | "headless", takeover?: boolean) => string;
+  /** The notebook moved: a headless page attached under its old name closes. */
+  readonly moved: () => void;
+  /** realm.headless was turned off: the headless page closes. */
+  readonly headlessOff: () => void;
+  readonly attach: (
+    page: PageSocket,
+    kind: "tab" | "headless",
+    options?: { readonly takeover?: boolean; readonly key?: string | undefined },
+  ) => string;
   readonly detach: (realmId: string) => boolean;
   readonly owns: (realmId: string) => boolean;
   readonly report: (report: RealmReport) => void;
   readonly bridgeCall: (fn: string, args: readonly unknown[]) => Promise<CallAnswer>;
   /** bridge.events: each event name's counts. */
   readonly events: EventChannel["stats"];
-  /** cell.snapshot: the client cell's container as the attached page renders it. */
-  readonly snapshot: (
-    cell: CellId,
-    maxBytes: number,
-    html: boolean,
-  ) => Promise<RealmSnapshotAnswer>;
+  /** cell.snapshot: the client cell's container as the page holding the realm renders it (the headless page started
+   * first when needed); with `image`, its PNG from the headless page. */
+  readonly snapshot: (request: SnapshotRequest) => Promise<RealmSnapshotAnswer & { image?: Shot }>;
   /** The notebook closes: the page is detached. */
   readonly close: () => void;
 };
@@ -80,17 +89,31 @@ function hookExports(context: SessionContext, state: RealmState): void {
 }
 
 /** Attaches the page; a reset it missed while away goes out once the attach is answered (realm.reset is the daemon's
- * request). */
+ * request). Only the session's own headless page attaches as `headless`, its socket counted as use. */
 function attachOwing(
   context: SessionContext,
   state: RealmState,
+  headless: HeadlessRealm,
   {
     page,
     kind,
     takeover,
-  }: { page: PageSocket; kind: "tab" | "headless"; takeover?: boolean | undefined },
+    key,
+  }: {
+    page: PageSocket;
+    kind: "tab" | "headless";
+    takeover?: boolean | undefined;
+    key?: string | undefined;
+  },
 ): string {
-  const realmId = attach(context, state, page, { kind, takeover });
+  if (kind === "headless" && !headless.expects(key)) {
+    const message =
+      "only the daemon's own headless page attaches as headless, with the key it was given; a tab attaches as tab";
+    throw new InvalidParams({ issues: [{ path: ["kind"], message }] });
+  }
+  const socket = kind === "headless" ? headless.wrap(page) : page;
+  const realmId = attach(context, state, socket, { kind, takeover });
+  if (kind === "headless") headless.attached(realmId);
   const owed = state.owed;
   if (owed !== undefined)
     setImmediate(() => {
@@ -112,13 +135,69 @@ function hookEvents(context: SessionContext, state: RealmState): EventChannel {
   return events;
 }
 
+/** The session's headless realm, closed with the page it attached. */
+function headlessOf(context: SessionContext, state: RealmState, deps: RealmDeps): HeadlessRealm {
+  const headless = createHeadlessRealm(context, state, deps.headless, (realmId, why) => {
+    detach(context, state, realmId, { why });
+  });
+  state.onDetach = (attachment) => {
+    headless.detached(attachment.realmId);
+  };
+  state.onUnresponsive = () => {
+    if (state.attachment?.kind === "headless") headless.unresponsive();
+  };
+  return headless;
+}
+
+/** What the page and the realm commands call: attach and detach, reports, bridge calls, snapshots, the close. */
+function pageSide(
+  context: SessionContext,
+  state: RealmState,
+  deps: RealmDeps,
+  headless: HeadlessRealm,
+) {
+  const fromHeadless = (): void => {
+    if (state.attachment?.kind === "headless") headless.touch();
+  };
+  return {
+    attach: (
+      page: PageSocket,
+      kind: "tab" | "headless",
+      options: { readonly takeover?: boolean; readonly key?: string | undefined } = {},
+    ) => attachOwing(context, state, headless, { page, kind, ...options }),
+    moved: headless.moved,
+    headlessOff: headless.turnedOff,
+    detach: (realmId: string) => detach(context, state, realmId),
+    owns: (realmId: string) => state.attachment?.realmId === realmId,
+    report: (report: RealmReport) => {
+      fromHeadless();
+      applyReport(context, state, deps, report);
+    },
+    bridgeCall: (fn: string, args: readonly unknown[]) => {
+      fromHeadless();
+      return bridgeCall(context, state, fn, args);
+    },
+    snapshot: async (request: SnapshotRequest) => {
+      await headless.ensure();
+      return snapshotCell(context, state, deps, { request, headless: headless.page() });
+    },
+    close: () => {
+      headless.close();
+      if (state.attachment) detach(context, state, state.attachment.realmId);
+    },
+  };
+}
+
 export function createRealm(context: SessionContext, deps: RealmDeps): SessionRealm {
   const state = createRealmState();
   hookExports(context, state);
   const events = hookEvents(context, state);
+  const headless = headlessOf(context, state, deps);
   return {
     attached: () => state.attachment !== undefined,
-    run: (execution) => runClientCell(context, state, deps, execution),
+    available: headless.available,
+    ensure: headless.ensure,
+    run: (execution) => runClientCell(context, state, deps, { execution, ensure: headless.ensure }),
     bindings: (cell) => bindingsOf(context, state, cell),
     scope: () =>
       bindingsOf(context, state).map(({ name, kind, preview, definedBy, exported }) => ({
@@ -132,18 +211,7 @@ export function createRealm(context: SessionContext, deps: RealmDeps): SessionRe
     runs: (execution) => state.running.has(execution),
     interrupt: (execution) => interruptClientRun(context, state, deps, execution),
     status: () => realmStatusOf(state),
-    attach: (page, kind, takeover) => attachOwing(context, state, { page, kind, takeover }),
-    detach: (realmId) => detach(context, state, realmId),
-    owns: (realmId) => state.attachment?.realmId === realmId,
-    report: (report) => {
-      applyReport(context, state, deps, report);
-    },
-    bridgeCall: (fn, args) => bridgeCall(context, state, fn, args),
     events: events.stats,
-    snapshot: (cell, maxBytes, html) =>
-      snapshotCell(context, state, deps, { cell, maxBytes, html }),
-    close: () => {
-      if (state.attachment) detach(context, state, state.attachment.realmId);
-    },
+    ...pageSide(context, state, deps, headless),
   };
 }

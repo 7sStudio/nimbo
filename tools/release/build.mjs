@@ -175,25 +175,32 @@ function stamp(file, from, to) {
 function buildUi() {
   const dist = join(out, "stage", "ui-dist");
   rmSync(dist, { recursive: true, force: true });
-  sh(
-    "pnpm",
-    [
-      "--filter",
-      "@jsnb/ui",
-      "exec",
-      "vite",
-      "build",
-      "--outDir",
-      dist,
-      "--emptyOutDir",
-      "--sourcemap",
-    ],
-    {
-      cwd: root,
-      env: { ...process.env, NIMBO_RELEASE_VERSION: version, NIMBO_RELEASE_COMMIT: commit },
-      stdio: ["ignore", "ignore", "inherit"],
-    },
-  );
+  // the page, then the headless realm's page into the same folder (packages/ui/vite.config.ts)
+  for (const page of ["notebook", "headless"])
+    sh(
+      "pnpm",
+      [
+        "--filter",
+        "@jsnb/ui",
+        "exec",
+        "vite",
+        "build",
+        "--outDir",
+        dist,
+        ...(page === "notebook" ? ["--emptyOutDir"] : []),
+        "--sourcemap",
+      ],
+      {
+        cwd: root,
+        env: {
+          ...process.env,
+          NIMBO_RELEASE_VERSION: version,
+          NIMBO_RELEASE_COMMIT: commit,
+          NIMBO_UI_PAGE: page,
+        },
+        stdio: ["ignore", "ignore", "inherit"],
+      },
+    );
   const bundled = new Map();
   const add = (found) => {
     if (found !== undefined && !found[1].name.startsWith("@jsnb/")) bundled.set(found[0], found[1]);

@@ -88,5 +88,6 @@ export async function resetRealm(
     await attachment.page.request("realm.reset", params, signal);
   } catch (error) {
     context.log.warn({ err: error }, "the page did not take realm.reset");
+    if (!attachment.detached.signal.aborted) state.onUnresponsive?.();
   }
 }

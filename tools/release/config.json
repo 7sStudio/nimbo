@@ -49,6 +49,8 @@
     },
     "texts": {
       "@duckdb/duckdb-wasm": "licences/duckdb-wasm.txt",
+      "@puppeteer/browsers": "licences/puppeteer.txt",
+      "puppeteer-core": "licences/puppeteer.txt",
       "@esbuild/darwin-arm64": "esbuild",
       "@esbuild/darwin-x64": "esbuild",
       "@esbuild/linux-arm64": "esbuild",

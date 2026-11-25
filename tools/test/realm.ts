@@ -18,6 +18,36 @@ const html = `<!doctype html>
 <script type="module" src="/ui/realm-page.js"></script>
 `;
 
+/** The headless realm's page of the ui package (packages/ui/headless.html's entry). */
+const headlessEntry = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "..",
+  "..",
+  "packages",
+  "ui",
+  "src",
+  "realm",
+  "headless.ts",
+);
+
+const headlessHtml = `<!doctype html>
+<meta charset="utf-8">
+<title>nimbo headless realm</title>
+<script type="module" src="/ui/headless-page.js"></script>
+`;
+
+/** Bundles the ui's headless realm page into `dir` as `headless.html`, where the daemon's headless browser loads it. */
+export async function buildHeadlessPage(dir: string): Promise<void> {
+  await mkdir(dir, { recursive: true });
+  await build({
+    entryPoints: [headlessEntry],
+    outfile: join(dir, "headless-page.js"),
+    ...{ bundle: true, format: "esm", platform: "browser", target: "es2024" },
+    ...{ conditions: ["development"], logLevel: "silent" },
+  });
+  await writeFile(join(dir, "headless.html"), headlessHtml);
+}
+
 /** Bundles the test page into `dir`, a UI folder for startServer's `uiDir`. */
 export async function buildRealmPage(dir: string): Promise<void> {
   await mkdir(dir, { recursive: true });

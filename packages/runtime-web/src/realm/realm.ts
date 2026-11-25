@@ -51,10 +51,13 @@ export class Realm {
   /** `realm.attach { notebook, kind }`; a rejection propagates (the host shows the page view-only). With `takeover`
    * the page takes the notebook from the tab that holds it. */
   async attach(takeover = false): Promise<string> {
-    const { notebook, kind, transport } = this.#state.options;
-    const { realmId } = realmAttach.output.parse(
-      await transport.call("realm.attach", { notebook, kind, ...(takeover ? { takeover } : {}) }),
-    );
+    const { notebook, kind, transport, attachKey } = this.#state.options;
+    const params = {
+      ...{ notebook, kind },
+      ...(takeover ? { takeover } : {}),
+      ...(attachKey === undefined ? {} : { key: attachKey }),
+    };
+    const { realmId } = realmAttach.output.parse(await transport.call("realm.attach", params));
     const { attachment } = this.#state;
     attachment.stopListening?.();
     attachment.stopListening = listenForStrayErrors(this.#state);

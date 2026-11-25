@@ -119,6 +119,7 @@ function workspaceOf(start: Start, bus: EventBus, listening: { port: number }): 
       log,
       onEnvWrite: start.onEnvWrite,
       redact: start.redact,
+      pageCredentials: { token: start.token, pageKey: start.pageKey },
     },
     ...{
       ids: resolved.ids,

@@ -338,6 +338,22 @@ async function closeSession(
   context.emit("notebook.closed", { path: context.ref });
 }
 
+/** A move followed (07 §5): the watch rearmed on the new path, the headless page of the old name closed. */
+async function moved(
+  options: SessionOptions,
+  context: ReturnType<typeof contextOf>,
+  parts: {
+    readonly to: string;
+    readonly path: string;
+    readonly watch: FileWatch;
+    readonly realm: SessionRealm;
+  },
+): Promise<void> {
+  await moveSession(options, context, parts.to, parts.path);
+  parts.watch.rearm();
+  parts.realm.moved();
+}
+
 /** The session of an opened notebook; its kernel starts now, without waiting for `ready`. */
 export function createSession(options: SessionOptions): Session {
   const hook = fileHookSlots();
@@ -355,10 +371,7 @@ export function createSession(options: SessionOptions): Session {
       return context.ref;
     },
     opened,
-    moveTo: async (to, path) => {
-      await moveSession(options, context, to, path);
-      watch.rearm();
-    },
+    moveTo: (to, path) => moved(options, context, { to, path, watch, realm }),
     context,
     state: () => stateOf(context, realm.status(), debug.state()),
     ...edits(context, state),

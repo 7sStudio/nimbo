@@ -55,6 +55,22 @@ export const settingsMeta: Readonly<Record<SettingsKey, SettingMeta>> = {
     "Package manager",
     "auto detects from the lockfile, else pnpm, npm, yarn or bun.",
   ),
+  "realm.headless": stable(
+    "Headless client realm",
+    "With no tab holding a notebook, run its client cells in a headless Chrome, Chromium or Edge of this machine, started when a client run or a snapshot needs it; a tab that opens takes over.",
+  ),
+  "realm.headlessBrowser": stable(
+    "Headless browser",
+    "The Chrome, Chromium or Edge executable the headless realm runs; null finds one (CHROME_PATH, then the usual install places).",
+  ),
+  "realm.headlessIdleMs": stable(
+    "Headless idle time",
+    "The headless page closes after this long with no run, snapshot, bridge call or event, in milliseconds.",
+  ),
+  "realm.headlessSandbox": stable(
+    "Headless sandbox",
+    "Run the headless browser in its sandbox. Off only where Chrome cannot start sandboxed (some containers): client cells then run without the browser's sandbox.",
+  ),
   "outputs.maxValueBytes": stable(
     "Value output limit",
     "Bytes of a value output that reach the page or an API caller before truncation.",
