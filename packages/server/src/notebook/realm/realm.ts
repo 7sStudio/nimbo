@@ -149,50 +149,14 @@ function headlessOf(context: SessionContext, state: RealmState, deps: RealmDeps)
   return headless;
 }
 
-/** What the page and the realm commands call: attach and detach, reports, bridge calls, snapshots, the close. */
-function pageSide(
-  context: SessionContext,
-  state: RealmState,
-  deps: RealmDeps,
-  headless: HeadlessRealm,
-) {
-  const fromHeadless = (): void => {
-    if (state.attachment?.kind === "headless") headless.touch();
-  };
-  return {
-    attach: (
-      page: PageSocket,
-      kind: "tab" | "headless",
-      options: { readonly takeover?: boolean; readonly key?: string | undefined } = {},
-    ) => attachOwing(context, state, headless, { page, kind, ...options }),
-    moved: headless.moved,
-    headlessOff: headless.turnedOff,
-    detach: (realmId: string) => detach(context, state, realmId),
-    owns: (realmId: string) => state.attachment?.realmId === realmId,
-    report: (report: RealmReport) => {
-      fromHeadless();
-      applyReport(context, state, deps, report);
-    },
-    bridgeCall: (fn: string, args: readonly unknown[]) => {
-      fromHeadless();
-      return bridgeCall(context, state, fn, args);
-    },
-    snapshot: async (request: SnapshotRequest) => {
-      await headless.ensure();
-      return snapshotCell(context, state, deps, { request, headless: headless.page() });
-    },
-    close: () => {
-      headless.close();
-      if (state.attachment) detach(context, state, state.attachment.realmId);
-    },
-  };
-}
-
 export function createRealm(context: SessionContext, deps: RealmDeps): SessionRealm {
   const state = createRealmState();
   hookExports(context, state);
   const events = hookEvents(context, state);
   const headless = headlessOf(context, state, deps);
+  const fromHeadless = (): void => {
+    if (state.attachment?.kind === "headless") headless.touch();
+  };
   return {
     attached: () => state.attachment !== undefined,
     available: headless.available,
@@ -212,6 +176,28 @@ export function createRealm(context: SessionContext, deps: RealmDeps): SessionRe
     interrupt: (execution) => interruptClientRun(context, state, deps, execution),
     status: () => realmStatusOf(state),
     events: events.stats,
-    ...pageSide(context, state, deps, headless),
+    // what the page and the realm commands call: attach and detach, reports, bridge calls, snapshots, the close
+    attach: (page, kind, options = {}) =>
+      attachOwing(context, state, headless, { page, kind, ...options }),
+    moved: headless.moved,
+    headlessOff: headless.turnedOff,
+    detach: (realmId) => detach(context, state, realmId),
+    owns: (realmId) => state.attachment?.realmId === realmId,
+    report: (report) => {
+      fromHeadless();
+      applyReport(context, state, deps, report);
+    },
+    bridgeCall: (fn, args) => {
+      fromHeadless();
+      return bridgeCall(context, state, fn, args);
+    },
+    snapshot: async (request) => {
+      await headless.ensure();
+      return snapshotCell(context, state, deps, { request, headless: headless.page() });
+    },
+    close: () => {
+      headless.close();
+      if (state.attachment) detach(context, state, state.attachment.realmId);
+    },
   };
 }

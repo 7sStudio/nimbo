@@ -106,28 +106,6 @@ type Where = {
   readonly startedAt: number;
 };
 
-/** realm.execute's params: the run, its bindings, the public env, its limits and the names it cannot bind. */
-function paramsOf(
-  context: SessionContext,
-  sent: Sent,
-  given: {
-    readonly bindings: Record<string, SnapshotBinding>;
-    readonly env: Readonly<Record<string, string>>;
-  },
-) {
-  const { execution, resolution } = sent;
-  const unbound = Object.keys(resolution.unbound).length > 0 ? { unbound: resolution.unbound } : {};
-  return {
-    execution: execution.id,
-    cell: execution.cell,
-    code: sent.code,
-    map: sent.map,
-    ...given,
-    limits: limitsOf(context.settings()),
-    ...unbound,
-  };
-}
-
 /** Snapshot, env, limits, realm.execute; the run's end once the page answered, or why it failed. */
 async function execute(
   context: SessionContext,
@@ -159,11 +137,18 @@ async function execute(
     }
     setStatus(context, execution, "running");
     const signal = AbortSignal.any([attachment.detached.signal, stop]);
-    await attachment.page.request(
-      "realm.execute",
-      paramsOf(context, sent, { bindings, env }),
-      signal,
-    );
+    // the run, its bindings, the public env, its limits and the names it cannot bind
+    const params = {
+      execution: execution.id,
+      cell: execution.cell,
+      code: sent.code,
+      map: sent.map,
+      bindings,
+      env,
+      limits: limitsOf(context.settings()),
+      ...(Object.keys(resolution.unbound).length > 0 ? { unbound: resolution.unbound } : {}),
+    };
+    await attachment.page.request("realm.execute", params, signal);
     // The page answers after its status report; no status means it dropped the run (a reset, a detach), and its own
     // `interrupted` report, which comes after this answer whenever another report was ahead of it, is dropped
     // (reports.ts).
@@ -173,30 +158,6 @@ async function execute(
     if (cut()) interrupted();
     else failWith(context, execution, error);
   }
-}
-
-/** The page to run on and what to send it, or false once the run ended without starting. */
-function prepare(context: SessionContext, state: RealmState, execution: ExecutionRecord) {
-  const attachment = state.attachment;
-  if (!attachment) {
-    failWith(context, execution, new RealmNotAttached({ notebook: context.ref }));
-    return false;
-  }
-  const prepared = compileCell(context, context.cells.require(execution.cell));
-  if (!prepared.ok) {
-    finish(context, execution, prepared.ending);
-    return false;
-  }
-  const { code, map, analysis } = prepared.compiled;
-  // The pre-flight of a server run (04-kernel §4): the page would only see its import fail to fetch, with no name.
-  const missing = missingPackages(context.root, analysis.imports);
-  if (missing.length > 0) {
-    failWith(context, execution, new MissingPackage({ names: missing }));
-    return false;
-  }
-  execution.defines = analysis.defines;
-  const resolution = resolveNames(context, state, execution.cell, analysis);
-  return { attachment, sent: { execution, code, map, resolution } };
 }
 
 /** Runs a client cell to its terminal status on the attached page, once `ensure` (the headless realm's) settled: its
@@ -217,19 +178,32 @@ export async function runClientCell(
     failWith(context, execution, unready);
     return;
   }
-  const ready = prepare(context, state, execution);
-  if (!ready) return;
-  hold(state, ready.sent.resolution.names);
+  const attachment = state.attachment;
+  if (!attachment) {
+    failWith(context, execution, new RealmNotAttached({ notebook: context.ref }));
+    return;
+  }
+  const prepared = compileCell(context, context.cells.require(execution.cell));
+  if (!prepared.ok) {
+    finish(context, execution, prepared.ending);
+    return;
+  }
+  const { code, map, analysis } = prepared.compiled;
+  // The pre-flight of a server run (04-kernel §4): the page would only see its import fail to fetch, with no name.
+  const missing = missingPackages(context.root, analysis.imports);
+  if (missing.length > 0) {
+    failWith(context, execution, new MissingPackage({ names: missing }));
+    return;
+  }
+  execution.defines = analysis.defines;
+  const resolution = resolveNames(context, state, execution.cell, analysis);
+  hold(state, resolution.names);
   const stop = { controller: new AbortController(), startedAt: performance.now() };
   state.running.set(execution.id, execution);
   state.stops.set(execution.id, stop);
   try {
-    const where = {
-      attachment: ready.attachment,
-      stop: stop.controller.signal,
-      startedAt: stop.startedAt,
-    };
-    await execute(context, deps, where, ready.sent);
+    const where = { attachment, stop: stop.controller.signal, startedAt: stop.startedAt };
+    await execute(context, deps, where, { execution, code, map, resolution });
   } finally {
     state.running.delete(execution.id);
     state.stops.delete(execution.id);
