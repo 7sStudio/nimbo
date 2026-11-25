@@ -5,16 +5,18 @@
 // with the reason in its name, on a machine with no such browser (some CI runners).
 import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync } from "node:fs";
-import { mkdtemp, rm } from "node:fs/promises";
+import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import type { RealmPages } from "@jsnb/test-tools/realm";
 import { buildHeadlessPage, buildRealmPage, startRealmPages } from "@jsnb/test-tools/realm";
+import { realmAttach } from "@jsnb/core";
+import { withWorkspace } from "@jsnb/test-tools/workspace";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import type { Daemon } from "../../fixtures/daemon.js";
-import { withDaemon } from "../../fixtures/daemon.js";
+import { startDaemon, withDaemon } from "../../fixtures/daemon.js";
 import type { TestNotebook } from "../../fixtures/notebook.js";
 import { createNotebook, valueOf } from "../../fixtures/notebook.js";
 import { findBrowser } from "../../kernel/headless/executable.js";
@@ -28,7 +30,9 @@ function browsersOf(workspace: string): number[] {
   const profile = join(workspace, ".jsnb", "headless", "profile-");
   return execFileSync("ps", ["-axww", "-o", "pid=,args="], { encoding: "utf8" })
     .split("\n")
-    .filter((line) => line.includes(profile) && !line.includes("--type="))
+    .filter(
+      (line) => line.includes(profile) && !line.includes("--type=") && !line.includes("crashpad"),
+    )
     .map((line) => Number.parseInt(line.trim(), 10));
 }
 
@@ -174,15 +178,25 @@ suite(`the headless realm and a tab${skipped}`, { timeout: 60_000 }, () => {
 });
 
 suite(`a headless browser that goes or cannot start${skipped}`, { timeout: 60_000 }, () => {
-  it("starts a killed browser again at the next need", async () => {
+  it("ends a run its killed browser held with the reason, and starts a browser again at the next need", async () => {
     await withDaemon(
       async (daemon) => {
         const { book, cell } = await headlessBook(daemon);
         const { notebook } = book;
         await daemon.client.cell.run({ notebook, cell });
+        const waiting = await book.add(
+          "await new Promise((resolve) => setTimeout(resolve, 60_000))",
+          "client",
+        );
+        await daemon.client.cell.run({ notebook, cell: waiting, wait: false });
+        await book.cellReaches(waiting, "running");
         const [pid] = browsersOf(daemon.server.workspace);
         process.kill(pid ?? 0, "SIGKILL");
-        await daemon.events.until("realm.status", (event) => !event.data.attached);
+        await book.cellReaches(waiting, "interrupted");
+        const { execution: cut } = await daemon.client.cell.outputs({ notebook, cell: waiting });
+        expect(cut?.error?.message).toMatch(
+          /the headless (browser|page) running it .*\. Run it again\./,
+        );
         const again = await daemon.client.cell.run({ notebook, cell });
         expect(again.execution).toMatchObject({ status: "ok" });
         expect(browsersOf(daemon.server.workspace)).not.toContain(pid);
@@ -199,6 +213,136 @@ suite(`a headless browser that goes or cannot start${skipped}`, { timeout: 60_00
         const run = () => daemon.client.cell.run({ notebook: book.notebook, cell });
         await expect(run()).rejects.toThrow(/\/usr\/bin\/false did not start/);
         await expect(run()).rejects.toThrow(/It is tried again in 2 s\./);
+      },
+      { uiDir },
+    );
+  });
+});
+
+/** A browser that never answers: a shell that sleeps, in place of Chrome. */
+async function sleeper(dir: string): Promise<string> {
+  const path = join(dir, "sleeping-browser");
+  await writeFile(path, "#!/bin/sh\nsleep 600\n", { mode: 0o755 });
+  return path;
+}
+
+const sleepersOf = (path: string): number[] =>
+  execFileSync("ps", ["-axww", "-o", "pid=,args="], { encoding: "utf8" })
+    .split("\n")
+    .filter((line) => line.includes(path))
+    .map((line) => Number.parseInt(line.trim(), 10));
+
+suite(`a headless browser that hangs at start${skipped}`, { timeout: 60_000 }, () => {
+  it("is killed after the launch bound, held back by the delay, and leaves nothing at stop", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "nimbo-sleeper-"));
+    const path = await sleeper(dir);
+    try {
+      await withWorkspace(async (ws) => {
+        const daemon = await startDaemon(ws, { uiDir });
+        const { book, cell } = await headlessBook(daemon);
+        await daemon.client.settings.set({ key: "realm.headlessBrowser", value: path });
+        const run = () => daemon.client.cell.run({ notebook: book.notebook, cell });
+        await expect(run()).rejects.toThrow(/the browser at .* hung at start/);
+        expect(sleepersOf(path)).toEqual([]);
+        await expect(run()).rejects.toThrow(/It is tried again in 2 s\./);
+        await daemon.client.settings.set({ key: "realm.headlessBrowser", value: null });
+        const pending = run().catch(() => undefined); // the backoff still holds: a stop right after it
+        await daemon.stop();
+        await pending;
+        expect(sleepersOf(path)).toEqual([]);
+      });
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+
+  it("is killed with its group when the daemon stops during its launch", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "nimbo-sleeper-"));
+    const path = await sleeper(dir);
+    try {
+      await withWorkspace(async (ws) => {
+        const daemon = await startDaemon(ws, { uiDir });
+        const { book, cell } = await headlessBook(daemon);
+        await daemon.client.settings.set({ key: "realm.headlessBrowser", value: path });
+        const run = daemon.client.cell
+          .run({ notebook: book.notebook, cell })
+          .catch((e: unknown) => e);
+        await until(() => sleepersOf(path).length > 0, "the sleeping browser to start");
+        await daemon.stop();
+        await run;
+        expect(sleepersOf(path)).toEqual([]);
+        expect(profilesOf(daemon.server.workspace)).toEqual([]);
+      });
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
+  });
+});
+
+/** The CPU seconds each renderer of the headless browsers of `workspace` has used. */
+function rendererTimes(workspace: string): Map<number, number> {
+  const profile = join(workspace, ".jsnb", "headless", "profile-");
+  const lines = execFileSync("ps", ["-axww", "-o", "pid=,time=,args="], { encoding: "utf8" }).split(
+    "\n",
+  );
+  const times = new Map<number, number>();
+  for (const line of lines.filter((each) => each.includes("--type=renderer"))) {
+    const [pid, time] = line.trim().split(/\s+/u);
+    if (!line.includes(profile) && !line.includes(workspace)) continue;
+    const [minutes, seconds] = (time ?? "0:0").split(":").map(Number);
+    times.set(Number(pid), (minutes ?? 0) * 60 + (seconds ?? 0));
+  }
+  return times;
+}
+
+suite(`a headless page a client cell keeps busy${skipped}`, { timeout: 60_000 }, () => {
+  it("is closed by realm.restart, and the next run gets a fresh page", async () => {
+    await withDaemon(
+      async (daemon) => {
+        const { book, cell } = await headlessBook(daemon);
+        const { notebook } = book;
+        await daemon.client.cell.run({ notebook, cell });
+        const before = await daemon.client.realm.status({ notebook });
+        const spin = await book.add("while (true) {}", "client");
+        await daemon.client.cell.run({ notebook, cell: spin, wait: false });
+        await book.cellReaches(spin, "running");
+        await daemon.client.realm.restart({ notebook });
+        const { execution } = await daemon.client.cell.run({ notebook, cell });
+        expect(execution).toMatchObject({ status: "ok" });
+        const after = await daemon.client.realm.status({ notebook });
+        expect(after.attachedAt).not.toBe(before.attachedAt);
+        const first = rendererTimes(daemon.server.workspace);
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+        const second = rendererTimes(daemon.server.workspace);
+        const spinning = [...second].filter(
+          ([pid, used]) => used - (first.get(pid) ?? used) >= 1.5,
+        );
+        expect(spinning).toEqual([]);
+      },
+      { uiDir },
+    );
+  });
+});
+
+suite(`the headless realm's attach${skipped}`, { timeout: 60_000 }, () => {
+  it("refuses a socket that attaches as headless without the page's one-time key", async () => {
+    await withDaemon(
+      async (daemon) => {
+        const { book, cell } = await headlessBook(daemon);
+        const { notebook } = book;
+        const impostor = daemon.socket({ client: "ui" });
+        const run = daemon.client.cell.run({ notebook, cell });
+        const posing = (key?: string) =>
+          impostor.call(realmAttach, {
+            notebook,
+            kind: "headless",
+            ...(key === undefined ? {} : { key }),
+          });
+        await expect(posing()).rejects.toMatchObject({ code: -32602 });
+        await expect(posing("guessed")).rejects.toMatchObject({ code: -32602 });
+        expect((await run).execution).toMatchObject({ status: "ok" });
+        expect(await kindOf(daemon, notebook)).toBe("headless");
+        await expect(posing()).rejects.toMatchObject({ code: -32602 });
       },
       { uiDir },
     );

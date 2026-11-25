@@ -71,7 +71,9 @@ const cellLine = (cell: Cell): string =>
   `${cell.id} ${cell.type} ${cell.status}${cell.stale ? " stale" : ""} · ${firstLine(cell.source, 60)}\n`;
 
 const skippedSchema = z.object({
-  skipped: z.array(z.object({ cell: z.string(), code: z.string() })),
+  skipped: z.array(
+    z.object({ cell: z.string(), code: z.string(), message: z.string().optional() }),
+  ),
 });
 
 /** The outline of an output, or Done. for an empty one ({}): the command did what it said. */
@@ -87,13 +89,15 @@ function skippedNotes(output: unknown): readonly string[] | undefined {
   const lines = skipped.data.skipped.map(
     (entry) => `${entry.cell} skipped: ${entry.code} (no page is attached to run it)\n`,
   );
-  // what to do about it, once: client cells run in the notebook's page
-  return lines.length === 0
-    ? lines
-    : [
-        ...lines,
-        "Client cells run in the page: nimbo open <notebook> attaches one, or nimbo config set realm.headless true runs them in a headless browser (nimbo run <cell> says why one could not start); then run them again.\n",
-      ];
+  if (lines.length === 0) return lines;
+  // why, once: the daemon's own words (the setting off, or why the headless browser could not start)
+  const why = skipped.data.skipped.find((entry) => entry.message !== undefined)?.message;
+  return [
+    ...lines,
+    why === undefined
+      ? "Client cells run in the page: nimbo open <notebook> attaches one, then run them again.\n"
+      : `${why}\n`,
+  ];
 }
 
 /** The line of the cell an output names (`cell`), or "" when it names none. */

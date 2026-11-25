@@ -12,12 +12,18 @@ import type { SessionContext } from "../session/context.js";
 import type { Attachment, PageSocket, RealmState } from "./state.js";
 import { realmStatusOf } from "./state.js";
 
+/** Why a page was detached, the abort reason of its `detached` signal: what a run it held ends with (clientRun.ts). */
+export type DetachReason = "detached" | "socket" | "takenOver" | `headless:${string}`;
+
 /** Forgets the page `realmId` names; false when it is not the attached one. */
 export function detach(
   context: SessionContext,
   state: RealmState,
   realmId: string,
-  quiet = false,
+  {
+    why = "detached",
+    quiet = false,
+  }: { readonly why?: DetachReason; readonly quiet?: boolean } = {},
 ): boolean {
   const attachment = state.attachment;
   if (attachment?.realmId !== realmId) return false;
@@ -25,7 +31,7 @@ export function detach(
   state.record.clear();
   // `held` and `finished` stay: a page whose socket came back attaches again with its runs and stubs, reports late
   // outputs on runs it ran, and a restart must still list what it holds; a page that holds none of them is not harmed
-  attachment.detached.abort();
+  attachment.detached.abort(why);
   state.onDetach?.(attachment);
   context.kernel.live()?.listening(false);
   if (!quiet) context.emit("realm.status", realmStatusOf(state));
@@ -58,7 +64,8 @@ export function attach(
   const live = held !== undefined && !held.page.closed.aborted;
   if (live && !takes(held, kind, takeover)) throw new RealmAttached({ notebook: context.ref });
   if (live && held.page !== page) tellTakenOver(context, held.page);
-  if (held) detach(context, state, held.realmId, live);
+  if (held)
+    detach(context, state, held.realmId, { why: live ? "takenOver" : "socket", quiet: live });
   const realmId = `realm_${randomUUID()}`;
   const attachedAt = context.now().toISOString();
   state.attachment = { realmId, page, kind, attachedAt, detached: new AbortController() };
@@ -66,7 +73,7 @@ export function attach(
   page.closed.addEventListener(
     "abort",
     () => {
-      detach(context, state, realmId);
+      detach(context, state, realmId, { why: "socket" });
     },
     { once: true },
   );

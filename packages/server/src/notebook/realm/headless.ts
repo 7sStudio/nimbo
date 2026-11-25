@@ -4,6 +4,8 @@
 // and no headless page starts while a tab holds the notebook. The page closes when it detaches (taken over, its socket
 // gone, its browser gone), when the notebook closes or moves, and after realm.headlessIdleMs with no request to it, no
 // report and no bridge call from it, while no client run is in flight.
+import { randomBytes, timingSafeEqual } from "node:crypto";
+
 import { RealmNotAttached } from "@jsnb/core";
 
 import { HeadlessFailed } from "../../kernel/headless/browser.js";
@@ -17,8 +19,9 @@ export type HeadlessRealm = {
   readonly ensure: () => Promise<void>;
   /** Whether a run may count on a page: one is attached, or the headless realm can open one. */
   readonly available: () => boolean;
-  /** Whether a `kind: "headless"` attach is this session's own page starting. */
-  readonly expecting: () => boolean;
+  /** Whether a `kind: "headless"` attach carrying `key` is this session's own page starting: the one-time key it was
+   * given with the token, while it starts. */
+  readonly expects: (key: string | undefined) => boolean;
   /** The headless page's socket as the realm keeps it: each request to it counts as use. */
   readonly wrap: (page: PageSocket) => PageSocket;
   /** A report or a bridge call from the page. */
@@ -30,6 +33,11 @@ export type HeadlessRealm = {
   readonly page: () => GuardedPage | undefined;
   /** The notebook moved: its headless page, attached under the old name, closes. */
   readonly moved: () => void;
+  /** The page holding the realm did not answer a reset or an interrupt: a headless one is closed (its renderer with
+   * it), and the next need opens a fresh one. */
+  readonly unresponsive: () => void;
+  /** realm.headless was turned off: the headless page closes. */
+  readonly turnedOff: () => void;
   /** The notebook closes: its headless page closes, and none opens again. */
   readonly close: () => void;
 };
@@ -38,8 +46,10 @@ type State = {
   readonly context: SessionContext;
   readonly realm: RealmState;
   readonly service: HeadlessService | undefined;
-  readonly detach: (realmId: string) => void;
+  readonly detach: (realmId: string, why: `headless:${string}`) => void;
   page: GuardedPage | undefined;
+  /** The one-time key of the page starting. */
+  key: string | undefined;
   realmId: string | undefined;
   starting: Promise<void> | undefined;
   idle: ReturnType<typeof setTimeout> | undefined;
@@ -67,7 +77,7 @@ function shut(state: State, reason: string): void {
   const { page, realmId } = state;
   state.page = undefined;
   state.realmId = undefined;
-  if (realmId !== undefined) state.detach(realmId);
+  if (realmId !== undefined) state.detach(realmId, `headless:${reason}`);
   if (page === undefined) return;
   state.context.log.info({ reason }, "the headless page closed");
   void page.close();
@@ -83,10 +93,19 @@ function touch(state: State): void {
   state.idle.unref();
 }
 
+/** Whether `given` is the key of the page starting, compared in constant time. */
+function isKey(state: State, given: string | undefined): boolean {
+  if (state.starting === undefined || state.key === undefined || given === undefined) return false;
+  const a = Buffer.from(given);
+  const b = Buffer.from(state.key);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 /** Opens the page and keeps it once it attached; a tab that attached meanwhile holds the realm instead. */
 async function start(state: State, service: HeadlessService): Promise<void> {
   const { context, realm } = state;
-  const opened = service.open(context.ref);
+  state.key = randomBytes(32).toString("base64url");
+  const opened = service.open(context.ref, state.key);
   const timeout = new Promise<never>((_resolve, reject) => {
     setTimeout(() => {
       const late = `its page did not attach within ${String(startTimeoutMs / 1000)} s.`;
@@ -124,6 +143,7 @@ async function ensure(state: State): Promise<void> {
     throw new RealmNotAttached({ notebook: context.ref });
   state.starting ??= start(state, service).finally(() => {
     state.starting = undefined;
+    state.key = undefined;
   });
   await state.starting;
   if (held(realm)) return; // the headless page, or a tab that attached meanwhile
@@ -134,16 +154,17 @@ export function createHeadlessRealm(
   context: SessionContext,
   realm: RealmState,
   service: HeadlessService | undefined,
-  detach: (realmId: string) => void,
+  detach: (realmId: string, why: `headless:${string}`) => void,
 ): HeadlessRealm {
   const state: State = {
     ...{ context, realm, service, detach },
-    ...{ page: undefined, realmId: undefined, starting: undefined, idle: undefined, closed: false },
+    ...{ page: undefined, key: undefined, realmId: undefined, starting: undefined },
+    ...{ idle: undefined, closed: false },
   };
   return {
     ensure: () => ensure(state),
     available: () => realm.attachment !== undefined || enabled(state),
-    expecting: () => state.starting !== undefined,
+    expects: (key) => isKey(state, key),
     wrap: (socket) => ({
       request: (method, params, signal) => {
         touch(state);
@@ -163,6 +184,12 @@ export function createHeadlessRealm(
     page: () => state.page,
     moved: () => {
       shut(state, "moved");
+    },
+    unresponsive: () => {
+      if (state.page !== undefined) shut(state, "unresponsive");
+    },
+    turnedOff: () => {
+      shut(state, "turned off");
     },
     close: () => {
       state.closed = true;

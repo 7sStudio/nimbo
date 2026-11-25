@@ -238,6 +238,27 @@ function headlessOf(
   });
 }
 
+/** Turning realm.headless off closes the open notebooks' headless pages; returns the watch's end. */
+function watchHeadlessOff(
+  options: WorkspaceOptions,
+  settings: SettingsService,
+  notebooks: Notebooks,
+) {
+  const id = "headless-setting";
+  options.bus.subscribe({
+    id,
+    deliver: (event) => {
+      if (event.type !== "settings.changed" || settings.current()["realm.headless"]) return;
+      void notebooks.sessions().then((open) => {
+        for (const session of open) session.realm.headlessOff();
+      });
+    },
+  });
+  return (): void => {
+    options.bus.unsubscribe(id);
+  };
+}
+
 /** Opens the workspace's services (the settings files are read and watched from here on). */
 export async function openWorkspace(options: WorkspaceOptions): Promise<Workspace> {
   const { facts, jsnb, bus, log } = options;
@@ -260,6 +281,7 @@ export async function openWorkspace(options: WorkspaceOptions): Promise<Workspac
     ...(options.moveCheckMs === undefined ? {} : { moveCheckMs: options.moveCheckMs }),
   });
   const stopListWatch = listWatchOf(options, notebooks, listChanged);
+  const stopHeadlessWatch = watchHeadlessOff(options, settings, notebooks);
   const nodeVersion = kernelNodeVersion(settings);
   const language = languageOf(options, { settings, secrets, notebooks });
   envWrites.language = language.envChanged;
@@ -275,7 +297,10 @@ export async function openWorkspace(options: WorkspaceOptions): Promise<Workspac
     git: createGitService({ root: facts.root, bus, notebooks, log }),
     info: () => infoOf(facts, notebooks, nodeVersion),
     clearCache: serialClear(jsnb.npmCache, log),
-    close: () => closeAll(workspace, { debugAdapter, headless }, stopListWatch),
+    close: () => {
+      stopHeadlessWatch();
+      return closeAll(workspace, { debugAdapter, headless }, stopListWatch);
+    },
   };
   return workspace;
 }

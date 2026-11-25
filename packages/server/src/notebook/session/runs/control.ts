@@ -133,7 +133,11 @@ export type NotebookRun = Waiting & { readonly select: Selection; readonly stopO
 
 export type NotebookRunAnswer = {
   readonly executions: Execution[];
-  readonly skipped: { readonly cell: CellId; readonly code: "REALM_NOT_ATTACHED" }[];
+  readonly skipped: {
+    readonly cell: CellId;
+    readonly code: "REALM_NOT_ATTACHED";
+    readonly message?: string;
+  }[];
 };
 
 /** notebook.run. */
@@ -151,16 +155,22 @@ export async function runNotebook(
   const skipped: NotebookRunAnswer["skipped"] = [];
   const queued = [];
   const anyClient = selected.some((id) => cells.require(id).type === "client");
-  const realm =
-    anyClient &&
-    (await runs.realmReady().then(
-      () => true,
-      () => false,
-    ));
+  const refusal = anyClient
+    ? await runs.realmReady().then(
+        () => undefined,
+        (error: unknown) => (error instanceof Error ? error.message : String(error)),
+      )
+    : undefined;
+  const realm = anyClient && refusal === undefined;
   for (const id of selected) {
     const type = cells.require(id).type;
     if (type === "markdown") continue;
-    if (type === "client" && !realm) skipped.push({ cell: id, code: "REALM_NOT_ATTACHED" });
+    if (type === "client" && !realm)
+      skipped.push({
+        cell: id,
+        code: "REALM_NOT_ATTACHED",
+        ...(refusal === undefined ? {} : { message: refusal }),
+      });
     else
       queued.push(
         enqueue(context, runs, id, { batch: input.stopOnError ? batch : undefined, by: input.by }),

@@ -14,6 +14,10 @@ import type { GuardedPage, Shot } from "../../kernel/headless/page.js";
 import type { SessionContext } from "../session/context.js";
 import type { Attachment, RealmDeps, RealmState } from "./state.js";
 
+/** The text of a cell with no container in the page. */
+const notRendered =
+  "(nothing rendered: this cell has no container in the page holding the realm; run it there first. A page that was closed, idle or taken over holds none of its earlier runs.)";
+
 /** How long the page has to read its container. */
 const pageWaitMs = 5000;
 
@@ -31,13 +35,22 @@ const noImageInTab = (context: SessionContext): NotAvailable =>
     reason: `a tab holds ${context.ref}'s client realm, and only the headless realm takes images; read text and html instead.`,
   });
 
+/** How long the headless page has to let its container be taken. */
+const imageWaitMs = 10_000;
+
 /** The PNG of `cell`'s container in the headless page, cut to `maxBytes`; undefined when it has no box. */
 async function imageOf(
+  context: SessionContext,
   page: GuardedPage,
-  cell: CellId,
-  maxBytes: number,
+  { cell, maxBytes }: { readonly cell: CellId; readonly maxBytes: number },
 ): Promise<Shot | undefined> {
-  const shot = await page.shoot(cell, maxBytes);
+  const shot = await page.shoot(cell, { maxBytes, timeoutMs: imageWaitMs });
+  if (shot === "timeout")
+    throw new PageTimeout({
+      notebook: context.ref,
+      request: "the container's image",
+      timeoutMs: imageWaitMs,
+    });
   if (shot !== "tooLarge") return shot;
   const message = `the container's PNG does not fit ${String(maxBytes)} bytes even at a twentieth of its size; raise imageMaxBytes`;
   throw new InvalidParams({ issues: [{ path: ["imageMaxBytes"], message }] });
@@ -84,8 +97,9 @@ export async function snapshotCell(
   if (!attachment) throw new RealmNotAttached({ notebook: context.ref });
   const own = attachment.kind === "headless" ? given.headless : undefined;
   if (request.image !== undefined && own === undefined) throw noImageInTab(context);
-  const read = await askPage(context, deps, attachment, request);
+  const asked = await askPage(context, deps, attachment, request);
+  const read = asked.rendered ? asked : { ...asked, text: notRendered };
   if (request.image === undefined || own === undefined || !read.rendered) return read;
-  const image = await imageOf(own, request.cell, request.image);
+  const image = await imageOf(context, own, { cell: request.cell, maxBytes: request.image });
   return image === undefined ? read : { ...read, image };
 }

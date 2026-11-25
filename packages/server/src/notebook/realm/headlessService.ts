@@ -9,8 +9,8 @@ import { createHeadlessBrowser } from "../../kernel/headless/browser.js";
 import type { GuardedPage } from "../../kernel/headless/page.js";
 
 export type HeadlessService = {
-  /** A new page holding `notebook`'s realm, attached once it resolves. */
-  readonly open: (notebook: string) => Promise<GuardedPage>;
+  /** A new page holding `notebook`'s realm, attached once it resolves; `key` is the one-time key its attach carries. */
+  readonly open: (notebook: string, key: string) => Promise<GuardedPage>;
   readonly stop: () => Promise<void>;
 };
 
@@ -49,13 +49,13 @@ export function createHeadlessService(options: {
     settings: options.settings,
   });
   return {
-    open: async (notebook) => {
+    open: async (notebook, key) => {
       const port = credentials.port();
       const origin = `http://127.0.0.1:${String(port)}`;
       const cookies = cookiesOf(port, credentials.pageKey);
       const page = await browser.open({ origin, path: pagePath, cookies });
       try {
-        await page.startRealm(credentials.token, notebook);
+        await page.startRealm({ token: credentials.token, notebook, key });
       } catch (error) {
         await page.close();
         throw error;

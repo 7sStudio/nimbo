@@ -37,9 +37,9 @@ export function realmHandlers({ workspace }: Services): readonly Bound[] {
       await (await session(notebook)).realm.restart();
       return {};
     }),
-    bind(realmAttach, async ({ notebook, kind, takeover }, { peer }) => {
+    bind(realmAttach, async ({ notebook, kind, takeover, key }, { peer }) => {
       if (!peer) throw new MethodNotFound(realmAttach.name, socketOnly);
-      return { realmId: (await session(notebook)).realm.attach(peer, kind, takeover) };
+      return { realmId: (await session(notebook)).realm.attach(peer, kind, { takeover, key }) };
     }),
     bind(realmDetach, async ({ realmId }) => {
       (await notebooks.byRealm(realmId))?.realm.detach(realmId); // a page already gone is detached already

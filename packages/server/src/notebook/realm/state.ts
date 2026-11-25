@@ -61,6 +61,8 @@ export type RealmState = {
   owed: "bridge" | "all" | undefined;
   /** Hears every detach (the headless page closes with its own). */
   onDetach?: (attachment: Attachment) => void;
+  /** The attached page did not answer a reset or an interrupt in time (a headless one is closed). */
+  onUnresponsive?: () => void;
 };
 
 export const createRealmState = (): RealmState => ({

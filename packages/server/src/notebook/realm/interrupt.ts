@@ -58,6 +58,7 @@ async function askThePage(
       { err: error, execution: execution.id },
       "the page did not take realm.interrupt",
     );
+    if (!attachment.detached.signal.aborted) run.state.onUnresponsive?.();
     return false;
   }
 }

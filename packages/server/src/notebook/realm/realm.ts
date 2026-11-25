@@ -35,7 +35,13 @@ export type SessionRealm = RealmPart & {
   readonly status: () => RealmStatus;
   /** The notebook moved: a headless page attached under its old name closes. */
   readonly moved: () => void;
-  readonly attach: (page: PageSocket, kind: "tab" | "headless", takeover?: boolean) => string;
+  /** realm.headless was turned off: the headless page closes. */
+  readonly headlessOff: () => void;
+  readonly attach: (
+    page: PageSocket,
+    kind: "tab" | "headless",
+    options?: { readonly takeover?: boolean; readonly key?: string | undefined },
+  ) => string;
   readonly detach: (realmId: string) => boolean;
   readonly owns: (realmId: string) => boolean;
   readonly report: (report: RealmReport) => void;
@@ -92,11 +98,17 @@ function attachOwing(
     page,
     kind,
     takeover,
-  }: { page: PageSocket; kind: "tab" | "headless"; takeover?: boolean | undefined },
+    key,
+  }: {
+    page: PageSocket;
+    kind: "tab" | "headless";
+    takeover?: boolean | undefined;
+    key?: string | undefined;
+  },
 ): string {
-  if (kind === "headless" && !headless.expecting()) {
+  if (kind === "headless" && !headless.expects(key)) {
     const message =
-      "only the daemon's own headless page attaches as headless; a tab attaches as tab";
+      "only the daemon's own headless page attaches as headless, with the key it was given; a tab attaches as tab";
     throw new InvalidParams({ issues: [{ path: ["kind"], message }] });
   }
   const socket = kind === "headless" ? headless.wrap(page) : page;
@@ -125,11 +137,14 @@ function hookEvents(context: SessionContext, state: RealmState): EventChannel {
 
 /** The session's headless realm, closed with the page it attached. */
 function headlessOf(context: SessionContext, state: RealmState, deps: RealmDeps): HeadlessRealm {
-  const headless = createHeadlessRealm(context, state, deps.headless, (realmId) => {
-    detach(context, state, realmId);
+  const headless = createHeadlessRealm(context, state, deps.headless, (realmId, why) => {
+    detach(context, state, realmId, { why });
   });
   state.onDetach = (attachment) => {
     headless.detached(attachment.realmId);
+  };
+  state.onUnresponsive = () => {
+    if (state.attachment?.kind === "headless") headless.unresponsive();
   };
   return headless;
 }
@@ -145,9 +160,13 @@ function pageSide(
     if (state.attachment?.kind === "headless") headless.touch();
   };
   return {
-    attach: (page: PageSocket, kind: "tab" | "headless", takeover?: boolean) =>
-      attachOwing(context, state, headless, { page, kind, takeover }),
+    attach: (
+      page: PageSocket,
+      kind: "tab" | "headless",
+      options: { readonly takeover?: boolean; readonly key?: string | undefined } = {},
+    ) => attachOwing(context, state, headless, { page, kind, ...options }),
     moved: headless.moved,
+    headlessOff: headless.turnedOff,
     detach: (realmId: string) => detach(context, state, realmId),
     owns: (realmId: string) => state.attachment?.realmId === realmId,
     report: (report: RealmReport) => {
