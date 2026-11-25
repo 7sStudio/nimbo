@@ -19,7 +19,7 @@ import { JsnbError, MissingPackage } from "@jsnb/core";
 import type { Resolver } from "./bareImport.js";
 import type { Built } from "./bundle.js";
 import { transformFile } from "./bundle.js";
-import type { BuildQueue, Turns } from "./buildQueue.js";
+import type { BuildQueue } from "./buildQueue.js";
 import { BuildTimedOut, createBuildQueue, createTurns, defaultConcurrency } from "./buildQueue.js";
 import type { CachedSpec, NoteLog, Where } from "./cache.js";
 import { cachedBundle, heldBundle } from "./cache.js";
@@ -140,29 +140,28 @@ export function createNpmModules(
   });
   const builds = createBuildQueue<Built>(turns);
   const cache: Where = { cacheDir: where.cacheDir, log: options.log, resolver, cleared: new Map() };
-  const packageModule = packageModules(cache, turns, builds, options.timeoutMs / 2);
-  return async (rest, signal) => {
-    const spec = parseNpmSpec(rest);
-    if (spec === undefined) return refused(404);
-    return spec.kind === "relative"
-      ? workspaceFile({ resolver, builds }, spec.path, signal)
-      : packageModule(spec, signal);
-  };
-}
+  const groups = createGroups(cache, createBuildQueue(turns), options.timeoutMs / 2);
+  const failedAlone = createFailures(root);
 
-/**
- * A standalone bundle of a package's subpath: from the cache, else built through the queue, a subpath spelled otherwise
- * than its file refused, and a build that failed answered with its failure until the package or the install changes.
- */
-function standaloneOf(
-  cache: Where,
-  builds: BuildQueue<Built>,
-  known: {
-    readonly siblings: (spec: CachedSpec) => Promise<readonly string[]>;
-    readonly failed: ReturnType<typeof createFailures>;
-  },
-) {
-  return async (spec: CachedSpec, signal: AbortSignal): Promise<Built> => {
+  // Forgets what the daemon learned of its packages once cache.clear replaced the cache's folder (a new folder in its
+  // place): failed split builds, entries read, builds kept in memory, folders checked.
+  let folder: string | undefined;
+  const cleared = async (): Promise<void> => {
+    const stats = await lstat(cache.cacheDir).catch(() => undefined);
+    const now = stats === undefined ? "" : `${String(stats.dev)}:${String(stats.ino)}`;
+    if (folder !== undefined && now !== folder) {
+      groups.reset();
+      failedAlone.clear();
+      cache.cleared.clear();
+      resolver.entries.clear();
+    }
+    folder = now;
+  };
+
+  // A standalone bundle of a package's subpath: from the cache, else built through the queue, a subpath spelled
+  // otherwise than its file refused, and a build that failed answered with its failure until the package or the install
+  // changes.
+  const standalone = async (spec: CachedSpec, signal: AbortSignal): Promise<Built> => {
     const held = await heldBundle(cache, spec); // a cached one is no build: it takes no turn in the queue
     if (held !== undefined) return { ok: true, text: held };
     const spelled = await subpathAsWritten(spec.found.folder, spec.subpath);
@@ -170,9 +169,9 @@ function standaloneOf(
       throw new Error(`the package's file is spelled ${spelled}; import it by that name`);
     }
     const key = `${spec.dir}/${spec.subpath}`;
-    const before = await known.failed.get(key, spec); // a build that failed fails the same until something changed
+    const before = await failedAlone.get(key, spec); // a build that failed fails the same until something changed
     if (before !== undefined) throw before;
-    const alone = { ...spec, siblings: await known.siblings(spec) };
+    const alone = { ...spec, siblings: await groups.siblings(spec) };
     const build = (inner: AbortSignal) => cachedBundle(cache, alone, inner);
     try {
       return await builds(`entry:${key}`, build, signal);
@@ -180,25 +179,16 @@ function standaloneOf(
       if (!signal.aborted) {
         const failure = error instanceof Error ? error : new Error(String(error));
         const forMs = failure instanceof BuildTimedOut ? timedOutMs : Infinity; // a slow moment, tried again soon
-        await known.failed.add(key, spec, failure, forMs);
+        await failedAlone.add(key, spec, failure, forMs);
       }
       throw error;
     }
   };
-}
 
-/** The package modules: an entry of the package's split build, a chunk of it, or a standalone bundle. */
-function packageModules(cache: Where, turns: Turns, builds: BuildQueue<Built>, searchMs: number) {
-  const groups = createGroups(cache, createBuildQueue(turns), searchMs);
-  const failedAlone = createFailures(cache.resolver.root);
-  const cleared = clearedBy(cache, [groups.reset, failedAlone.clear]);
-  const standalone = standaloneOf(cache, builds, {
-    siblings: groups.siblings,
-    failed: failedAlone,
-  });
-  return async (spec: Package, signal: AbortSignal): Promise<NpmModule> => {
+  // a package module: an entry of the package's split build, a chunk of it, or a standalone bundle
+  const packageModule = async (spec: Package, signal: AbortSignal): Promise<NpmModule> => {
     await cleared();
-    const cached = await cachedSpecOf(cache.resolver, spec);
+    const cached = await cachedSpecOf(resolver, spec);
     if (!("found" in cached)) return cached;
     try {
       if (spec.chunk !== undefined) {
@@ -214,22 +204,12 @@ function packageModules(cache: Where, turns: Turns, builds: BuildQueue<Built>, s
       return failed(500, new NpmModuleFailed({ spec: name, reason }, { cause: error }));
     }
   };
-}
 
-/**
- * Forgets what the daemon learned of its packages once cache.clear replaced the cache's folder (a new folder in its
- * place): failed split builds, entries read, builds kept in memory, folders checked.
- */
-function clearedBy(cache: Where, resets: readonly (() => void)[]) {
-  let folder: string | undefined;
-  return async (): Promise<void> => {
-    const stats = await lstat(cache.cacheDir).catch(() => undefined);
-    const now = stats === undefined ? "" : `${String(stats.dev)}:${String(stats.ino)}`;
-    if (folder !== undefined && now !== folder) {
-      for (const reset of resets) reset();
-      cache.cleared.clear();
-      cache.resolver.entries.clear();
-    }
-    folder = now;
+  return async (rest, signal) => {
+    const spec = parseNpmSpec(rest);
+    if (spec === undefined) return refused(404);
+    return spec.kind === "relative"
+      ? workspaceFile({ resolver, builds }, spec.path, signal)
+      : packageModule(spec, signal);
   };
 }

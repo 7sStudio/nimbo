@@ -105,58 +105,48 @@ async function holds(where: Where, spec: CachedSpec, made: Made): Promise<boolea
   return importsHold(where.resolver, made.imports);
 }
 
-/** Whether `spec`'s package is built entry by entry: found out by this daemon, or marked in the cache by an earlier one. */
-async function failedIn(where: Where, memory: Memory, spec: CachedSpec): Promise<boolean> {
-  if ((await memory.failures.get(spec.dir, spec)) !== undefined) return true;
-  const marked = await heldUnsplit(where, spec);
-  if (marked !== undefined) await memory.failures.add(spec.dir, spec, new Error(marked));
-  return marked !== undefined;
-}
-
-/** A split build kept in memory, for a cache that could not hold it, while it holds. */
-async function keptIn(where: Where, memory: Memory, spec: CachedSpec): Promise<Made | undefined> {
-  const made = memory.recent.get(spec.dir);
-  return made !== undefined && !made.cached && (await holds(where, spec, made)) ? made : undefined;
-}
-
-type Memory = {
-  readonly failures: ReturnType<typeof createFailures>;
-  readonly recent: ReturnType<typeof createRecent<Made>>;
-};
-
-/** The split builds through `queue`: a failure remembered for the package, a success kept among the recent ones. */
-function builder(where: Where, queue: BuildQueue<GroupRun>, memory: Memory, searchMs: number) {
-  return async (spec: CachedSpec, entries: readonly string[], signal: AbortSignal) => {
+/** The split builds over the cache `where`, each through `queue`; `reset` forgets what they learned. */
+export function createGroups(where: Where, queue: BuildQueue<GroupRun>, searchMs: number) {
+  const failures = createFailures();
+  const recent = createRecent(recentBytes, bytesOf);
+  let subpathsOf = subpathsMemo();
+  /** Whether `spec`'s package is built entry by entry: found out by this daemon, or marked in the cache by an earlier one. */
+  const failed = async (spec: CachedSpec): Promise<boolean> => {
+    if ((await failures.get(spec.dir, spec)) !== undefined) return true;
+    const marked = await heldUnsplit(where, spec);
+    if (marked !== undefined) await failures.add(spec.dir, spec, new Error(marked));
+    return marked !== undefined;
+  };
+  const subpaths = async (spec: CachedSpec): Promise<readonly string[]> =>
+    (await failed(spec)) ? [] : subpathsOf(spec.found.folder);
+  /** A split build kept in memory, for a cache that could not hold it, while it holds. */
+  const kept = async (spec: CachedSpec): Promise<Made | undefined> => {
+    const made = recent.get(spec.dir);
+    return made !== undefined && !made.cached && (await holds(where, spec, made))
+      ? made
+      : undefined;
+  };
+  /** The split build through `queue`: a failure remembered for the package, a success kept among the recent ones. */
+  const built = async (spec: CachedSpec, entries: readonly string[], signal: AbortSignal) => {
     const build = (inner: AbortSignal) =>
       buildGroup(where, spec, entries, { signal: inner, searchMs });
     const made = await queue(`group:${spec.dir}`, build, signal);
     if ("failed" in made) {
-      if ((await memory.failures.get(spec.dir, spec)) === undefined) {
+      if ((await failures.get(spec.dir, spec)) === undefined) {
         where.log.warn(
           { dir: spec.dir, reason: made.failed },
           "a package's entries are built one by one",
         );
         const error = new Error(made.failed);
-        await memory.failures.add(spec.dir, spec, error, made.timedOut ? timedOutMs : Infinity);
+        await failures.add(spec.dir, spec, error, made.timedOut ? timedOutMs : Infinity);
         if (!made.timedOut) await cacheUnsplit(where, spec, made.failed);
       }
       return undefined;
     }
     if (!made.ok) return undefined;
-    memory.recent.set(spec.dir, made);
+    recent.set(spec.dir, made);
     return made;
   };
-}
-
-/** The split builds over the cache `where`, each through `queue`; `reset` forgets what they learned. */
-export function createGroups(where: Where, queue: BuildQueue<GroupRun>, searchMs: number) {
-  const memory: Memory = { failures: createFailures(), recent: createRecent(recentBytes, bytesOf) };
-  let subpathsOf = subpathsMemo();
-  const failed = (spec: CachedSpec) => failedIn(where, memory, spec);
-  const subpaths = async (spec: CachedSpec): Promise<readonly string[]> =>
-    (await failed(spec)) ? [] : subpathsOf(spec.found.folder);
-  const kept = (spec: CachedSpec) => keptIn(where, memory, spec);
-  const built = builder(where, queue, memory, searchMs);
   return {
     /** The entry `spec` of its package's split build; undefined when it is no entry of one (it is built alone). */
     entry: async (spec: CachedSpec, signal: AbortSignal): Promise<string | undefined> => {
@@ -172,7 +162,7 @@ export function createGroups(where: Where, queue: BuildQueue<GroupRun>, searchMs
     chunk: async (spec: CachedSpec, hash: string, signal: AbortSignal) => {
       const held = textOf(await heldChunk(where, spec, hash));
       if (held !== absent) return held;
-      const text = memory.recent.get(spec.dir)?.chunks.get(hash); // a chunk's name is its content's hash
+      const text = recent.get(spec.dir)?.chunks.get(hash); // a chunk's name is its content's hash
       if (text !== undefined) return text;
       const entries = await subpaths(spec);
       if (entries.length === 0) return undefined;
@@ -185,8 +175,8 @@ export function createGroups(where: Where, queue: BuildQueue<GroupRun>, searchMs
     siblings: async (spec: CachedSpec): Promise<readonly string[]> =>
       (await failed(spec)) ? subpathsOf(spec.found.folder) : subpaths(spec),
     reset: (): void => {
-      memory.failures.clear();
-      memory.recent.clear();
+      failures.clear();
+      recent.clear();
       subpathsOf = subpathsMemo();
     },
   };
