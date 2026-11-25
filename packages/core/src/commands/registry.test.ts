@@ -159,6 +159,7 @@ describe("the defaults", () => {
       cell: "c_a1b2c3",
       wait: true,
       timeoutMs: 30_000,
+      waitAutoRun: true,
     });
     expect(notebookRun.input.parse({ notebook: "d", select: "all" })).toMatchObject({
       wait: true,

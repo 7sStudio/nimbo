@@ -58,6 +58,7 @@ function hookExports(context: SessionContext, state: RealmState): void {
     state.former = [...without(state.former, state.exports), ...state.exports];
     state.exports = [];
     exportsArrived(context.runs.exports);
+    context.hooks.realmEnded("server");
   };
 }
 

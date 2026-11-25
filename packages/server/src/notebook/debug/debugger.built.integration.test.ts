@@ -2,7 +2,8 @@
 // a re-run, a step into a function another cell defined, the Notebook scope and an evaluation that changes a cell's
 // name, interrupt and restart while paused (the breakpoints bound again on the new kernel), the kernel's NODE_OPTIONS
 // untouched, secrets redacted in what the debugger shows, a breakpoint that stays on its cell when another cell gets
-// one, and conditions and logpoints that read other cells' names and report their errors once.
+// one, conditions and logpoints that read other cells' names and report their errors once, and an auto-run cascade
+// that waits while a dependent is paused.
 import type { Execution } from "@jsnb/core";
 import { describe, expect, it } from "vitest";
 
@@ -289,6 +290,39 @@ describe("a caller's run wait", () => {
       );
       const { execution } = await daemon.client.cell.outputs({ notebook, cell });
       expect(valueOf(execution)).toBe(2);
+    });
+  });
+});
+
+describe("the debugger and execution.autoRunDependents", () => {
+  it("queues no further dependent while one is paused, and goes on once it resumes", async () => {
+    await withDaemon(async (daemon) => {
+      await daemon.client.notebook.create({ path: notebook });
+      const a = await server(daemon, ["let a = 1"]);
+      const paused = await server(daemon, ["let b = a", "b += 1"]);
+      const after = await server(daemon, ["const c = a + 1", "c"]);
+      await daemon.client.notebook.run({ notebook, select: "all" });
+      await daemon.client.settings.set({ key: "execution.autoRunDependents", value: true });
+      await daemon.client.debug.setBreakpoint({ notebook, cell: paused, line: 2 });
+      const before = mark(daemon);
+      const answer = daemon.client.cell.run({ notebook, cell: a, source: "let a = 5" });
+      await pausedAt(daemon, before, paused, 2);
+      const state = await daemon.client.notebook.get({ notebook });
+      expect(state.notebook.autoRun).toEqual({ running: paused, pending: [after] });
+      const queuedAfter = () =>
+        daemon.events
+          .all()
+          .some((e) => e.seq > before && e.type === "cell.status" && e.data.cell === after);
+      expect(queuedAfter()).toBe(false);
+      await daemon.client.debug.resume({ notebook });
+      await answer;
+      await daemon.events.until(
+        "cell.status",
+        (e) => e.seq > before && e.data.cell === after && e.data.status === "ok",
+      );
+      const { execution } = await daemon.client.cell.outputs({ notebook, cell: after });
+      expect(execution?.autoRun?.cell).toBe(a);
+      expect(valueOf(execution)).toBe(6);
     });
   });
 });

@@ -31,6 +31,7 @@ export const eventTypes = [
   "cell.status",
   "cell.output",
   "cells.stale",
+  "cells.autoRun",
   "cell.diagnostics",
   "routes.changed",
   "kernel.status",
@@ -82,6 +83,15 @@ export const eventData = {
     .readonly(),
   "cell.output": z.object({ cell: CellId, execution: ExecutionId, output: Output }).readonly(),
   "cells.stale": z.object({ cells: z.array(CellId).readonly() }).readonly(),
+  /** execution.autoRunDependents at work, as a change of NotebookState.autoRun: the dependent running now, and the
+   * cells that started or stopped waiting. */
+  "cells.autoRun": z
+    .object({
+      running: CellId.nullable(),
+      added: z.array(CellId).readonly(),
+      removed: z.array(CellId).readonly(),
+    })
+    .readonly(),
   "cell.diagnostics": CellDiagnostics,
   "routes.changed": z.object({ routes: z.array(Route).readonly() }).readonly(),
   "kernel.status": KernelStatus,
@@ -153,6 +163,7 @@ export const EventEnvelope = z.discriminatedUnion("type", [
   envelope("cell.status"),
   envelope("cell.output"),
   envelope("cells.stale"),
+  envelope("cells.autoRun"),
   envelope("cell.diagnostics"),
   envelope("routes.changed"),
   envelope("kernel.status"),

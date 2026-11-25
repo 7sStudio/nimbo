@@ -1,6 +1,6 @@
 // The cells of an open notebook in order, with the dependency graph and the stale flags over them (00-overview §4.2,
 // 05-bridge §5): adds, moves and removals by id, the graph rebuilt from the analyses, staleness through core's rules.
-import type { CellId, Graph, StaleMap } from "@jsnb/core";
+import type { CellId, Graph, GraphInput, StaleMap } from "@jsnb/core";
 import { buildGraph, CellNotFound, Conflict } from "@jsnb/core";
 
 import type { CellRecord } from "./records.js";
@@ -94,12 +94,30 @@ function ordering(state: State, cells: Lookup): Ordering {
   };
 }
 
+/** The graph of the records, built again only when a cell's id, place, type or analysis changed since (an edit
+ * gives a cell a new analysis object). */
+function graphOf(state: State): () => Graph {
+  let inputs: readonly GraphInput[] = [];
+  let graph: Graph | undefined;
+  const same = (): boolean =>
+    state.records.length === inputs.length &&
+    state.records.every((record, at) => {
+      const was = inputs[at];
+      return was?.id === record.id && was.type === record.type && was.analysis === record.analysis;
+    });
+  return () => {
+    if (graph !== undefined && same()) return graph;
+    inputs = state.records.map(({ id, type, analysis }) => ({ id, type, analysis }));
+    graph = buildGraph(inputs);
+    return graph;
+  };
+}
+
 function staleness(state: State): Staleness {
   const staleCells = () =>
     state.records.filter((record) => state.stale[record.id] === true).map((record) => record.id);
   return {
-    graph: () =>
-      buildGraph(state.records.map(({ id, type, analysis }) => ({ id, type, analysis }))),
+    graph: graphOf(state),
     stale: () => state.stale,
     setStale: (next) => {
       const before = staleCells().join(",");
