@@ -6,7 +6,7 @@
 import type { CellId } from "@jsnb/core";
 
 import type { SessionContext } from "../context.js";
-import type { ExecutionRecord } from "../records.js";
+import type { CellRecord, ExecutionRecord } from "../records.js";
 import { terminalStatuses } from "../records.js";
 import { finish } from "./executions.js";
 import type { QueuedRun } from "./queue.js";
@@ -27,6 +27,20 @@ export function cancel(
 /** The client realm's side of a run, which the realm part provides. */
 export type ClientRunner = (execution: ExecutionRecord) => Promise<void>;
 
+/** Runs the cell in its realm; a run that started there records the code it ran (CellRecord.ran). */
+async function runIn(
+  context: SessionContext,
+  execution: ExecutionRecord,
+  record: CellRecord,
+  client: ClientRunner,
+): Promise<void> {
+  const code = { source: record.source, type: record.type };
+  if (record.type === "markdown") finish(context, execution, { status: "ok", durationMs: 0 });
+  else if (record.type === "server") await runServerCell(context, execution, record);
+  else await client(execution);
+  if (execution.count !== undefined) record.ran = code;
+}
+
 /** Runs one queued run to its terminal status. */
 export async function executeRun(
   context: SessionContext,
@@ -39,9 +53,7 @@ export async function executeRun(
     cancel(context, execution, run.batch?.stopped === true ? run.batch.stoppedBy : undefined);
     return;
   }
-  if (record.type === "markdown") finish(context, execution, { status: "ok", durationMs: 0 });
-  else if (record.type === "server") await runServerCell(context, execution, record);
-  else await client(execution);
+  await runIn(context, execution, record, client);
   if (run.batch && execution.status === "error") {
     run.batch.stopped = true;
     run.batch.stoppedBy = execution.cell;

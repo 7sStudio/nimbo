@@ -67,7 +67,25 @@ export type CellModel = {
   readonly pinned: boolean;
   /** Its header shows the title field (double click on the name, F2). */
   readonly renaming: boolean;
+  /** execution.autoRunDependents: waiting to run, running, or its last run was started by it after a run of cell
+   * `after` (0 when that cell is gone, or while waiting or running); null otherwise. */
+  readonly autoRun: {
+    readonly state: "pending" | "running" | "ran";
+    readonly after: number;
+  } | null;
 };
+
+/** The cell's part in an auto-run cascade, from the cascade's state and the cell's last run. */
+export function autoRunOf(
+  cell: string,
+  cascade: { readonly running: string | null; readonly pending: readonly string[] },
+  last: Execution | undefined,
+  numberOf: (cell: string) => number,
+): CellModel["autoRun"] {
+  if (cascade.running === cell) return { state: "running", after: 0 };
+  if (cascade.pending.includes(cell)) return { state: "pending", after: 0 };
+  return last?.autoRun === undefined ? null : { state: "ran", after: numberOf(last.autoRun.cell) };
+}
 
 /** "Cell 3, server, ok": the list item's label. */
 export function cellLabel(cell: Pick<CellModel, "number" | "type" | "status" | "stale">): string {

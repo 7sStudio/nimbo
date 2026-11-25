@@ -28,7 +28,8 @@ ${notebookFlagHelp}
 const options = {
   ...notebookOption,
   html: { type: "boolean" },
-  "no-outputs": { type: "boolean" },
+  // parseArgs reads --no-outputs as outputs: false (allowNegative)
+  outputs: { type: "boolean" },
   theme: { type: "string" },
 } as const;
 
@@ -62,7 +63,7 @@ async function run(argv: readonly string[], io: Io): Promise<ExitCode> {
     (session, notebook) =>
       session.call(notebookExport, {
         notebook,
-        outputs: args.values["no-outputs"] !== true,
+        outputs: args.values.outputs !== false,
         ...(theme === undefined ? {} : { theme }),
       }),
   );

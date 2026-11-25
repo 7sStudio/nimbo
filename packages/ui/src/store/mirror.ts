@@ -38,6 +38,8 @@ export type Mirror = {
   /** The language service's diagnostics per code cell (notebook.diagnostics, then cell.diagnostics); a cell
    * absent here has no list from the service yet. */
   readonly diagnostics: ReadonlyMap<CellId, readonly Diagnostic[]>;
+  /** execution.autoRunDependents at work (cells.autoRun): the dependent running and those waiting, in order. */
+  readonly autoRun: { readonly running: CellId | null; readonly pending: readonly CellId[] };
 };
 
 export const emptyMirror: Mirror = {
@@ -50,6 +52,7 @@ export const emptyMirror: Mirror = {
   saveError: null,
   closed: false,
   diagnostics: new Map(),
+  autoRun: { running: null, pending: [] },
 };
 
 /** The mirror after a (re)hydrate: the full state replaces the cells; executions, graph and routes of cells that still
@@ -67,6 +70,7 @@ export function hydrated(mirror: Mirror, state: NotebookState, seq: number): Mir
     saveState: state.dirty ? "writing" : "saved",
     saveError: null,
     closed: false,
+    autoRun: state.autoRun ?? { running: null, pending: [] },
   };
 }
 

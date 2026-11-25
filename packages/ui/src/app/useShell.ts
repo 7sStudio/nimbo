@@ -113,6 +113,9 @@ function statusOf(notebook: Notebook, workspace: Workspace, ui: Ui): StatusModel
   return {
     node: workspace.info?.nodeVersion ?? "",
     routes: notebook.mirror.routes.length,
+    autoRun:
+      notebook.mirror.autoRun.pending.length + (notebook.mirror.autoRun.running === null ? 0 : 1),
+    runsOff: runsOff(notebook),
     // the Problems tab's count split as VS Code's status bar splits it: errors + warnings is the tab's number
     errors: notebook.errors.length + notebook.diagnosticCount - warningsOf(notebook),
     warnings: warningsOf(notebook),

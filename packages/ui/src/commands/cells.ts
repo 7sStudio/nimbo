@@ -121,7 +121,7 @@ function runCommands(store: Store, ui: Ui): readonly Command[] {
 }
 
 /** A meta flag of the cell flipped: the values view, collapse, hidden outputs. */
-const toggled = (cell: Cell, key: "showBindings" | "collapsed" | "outputsHidden") => ({
+const toggled = (cell: Cell, key: "showBindings" | "collapsed" | "outputsHidden" | "manual") => ({
   meta: { [key]: cell.meta[key] !== true },
 });
 
@@ -148,6 +148,9 @@ function toggleCommands(store: Store, ui: Ui): readonly Command[] {
     ),
     command("ui.cell.toggleOutputs", "Hide or show the cell's outputs", (cell) =>
       store.update(cell.id, toggled(cell, "outputsHidden")),
+    ),
+    command("ui.cell.toggleManual", "Run the cell only when asked, never by auto-run", (cell) =>
+      store.update(cell.id, toggled(cell, "manual")),
     ),
     command("ui.cell.rename", "Rename Cell", (cell) => {
       ui.setRenaming(cell.id);

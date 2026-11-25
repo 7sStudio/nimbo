@@ -9,7 +9,7 @@ const groups = groupsOf(settingsJsonSchema());
 const field = (key: string) => groups.flatMap((g) => g.fields).find((f) => f.key === key);
 
 /** The schema's planned keys, which the panel leaves out. */
-const planned = new Set(["execution.autoRunDependents", "editor.keymap", "secrets.allowLiveKeys"]);
+const planned = new Set(["editor.keymap", "secrets.allowLiveKeys"]);
 
 describe("settings fields", () => {
   it("lists every key once, grouped by its prefix in the schema's order", () => {

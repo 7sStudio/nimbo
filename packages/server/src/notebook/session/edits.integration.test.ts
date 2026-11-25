@@ -3,6 +3,7 @@
 import { withDaemon } from "../../fixtures/daemon.js";
 import { describe, expect, it } from "vitest";
 
+import { createNotebook } from "../../fixtures/notebook.js";
 import { bodyOf, postRpc } from "../../fixtures/raw.js";
 
 describe("meta.lastEdit", () => {
@@ -138,6 +139,19 @@ describe("cells.stale", () => {
       expect(
         (await daemon.client.notebook.graph({ notebook: "a.jsnb" })).cells.map((cell) => cell.id),
       ).toEqual([a.id, b.id]);
+    });
+  });
+});
+
+describe("a server cell retyped while it runs", () => {
+  it("finishes its run with its old code before the kernel disposes it", async () => {
+    await withDaemon(async (daemon) => {
+      const book = await createNotebook(daemon);
+      const cell = await book.add("await new Promise((r) => setTimeout(r, 300))\nconst s = 1");
+      const answer = daemon.client.cell.run({ notebook: book.notebook, cell });
+      await book.cellReaches(cell, "running");
+      await daemon.client.cell.update({ notebook: book.notebook, cell, type: "markdown" });
+      expect((await answer).execution.status).toBe("ok");
     });
   });
 });

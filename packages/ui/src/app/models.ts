@@ -75,6 +75,10 @@ export type StatusModel = {
   /** The Node the kernels run on, as workspace.info says it (`26.7.0`, `unknown`); "" before it is known. */
   readonly node: string;
   readonly routes: number;
+  /** Cells execution.autoRunDependents runs now or still has to run; 0 when no cascade is under way. */
+  readonly autoRun: number;
+  /** Runs are off in this tab (view only, no live socket): the cascade's stop is off too. */
+  readonly runsOff: boolean;
   /** The problems as VS Code's status bar counts them: errors (cells whose last run failed and the editor's error
    * diagnostics) and warnings; together they make the Problems tab's count. The item opens the Problems tab, or hides
    * it while it shows. */

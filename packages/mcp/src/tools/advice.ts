@@ -24,14 +24,17 @@ const cellUriOf = (path: string): string =>
 const notebookOf = ({ input }: Exchange): string =>
   textOf(input.notebook) ?? textOf(input.path) ?? "<notebook>";
 
-/** The executions an output carries: cell_add's, cell_run's and cell_outputs' one, notebook_run's list. */
+/** The executions an output carries: cell_add's, cell_run's and cell_outputs' one, notebook_run's list, and the
+ * dependents cell_run started (autoRun). */
 function executionsOf(output: Args): readonly Execution[] {
   const found: unknown[] = Array.isArray(output.executions)
     ? output.executions
     : isRecord(output.execution)
       ? [output.execution]
       : [];
-  return found.filter((execution): execution is Execution => isRecord(execution));
+  const auto: unknown = isRecord(output.autoRun) ? output.autoRun.executions : undefined;
+  const started: unknown[] = Array.isArray(auto) ? auto : [];
+  return [...found, ...started].filter((execution): execution is Execution => isRecord(execution));
 }
 
 /** A value output read in parts. */
