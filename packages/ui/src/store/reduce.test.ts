@@ -82,7 +82,9 @@ describe("the reducer's guards", () => {
 
   it("marks the notebook closed by another client, open again on notebook.opened, and not closed after a hydrate", () => {
     const at = (seq: number, type: "notebook.closed" | "notebook.opened"): EventEnvelope => ({
-      ...{ notebook: start.path, seq, ts: "2026-01-01T00:00:00.000Z" },
+      notebook: start.path,
+      seq,
+      ts: "2026-01-01T00:00:00.000Z",
       type,
       data: { path: start.path },
     });
@@ -94,7 +96,9 @@ describe("the reducer's guards", () => {
 
   it("drops an output of a run it does not follow", () => {
     const stray: EventEnvelope = {
-      ...{ notebook: start.path, seq: startSeq + 1, ts: "2026-01-01T00:00:00.000Z" },
+      notebook: start.path,
+      seq: startSeq + 1,
+      ts: "2026-01-01T00:00:00.000Z",
       type: "cell.output",
       data: {
         cell: "c_m0izya",
@@ -112,7 +116,11 @@ const current = mirror.executions.get("c_m0izya")?.id ?? "";
 
 describe("what the store folds in", () => {
   const run = (id: string, startedAt: string): Execution => ({
-    ...{ id, cell: "c_m0izya", status: "ok", startedAt, outputs: [] },
+    id,
+    cell: "c_m0izya",
+    status: "ok",
+    startedAt,
+    outputs: [],
   });
 
   it("takes a fetched execution unless it follows a newer run", () => {

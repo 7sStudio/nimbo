@@ -141,7 +141,7 @@ export function headingOf(cells: readonly Cell[], sections: Sections, cell: Cell
   return null;
 }
 
-/** Where a move puts which cells (store/notebookActions.ts): `ids` in order, the first after `after` (null: the top). */
+/** Where a move puts which cells (store/notebook.ts): `ids` in order, the first after `after` (null: the top). */
 type Plan = { readonly ids: readonly CellId[]; readonly after: CellId | null } | undefined;
 
 /** Where a collapsed section `ids` lands moving down past the shown cell `next`: after `next`'s whole section when it

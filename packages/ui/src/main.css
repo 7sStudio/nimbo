@@ -157,7 +157,7 @@
   line-height: inherit;
 }
 
-/* Text for a screen reader alone (Tailwind's sr-only sizes in px and hides overflow, which 08 §7 refuses). */
+/* Text for a screen reader alone. */
 @utility visually-hidden {
   position: absolute;
   inline-size: 0.0625rem;
@@ -170,8 +170,7 @@
   border-width: 0;
 }
 
-/* One line cut with an ellipsis, clipped rather than hidden (08 §7: overflow is clip unless it
-   scrolls); Tailwind's truncate hides. */
+/* One line cut with an ellipsis. */
 @utility ellipsis {
   overflow: clip;
   text-overflow: ellipsis;

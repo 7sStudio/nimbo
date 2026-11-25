@@ -5,7 +5,6 @@ import type { Cell, CellId, CellMeta } from "@jsnb/core";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
-import type { Attempt } from "./attempt.js";
 import { attempter, usePageReport } from "./attempt.js";
 import { useSessionStore } from "./socket.js";
 import { useUiStore } from "./ui.js";
@@ -41,27 +40,34 @@ export const sendable = ({
   outputColumns,
   manual,
 }: CellMeta) => ({
-  ...{
-    title,
-    showBindings,
-    collapsed,
-    headingCollapsed,
-    outputsHidden,
-    outputView,
-    outputQuery,
-    outputHeight,
-    outputColumns,
-    manual,
-  },
+  title,
+  showBindings,
+  collapsed,
+  headingCollapsed,
+  outputsHidden,
+  outputView,
+  outputQuery,
+  outputHeight,
+  outputColumns,
+  manual,
 });
 
 /** True when `meta` has a key to send back. */
 export const hasSendable = (meta: CellMeta): boolean =>
   Object.values(sendable(meta)).some((value) => value !== undefined);
 
-/** Adds one deleted cell back under its old id with its meta; false when the add failed. */
-function restorer(session: ReturnType<typeof useSessionStore>, attempt: Attempt) {
-  return async ({ cell, after }: Deleted): Promise<boolean> => {
+export const useUndoStore = defineStore("undo", () => {
+  const ui = useUiStore();
+  const session = useSessionStore();
+  const attempt = attempter(usePageReport());
+  const stack = ref<readonly Deleted[]>([]);
+
+  let batches = 0;
+  /** The toast that offers each delete's undo, closed once its cells are back (Z, the menu or its own button). */
+  const toastOf = new Map<number, number>();
+
+  /** Adds one deleted cell back under its old id with its meta; false when the add failed. */
+  async function restoreOne({ cell, after }: Deleted): Promise<boolean> {
     const { client, notebook } = session.session();
     const added = await attempt(() =>
       client.cell.add({ notebook, id: cell.id, type: cell.type, source: cell.source, after }),
@@ -72,35 +78,7 @@ function restorer(session: ReturnType<typeof useSessionStore>, attempt: Attempt)
         client.cell.update({ notebook, cell: cell.id, meta: sendable(cell.meta) }),
       );
     return true;
-  };
-}
-
-/** The toast that offers each delete's undo, closed once its cells are back (Z, the menu or its own button). */
-function undoToasts(ui: ReturnType<typeof useUiStore>) {
-  const toastOf = new Map<number, number>();
-  return {
-    show: (batch: number, count: number) => {
-      const title = count === 1 ? "Cell deleted" : `${String(count)} cells deleted`;
-      toastOf.set(
-        batch,
-        ui.toast({ kind: "info", title, action: { label: "Undo", command: "undo.restore" } }),
-      );
-    },
-    close: (batch: number) => {
-      const toast = toastOf.get(batch);
-      if (toast !== undefined) ui.dismiss(toast);
-      toastOf.delete(batch);
-    },
-  };
-}
-
-export const useUndoStore = defineStore("undo", () => {
-  const ui = useUiStore();
-  const restoreOne = restorer(useSessionStore(), attempter(usePageReport()));
-  const stack = ref<readonly Deleted[]>([]);
-
-  let batches = 0;
-  const toasts = undoToasts(ui);
+  }
 
   /** Keeps the cells of one delete for an undo, each with where it goes back (bottom-up, so each one's `after` is
    * still there when it is restored), and shows the toast that offers it. */
@@ -110,7 +88,11 @@ export const useUndoStore = defineStore("undo", () => {
     const at = Date.now();
     const kept = deleted.map((each) => ({ ...each, at, batch: batches }));
     stack.value = lastBatches([...stack.value, ...kept], undoLimit);
-    toasts.show(batches, deleted.length);
+    const title = deleted.length === 1 ? "Cell deleted" : `${String(deleted.length)} cells deleted`;
+    toastOf.set(
+      batches,
+      ui.toast({ kind: "info", title, action: { label: "Undo", command: "undo.restore" } }),
+    );
   }
 
   let restoring: Promise<CellId | undefined> | null = null;
@@ -134,7 +116,11 @@ export const useUndoStore = defineStore("undo", () => {
       restored = done.cell.id;
       last = stack.value.at(-1);
     }
-    if (restored !== undefined && batch !== undefined) toasts.close(batch);
+    if (restored !== undefined && batch !== undefined) {
+      const toast = toastOf.get(batch);
+      if (toast !== undefined) ui.dismiss(toast);
+      toastOf.delete(batch);
+    }
     return restored;
   }
 

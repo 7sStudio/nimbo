@@ -22,29 +22,6 @@ const keysUnder = (entries: readonly Keybinding[], target: KeyTarget): readonly 
     )
     .map((each) => each.key);
 
-type Write = (target: KeyTarget, keys: readonly string[]) => Promise<void>;
-
-/** The row's key added under `text`'s clause, then taken from its own; the problem with `text`, or null. */
-async function moveWhen(
-  entries: () => readonly Keybinding[],
-  write: Write,
-  row: KeyRow,
-  text: string,
-): Promise<string | null> {
-  const read = parseWhen(text);
-  if ("problem" in read) return read.problem;
-  const key = row.keys[0];
-  const target = row.target;
-  if (target === null || key === undefined || read.when.text === target.when) return null;
-  const moved = { ...target, when: read.when.text };
-  await write(moved, [...keysUnder(entries(), moved), key]);
-  await write(
-    target,
-    keysUnder(entries(), target).filter((each) => each !== key),
-  );
-  return null;
-}
-
 export function keybindingActions(context: {
   readonly entries: () => readonly Keybinding[];
   readonly scope: Ref<Scope>;
@@ -52,7 +29,7 @@ export function keybindingActions(context: {
 }) {
   const store = useKeybindingsStore();
   const { entries, scope, mac } = context;
-  const write: Write = async (target, keys) => {
+  const write = async (target: KeyTarget, keys: readonly string[]) => {
     await store.set(
       target,
       keys.map((each) => keysText(each, mac)),
@@ -83,6 +60,20 @@ export function keybindingActions(context: {
       if (row.target !== null) await store.reset(row.target, undefined);
     },
     /** Change When Expression: the row's key moves to `text`'s clause; the problem with `text`, or null. */
-    moveWhen: (row: KeyRow, text: string) => moveWhen(entries, write, row, text),
+    moveWhen: async (row: KeyRow, text: string): Promise<string | null> => {
+      const read = parseWhen(text);
+      if ("problem" in read) return read.problem;
+      const key = row.keys[0];
+      const target = row.target;
+      if (target === null || key === undefined || read.when.text === target.when) return null;
+      // added under the new clause, then taken from its own
+      const moved = { ...target, when: read.when.text };
+      await write(moved, [...keysUnder(entries(), moved), key]);
+      await write(
+        target,
+        keysUnder(entries(), target).filter((each) => each !== key),
+      );
+      return null;
+    },
   };
 }

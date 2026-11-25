@@ -11,7 +11,6 @@ import { useNotebookStore } from "../store/notebook.js";
 import { useUiStore } from "../store/ui.js";
 import { addCommands, positionOf, typeOf } from "./addCell.js";
 import { clipboardCommands } from "./clipboard.js";
-import { titleCommands } from "./titles.js";
 import type { OnCell } from "./selected.js";
 import { onSelected } from "./selected.js";
 import { moveBlock, sectionCommands } from "./sections.js";
@@ -21,6 +20,36 @@ import { stringArg } from "./command.js";
 
 type Store = ReturnType<typeof useNotebookStore>;
 type Ui = ReturnType<typeof useUiStore>;
+
+/** The header's title field: Enter or a blur saves its text as meta.title, an empty one removes it (the
+ * derived name comes back), Esc leaves it. Only the field gives the title, so the palette never offers either. */
+function titleCommands(store: Store, ui: Ui): readonly Command[] {
+  return [
+    {
+      id: "ui.cell.setTitle",
+      title: "Set Cell Title",
+      source: "ui",
+      writes: true,
+      when: (args) => store.selectedCell !== undefined && stringArg(args, "title") !== undefined,
+      run: (args) => {
+        ui.setRenaming(null);
+        const cell = store.selectedCell;
+        const title = (stringArg(args, "title") ?? "").trim().slice(0, 200);
+        if (cell === undefined || title === (cell.meta.title ?? "")) return undefined;
+        return store.update(cell.id, { meta: { title: title === "" ? null : title } });
+      },
+    },
+    {
+      id: "ui.cell.cancelRename",
+      title: "Cancel Rename",
+      source: "ui",
+      when: () => ui.renaming !== null,
+      run: () => {
+        ui.setRenaming(null);
+      },
+    },
+  ];
+}
 
 /** Runs a code cell with its unsent text (`args.source`, else the editor's draft, named by the text it was typed on),
  * or saves a markdown cell's and so renders it. */

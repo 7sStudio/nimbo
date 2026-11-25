@@ -10,26 +10,17 @@ import type { useNotebookStore } from "../store/notebook.js";
 import type { useUiStore } from "../store/ui.js";
 import { itemOf, useReveal } from "./useReveal.js";
 
-/** Reveals and focuses the selected cell once it is in the list (one just added arrives with its event); a select of
- * the cell already selected (the outline, a Jump) reveals it again. `pointed` says, once, that a pointer selected it. */
-function followSelection(
+export function useFocusFollow(
   store: ReturnType<typeof useNotebookStore>,
   ui: ReturnType<typeof useUiStore>,
   list: Readonly<Ref<HTMLElement | null>>,
-  pointed: () => boolean,
-): void {
+) {
+  /** A pointer selected the cell: said once, to the next follow. */
+  let pointer = false;
   const scroll = useReveal(ui, list);
-  const show = (cell: CellId, item: HTMLElement) => {
-    const active = document.activeElement;
-    if (pointed()) {
-      scroll.release();
-      return;
-    }
-    scroll.show(cell, item);
-    const inList =
-      active === null || active === document.body || active.closest("[data-cell]") !== null;
-    if (ui.mode === "command" && inList) item.focus({ preventScroll: true });
-  };
+
+  // Reveals and focuses the selected cell once it is in the list (one just added arrives with its event); a select of
+  // the cell already selected (the outline, a Jump) reveals it again.
   watch(
     () =>
       [
@@ -40,22 +31,19 @@ function followSelection(
       if (cell === null) return;
       await nextTick();
       const item = itemOf(cell);
-      if (item !== null) show(cell, item);
+      if (item === null) return;
+      const active = document.activeElement;
+      if (pointer) {
+        pointer = false;
+        scroll.release();
+        return;
+      }
+      scroll.show(cell, item);
+      const inList =
+        active === null || active === document.body || active.closest("[data-cell]") !== null;
+      if (ui.mode === "command" && inList) item.focus({ preventScroll: true });
     },
   );
-}
-
-export function useFocusFollow(
-  store: ReturnType<typeof useNotebookStore>,
-  ui: ReturnType<typeof useUiStore>,
-  list: Readonly<Ref<HTMLElement | null>>,
-) {
-  let pointer = false;
-  followSelection(store, ui, list, () => {
-    const was = pointer;
-    pointer = false;
-    return was;
-  });
 
   return {
     /** A press on a cell selects it without moving the focus or the page. */

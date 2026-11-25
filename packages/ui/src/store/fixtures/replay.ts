@@ -49,6 +49,12 @@ export const projection = (state: NotebookState) => ({
   kernel: state.kernel.state,
   realm: state.realm.attached,
   cells: state.cells.map(({ id, type, source, index, meta, status, stale }) => ({
-    ...{ id, type, source, index, meta, status, stale },
+    id,
+    type,
+    source,
+    index,
+    meta,
+    status,
+    stale,
   })),
 });

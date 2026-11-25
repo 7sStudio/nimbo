@@ -15,7 +15,7 @@ import type { useSettingsStore } from "../store/settings.js";
 import type { useUiStore } from "../store/ui.js";
 import type { CardPage } from "./card.js";
 import { useStates } from "./cardStates.js";
-import type { CellModel, RunContext } from "./models.js";
+import type { CellModel } from "./models.js";
 import { autoRunOf, editedSince, routesOf, runFact, staleWhy } from "./models.js";
 import { aboutOf, nameOf, nameOptionsOf } from "./names.js";
 import type { OutputHost } from "./outputHost.js";
@@ -66,41 +66,9 @@ function requestsOf(store: Stores["store"], cell: Cell) {
   return { count, last: hits.at(-1)?.status ?? null };
 }
 
-/** What the page shows of the cell beyond its state: folded or not, what is inside it, its pin. */
-function shownOf({ store, ui, containers }: Stores, cell: Cell, about: string) {
-  const pinned = ui.pinned === cell.id;
-  const live = store.attach.state === "attached" && containers.cells.has(cell.id);
-  return {
-    folded: isFolded(cell, ui.foldAll, ui.opened),
-    inside: insideOf({
-      ...cell,
-      about,
-      requests: requestsOf(store, cell),
-      outputs: store.lastExecutionOf(cell.id)?.outputs ?? [],
-      live: cell.type === "client" && live,
-      pinned,
-    }),
-    pinned,
-    renaming: ui.renaming === cell.id,
-  };
-}
-
-/** The last run's fact, and the cell's part in an auto-run cascade. */
-function runParts(
-  store: Stores["store"],
-  cell: Cell,
-  context: RunContext & { readonly numberOf: (cell: string) => number },
-): Pick<CellModel, "run" | "autoRun"> {
-  const last = store.lastExecutionOf(cell.id);
-  return {
-    run: runFact(cell, last, context),
-    autoRun: autoRunOf(cell.id, store.mirror.autoRun, last, context.numberOf),
-  };
-}
-
 /** One CellModel per cell, in order. */
 function useModels(stores: Stores, { numberOf, off }: Numbers) {
-  const { store, ui } = stores;
+  const { store, ui, containers } = stores;
   const counts = useRunCountStore();
   const clock = useRunClock(store);
   const pageAttached = computed(() => store.mirror.notebook?.realm.attached ?? false);
@@ -116,6 +84,9 @@ function useModels(stores: Stores, { numberOf, off }: Numbers) {
         routes: store.mirror.routes,
         exporters: exporters.value,
       });
+      const last = store.lastExecutionOf(cell.id);
+      const pinned = ui.pinned === cell.id;
+      const live = store.attach.state === "attached" && containers.cells.has(cell.id);
       return {
         id: cell.id,
         number: at + 1,
@@ -133,9 +104,20 @@ function useModels(stores: Stores, { numberOf, off }: Numbers) {
         staleWhy: cell.stale ? staleWhy(entry, store.mirror.graph, numberOf) : null,
         editedSince: editedSince(cell),
         routes: routesOf(cell.id, store.mirror.routes),
-        ...runParts(store, cell, { ...clock(cell), numberOf }),
+        run: runFact(cell, last, { ...clock(cell), numberOf }),
+        autoRun: autoRunOf(cell.id, store.mirror.autoRun, last, numberOf),
         meta: cell.meta,
-        ...shownOf(stores, cell, about),
+        folded: isFolded(cell, ui.foldAll, ui.opened),
+        inside: insideOf({
+          ...cell,
+          about,
+          requests: requestsOf(store, cell),
+          outputs: last?.outputs ?? [],
+          live: cell.type === "client" && live,
+          pinned,
+        }),
+        pinned,
+        renaming: ui.renaming === cell.id,
       };
     }),
   );

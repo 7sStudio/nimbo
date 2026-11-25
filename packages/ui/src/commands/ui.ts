@@ -13,13 +13,37 @@ import type { Args, Command } from "./command.js";
 import { stringArg, uiCommand as ui } from "./command.js";
 import { consented } from "./consent.js";
 
-import { editAt } from "./editAt.js";
 import { overlayCommands } from "./overlays.js";
 
 type Ui = ReturnType<typeof useUiStore>;
 
 /** The place the `which` argument names: a view, a tab or a section, or a panel's older name. */
 const placeArg = (args: Args | undefined): Place | undefined => placeOf(stringArg(args, "which"));
+
+/** A number argument, or undefined. */
+const numberArg = (args: Args | undefined, key: string): number | undefined => {
+  const value = args?.[key];
+  return typeof value === "number" && Number.isFinite(value) ? value : undefined;
+};
+
+/** The Search view's jump: the cell selected, opened if Fold All folded it, edited with the caret on the match. */
+function editAt(store: Ui, notebook: ReturnType<typeof useNotebookStore>): Command {
+  return ui(
+    "ui.edit.at",
+    "Edit a cell at a line",
+    (args) => {
+      const cell = stringArg(args, "cell");
+      if (cell === undefined || !notebook.byId.has(cell)) return;
+      const [line = 1, from = 0, to = 0] = ["line", "from", "to"].map((key) =>
+        numberArg(args, key),
+      );
+      store.select(cell);
+      if (store.foldAll) store.setOpened(cell, true);
+      store.setMode("edit", { line, from, to });
+    },
+    (args) => stringArg(args, "cell") !== undefined,
+  );
+}
 
 /** The workbench's three regions: the side panel (⌘B), the inspector (⌘I) and the bottom panel (⌘J). `ui.panel.*`
  * take a place by name and act on the region that holds it; with no name they act on the side panel. */

@@ -4,14 +4,12 @@
 import type { EventEnvelope } from "@jsnb/core";
 import type { SocketClient } from "@jsnb/client";
 import { defineStore } from "pinia";
-import type { Ref } from "vue";
 import { ref, shallowRef, toRaw } from "vue";
 
 import type { Report } from "./attempt.js";
 import { attempter, usePageReport } from "./attempt.js";
 import { errorName } from "./report.js";
 import { useSessionStore } from "./socket.js";
-import type { NewToast } from "./toasts.js";
 import { useUiStore } from "./ui.js";
 
 export type WorkspaceInfo = Awaited<ReturnType<SocketClient["workspace"]["info"]>>;
@@ -37,14 +35,6 @@ const isShown = (shown: Install, names: readonly string[], action: PackageAction
   shown.names.length === names.length &&
   shown.names.every((name, at) => name === names[at]);
 
-/** The banner's state: the run shown, and the page's own runs not yet answered, oldest first, so the banner falls
- * back to one of them when another run's end takes the shown one down (an agent's run ahead of the page's). */
-type Runs = {
-  readonly installing: Ref<Install | null>;
-  readonly own: Install[];
-  readonly failure: Ref<Failure | null>;
-};
-
 /** The last add or remove that failed, kept on screen past its toast until the next run starts; not a cancel or a
  * stop, which the person asked for. */
 export type Failure = {
@@ -66,80 +56,6 @@ const failureOf = (done: {
     ? null
     : { names: done.names, action: done.action, error: done.error };
 
-/** The run shown ended: the banner goes to the page's own run still waiting, else down; another run's end (a queued
- * one cancelled) leaves the one shown up. */
-function takeDown(
-  { installing, own }: Runs,
-  names: readonly string[],
-  action: PackageAction,
-): void {
-  if (installing.value === null || isShown(installing.value, names, action))
-    installing.value = own.find((run) => !isShown(run, names, action)) ?? null;
-}
-
-/** The install's events: progress lines while it runs, then a toast and the package list again. */
-function installEvents(
-  { installing, own, failure }: Runs,
-  toast: (toast: NewToast) => unknown,
-  refresh: () => unknown,
-) {
-  return (event: EventEnvelope): void => {
-    if (event.type === "packages.progress") {
-      const { names, line, action } = event.data;
-      installing.value = { names, lines: [...(installing.value?.lines ?? []), line], action };
-      failure.value = null;
-    } else if (event.type === "packages.done") {
-      const { names, ok, error, action } = event.data;
-      takeDown({ installing, own, failure }, names, action);
-      failure.value = failureOf(event.data);
-      const title = `${doneTitles[action][ok ? "ok" : "failed"]} ${names.join(", ")}`;
-      toast({
-        kind: ok ? "success" : "error",
-        title,
-        ...(error === undefined ? {} : { text: error }),
-      });
-      void refresh();
-    }
-  };
-}
-
-/** packages.add or packages.remove; the progress arrives as events. A run that failed before the manager ran (a name
- * the daemon refuses, a lost socket) sends no packages.done: the run it began is over all the same. */
-function runner<T>(
-  { installing, own, failure }: Runs,
-  action: PackageAction,
-  run: (names: string[]) => Promise<T | undefined>,
-) {
-  return async (names: readonly string[]) => {
-    const mine: Install = { names, lines: [], action };
-    installing.value = mine;
-    failure.value = null;
-    own.push(mine);
-    const done = await run([...names]).finally(() => {
-      own.splice(own.indexOf(mine), 1);
-    });
-    if (done === undefined && toRaw(installing.value) === mine) installing.value = null;
-    return done;
-  };
-}
-
-/** The workspace stream's events this store follows: the installs', kernel.nodePath's change, after which
- * workspace.info says again which Node the kernels run on, and notebooks.changed, the Explorer's list (a file created,
- * deleted or renamed, in nimbo or outside it). */
-const workspaceEvents =
-  (
-    installs: (event: EventEnvelope) => void,
-    refreshInfo: () => Promise<void>,
-    info: Ref<WorkspaceInfo | null>,
-  ) =>
-  (event: EventEnvelope): void => {
-    installs(event);
-    if (event.type === "settings.changed" && event.data.key === "kernel.nodePath")
-      void refreshInfo();
-    if (event.type === "notebooks.changed" && info.value !== null)
-      info.value = { ...info.value, notebooks: event.data.notebooks };
-  };
-
 /** The failures of an add or a remove that its packages.done already announced in a toast: the page's report
  * of the call would say them twice. */
 const announcedByDone = new Set([
@@ -158,53 +74,6 @@ const unlessDone =
     if (!announcedByDone.has(errorName(error) ?? "")) report(error);
   };
 
-type Client = ReturnType<ReturnType<typeof useSessionStore>["session"]>["client"];
-
-/** packages.add, packages.remove and packages.cancel through `attempt`, the run under way in `installing`. */
-function packageRuns(
-  runs: Runs,
-  attempt: <T>(call: (client: Client) => Promise<T>) => Promise<T | undefined>,
-) {
-  const { installing } = runs;
-  return {
-    addPackages: runner(runs, "add", (names) => attempt((c) => c.packages.add({ names }))),
-    /** packages.remove, its progress and its end as an add's. */
-    removePackages: runner(runs, "remove", (names) => attempt((c) => c.packages.remove({ names }))),
-    /** packages.cancel of the run the banner shows, queued or under way, whoever started it (the page, or an agent
-     * the person at the page may stop): it fails PackagesCancelled, whose packages.done ends it here. */
-    cancelPackages: () => {
-      const names = installing.value?.names;
-      return attempt((c) => c.packages.cancel(names === undefined ? {} : { names: [...names] }));
-    },
-  };
-}
-
-/** The workspace's lists read again (packages.list, secrets.list, each kept when its read fails) and workspace.info. */
-function reads(
-  attempt: <T>(call: (client: Client) => Promise<T>) => Promise<T | undefined>,
-  lists: {
-    readonly packages: Ref<readonly Installed[]>;
-    readonly secrets: Ref<readonly string[]>;
-    readonly info: Ref<WorkspaceInfo | null>;
-  },
-) {
-  const { packages, secrets, info } = lists;
-  const readInfo = () => attempt((c) => c.workspace.info({}));
-  return {
-    /** workspace.info again (the Explorer's list of notebooks); kept when the read fails. */
-    refreshInfo: async () => {
-      info.value = (await readInfo()) ?? info.value;
-    },
-    refreshPackages: async () => {
-      packages.value = (await attempt((c) => c.packages.list({})))?.packages ?? packages.value;
-    },
-    refreshSecrets: async () => {
-      secrets.value = (await attempt((c) => c.secrets.list({})))?.names ?? secrets.value;
-    },
-    readInfo,
-  };
-}
-
 export const useWorkspaceStore = defineStore("workspace", () => {
   const session = useSessionStore();
   const ui = useUiStore();
@@ -212,20 +81,83 @@ export const useWorkspaceStore = defineStore("workspace", () => {
   const runAttempt = attempter(unlessDone(usePageReport()));
   const info = shallowRef<WorkspaceInfo | null>(null);
   const packages = ref<readonly Installed[]>([]);
+  /** The run the banner shows. */
   const installing = ref<Install | null>(null);
+  /** The page's own runs not yet answered, oldest first, so the banner falls back to one of them when another run's
+   * end takes the shown one down (an agent's run ahead of the page's). */
+  const own: Install[] = [];
   const failure = ref<Failure | null>(null);
-  const runs: Runs = { installing, own: [], failure };
   const secrets = ref<readonly string[]>([]);
   const client = () => session.session().client;
-  const { refreshPackages, refreshSecrets, refreshInfo, readInfo } = reads(
-    (call) => attempt(() => call(client())),
-    { packages, secrets, info },
-  );
-  const installs = installEvents(runs, ui.toast, refreshPackages);
-  const onEvent = workspaceEvents(installs, refreshInfo, info);
+
+  const readInfo = () => attempt(() => client().workspace.info({}));
+  /** workspace.info again (the Explorer's list of notebooks); kept when the read fails. */
+  const refreshInfo = async () => {
+    info.value = (await readInfo()) ?? info.value;
+  };
+  const refreshPackages = async () => {
+    packages.value = (await attempt(() => client().packages.list({})))?.packages ?? packages.value;
+  };
+  const refreshSecrets = async () => {
+    secrets.value = (await attempt(() => client().secrets.list({})))?.names ?? secrets.value;
+  };
+
+  /** The workspace stream's events this store follows: the installs' progress lines while they run, then a toast and
+   * the package list again; kernel.nodePath's change, after which workspace.info says again which Node the kernels run
+   * on; and notebooks.changed, the Explorer's list (a file created, deleted or renamed, in nimbo or outside it). */
+  const onEvent = (event: EventEnvelope): void => {
+    if (event.type === "packages.progress") {
+      const { names, line, action } = event.data;
+      installing.value = { names, lines: [...(installing.value?.lines ?? []), line], action };
+      failure.value = null;
+    } else if (event.type === "packages.done") {
+      const { names, ok, error, action } = event.data;
+      // The run shown ended: the banner goes to the page's own run still waiting, else down; another run's end (a
+      // queued one cancelled) leaves the one shown up.
+      if (installing.value === null || isShown(installing.value, names, action))
+        installing.value = own.find((run) => !isShown(run, names, action)) ?? null;
+      failure.value = failureOf(event.data);
+      const title = `${doneTitles[action][ok ? "ok" : "failed"]} ${names.join(", ")}`;
+      ui.toast({
+        kind: ok ? "success" : "error",
+        title,
+        ...(error === undefined ? {} : { text: error }),
+      });
+      void refreshPackages();
+    }
+    if (event.type === "settings.changed" && event.data.key === "kernel.nodePath")
+      void refreshInfo();
+    if (event.type === "notebooks.changed" && info.value !== null)
+      info.value = { ...info.value, notebooks: event.data.notebooks };
+  };
+
+  /** packages.add or packages.remove; the progress arrives as events. A run that failed before the manager ran (a name
+   * the daemon refuses, a lost socket) sends no packages.done: the run it began is over all the same. */
+  async function runPackages<T>(
+    action: PackageAction,
+    names: readonly string[],
+    run: (names: string[]) => Promise<T | undefined>,
+  ) {
+    const mine: Install = { names, lines: [], action };
+    installing.value = mine;
+    failure.value = null;
+    own.push(mine);
+    const done = await run([...names]).finally(() => {
+      own.splice(own.indexOf(mine), 1);
+    });
+    if (done === undefined && toRaw(installing.value) === mine) installing.value = null;
+    return done;
+  }
 
   return {
-    ...{ info, packages, installing, failure, secrets, onEvent, refreshPackages, refreshSecrets },
+    info,
+    packages,
+    installing,
+    failure,
+    secrets,
+    onEvent,
+    refreshPackages,
+    refreshSecrets,
     refreshInfo,
     /** Loads everything and follows the install events; loads the packages and the secrets again after a gap in the
      * workspace stream (an install that ended while the socket was away). */
@@ -241,7 +173,23 @@ export const useWorkspaceStore = defineStore("workspace", () => {
       await Promise.all([refreshPackages(), refreshSecrets()]);
       info.value = (await loaded) ?? null;
     },
-    ...packageRuns(runs, (call) => runAttempt(() => call(client()))),
+    addPackages: (names: readonly string[]) =>
+      runPackages("add", names, (asked) =>
+        runAttempt(() => client().packages.add({ names: asked })),
+      ),
+    /** packages.remove, its progress and its end as an add's. */
+    removePackages: (names: readonly string[]) =>
+      runPackages("remove", names, (asked) =>
+        runAttempt(() => client().packages.remove({ names: asked })),
+      ),
+    /** packages.cancel of the run the banner shows, queued or under way, whoever started it (the page, or an agent
+     * the person at the page may stop): it fails PackagesCancelled, whose packages.done ends it here. */
+    cancelPackages: () => {
+      const names = installing.value?.names;
+      return runAttempt(() =>
+        client().packages.cancel(names === undefined ? {} : { names: [...names] }),
+      );
+    },
     /** secrets.set, then the names again; the value is never kept here. */
     setSecret: async (name: string, value: string) => {
       const done = await attempt(() => client().secrets.set({ name, value }));

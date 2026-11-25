@@ -1,12 +1,10 @@
 // The settings store: every value with its source (settings.get), the schema the Settings panel is
 // generated from (settings.schema), kept current by settings.changed, and written by settings.set.
-import type { SocketClient } from "@jsnb/client";
 import type { EventEnvelope, SettingsKey } from "@jsnb/core";
 import { settingsFile, settingsWriteFile } from "@jsnb/core";
 import { defineStore } from "pinia";
 import { ref, shallowRef } from "vue";
 
-import type { Attempt } from "./attempt.js";
 import { attempter, usePageReport } from "./attempt.js";
 import { useSessionStore } from "./socket.js";
 
@@ -33,22 +31,6 @@ export function refusalWords(error: unknown): string {
   const messages = Array.isArray(issues) ? issues.map(words) : [];
   if (messages.length > 0) return messages.join("\n");
   return error instanceof Error ? error.message : String(error);
-}
-
-/** Settings (JSON): a file read as text, and replaced whole (the refusal's message when it does not parse or holds a
- * bad value, null once written). */
-function fileActions(client: () => SocketClient, attempt: Attempt) {
-  return {
-    file: (scope: Scope) => attempt(() => client().call(settingsFile, { scope })),
-    writeFile: async (scope: Scope, text: string): Promise<string | null> => {
-      try {
-        await client().call(settingsWriteFile, { scope, text });
-        return null;
-      } catch (error) {
-        return refusalWords(error);
-      }
-    },
-  };
 }
 
 export const useSettingsStore = defineStore("settings", () => {
@@ -92,6 +74,16 @@ export const useSettingsStore = defineStore("settings", () => {
     /** Reset Setting: the key leaves the file of `scope`, the next scope or the default applies. */
     reset: (key: SettingsKey, scope: Scope) =>
       attempt(() => client().settings.set({ key, scope, reset: true })),
-    ...fileActions(client, attempt),
+    /** Settings (JSON): a file read as text. */
+    file: (scope: Scope) => attempt(() => client().call(settingsFile, { scope })),
+    /** Replaces a file whole: the refusal's message when it does not parse or holds a bad value, null once written. */
+    writeFile: async (scope: Scope, text: string): Promise<string | null> => {
+      try {
+        await client().call(settingsWriteFile, { scope, text });
+        return null;
+      } catch (error) {
+        return refusalWords(error);
+      }
+    },
   };
 });

@@ -61,13 +61,6 @@ function runStart(notebook: Notebook): number | null {
   });
 }
 
-/** This tab's own attach, as the banners read it: its state, a refusal's message, and whether it was taken over. */
-const attachFacts = (own: Notebook["attach"]) => ({
-  ownAttach: own.state,
-  takenOver: own.state === "viewOnly" && own.takenOver === true,
-  attachError: own.state === "failed" ? own.message : null,
-});
-
 /** What the banners read: the kernel's exit, the save state, the connection, the realm, an install. */
 function bannerFacts(notebook: Notebook, workspace: Workspace, reconnectingLong: boolean) {
   const failure = notebook.startFailure;
@@ -80,7 +73,10 @@ function bannerFacts(notebook: Notebook, workspace: Workspace, reconnectingLong:
     notebook: notebook.pageName,
     reconnectingLong,
     closed: notebook.mirror.closed,
-    ...attachFacts(own),
+    // this tab's own attach: its state, a refusal's message, and whether it was taken over
+    ownAttach: own.state,
+    takenOver: own.state === "viewOnly" && own.takenOver === true,
+    attachError: own.state === "failed" ? own.message : null,
     kernelExit: state?.kernel.state === "dead" ? (exitOf(state.kernel) ?? "") : null,
     save: notebook.mirror.saveState,
     saveError: notebook.mirror.saveError?.message ?? null,
@@ -139,24 +135,6 @@ function statusOf(notebook: Notebook, workspace: Workspace, ui: Ui): StatusModel
 const restartFrom = (overlay: Overlay | null): RestartFrom | null =>
   overlay?.kind === "restartMenu" ? overlay.from : null;
 
-/** The kernel cluster's model, with the running cell's elapsed time redrawn while it runs. */
-function useCluster(notebook: Notebook, workspace: Workspace, ui: Ui) {
-  const started = computed(() => runStart(notebook));
-  const now = useNow(() => started.value !== null, tickMs);
-  return computed<ClusterModel>(() => ({
-    ...kernelOf(notebook),
-    elapsed: started.value === null ? null : elapsedText(now.value - started.value),
-    node: shortNode(workspace.info?.nodeVersion ?? ""),
-    menuOpen: restartFrom(ui.overlay) === "cluster",
-    page: pageOf({
-      connection: notebook.connection,
-      closed: notebook.mirror.closed,
-      attach: notebook.attach.state,
-      attached: notebook.mirror.notebook?.realm.attached ?? false,
-    }),
-  }));
-}
-
 export function useShell() {
   const notebook = useNotebookStore();
   const workspace = useWorkspaceStore();
@@ -187,7 +165,21 @@ export function useShell() {
       inspector: ui.layout.inspector.open,
     },
   }));
-  const cluster = useCluster(notebook, workspace, ui);
+  // the kernel cluster's model, with the running cell's elapsed time redrawn while it runs
+  const started = computed(() => runStart(notebook));
+  const now = useNow(() => started.value !== null, tickMs);
+  const cluster = computed<ClusterModel>(() => ({
+    ...kernelOf(notebook),
+    elapsed: started.value === null ? null : elapsedText(now.value - started.value),
+    node: shortNode(workspace.info?.nodeVersion ?? ""),
+    menuOpen: restartFrom(ui.overlay) === "cluster",
+    page: pageOf({
+      connection: notebook.connection,
+      closed: notebook.mirror.closed,
+      attach: notebook.attach.state,
+      attached: notebook.mirror.notebook?.realm.attached ?? false,
+    }),
+  }));
   const banners = computed(() =>
     bannersOf(bannerFacts(notebook, workspace, reconnectingLong.value)),
   );
