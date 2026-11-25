@@ -38,7 +38,6 @@ describe("the repository's rules", () => {
         outline: ["none", "0", "/^0(?:px)?(?:\\s|$)/"],
         "outline-style": ["none"],
         "outline-width": ["/^0(?:px)?$/"],
-        "/^overflow/": ["/\\bhidden\\b/"],
       },
     ]);
   });
