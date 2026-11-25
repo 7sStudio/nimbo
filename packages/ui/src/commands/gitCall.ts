@@ -11,7 +11,7 @@ import type { useUiStore } from "../store/ui.js";
 import type { Args, Command } from "./command.js";
 import { uiCommand } from "./command.js";
 
-export type OnReason = Partial<Record<GitReason, (error: GitFailed) => void>>;
+type OnReason = Partial<Record<GitReason, (error: GitFailed) => void>>;
 
 export type GitCall = <T>(work: () => Promise<T>, on?: OnReason) => Promise<T | undefined>;
 

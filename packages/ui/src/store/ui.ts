@@ -7,7 +7,6 @@ import type { Ref } from "vue";
 import { reactive, ref, watch } from "vue";
 
 import { foldState, pinState } from "./fold.js";
-import type { DiffTarget } from "./git.js";
 import type { Overlay } from "./overlay.js";
 import type { InspectorSection, LayoutState, Place, Region } from "./layout.js";
 import {
@@ -58,6 +57,15 @@ function settingsDrafts() {
     },
   };
 }
+
+/** What the diff page compares: a working file (staged: the index's side), a commit's change, or a commit against the
+ * working tree (base). */
+export type DiffTarget = {
+  readonly path: string;
+  readonly staged: boolean;
+  readonly commit?: string;
+  readonly base?: string;
+};
 
 /** The diff page's state. */
 const diffState = () => ({

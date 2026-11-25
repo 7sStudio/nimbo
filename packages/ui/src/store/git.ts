@@ -9,6 +9,7 @@ import { computed, ref, shallowRef } from "vue";
 
 import { attempter, usePageReport } from "./attempt.js";
 import { useSessionStore } from "./socket.js";
+import type { DiffTarget } from "./ui.js";
 
 /** `read`, one run at a time; asked again meanwhile, it runs once more after the current run. */
 function singleFlight(read: () => Promise<void>, busy: Ref<boolean>): () => Promise<void> {
@@ -39,15 +40,6 @@ const countOf = (repo: GitRepo | null): number =>
     ? 0
     : new Set([...repo.conflicts, ...repo.staged, ...repo.changes].map((change) => change.path))
         .size;
-
-/** What the diff page compares: a working file (staged: the index's side), a commit's change, or a commit against the
- * working tree (base). */
-export type DiffTarget = {
-  readonly path: string;
-  readonly staged: boolean;
-  readonly commit?: string;
-  readonly base?: string;
-};
 
 type Client = ReturnType<ReturnType<typeof useSessionStore>["session"]>["client"];
 
