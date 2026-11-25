@@ -11,6 +11,7 @@ import { z } from "zod";
 import { readRegularFile } from "../regularFile.js";
 import type { Resolver } from "./bareImport.js";
 import { bareUrlOf } from "./bareImport.js";
+import { createLookups } from "./resolve.js";
 import { parsedJson } from "./inputs.js";
 import type { BareImport } from "./packagePlugin.js";
 
@@ -40,9 +41,21 @@ export const importsText = (imports: readonly BareImport[]): string =>
 export async function importsUnchanged(resolver: Resolver, path: string): Promise<boolean> {
   const read = await readRegularFile(path, maxRecordBytes, { follow: false }); // a cache file: no link
   const record = read.kind === "read" ? Record.safeParse(parsedJson(read.text)).data : undefined;
-  if (record === undefined) return false;
-  for (const { spec, from, url } of once(record.imports, (line) => JSON.stringify(line))) {
-    if (((await bareUrlOf(resolver, spec, from, false)) ?? null) !== url) return false;
-  }
-  return true;
+  return record !== undefined && importsHold(resolver, record.imports);
+}
+
+/** Whether every bare import of a bundle still resolves to the URL its build chose. */
+export async function importsHold(
+  resolver: Resolver,
+  imports: readonly BareImport[],
+): Promise<boolean> {
+  const lookups = createLookups();
+  const lines = once(imports, (line) => JSON.stringify(line));
+  const same = await Promise.all(
+    lines.map(
+      async ({ spec, from, url }) =>
+        ((await bareUrlOf(resolver, spec, from, lookups)) ?? null) === url,
+    ),
+  );
+  return same.every(Boolean);
 }

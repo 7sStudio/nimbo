@@ -8,6 +8,11 @@ import { lstat, open, rename, rm } from "node:fs/promises";
 export type AtomicWriteOptions = {
   /** The mode of a file that does not exist yet; an existing file keeps its own. */
   readonly mode?: number;
+  /**
+   * False: no fsync before the rename, for a cache file whose reader checks it against a record written durably
+   * after it (a crash can then leave it short, never half of another file's content under its name).
+   */
+  readonly durable?: boolean;
 };
 
 const codeOf = (error: unknown): unknown =>
@@ -57,7 +62,7 @@ export async function writeAtomically(
   try {
     await handle.writeFile(text);
     await handle.chmod(mode); // the umask may have narrowed the mode open() was given
-    await handle.sync();
+    if (options.durable !== false) await handle.sync();
     const stats = await handle.stat();
     written = { dev: stats.dev, ino: stats.ino };
   } catch (error) {

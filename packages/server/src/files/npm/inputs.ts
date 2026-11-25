@@ -39,9 +39,14 @@ export async function inputsUnchanged(recordPath: string): Promise<boolean> {
   const read = await readRegularFile(recordPath, maxInputsBytes, { follow: false }); // a cache file: no link
   if (read.kind !== "read") return false;
   const recorded = z.array(Input).safeParse(parsedJson(read.text));
-  if (!recorded.success || recorded.data.length === 0) return false;
-  const now = await Promise.all(recorded.data.map((input) => identityOf(input.path)));
-  return recorded.data.every((input, at) => {
+  return recorded.success && identitiesHold(recorded.data);
+}
+
+/** Whether every file `identities` names is as it was; false for none (nothing to tell a change by). */
+export async function identitiesHold(identities: readonly Identity[]): Promise<boolean> {
+  if (identities.length === 0) return false;
+  const now = await Promise.all(identities.map((input) => identityOf(input.path)));
+  return identities.every((input, at) => {
     const current = now[at];
     return current?.size === input.size && current.mtimeMs === input.mtimeMs;
   });

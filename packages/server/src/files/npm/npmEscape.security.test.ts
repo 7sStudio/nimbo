@@ -38,7 +38,7 @@ describe("/npm/<package>/<a segment that climbs out>", () => {
       const linked = await get("/npm/fakepkg/data.json");
       expect([linked.status, linked.body.includes("outside-the-workspace")]).toEqual([500, false]);
       expect(linked.body).toContain("outside the package");
-      expect(existsSync(work.path(".jsnb/cache/npm/fakepkg@1.0.0/data.json.js"))).toBe(false);
+      expect(existsSync(work.path(".jsnb/cache/npm/fakepkg@1.0.0/@data.json.js"))).toBe(false);
       expect((await get("/npm/fakepkg")).status).toBe(200);
       await daemon.stop();
     });
