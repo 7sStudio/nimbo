@@ -115,17 +115,21 @@ function loadsRemote(value: string): boolean {
   return /^[/\\]{2}/u.test(bare) || /^[a-z][a-z\d+.-]*:/iu.test(bare);
 }
 
+/** Every `src` whatever its case: the parser that reads the snapshot lowercases the name. */
+const sources = (element: Element): string[] =>
+  [...element.attributes].filter((a) => a.name.toLowerCase() === "src").map((a) => a.value);
+
 /** An image whose source would load from the network, as the text an agent reads instead: `[image: alt]`. */
 export function imageNote(element: Element): string | undefined {
   if (element.namespaceURI !== htmlNs || element.localName !== "img") return undefined;
-  const src = element.getAttribute("src");
-  if (src === null || !loadsRemote(src)) return undefined;
+  if (!sources(element).some(loadsRemote)) return undefined;
   return `[image: ${(element.getAttribute("alt") ?? "").slice(0, 200)}]`;
 }
 
 export function allowedAttribute(element: Element, name: string, value: string): boolean {
   const key = name.toLowerCase();
   if (urlAttributes.has(key) && !safeUrl(value)) return false;
+  if (key === "src" && loadsRemote(value)) return false;
   if (globalAttributes.has(key) || /^(?:aria|data)-[\w.-]+$/u.test(key)) return true;
   if (element.namespaceURI === svgNs) return svgAttributes.has(key) && safeSvgValue(key, value);
   return htmlAttributes.get(element.localName)?.has(key) === true;

@@ -6,7 +6,10 @@ import { afterEach, describe, expect, it } from "vitest";
 import { agentSnapshot } from "./agentSnapshot.js";
 
 // the hostile shapes are built in this page too: their payloads call it, and count nothing until reparse replaces it
-Reflect.set(window, "__hit", () => undefined);
+const setHit = (hit: () => void): void => {
+  for (const target of new Set([window, window.top ?? window])) Reflect.set(target, "__hit", hit);
+};
+setHit(() => undefined);
 
 const mounted: HTMLElement[] = [];
 afterEach(() => {
@@ -66,7 +69,7 @@ describe("agentSnapshot's text", () => {
  * answers how many payloads ran and the frame's document. */
 async function reparse(html: string): Promise<{ readonly ran: number; readonly doc: Document }> {
   let ran = 0;
-  Reflect.set(window, "__hit", () => (ran += 1));
+  setHit(() => (ran += 1));
   const frame = document.createElement("iframe");
   const loaded = new Promise((resolve) => {
     frame.addEventListener("load", resolve, { once: true });
@@ -150,9 +153,14 @@ function hostile(): HTMLElement {
 
 describe("agentSnapshot's HTML", () => {
   it("holds nothing executable from any hostile shape and runs nothing when parsed again", async () => {
-    const shot = await read(hostile());
+    const root = hostile();
+    const shot = await read(root);
+    // the shapes' own payloads run in this page: let them finish before counting what the snapshot runs
+    root.remove();
+    await new Promise((resolve) => setTimeout(resolve, 500));
     const { ran, doc } = await reparse(shot.html ?? "");
     expect(ran).toBe(0);
+    expect((await reparse('<img src="x" onerror="top.__hit()">')).ran).toBe(2);
     expect(executable(doc)).toEqual([]);
     expect(shot.text).not.toContain("@import");
     expect(shot.html).toContain("<text>chart</text>");
@@ -228,5 +236,20 @@ describe("agentSnapshot's HTML and the network", () => {
     expect(html).toContain("[image: logo][image: b]");
     expect(html).toContain('<img src="local.png" alt="l">');
     expect(html).toContain('<a href="https://x.test/page">link</a>');
+  });
+
+  it("notes a remote image whose src attribute is not written in lower case", async () => {
+    const root = container("");
+    for (const [name, value] of [
+      ["SRC", "https://x.test/upper.png"],
+      ["sRc", "//x.test/mixed.png"],
+    ] as const) {
+      const image = document.createElement("img");
+      image.setAttributeNS(null, name, value);
+      root.append(image);
+    }
+    const { html } = await read(root);
+    expect(html).not.toContain("x.test");
+    expect(html).toContain("[image: ][image: ]");
   });
 });
