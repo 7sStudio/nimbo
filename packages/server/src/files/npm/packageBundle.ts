@@ -15,14 +15,12 @@ import { realpath, stat } from "node:fs/promises";
 import { join, resolve, sep } from "node:path";
 
 import type { Metafile } from "esbuild";
-import { z } from "zod";
 
-import { readRegularFile } from "../regularFile.js";
 import type { Resolver } from "./bareImport.js";
 import { buildUnder, fromCommonJs, refusal } from "./bundle.js";
 import { commonJsNames, withNamedExports } from "./commonJsExports.js";
 import type { Identity } from "./inputs.js";
-import { parsedJson } from "./inputs.js";
+import { identityOf } from "./inputs.js";
 import type { BareImport, Seen } from "./packagePlugin.js";
 import { packagePlugin } from "./packagePlugin.js";
 import { resolveExtensions } from "./relativeImport.js";
@@ -50,19 +48,6 @@ const filesOf = (from: string, metafile: Metafile) =>
       .filter((input) => !isVirtual(input))
       .map(async (input) => ({ input, path: await realpath(resolve(from, input)) })),
   );
-
-const Exports = z.looseObject({ exports: z.unknown().optional() });
-
-/** The package's `exports` subpaths without a pattern (`/client`), its package.json read as a regular file only. */
-async function exportsOf(folder: string): Promise<string[]> {
-  const read = await readRegularFile(join(folder, "package.json"), 1024 * 1024);
-  const exports =
-    read.kind === "read" ? Exports.safeParse(parsedJson(read.text)).data?.exports : undefined;
-  if (typeof exports !== "object" || exports === null || Array.isArray(exports)) return [];
-  return Object.keys(exports)
-    .filter((key) => key.startsWith("./") && key !== "./package.json" && !key.includes("*"))
-    .map((key) => key.slice(1));
-}
 
 /**
  * The file a package's main entry is bundled from in the page when it is not the one its `exports` gives: Vue's main
@@ -105,13 +90,17 @@ export async function bundlePackage(
     readonly subpath: string;
     readonly base: string;
     readonly found: FoundPackage;
+    /** The subpaths the package's split bundle serves, which a relative import may land on. */
+    readonly siblings: readonly string[];
   },
   resolver: Resolver,
   signal: AbortSignal,
 ): Promise<Bundled> {
   const { folder, lookup } = pkg.found;
   const seen: Seen = { requires: [], imports: [], identities: new Map() };
-  const bundling = { ...pkg, lookup, exports: await exportsOf(folder) };
+  const manifest = await identityOf(join(folder, "package.json"));
+  const stamp = `${String(manifest?.size)}:${String(manifest?.mtimeMs)}`;
+  const bundling = { ...pkg, lookup, exports: pkg.siblings.filter((sub) => sub !== ""), stamp };
   const plugins = [
     packagePlugin(resolver, bundling, seen, {
       split: false,

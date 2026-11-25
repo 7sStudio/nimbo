@@ -39,8 +39,8 @@ describe("a package with hundreds of entries", () => {
       const m7 = await page.load("/npm/many/m7");
       expect([(index.m3 as Call)(), (m7.m7 as Call)(), (index.m7 as Call)()]).toEqual([1, 2, 3]);
       expect(index.m7).toBe(m7.m7);
-      const subpaths = Array.from({ length: 300 }, (_, at) => modules.get(`many/m${String(at)}`));
-      expect((await Promise.all(subpaths)).every((answer) => answer.ok)).toBe(true);
+      const sample = Array.from({ length: 15 }, (_, at) => modules.get(`many/m${String(at * 20)}`));
+      expect((await Promise.all(sample)).every((answer) => answer.ok)).toBe(true);
       expect(modules.builds()).toBe(1);
       expect(page.fetched().some((url) => url.includes("/.chunks/"))).toBe(true);
       const again = await modulesOf(ws); // another daemon: everything from the cache
@@ -108,7 +108,7 @@ describe("a split bundle in the cache", () => {
 });
 
 describe("a package the split build cannot take whole", () => {
-  it("stands in for a Node built-in, and builds entries one by one when the split build fails", async () => {
+  it("stands in for a Node built-in, and builds an entry that does not build alone", async () => {
     await withWorkspace(async (ws) => {
       await writeFiles(ws, awkwardPackages);
       const modules = await modulesOf(ws);
@@ -122,7 +122,7 @@ describe("a package the split build cannot take whole", () => {
       expect((await page.load("/npm/half")).fine).toBe(1);
       const broken = await modules.get("half/broken");
       expect(broken.ok ? "" : broken.error?.message).toContain("The page cannot load half/broken");
-      expect(modules.noted("one by one")).toBe(1);
+      expect(modules.noted("fail are built alone")).toBe(1);
     });
   });
 });

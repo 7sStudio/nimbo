@@ -61,6 +61,8 @@ export type Bundling = {
   readonly subpath: string;
   readonly lookup: string;
   readonly exports: readonly string[];
+  /** The state of its package.json, part of the key its entries' resolution is kept under. */
+  readonly stamp?: string;
 };
 
 /** Marks the plugin's own calls of esbuild's resolver, which the plugin leaves to esbuild. */
@@ -162,12 +164,21 @@ function onBare(resolver: Resolver, seen: Seen, own: (args: OnResolveArgs) => Pr
 }
 
 /** A relative import that lands on another of the package's own entries: external under that entry's URL. */
-function onRelative(builder: PluginBuild, pkg: Bundling, seen: Seen) {
-  const entries = new Map<string, Promise<Map<string, string>>>();
-  const entriesFor = (kind: ImportKind): Promise<Map<string, string>> => {
-    const key = isRequire(kind) ? "require" : "import";
-    const made = entries.get(key) ?? entriesOf(builder, pkg, kind);
-    entries.set(key, made);
+function onRelative(builder: PluginBuild, pkg: Bundling, seen: Seen, resolver: Resolver) {
+  const entriesFor = (kind: ImportKind): Promise<ReadonlyMap<string, string>> => {
+    const key = [
+      isRequire(kind) ? "require" : "import",
+      pkg.lookup,
+      pkg.base,
+      pkg.stamp,
+      ...pkg.exports,
+    ];
+    const memo = key.join("\0"); // once per package: a page's standalone builds would each resolve them all again
+    const held = resolver.entries.get(memo);
+    if (held !== undefined) return held;
+    const made = entriesOf(builder, pkg, kind);
+    resolver.entries.set(memo, made);
+    made.catch(() => resolver.entries.delete(memo)); // a cancelled build's resolution is not kept
     return made;
   };
   return async (args: OnResolveArgs): Promise<OnResolveResult | undefined> => {
@@ -206,7 +217,7 @@ export function packagePlugin(resolver: Resolver, pkg: Bundling, seen: Seen, mod
       if (!mode.split) {
         builder.onResolve(
           { filter: /^\.\.?(?:\/|$)/ },
-          until(signal, onRelative(builder, pkg, seen)),
+          until(signal, onRelative(builder, pkg, seen, resolver)),
         );
       }
       if (!mode.linked) return; // a registry package's version says whether its files changed

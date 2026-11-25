@@ -10,7 +10,7 @@
 // file a later request serves. A bundle that cannot be cached is still served. Its files are read non-blocking and as
 // regular files only, and nothing in the cache is read, written or removed through a symbolic link
 // (cacheFiles.ts): a link planted in an entry's place is removed and the entry built again.
-import { rm } from "node:fs/promises";
+import { lstat, rm } from "node:fs/promises";
 import { join } from "node:path";
 
 import { version as esbuildVersion } from "esbuild";
@@ -35,7 +35,7 @@ export type NoteLog = {
 };
 
 /** The path rule's version a cached bundle passed: one cached under an earlier rule is built and checked again. */
-const pathRule = 7; // 7: a package's entries split together (packageGroup.ts)
+const pathRule = 8; // 8: a subpath's bundle named apart from the main's
 
 /** A cached bundle's meta.json: the esbuild version and the rule that made it decide whether it is still good. */
 const CacheMeta = z.looseObject({ esbuild: z.string(), rule: z.number().optional() });
@@ -55,6 +55,8 @@ export type CachedSpec = {
   readonly base: string;
   /** `<name>@<version>` for the page's own import, `_/<key>` for a resolved form. */
   readonly dir: string;
+  /** For a standalone bundle: the subpaths the package's split bundle serves (none when it is built entry by entry). */
+  readonly siblings?: readonly string[];
 };
 
 export type Where = {
@@ -65,11 +67,24 @@ export type Where = {
   readonly cleared: Map<string, Promise<void>>;
 };
 
+/** The meta.json files found current, with the identity they had. */
+const currents = new Map<string, string>();
+
 /** Whether the meta.json of the entry folder `path` names today's esbuild and path rule. */
 export async function current(path: string): Promise<boolean> {
-  const meta = await readCacheFile(join(path, "meta.json"), maxMetaBytes); // none yet: no cache
+  const file = join(path, "meta.json");
+  const identity = await lstat(file).then(
+    (stats) => `${String(stats.ino)}:${String(stats.size)}:${String(stats.mtimeMs)}`,
+    () => undefined, // none yet: no cache
+  );
+  if (identity === undefined) return false;
+  if (currents.get(file) === identity) return true; // read once per identity: each chunk of a warm load asks
+  const meta = await readCacheFile(file, maxMetaBytes);
   const stamp = meta === undefined ? undefined : CacheMeta.safeParse(parsedJson(meta)).data;
-  return stamp?.esbuild === esbuildVersion && stamp.rule === pathRule;
+  const good = stamp?.esbuild === esbuildVersion && stamp.rule === pathRule;
+  if (good) currents.set(file, identity);
+  if (currents.size > 1024) currents.delete(currents.keys().next().value ?? "");
+  return good;
 }
 
 /**
@@ -132,9 +147,12 @@ async function lookup(where: Where, spec: CachedSpec, name: string) {
 export const metaText = (name: string, version: string): string =>
   `${JSON.stringify({ name, version, esbuild: esbuildVersion, rule: pathRule })}\n`;
 
-/** The name of a subpath's bundle in its entry folder (`""` or `locale/fr`, no leading slash). */
+/**
+ * The name of a subpath's bundle in its entry folder (`""` or `locale/fr`, no leading slash): a subpath's name starts
+ * with `@`, so the main's never meets one (a package exporting both `.` and `./index`).
+ */
 export const bundleName = (subpath: string): string =>
-  subpath === "" ? "index.js" : `${encodeURIComponent(subpath)}.js`;
+  subpath === "" ? "index.js" : `@${encodeURIComponent(subpath)}.js`;
 
 /** The cached bundle of `spec` while it is still good; undefined when it is to be built. */
 export async function heldBundle(where: Where, spec: CachedSpec): Promise<string | undefined> {
@@ -156,7 +174,13 @@ export async function cachedBundle(
   const subpath = spec.subpath === "" ? "" : `/${spec.subpath}`;
   where.log.info({ spec: `${spec.name}${subpath}`, version }, "bundling a package for the page");
   const built = await bundlePackage(
-    { name: spec.name, subpath, base: spec.base, found: spec.found },
+    {
+      name: spec.name,
+      subpath,
+      base: spec.base,
+      found: spec.found,
+      siblings: spec.siblings ?? [""],
+    },
     where.resolver,
     signal,
   );

@@ -81,6 +81,8 @@ export type Group =
       readonly chunks: ReadonlyMap<string, string>;
       readonly inputs: readonly Identity[] | undefined;
       readonly imports: readonly BareImport[];
+      /** The exported subpaths left out of the build: each fails on its own, and is built alone when asked for. */
+      readonly left: readonly string[];
     }
   | { readonly ok: false };
 
@@ -174,7 +176,70 @@ export async function bundleGroup(
   if (!checked.ok) return refusal;
   const context = { pkg, requires: seen.requires, lookup, metafile: made.metafile };
   const { entries, chunks } = await sorted(made.files, outdir, context);
-  return { ok: true, entries, chunks, inputs: checked.inputs, imports: seen.imports };
+  return { ok: true, entries, chunks, inputs: checked.inputs, imports: seen.imports, left: [] };
+}
+
+/** More entries than this failing on their own: the package is built entry by entry. */
+const maxLeft = 8;
+
+/** The split build of `subpaths` alone, or the reason it cannot be made (a rule's refusal among them). */
+async function attempt(
+  pkg: GroupPackage,
+  resolver: Resolver,
+  signal: AbortSignal,
+): Promise<Group | Error> {
+  try {
+    const group = await bundleGroup(pkg, resolver, signal);
+    return group.ok ? group : new Error("a file it reads is not one a page may load");
+  } catch (error) {
+    signal.throwIfAborted(); // cancelled or past its limit: the request's failure, not the package's
+    return error instanceof Error ? error : new Error(String(error));
+  }
+}
+
+/**
+ * The subpaths among `subpaths` (whose split build fails) that fail on their own, found by halves, added to `left`;
+ * false once more than `maxLeft` do.
+ */
+async function failing(
+  pkg: GroupPackage,
+  context: { readonly resolver: Resolver; readonly signal: AbortSignal },
+  left: string[],
+): Promise<boolean> {
+  const [only] = pkg.subpaths;
+  if (pkg.subpaths.length === 1 && only !== undefined) {
+    left.push(only);
+    return left.length <= maxLeft;
+  }
+  const half = Math.ceil(pkg.subpaths.length / 2);
+  for (const part of [pkg.subpaths.slice(0, half), pkg.subpaths.slice(half)]) {
+    const tried = await attempt({ ...pkg, subpaths: part }, context.resolver, context.signal);
+    if (tried instanceof Error && !(await failing({ ...pkg, subpaths: part }, context, left))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * The split bundle of `pkg`; when it cannot be made, the entries that fail on their own are found by halves and left
+ * out (`left`), and the rest is built together. Rejects with the first failure when none fails on its own, when too
+ * many do, or when the rest still fails together.
+ */
+export async function bundleGroupAround(
+  pkg: GroupPackage,
+  resolver: Resolver,
+  signal: AbortSignal,
+): Promise<Group> {
+  const first = await attempt(pkg, resolver, signal);
+  if (!(first instanceof Error)) return first;
+  const left: string[] = [];
+  const found = await failing(pkg, { resolver, signal }, left);
+  const kept = pkg.subpaths.filter((subpath) => !left.includes(subpath));
+  if (!found || left.length === 0 || kept.length === 0) throw first;
+  const rest = await attempt({ ...pkg, subpaths: kept }, resolver, signal);
+  if (rest instanceof Error) throw first;
+  return rest.ok ? { ...rest, left } : rest;
 }
 
 /** The build's outputs, each shaped for the page: the entries by subpath, the chunks by hash. */

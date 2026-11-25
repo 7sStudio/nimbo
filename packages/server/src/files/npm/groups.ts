@@ -1,8 +1,11 @@
 // The split builds of a daemon's /npm/ (04-kernel §8.1, packageGroup.ts): an entry of a package's split bundle and
 // a chunk of it, from the cache (groupCache.ts) or a build through the queue; each package's entries read once per
-// state of its package.json (a page's import of date-fns asks for its 260 modules at once); a split build that fails
-// remembered, so the package's entries are built one by one (a linked package's is tried again each time: it is being
-// edited).
+// state of its package.json (a page's import of date-fns asks for its 260 modules at once). A split build whose
+// failure no entry explains alone is remembered, so the package's entries are built one by one, each a single bundle
+// (a linked package's until one of its files changes). The last few split builds stay in memory, so a chunk is built
+// once even when the cache cannot hold it.
+import { createHash } from "node:crypto";
+import { readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 
 import type { BuildQueue } from "./buildQueue.js";
@@ -11,7 +14,7 @@ import type { Held } from "./groupCache.js";
 import { cacheGroup, heldChunk, heldEntry } from "./groupCache.js";
 import { identityOf } from "./inputs.js";
 import type { Group } from "./packageGroup.js";
-import { bundleGroup, groupSubpaths } from "./packageGroup.js";
+import { bundleGroupAround, groupSubpaths } from "./packageGroup.js";
 import { isLinkedPackage } from "./spec.js";
 
 /** A split build that could not be made: the package's entries are then built one by one. */
@@ -48,9 +51,16 @@ async function buildGroup(
   const fields = { spec: spec.name, version: spec.found.version, entries: subpaths.length };
   where.log.info(fields, "bundling a package's entries together for the page");
   try {
-    const group = await bundleGroup(pkg, where.resolver, signal);
-    if (group.ok) await cacheGroup(where, spec, group);
-    return group.ok ? group : { failed: "a file it reads is not one a page may load" };
+    const group = await bundleGroupAround(pkg, where.resolver, signal);
+    if (!group.ok) return { failed: "a file it reads is not one a page may load" };
+    if (group.left.length > 0) {
+      where.log.warn(
+        { ...fields, left: group.left },
+        "a package's entries that fail are built alone",
+      );
+    }
+    await cacheGroup(where, spec, group);
+    return group;
   } catch (error) {
     if (signal.aborted) throw error; // cancelled or past its limit: the request's failure
     return { failed: messageOf(error) };
@@ -63,28 +73,94 @@ const absent = Symbol("absent");
 const textOf = (held: Held): string | undefined | typeof absent =>
   held.kind === "absent" ? absent : held.kind === "text" ? held.text : undefined;
 
-/** The split builds of packages through `queue`; one that fails noted, and kept unless its package is a linked one. */
-function builder(where: Where, queue: BuildQueue<GroupRun>, failures: Map<string, string>) {
-  return async (spec: CachedSpec, entries: readonly string[], signal: AbortSignal) => {
-    const build = (inner: AbortSignal) => buildGroup(where, spec, entries, inner);
-    const made = await queue(`group:${spec.dir}`, build, signal);
-    if (!("failed" in made)) return made.ok ? made : undefined;
-    if (!failures.has(spec.dir)) {
-      const fields = { dir: spec.dir, reason: made.failed };
-      where.log.warn(fields, "a package's entries are built one by one");
-      if (!isLinkedPackage(spec.found.folder)) failures.set(spec.dir, made.failed);
+/** The files a linked package's stamp covers: far more than one holds. */
+const maxStampFiles = 20_000;
+
+/** A stamp of the linked package in `folder`: its files' paths, sizes and times, its node_modules and hidden ones aside. */
+async function folderStamp(folder: string): Promise<string> {
+  const hash = createHash("sha256");
+  const folders = [folder];
+  let files = 0;
+  for (
+    let next = folders.pop();
+    next !== undefined && files < maxStampFiles;
+    next = folders.pop()
+  ) {
+    const entries = await readdir(next, { withFileTypes: true }).catch(() => []);
+    for (const entry of entries) {
+      if (entry.name.startsWith(".") || entry.name === "node_modules") continue;
+      const path = join(next, entry.name);
+      if (entry.isDirectory()) folders.push(path);
+      const stats = entry.isFile() ? await stat(path).catch(() => undefined) : undefined;
+      if (stats !== undefined)
+        hash.update(`${path}\0${String(stats.size)}\0${String(stats.mtimeMs)}\n`);
+      files += 1;
     }
-    return undefined;
+  }
+  return hash.digest("hex");
+}
+
+/** The stamp a failure is kept under: a registry package's version is in its folder's name, a linked one is edited. */
+const stampOf = (spec: CachedSpec): Promise<string> =>
+  isLinkedPackage(spec.found.folder) ? folderStamp(spec.found.folder) : Promise.resolve("");
+
+/** The split builds of packages that failed, each until its package changed. */
+function failuresOf(where: Where) {
+  const failures = new Map<string, string>();
+  return {
+    has: async (spec: CachedSpec): Promise<boolean> => {
+      const stamp = failures.get(spec.dir);
+      if (stamp === undefined) return false;
+      if (stamp === (await stampOf(spec))) return true;
+      failures.delete(spec.dir); // a linked package edited since: tried again
+      return false;
+    },
+    add: async (spec: CachedSpec, reason: string): Promise<void> => {
+      where.log.warn({ dir: spec.dir, reason }, "a package's entries are built one by one");
+      failures.set(spec.dir, await stampOf(spec));
+    },
+    clear: () => {
+      failures.clear();
+    },
   };
 }
 
-/** The split builds over the cache `where`, each through `queue`. */
+/** The last split builds of this daemon, served when the cache cannot hold them: a few packages. */
+const recentGroups = 8;
+
+type Built = Extract<Group, { ok: true }>;
+
+/** The split builds through `queue`: a failure noted, a success kept among the recent ones. */
+function builder(
+  where: Where,
+  queue: BuildQueue<GroupRun>,
+  memory: { readonly failures: ReturnType<typeof failuresOf>; readonly recent: Map<string, Built> },
+) {
+  return async (spec: CachedSpec, entries: readonly string[], signal: AbortSignal) => {
+    const build = (inner: AbortSignal) => buildGroup(where, spec, entries, inner);
+    const made = await queue(`group:${spec.dir}`, build, signal);
+    if ("failed" in made) {
+      if (!(await memory.failures.has(spec))) await memory.failures.add(spec, made.failed);
+      return undefined;
+    }
+    if (!made.ok) return undefined;
+    const { recent } = memory;
+    recent.delete(spec.dir);
+    recent.set(spec.dir, made);
+    const [oldest] = recent.keys();
+    if (recent.size > recentGroups && oldest !== undefined) recent.delete(oldest);
+    return made;
+  };
+}
+
+/** The split builds over the cache `where`, each through `queue`; `reset` forgets what they learned. */
 export function createGroups(where: Where, queue: BuildQueue<GroupRun>) {
-  const failures = new Map<string, string>();
-  const subpathsOf = subpathsMemo();
-  const subpaths = (spec: CachedSpec): Promise<readonly string[]> =>
-    failures.has(spec.dir) ? Promise.resolve([]) : subpathsOf(spec.found.folder);
-  const built = builder(where, queue, failures);
+  const failures = failuresOf(where);
+  let subpathsOf = subpathsMemo();
+  const recent = new Map<string, Built>();
+  const subpaths = async (spec: CachedSpec): Promise<readonly string[]> =>
+    (await failures.has(spec)) ? [] : subpathsOf(spec.found.folder);
+  const built = builder(where, queue, { failures, recent });
   return {
     /** The entry `spec` of its package's split build; undefined when it is no entry of one (it is built alone). */
     entry: async (spec: CachedSpec, signal: AbortSignal): Promise<string | undefined> => {
@@ -99,9 +175,21 @@ export function createGroups(where: Where, queue: BuildQueue<GroupRun>) {
     chunk: async (spec: CachedSpec, hash: string, signal: AbortSignal) => {
       const held = textOf(await heldChunk(where, spec, hash));
       if (held !== absent) return held;
+      const kept = recent.get(spec.dir)?.chunks.get(hash); // a chunk's name is its content's hash
+      if (kept !== undefined) return kept;
       const entries = await subpaths(spec);
       if (entries.length === 0) return undefined;
       return (await built(spec, entries, signal))?.chunks.get(hash);
+    },
+    /** The subpaths a standalone bundle of `spec`'s package may import as entries: its main alone once it failed. */
+    siblings: async (spec: CachedSpec): Promise<readonly string[]> => {
+      const entries = await subpaths(spec);
+      return entries.length === 0 ? [""] : entries;
+    },
+    reset: (): void => {
+      failures.clear();
+      subpathsOf = subpathsMemo();
+      recent.clear();
     },
   };
 }

@@ -6,9 +6,10 @@
 // as recorded, the keys they name are in the index and a linked package's files are unchanged; else the whole package
 // is built again. A chunk is served from the cache while meta.json is current, whatever else changed since: its name
 // is its content's hash, so it is what the entry that imports it was built with; a chunk the cache lacks builds the
-// package again (esbuild makes the same chunk from the same files). Chunks no longer in the package's build are
-// removed when it is written again. A split bundle the cache cannot hold is still served.
-import { readdir, rm } from "node:fs/promises";
+// package again (esbuild makes the same chunk from the same files). The chunks of the build before are kept (a page
+// that loaded its entries may still import one), older ones removed when the package is written again; a manifest is
+// read once per identity of its file. A split bundle the cache cannot hold is still served.
+import { lstat, readdir, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
 import { z } from "zod";
@@ -27,7 +28,10 @@ import { isLinkedPackage } from "./spec.js";
 const Manifest = z.object({
   entries: z.record(z.string(), z.number()),
   chunks: z.record(z.string(), z.number()),
+  /** The chunks of the build before, kept for a page that loaded its entries (a later dynamic import). */
+  previous: z.record(z.string(), z.number()).optional(),
 });
+type Manifest = z.infer<typeof Manifest>;
 
 /** A manifest names each entry and chunk once: far below this. */
 const maxManifestBytes = 16 * 1024 * 1024;
@@ -90,15 +94,41 @@ export async function heldChunk(where: Where, spec: CachedSpec, hash: string): P
   if (!(await current(entry))) return absent;
   const manifest = await manifestIn(entry);
   if (manifest === undefined) return absent;
-  const size = manifest.chunks[hash];
+  const size = manifest.chunks[hash] ?? manifest.previous?.[hash];
   if (size === undefined) return none; // no chunk of the build the cache holds: nothing to build again for
   return sized(await readCacheFile(join(folder.path, `${hash}.js`), maxBundleBytes), size);
 }
 
 /** The manifest of the entry folder `folder`; undefined when there is none or it is not what the schema says. */
-async function manifestIn(folder: string) {
-  const read = await readCacheFile(join(folder, "group.json"), maxManifestBytes);
-  return read === undefined ? undefined : Manifest.safeParse(parsedJson(read)).data;
+async function manifestIn(folder: string): Promise<Manifest | undefined> {
+  const path = join(folder, "group.json");
+  const stamp = await stampOf(path);
+  const held = manifests.get(path);
+  if (stamp !== undefined && held?.stamp === stamp) return held.manifest;
+  const read = await readCacheFile(path, maxManifestBytes);
+  const manifest = read === undefined ? undefined : Manifest.safeParse(parsedJson(read)).data;
+  if (stamp !== undefined && manifest !== undefined) remember(manifests, path, { stamp, manifest });
+  return manifest;
+}
+
+/** A cache file's identity: a file written again is a new one (atomicWrite.ts renames it into place). */
+const stampOf = (path: string): Promise<string | undefined> =>
+  lstat(path).then(
+    (stats) => `${String(stats.ino)}:${String(stats.size)}:${String(stats.mtimeMs)}`,
+    () => undefined,
+  );
+
+/** The manifests read, by path and identity: a warm page load asks for one per chunk (date-fns: 260). */
+const manifests = new Map<string, { readonly stamp: string; readonly manifest: Manifest }>();
+
+/** How many manifests are kept read: far more than a page imports packages. */
+const manifestsKept = 256;
+
+function remember<T>(memo: Map<string, T>, key: string, value: T): void {
+  memo.delete(key);
+  memo.set(key, value);
+  const [oldest] = memo.keys();
+  if (memo.size > manifestsKept && oldest !== undefined) memo.delete(oldest);
 }
 
 /** Writes `files` (path to text) a few at a time, without an fsync each: the manifest records their sizes. */
@@ -119,10 +149,10 @@ async function linkedInputs(spec: CachedSpec, inputs: readonly Identity[] | unde
   return inputs === undefined || manifest === undefined ? [] : [...inputs, manifest]; // none: built again next time
 }
 
-/** Removes the chunks of `folder` that the build `kept` does not hold (an earlier build's). */
-async function prune(folder: string, kept: ReadonlyMap<string, string>): Promise<void> {
+/** Removes the chunks of `folder` that neither the build nor the one before holds. */
+async function prune(folder: string, kept: Readonly<Record<string, number>>): Promise<void> {
   const names = await readdir(folder);
-  const stale = names.filter((name) => !kept.has(name.replace(/\.js$/, "")));
+  const stale = names.filter((name) => !Object.hasOwn(kept, name.replace(/\.js$/, "")));
   await Promise.all(stale.map((name) => rm(join(folder, name), { force: true })));
 }
 
@@ -150,10 +180,15 @@ export async function cacheGroup(
       await writeAtomically(join(folder, "group.inputs.json"), recordText(inputs));
     }
     await writeAtomically(join(folder, "group.imports.json"), importsText(group.imports));
-    const manifest = { entries: sizesOf(group.entries), chunks: sizesOf(group.chunks) };
+    const chunkSizes = sizesOf(group.chunks);
+    const before = (await current(folder)) ? await manifestIn(folder) : undefined;
+    const previous = Object.fromEntries(
+      Object.entries(before?.chunks ?? {}).filter(([hash]) => !Object.hasOwn(chunkSizes, hash)),
+    );
+    const manifest = { entries: sizesOf(group.entries), chunks: chunkSizes, previous };
     await writeAtomically(join(folder, "group.json"), `${JSON.stringify(manifest)}\n`);
     await writeAtomically(join(folder, "meta.json"), metaText(spec.name, spec.found.version));
-    await prune(chunks, group.chunks);
+    await prune(chunks, { ...previous, ...chunkSizes });
   } catch (error) {
     where.log.warn(
       { err: error, dir: spec.dir },

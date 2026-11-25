@@ -59,20 +59,30 @@ async function scopesAbove(from: string, read: Map<string, Fields | undefined>) 
   }
 }
 
-/** The target of an `imports` value under the conditions of a page's import or require, as Node picks it. */
-export function targetOf(value: unknown, conditions: readonly string[]): string | undefined {
-  if (typeof value === "string") return value;
-  if (Array.isArray(value)) {
-    for (const item of value) {
-      const target = targetOf(item, conditions);
-      if (target !== undefined) return target;
-    }
-    return undefined;
+/** How deep a target's conditions may nest: far beyond any package's, short of the stack. */
+const maxDepth = 32;
+
+/** The target of an `exports` or `imports` value under the conditions of a page's import or require, as Node picks it. */
+export function targetOf(
+  value: unknown,
+  conditions: readonly string[],
+  depth = 0,
+): string | undefined {
+  if (depth > maxDepth) {
+    throw new Error(
+      `its package.json nests the conditions of a target deeper than ${String(maxDepth)} levels`,
+    );
   }
-  if (typeof value !== "object" || value === null) return undefined;
-  for (const [condition, nested] of Object.entries(value)) {
-    if (!conditions.includes(condition)) continue;
-    const target = targetOf(nested, conditions);
+  if (typeof value === "string") return value;
+  const options: readonly unknown[] = Array.isArray(value)
+    ? value
+    : typeof value === "object" && value !== null
+      ? Object.entries(value)
+          .filter(([condition]) => conditions.includes(condition))
+          .map(([, nested]): unknown => nested)
+      : [];
+  for (const option of options) {
+    const target = targetOf(option, conditions, depth + 1);
     if (target !== undefined) return target;
   }
   return undefined;

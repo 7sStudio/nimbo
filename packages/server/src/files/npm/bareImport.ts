@@ -10,7 +10,12 @@ import { findPackage } from "./resolve.js";
 import { packageSpecOf } from "./spec.js";
 
 /** What resolves a bare import: the workspace the page's own imports look from, and the index of resolved forms. */
-export type Resolver = { readonly root: string; readonly index: PackageIndex };
+export type Resolver = {
+  readonly root: string;
+  readonly index: PackageIndex;
+  /** How esbuild resolved each package's entries, by package and import kind, kept across builds. */
+  readonly entries: Map<string, Promise<ReadonlyMap<string, string>>>;
+};
 
 /**
  * The URL of the package folder Node resolves `spec` to from the real folder `from`; undefined when it finds none.

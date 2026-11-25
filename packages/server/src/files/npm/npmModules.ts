@@ -11,8 +11,8 @@
 // limit NpmModuleFailed (500), each naming the spec, so the page shows it as the import's failure. Builds go through
 // one bounded queue (buildQueue.ts): the requests for a build share it, its limit runs from its start, and it stops
 // once every request waiting for it went away.
-import { realpath, stat } from "node:fs/promises";
-import { resolve } from "node:path";
+import { lstat, readdir, realpath, stat } from "node:fs/promises";
+import { join, resolve } from "node:path";
 
 import { JsnbError, MissingPackage } from "@jsnb/core";
 
@@ -93,6 +93,22 @@ async function workspaceFile(
 
 type Package = Extract<NpmSpec, { kind: "package" | "resolved" }>;
 
+/** The name of the package folder `name` finds under `lookup`'s node_modules, as its folders are spelled on disk. */
+async function installedAs(lookup: string, name: string): Promise<string | undefined> {
+  let parent = join(lookup, "node_modules");
+  const spelled: string[] = [];
+  for (const segment of name.split("/")) {
+    const names = await readdir(parent).catch((): string[] => []);
+    const found = names.includes(segment)
+      ? segment
+      : names.find((entry) => entry.toLowerCase() === segment.toLowerCase());
+    if (found === undefined) return undefined;
+    spelled.push(found);
+    parent = join(parent, found);
+  }
+  return spelled.join("/");
+}
+
 export type NpmOptions = {
   /** How long one build may run once it started; past it the build is cancelled and its requests fail. */
   readonly timeoutMs: number;
@@ -110,6 +126,12 @@ async function cachedSpecOf(resolver: Resolver, spec: Package): Promise<CachedSp
   if (spec.kind === "package") {
     const found = await findPackage(name, resolver.root);
     if (found === undefined) return failed(404, new MissingPackage({ names: [name] }));
+    const spelled = await installedAs(found.lookup, name);
+    if (spelled !== name) {
+      // a file system that ignores case finds `Date-fns` too: one package, one URL, one module instance
+      const reason = `the package is installed as ${spelled ?? "another name"}; import it by that name`;
+      return failed(404, new NpmModuleFailed({ spec: name, reason }));
+    }
     const dir = `${name}@${encodeURIComponent(found.version)}`; // one segment, whatever the version holds
     return { name, subpath, found, base: `/npm/${name}`, dir };
   }
@@ -124,7 +146,8 @@ export function createNpmModules(
   options: NpmOptions,
 ): (rest: string, signal: AbortSignal) => Promise<NpmModule> {
   const { root } = where;
-  const resolver: Resolver = { root, index: createPackageIndex(where.cacheDir, root, options.log) };
+  const index = createPackageIndex(where.cacheDir, root, options.log);
+  const resolver: Resolver = { root, index, entries: new Map() };
   const turns = createTurns({
     concurrency: options.concurrency ?? defaultConcurrency(),
     timeoutMs: options.timeoutMs,
@@ -144,13 +167,16 @@ export function createNpmModules(
 /** The package modules: an entry of the package's split build, a chunk of it, or a standalone bundle. */
 function packageModules(cache: Where, turns: Turns, builds: BuildQueue<Built>) {
   const groups = createGroups(cache, createBuildQueue(turns));
+  const cleared = clearedBy(cache, groups);
   const standalone = async (spec: CachedSpec, signal: AbortSignal): Promise<Built> => {
     const held = await heldBundle(cache, spec); // a cached one is no build: it takes no turn in the queue
     if (held !== undefined) return { ok: true, text: held };
-    const build = (inner: AbortSignal) => cachedBundle(cache, spec, inner);
+    const alone = { ...spec, siblings: await groups.siblings(spec) };
+    const build = (inner: AbortSignal) => cachedBundle(cache, alone, inner);
     return builds(`entry:${spec.dir}/${spec.subpath}`, build, signal);
   };
   return async (spec: Package, signal: AbortSignal): Promise<NpmModule> => {
+    await cleared();
     const cached = await cachedSpecOf(cache.resolver, spec);
     if (!("found" in cached)) return cached;
     try {
@@ -159,15 +185,30 @@ function packageModules(cache: Where, turns: Turns, builds: BuildQueue<Built>) {
         return text === undefined ? refused(404) : { ok: true, body: text };
       }
       const text = await groups.entry(cached, signal);
-      return text === undefined
-        ? answerOf(await standalone(cached, signal))
-        : { ok: true, body: text };
+      if (text !== undefined) return { ok: true, body: text };
+      return answerOf(await standalone(cached, signal));
     } catch (error) {
       const name = spec.subpath === "" ? spec.name : `${spec.name}/${spec.subpath}`;
-      return failed(
-        500,
-        new NpmModuleFailed({ spec: name, reason: messageOf(error) }, { cause: error }),
-      );
+      const reason = messageOf(error);
+      return failed(500, new NpmModuleFailed({ spec: name, reason }, { cause: error }));
     }
+  };
+}
+
+/**
+ * Forgets what the daemon learned of its packages once cache.clear replaced the cache's folder (a new folder in its
+ * place): failed split builds, entries read, builds kept in memory, folders checked.
+ */
+function clearedBy(cache: Where, groups: { readonly reset: () => void }) {
+  let folder: string | undefined;
+  return async (): Promise<void> => {
+    const stats = await lstat(cache.cacheDir).catch(() => undefined);
+    const now = stats === undefined ? "" : `${String(stats.dev)}:${String(stats.ino)}`;
+    if (folder !== undefined && now !== folder) {
+      groups.reset();
+      cache.cleared.clear();
+      cache.resolver.entries.clear();
+    }
+    folder = now;
   };
 }

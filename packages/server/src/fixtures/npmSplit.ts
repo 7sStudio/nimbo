@@ -2,6 +2,7 @@
 // workspace with its builds counted from the log, packages of each shape the bundler meets, and the CPU the builds
 // spend, to tell a cancelled build from one left running.
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { mkdir, realpath } from "node:fs/promises";
 import { join } from "node:path";
 
@@ -165,18 +166,39 @@ export const pause = (ms: number): Promise<void> =>
     setTimeout(done, ms);
   });
 
+/** `ps`'s CPU time, `[DD-][HH:]MM:SS[.ss]` (macOS prints `M:SS.ss`, Linux's procps `[DD-]HH:MM:SS`), in seconds. */
+export function psSeconds(time: string): number {
+  const [days, clock = ""] = time.includes("-") ? time.split("-") : ["0", time];
+  const parts = clock.split(":").map(Number).reverse();
+  const [seconds = 0, minutes = 0, hours = 0] = parts;
+  return Number(days) * 86_400 + hours * 3600 + minutes * 60 + seconds;
+}
+
+/** The CPU seconds of the process `pid`: from /proc where there is one (clock ticks, finer than Linux's `ps`). */
+function cpuOf(pid: number): number {
+  try {
+    const fields =
+      readFileSync(`/proc/${String(pid)}/stat`, "utf8")
+        .split(") ")[1]
+        ?.split(" ") ?? [];
+    return (Number(fields[11]) + Number(fields[12])) / 100; // utime and stime, in USER_HZ ticks
+  } catch {
+    const time = execFileSync("ps", ["-o", "time=", "-p", String(pid)])
+      .toString()
+      .trim();
+    return time === "" ? 0 : psSeconds(time);
+  }
+}
+
 /** The CPU seconds of esbuild's service, this process's child. */
 function esbuildCpu(): number {
-  const lines = execFileSync("ps", ["-A", "-o", "ppid=,time=,command="]).toString().split("\n");
+  const lines = execFileSync("ps", ["-A", "-o", "pid=,ppid=,command="]).toString().split("\n");
   return lines
     .map((line) => line.trim().split(/\s+/))
     .filter(
-      ([ppid, , command]) => Number(ppid) === process.pid && command?.includes("esbuild") === true,
+      ([, ppid, command]) => Number(ppid) === process.pid && command?.includes("esbuild") === true,
     )
-    .reduce((total, [, time = "0:0"]) => {
-      const [minutes = "0", seconds = "0"] = time.split(":");
-      return total + Number(minutes) * 60 + Number(seconds);
-    }, 0);
+    .reduce((total, [pid = "0"]) => total + cpuOf(Number(pid)), 0);
 }
 
 /** This process's CPU seconds, where esbuild calls the bundler's plugin. */
@@ -191,3 +213,31 @@ export async function buildCpuUntil(done: Promise<unknown>): Promise<number> {
   await done;
   return esbuildCpu() + ownCpu() - before;
 }
+
+/** `many` with `broken` more exported entries that do not build, none of which its main imports. */
+export function brokenEntries(count: number, broken: number): Record<string, string> {
+  const files = manyModules(count);
+  const exports: Record<string, string> = { ".": "./index.js" };
+  for (let at = 0; at < count; at += 1) exports[`./m${String(at)}`] = `./m${String(at)}.js`;
+  for (let at = 0; at < broken; at += 1) {
+    exports[`./broken${String(at)}`] = `./broken${String(at)}.js`;
+    files[`node_modules/many/broken${String(at)}.js`] =
+      `export * from "./missing${String(at)}.js";\n`;
+  }
+  files["node_modules/many/package.json"] = esm("many", "1.0.0", exports);
+  return files;
+}
+
+/** Packages whose exports trouble a cache or a reader: `.` beside `./index`, and conditions nested 40 deep. */
+export const oddExports: Readonly<Record<string, string>> = {
+  "node_modules/twin/package.json": esm("twin", "1.0.0", {
+    ".": "./main.js",
+    "./index": "./other.js",
+  }),
+  "node_modules/twin/main.js": 'export const which = "main";\n',
+  "node_modules/twin/other.js": 'export const which = "other";\n',
+  "node_modules/deep/package.json": esm("deep", "1.0.0", {
+    ".": Array.from({ length: 40 }).reduce<unknown>((inner) => ({ import: inner }), "./index.js"),
+  }),
+  "node_modules/deep/index.js": "export const deep = 1;\n",
+};
