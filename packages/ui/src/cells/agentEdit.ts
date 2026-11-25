@@ -19,9 +19,9 @@ const clients: Readonly<Record<EditInfo["client"], string>> = {
   file: "the file",
 };
 
-/** "claude-code", "An agent" when the connection gave no name, "An edit on disk" for the file's. */
+/** "claude-code", "An agent" when the connection gave no name, "The file on disk" for an edit made there. */
 export const whoOf = (edit: EditInfo): string =>
-  edit.by === "external" ? "An edit on disk" : (edit.agent ?? "An agent");
+  edit.by === "external" ? "The file on disk" : (edit.agent ?? "An agent");
 
 /** "over MCP", "over the CLI"; "" for an edit on disk, which says where already. */
 export const overOf = (edit: EditInfo): string =>
@@ -65,5 +65,5 @@ export function markedLines(ranges: readonly LineRange[]): readonly number[] {
 /** "lines 2 to 3 changed by claude-code": a folded cell's name column and the outline's tooltip start. */
 export const changedBy = (edit: PendingEdit): string =>
   edit.by === "external"
-    ? `${linesOf(edit.review.lines)} changed on disk`
+    ? `${linesOf(edit.review.lines)} changed in the file on disk`
     : `${linesOf(edit.review.lines)} changed by ${edit.agent ?? "an agent"}`;

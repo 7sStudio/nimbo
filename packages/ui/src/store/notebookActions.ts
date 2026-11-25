@@ -15,7 +15,10 @@ type Context = {
 };
 
 /** What cell.update may change from the page; meta.lastEdit is the server's (03-api §4.3). */
-type CellPatch = Pick<Parameters<SocketClient["cell"]["update"]>[0], "source" | "type" | "meta">;
+type CellPatch = Pick<
+  Parameters<SocketClient["cell"]["update"]>[0],
+  "source" | "type" | "meta" | "base"
+>;
 
 /** A RenameRefused the daemon answered: -32603 with the error's name in its data (03-api §7.4). */
 function isRefusal(error: unknown): error is Error {
@@ -82,14 +85,16 @@ function stepper(move: Move) {
 
 function runActions({ client, notebook, attempt }: Context) {
   return {
-    /** Runs `cell`; `source`, the editor's text not yet sent, is saved and run at once (03-api §4.3). */
-    run: (cell: CellId, source?: string) =>
+    /** Runs `cell`; `source`, the editor's text not yet sent, is saved and run at once (03-api §4.3), `base` the
+     * textHash of the text it was typed on. */
+    run: (cell: CellId, source?: string, base?: string) =>
       attempt(() =>
         client().cell.run({
           notebook: notebook(),
           cell,
           wait: false,
           ...(source === undefined ? {} : { source }),
+          ...(base === undefined ? {} : { base }),
         }),
       ),
     runSelection: (select: Selection) =>

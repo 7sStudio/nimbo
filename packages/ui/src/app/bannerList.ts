@@ -57,17 +57,27 @@ const saveFailed = (error: string | null): BannerModel => ({
   actions: [{ label: "Retry", command: "notebook.save" }],
 });
 
-const conflict = (notebook: string): BannerModel => ({
-  id: "conflict",
-  tone: "warn",
-  title: "Changed on disk",
-  text: "The file and this page both changed.",
-  actions: [
-    { label: "Reload from disk", command: "notebook.reload", primary: true },
-    { label: "Overwrite with mine", command: "notebook.save", args: { force: true } },
-    { label: "Compare", command: "ui.diff.open", args: { path: notebook, disk: true } },
-  ],
-});
+/** A view-only tab cannot resolve it: it compares only. */
+const conflict = (notebook: string, viewOnly: boolean): BannerModel => {
+  const compare = {
+    label: "Compare",
+    command: "ui.diff.open",
+    args: { path: notebook, disk: true },
+  };
+  return {
+    id: "conflict",
+    tone: "warn",
+    title: "Changed on disk",
+    text: "The file and this page both changed.",
+    actions: viewOnly
+      ? [compare]
+      : [
+          { label: "Reload from disk", command: "notebook.reload", primary: true },
+          { label: "Overwrite with mine", command: "notebook.save", args: { force: true } },
+          compare,
+        ],
+  };
+};
 
 const noPage = (error: string | null): BannerModel => ({
   id: "noPage",
@@ -161,7 +171,7 @@ export function bannersOf(facts: BannerFacts): readonly BannerModel[] {
     ...connectionBanners(facts),
     facts.kernelExit === null || facts.closed ? null : kernelExited(facts.kernelExit),
     facts.save === "failed" ? saveFailed(facts.saveError) : null,
-    facts.save === "conflict" ? conflict(facts.notebook) : null,
+    facts.save === "conflict" ? conflict(facts.notebook, facts.connection === "viewOnly") : null,
     pageMissing(facts) ? noPage(facts.attachError) : null,
     facts.connection === "viewOnly" ? viewOnly(facts.takenOver === true) : null,
     facts.installing === null ? null : installing(facts.installing),
