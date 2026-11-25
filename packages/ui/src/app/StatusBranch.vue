@@ -14,7 +14,9 @@ const counts = computed(() => {
   if (branch?.upstream == null) return "";
   return `${String(branch.behind)}↓ ${String(branch.ahead)}↑`;
 });
-const publish = computed(() => at.value?.name != null && at.value.upstream === null);
+const publish = computed(
+  () => at.value?.name != null && at.value.oid !== null && at.value.upstream === null,
+);
 const item =
   "ui:inline-flex ui:cursor-pointer ui:items-center ui:gap-1 ui:rounded-control ui:border ui:border-transparent ui:bg-transparent ui:px-1 ui:font-medium ui:text-fg-2 ui:block-5.5 ui:hover:bg-well ui:hover:text-fg ui:focus-visible:border-accent";
 </script>

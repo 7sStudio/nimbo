@@ -48,7 +48,7 @@ const stateWords: Readonly<Record<string, string>> = {
 const state = computed(() => stateWords[repo.value?.state ?? "clean"] ?? "");
 const publish = computed(() => {
   const at = repo.value?.branch;
-  return at !== undefined && at.name !== null && at.upstream === null;
+  return at !== undefined && at.name !== null && at.oid !== null && at.upstream === null;
 });
 const sync = computed(() => {
   const at = repo.value?.branch;
