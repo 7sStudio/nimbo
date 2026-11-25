@@ -1,6 +1,7 @@
 // The Source Control view's mirror of the repository: git.status read at start, on each
-// git.changed, when the window regains focus (an edit made outside the app; no workspace watcher in v1) and on Refresh;
-// the whole-file writes through the daemon, whose git.changed brings the new status; the commit message draft.
+// git.changed, when the window regains focus (an edit made outside the app) and on Refresh; the whole-file writes
+// through the daemon, whose git.changed brings the new status; the commit message draft; and the long operation under
+// way (fetch, pull, push, publish, sync) with git's last progress line.
 import type { EventEnvelope, GitRepo } from "@jsnb/core";
 import { defineStore } from "pinia";
 import type { Ref } from "vue";
@@ -8,6 +9,7 @@ import { computed, ref, shallowRef } from "vue";
 
 import { attempter, usePageReport } from "./attempt.js";
 import { useSessionStore } from "./socket.js";
+import type { DiffTarget } from "./ui.js";
 
 /** `read`, one run at a time; asked again meanwhile, it runs once more after the current run. */
 function singleFlight(read: () => Promise<void>, busy: Ref<boolean>): () => Promise<void> {
@@ -49,19 +51,68 @@ const writes = (
 ) => ({
   stage: (paths: readonly string[]) => attempt(() => client().git.stage({ paths: [...paths] })),
   unstage: (paths: readonly string[]) => attempt(() => client().git.unstage({ paths: [...paths] })),
-  discard: (paths: readonly string[]) => attempt(() => client().git.discard({ paths: [...paths] })),
+  discard: (paths: readonly string[]) =>
+    attempt(() => client().git.discard({ paths: [...paths], confirm: true })),
   /** git.commit of the draft; the draft clears once the commit is made. */
   commit: async (all: boolean) => {
     const done = await attempt(() => client().git.commit({ message: message.value, all }));
     if (done !== undefined) message.value = "";
     return done;
   },
-  diff: (path: string, staged: boolean) =>
-    attempt(() => client().git.diff({ path, staged, content: true })),
+  diff: (target: DiffTarget) =>
+    attempt(() =>
+      client().git.diff({
+        path: target.path,
+        staged: target.staged,
+        content: true,
+        ...(target.commit === undefined ? {} : { commit: target.commit }),
+        ...(target.base === undefined ? {} : { base: target.base }),
+      }),
+    ),
   /** An open notebook's file on disk against its session (a conflict's Compare). */
   compareDisk: (notebook: string) =>
     attempt(() => client().notebook.compareDisk({ notebook, content: true })),
 });
+
+/** The long operation under way (fetch, pull, push, publish, sync) and git's last progress line for it. */
+function longRunning() {
+  const running = ref<string | null>(null);
+  const progress = ref("");
+  /** Runs a long operation, marking it under way for the status bar and the view. */
+  const long = async <T>(name: string, work: () => Promise<T>): Promise<T> => {
+    running.value = name;
+    progress.value = "";
+    try {
+      return await work();
+    } finally {
+      running.value = null;
+      progress.value = "";
+    }
+  };
+  const onProgress = (line: string): void => {
+    if (running.value !== null) progress.value = line;
+  };
+  /** The daemon's word on the write under way, whoever started it (another tab, the CLI, an agent). */
+  const onRunning = (operation: string | null): void => {
+    running.value = operation;
+    if (operation === null) progress.value = "";
+  };
+  return { running, progress, long, onProgress, onRunning };
+}
+
+/** git.changed reads the status again; git.progress is the operation's latest line; git.running names it. */
+const eventsOf =
+  (refresh: () => Promise<void>, under: ReturnType<typeof longRunning>) =>
+  (event: EventEnvelope): void => {
+    if (event.type === "git.changed") void refresh();
+    if (event.type === "git.progress") under.onProgress(event.data.line);
+    if (event.type === "git.running") under.onRunning(event.data.operation);
+  };
+
+const counted = (repo: Ref<GitRepo | null>) => {
+  const count = computed(() => countOf(repo.value));
+  return { count, dirty: computed(() => count.value > 0) };
+};
 
 export const useGitStore = defineStore("git", () => {
   const session = useSessionStore();
@@ -71,29 +122,30 @@ export const useGitStore = defineStore("git", () => {
   const loaded = ref(false);
   const refreshing = ref(false);
   const message = ref("");
+  const under = longRunning();
 
   /** git.status, one read at a time. */
   const refresh = singleFlight(async () => {
     const answer = await attempt(() => client().git.status({}));
     if (answer !== undefined) repo.value = answer.repo;
+    if (answer !== undefined && answer.running !== null) under.onRunning(answer.running);
     loaded.value = true;
   }, refreshing);
-
-  const onEvent = (event: EventEnvelope): void => {
-    if (event.type === "git.changed") void refresh();
-  };
+  const onEvent = eventsOf(refresh, under);
   const onFocus = (): void => {
     if (session.current !== null) void refresh();
   };
-  const count = computed(() => countOf(repo.value));
 
   return {
     repo,
     loaded,
     refreshing,
     message,
-    count,
-    dirty: computed(() => count.value > 0),
+    running: under.running,
+    progress: under.progress,
+    long: under.long,
+    client,
+    ...counted(repo),
     refresh,
     /** Reads the status and follows git.changed, the window's focus and the stream's gaps. */
     start: async () => {

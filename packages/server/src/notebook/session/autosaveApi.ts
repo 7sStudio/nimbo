@@ -69,6 +69,8 @@ export type Autosaver = {
   readonly state: () => {
     readonly savedAt: string | null;
     readonly dirty: boolean;
+    /** Changed by an edit since the load or the last save, not only by the load's normalization (07 §4). */
+    readonly mutated: boolean;
     readonly conflict: boolean;
     /** The cells of the open conflict (none for one a save found). */
     readonly conflictCells: readonly string[];

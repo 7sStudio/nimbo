@@ -2,11 +2,16 @@
 // validated notebook ref, the route base of /n/<name>, the output limits over core's defaults, the Node and the entry.
 import { fileURLToPath } from "node:url";
 
-import type { ExecutionId, FullValue, Output, Route } from "@jsnb/core";
+import type { BridgeEvent, ExecutionId, FullValue, Output, Route } from "@jsnb/core";
 import { InvalidParams } from "@jsnb/core";
 import { z } from "zod";
 
-import type { ChildConfig, ExportEntry, KernelLimits as KernelLimitsType } from "./messages.js";
+import type {
+  ChildConfig,
+  DroppedEvents,
+  ExportEntry,
+  KernelLimits as KernelLimitsType,
+} from "./messages.js";
 import { defaultLimits, KernelLimits } from "./messages.js";
 import type { Exit, KernelEntry } from "./childProcess.js";
 import { routeName, validateNotebookRef } from "./notebookRef.js";
@@ -16,6 +21,12 @@ export type LateOutput = {
   readonly execution: ExecutionId;
   readonly output: Output;
   readonly full?: FullValue;
+};
+
+/** One flush of the kernel's `emit` queue: the events in order, and per name how many a burst dropped. */
+export type EventBatch = {
+  readonly events: readonly BridgeEvent[];
+  readonly dropped: readonly DroppedEvents[];
 };
 
 export type NodeKernelOptions = {
@@ -37,6 +48,10 @@ export type NodeKernelOptions = {
   readonly onOutput?: (late: LateOutput) => void;
   readonly onExports?: (names: readonly ExportEntry[]) => void;
   readonly onRoutes?: (routes: readonly Route[]) => void;
+  /** A flush of `emit(name, data)` calls (05-bridge §6). */
+  readonly onEvents?: (batch: EventBatch) => void;
+  /** Whether a page holds the client realm when the kernel is ready; default true (05-bridge §6). */
+  readonly pageListening?: () => boolean;
   /** Debugger.paused (true) and Debugger.resumed (false) from the kernel's inspector. */
   readonly onPause?: (paused: boolean) => void;
   /** The child died without stop() or kill(). */

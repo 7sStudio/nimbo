@@ -148,9 +148,23 @@ function onOutput(context: Context, message: OutputMessage): void {
   context.options.onOutput?.(full ? { execution, output, full } : { execution, output });
 }
 
+/** The kernel's tables, kept for later readers and passed on. */
+function onTables(
+  context: Context,
+  message: Extract<KernelMessage, { type: "exports" | "routes" | "events" }>,
+): void {
+  const { options, state } = context;
+  if (message.type === "exports") {
+    state.exports = message.names;
+    options.onExports?.(message.names);
+  } else if (message.type === "routes") {
+    state.routes = message.routes;
+    options.onRoutes?.(message.routes);
+  } else options.onEvents?.({ events: message.events, dropped: message.dropped });
+}
+
 /** Routes one validated kernel message. */
 export function receive(context: Context, message: KernelMessage): void {
-  const { options, state } = context;
   switch (message.type) {
     case "output":
       onOutput(context, message);
@@ -162,12 +176,9 @@ export function receive(context: Context, message: KernelMessage): void {
       context.requests.settle(message);
       return;
     case "exports":
-      state.exports = message.names;
-      options.onExports?.(message.names);
-      return;
     case "routes":
-      state.routes = message.routes;
-      options.onRoutes?.(message.routes);
+    case "events":
+      onTables(context, message);
       return;
     case "ready":
       context.log(notice("a second ready message was ignored", { pid: message.pid }));

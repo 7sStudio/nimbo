@@ -1,4 +1,4 @@
-<!-- DiffPage: a changed file's diff in the main area, as VS Code opens one in an editor tab: the tab "demo.jsnb (Working Tree)" or "(Index)", or "(On Disk ↔ Yours)" for a conflict's Compare (the open notebook's file against the page's state, notebook.compareDisk), with its close button; a toolbar with Previous and Next Change (Shift Alt F5, Alt F5), Inline or Side by Side, the notebook diff's gear and Open File; then the notebook diff (NotebookDiffView), a text diff (TextDiff), or one line for a binary or oversized file. The diff is read again when the repository's status changes (a save, a stage), or the file is merged or saved. -->
+<!-- DiffPage: a changed file's diff in the main area, as VS Code opens one in an editor tab: the tab "demo.jsnb (Working Tree)" or "(Index)", or "(On Disk ↔ Yours)" for a conflict's Compare (the open notebook's file against the page's state, notebook.compareDisk), with its close button; a toolbar with Previous and Next Change (Shift Alt F5, Alt F5), Inline or Side by Side, the notebook diff's gear and Open File; then the notebook diff (NotebookDiffView), a text diff (TextDiff), or one line for a binary or oversized file or a submodule (the commits each side records). The diff is read again when the repository's status changes (a save, a stage), or the file is merged or saved. -->
 <script setup lang="ts">
 import { ArrowDown, ArrowUp, Columns2, GitCompare, NotebookText, Rows2, X } from "@lucide/vue";
 import { computed, ref, shallowRef, watch } from "vue";
@@ -32,8 +32,7 @@ async function load(): Promise<void> {
   const now = target.value;
   if (now === null) return;
   const mine = (asked += 1);
-  const got =
-    now.disk === true ? await git.compareDisk(now.path) : await git.diff(now.path, now.staged);
+  const got = now.disk === true ? await git.compareDisk(now.path) : await git.diff(now);
   if (mine !== asked) return; // a later file or status took over
   failed.value = got === undefined;
   const before = answer.value;
@@ -72,17 +71,14 @@ watch(
     if (asked !== null) step(asked.by);
   },
 );
-const title = computed(() =>
-  target.value === null
-    ? ""
-    : diffTitle(target.value.path, target.value.staged, target.value.disk === true),
-);
+const title = computed(() => (target.value === null ? "" : diffTitle(target.value)));
 const notebook = computed(() => target.value?.path.endsWith(".jsnb") === true);
 /** The old path of a renamed file, as VS Code's tab says "old ↔ new". */
 const renamedFrom = computed(() => {
   const now = target.value;
   const repo = git.repo;
-  if (now === null || repo === null) return undefined;
+  if (now === null || repo === null || now.commit !== undefined || now.base !== undefined)
+    return undefined;
   const list = now.staged ? repo.staged : repo.changes;
   return list.find((change) => change.path === now.path)?.from;
 });
@@ -162,9 +158,16 @@ const icon = "ui:block-3.5 ui:inline-3.5";
         <p v-else-if="answer.kind === 'tooLarge'" class="ui:m-0 ui:p-6 ui:text-small ui:text-muted">
           Over 1 MiB, not shown.
         </p>
+        <p
+          v-else-if="answer.kind === 'submodule'"
+          class="ui:m-0 ui:p-6 ui:font-mono ui:text-small ui:text-muted"
+        >
+          Submodule {{ answer.submodule?.before?.slice(0, 7) ?? "none" }} →
+          {{ answer.submodule?.after?.slice(0, 7) ?? "none" }}
+        </p>
         <NotebookDiffView
           v-else-if="answer.kind === 'notebook' && answer.notebook !== undefined"
-          :key="`${target.path}:${String(target.staged)}`"
+          :key="`${target.path}:${String(target.staged)}:${target.commit ?? target.base ?? ''}`"
           :diff="answer.notebook"
           :side-by-side="sideBySide"
           @command="(id, args) => emit('command', id, args)"
@@ -178,7 +181,7 @@ const icon = "ui:block-3.5 ui:inline-3.5";
           </p>
           <TextDiff
             ref="text"
-            :key="`${target.path}:${String(target.staged)}:${String(sideBySide)}:${String(version)}`"
+            :key="`${target.path}:${String(target.staged)}:${target.commit ?? target.base ?? ''}:${String(sideBySide)}:${String(version)}`"
             :before="answer.before ?? ''"
             :after="answer.after ?? ''"
             :language="notebook ? 'code' : languageOfPath(target.path)"

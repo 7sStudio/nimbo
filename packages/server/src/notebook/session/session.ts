@@ -20,7 +20,7 @@ import { addCell, deleteCell, markReviewed, moveCell, revertCell, updateCell } f
 import type { Editor } from "./provenance.js";
 import type { ExportRequest } from "./exported.js";
 import { compareCell, exportNotebook } from "./exported.js";
-import type { ExternalState } from "./external.js";
+import type { ExternalOutcome, ExternalState } from "./external.js";
 import {
   conflictOn,
   diskNotice,
@@ -68,6 +68,8 @@ export type Session = SessionRuns & {
   /** notebook.compareDisk: the file on disk against the text a save would write now. */
   readonly compareDisk: (content: boolean) => Promise<ReturnType<typeof diffDisk>>;
   readonly reload: () => Promise<NotebookState>;
+  /** A git operation rewrote the file: merged now, as the watch would (07 §5); `off` when merging is off. */
+  readonly mergeDisk: () => Promise<ExternalOutcome | "off">;
   readonly graph: () => GraphView;
   readonly errors: () => ErrorsView;
   readonly outputQuery: (request: OutputQueryRequest) => Promise<OutputQueryAnswer>;
@@ -104,11 +106,11 @@ function removeCell(
   runs: Pick<SessionRuns, "dropRuns">,
   cell: CellId,
 ): void {
-  const last = context.cells.require(cell).last;
+  const { last, type } = context.cells.require(cell);
   const ended = runs.dropRuns(cell);
   deleteCell(context, cell);
   if (last) context.runs.retained.drop(last.id);
-  void disposeDeleted(context, cell, ended);
+  void disposeDeleted(context, { cell, type }, ended);
 }
 
 /** The cell edits of the session, each answered in the API's form. An edit whose base is not the cell's text holds
@@ -246,7 +248,9 @@ function externalParts(
       if (on()) await context.autosave.exclusive(merge);
     },
   });
-  return { state, watch };
+  const mergeNow = async (): Promise<ExternalOutcome | "off"> =>
+    on() ? context.autosave.exclusive(merge) : "off";
+  return { state, watch, mergeNow };
 }
 
 /** notebook.reload: the file's text in place of the session's; the cells whose text it changed are the file's (a page
@@ -343,7 +347,7 @@ export function createSession(options: SessionOptions): Session {
   const runs = createRuns(context, realm);
   const query = queryParts(options, context);
   const debug = debuggerOf(options, context);
-  const { state, watch } = externalParts(options, context, { runs, hook });
+  const { state, watch, mergeNow } = externalParts(options, context, { runs, hook });
   const opened = recoveryParts(options, context, { state, hook });
   return {
     ...runs,
@@ -368,6 +372,7 @@ export function createSession(options: SessionOptions): Session {
       await reloaded(context, state);
       return stateOf(context, realm.status(), debug.state());
     },
+    mergeDisk: mergeNow,
     ...readers(options, context, query),
     realm: { ...realm, restart: runs.restartRealm },
     debug,

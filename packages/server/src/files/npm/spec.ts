@@ -5,12 +5,19 @@
 // with a dot (`.jsnb/`, `.env`, `.git/`, `.npmrc`) and ends in a module source extension; a package subpath holds no
 // segment that starts with a dot either, and what a package's bundle reads is checked in
 // packageBundle.ts (packageFileAllowed). `_/<key>/<name>[/<subpath>]` is the resolved form of a package folder the
-// daemon recorded (packageIndex.ts): a package name never starts with `_`. A legacy name with capitals
+// daemon recorded (packageIndex.ts): a package name never starts with `_`. `<name>/.chunks/<hash>.js` (either form) is
+// a chunk of the package's split bundle (packageGroup.ts): a dot segment no package subpath may hold, so it names no
+// file of the package and is served from the cache alone. A legacy name with capitals
 // (`JSONStream`) is a name, as npm still installs it, and `name/` with one trailing slash is the
 // package `name`, as Node reads it. A refused path is a bare 404 (npmModules.ts).
 import { extname, isAbsolute, parse, relative, sep } from "node:path";
 
-type Named = { readonly name: string; readonly subpath: string };
+type Named = {
+  readonly name: string;
+  readonly subpath: string;
+  /** The chunk `<hash>` of `<name>/.chunks/<hash>.js`, whose subpath is then `""`. */
+  readonly chunk?: string;
+};
 
 export type NpmSpec =
   | { readonly kind: "relative"; readonly path: string }
@@ -28,6 +35,9 @@ const moduleExtensions: ReadonlySet<string> = new Set([
   ".cts",
   ".tsx",
 ]);
+
+/** A chunk's file name as esbuild's `[hash]` makes it. */
+const chunkName = /^([A-Z0-9]{8})\.js$/;
 
 /** npm's name rule, capitals allowed in an unscoped name as in the legacy names npm still installs (`JSONStream`). */
 const packageName = /^(?:@[a-z0-9-~][a-z0-9-._~]*\/)?[A-Za-z0-9-~][A-Za-z0-9-._~]*$/;
@@ -107,6 +117,12 @@ const withoutTrailingSlash = (segments: readonly string[]): readonly string[] =>
     ? segments.slice(0, -1)
     : segments;
 
+/** The hash of a chunk's subpath segments (`.chunks`, `<hash>.js`); undefined for any other subpath. */
+const chunkIn = (subpath: readonly string[]): string | undefined =>
+  subpath.length === 2 && subpath[0] === ".chunks"
+    ? chunkName.exec(subpath[1] ?? "")?.[1]
+    : undefined;
+
 /** A package name and subpath from its segments; undefined for a name npm refuses or a hidden subpath segment. */
 function namedOf(segments: readonly string[]): Named | undefined {
   const [first = ""] = segments;
@@ -114,6 +130,8 @@ function namedOf(segments: readonly string[]): Named | undefined {
   const name = scoped ? segments.slice(0, 2).join("/") : first;
   if (!packageName.test(name)) return undefined;
   const subpath = segments.slice(scoped ? 2 : 1);
+  const chunk = chunkIn(subpath);
+  if (chunk !== undefined) return { name, subpath: "", chunk };
   if (subpath.some((segment) => segment.startsWith("."))) return undefined; // a package's hidden file or folder
   return { name, subpath: subpath.join("/") };
 }
@@ -121,7 +139,8 @@ function namedOf(segments: readonly string[]): Named | undefined {
 /** The package a bare import names (`ms`, `@scope/pkg/sub`), as written in a module; undefined when it names none. */
 export const packageSpecOf = (spec: string): Named | undefined => {
   const segments = withoutTrailingSlash(spec.split("/"));
-  return segments.some(isRefused) ? undefined : namedOf(segments);
+  const named = segments.some(isRefused) ? undefined : namedOf(segments);
+  return named?.chunk === undefined ? named : undefined; // a chunk is no import a module writes
 };
 
 /** The segments below /npm/, decoded, a page form's trailing slash after its name dropped; undefined when malformed. */

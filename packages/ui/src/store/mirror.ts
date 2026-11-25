@@ -29,6 +29,8 @@ export type Mirror = {
   readonly executions: ReadonlyMap<CellId, Execution>;
   readonly graph: ReadonlyMap<CellId, GraphEntry>;
   readonly routes: readonly Route[];
+  /** When the bridge last reported push-event activity (bridge.activity); null before any. */
+  readonly bridgeActivity: string | null;
   /** The seq of the last applied event. */
   readonly seq: number;
   readonly saveState: SaveState;
@@ -53,6 +55,7 @@ export const emptyMirror: Mirror = {
   executions: new Map(),
   graph: new Map(),
   routes: [],
+  bridgeActivity: null,
   seq: 0,
   saveState: "saved",
   saveError: null,

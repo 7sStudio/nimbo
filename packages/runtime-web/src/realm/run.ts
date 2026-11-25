@@ -10,6 +10,7 @@ import { createDisplay } from "../display/display.js";
 import { createBuiltins } from "./builtins.js";
 import type { Disposers } from "./disposers.js";
 import { createDisposers } from "./disposers.js";
+import type { EventListeners } from "./events.js";
 import type { ListenerRegistry } from "./listeners.js";
 import type { PauseClock } from "../bridge/stub.js";
 import type { RealmLimits } from "./options.js";
@@ -27,6 +28,8 @@ export type RunContext = {
   readonly containers: Containers;
   /** The realm's one listener registry (04-kernel §7). */
   readonly listeners: ListenerRegistry;
+  /** The realm's `on` listeners (05-bridge §6). */
+  readonly events: EventListeners;
   readonly reports: Reports;
   readonly importModule: (specifier: string) => Promise<unknown>;
   readonly errorInfo: (error: unknown) => ErrorInfo;
@@ -124,7 +127,11 @@ export function createRun(
   const defines = new Set<string>();
   const display = createDisplay(containerOf(context, cell, flags));
   const { env, listeners } = context;
-  const builtins = createBuiltins({ env, display, disposers, listeners, streams, reportError });
+  const on = context.events.on({
+    ...{ disposers, streams, report, reportError },
+    maxValueBytes: limits.maxValueBytes,
+  });
+  const builtins = createBuiltins({ env, display, disposers, listeners, streams, reportError, on });
   const onDefine = (name: string): void => {
     if (flags.inProgress) defines.add(name);
   };

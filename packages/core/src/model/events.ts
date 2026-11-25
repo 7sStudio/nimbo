@@ -36,6 +36,7 @@ export const eventTypes = [
   "cells.autoRun",
   "cell.diagnostics",
   "routes.changed",
+  "bridge.activity",
   "kernel.status",
   "realm.status",
   "debug.paused",
@@ -48,6 +49,8 @@ export const eventTypes = [
   "keybindings.changed",
   "notebooks.changed",
   "git.changed",
+  "git.progress",
+  "git.running",
 ] as const;
 export type EventType = (typeof eventTypes)[number];
 
@@ -114,6 +117,8 @@ export const eventData = {
     .readonly(),
   "cell.diagnostics": CellDiagnostics,
   "routes.changed": z.object({ routes: z.array(Route).readonly() }).readonly(),
+  /** Push events moved since the last one (emitted, delivered or dropped): bridge.events has new counts. */
+  "bridge.activity": z.object({ at: z.string() }).readonly(),
   "kernel.status": KernelStatus,
   "realm.status": RealmStatus,
   "debug.paused": DebugPause,
@@ -153,6 +158,8 @@ export const eventData = {
         .readonly(),
     })
     .readonly(),
+  "git.progress": z.object({ operation: z.string(), line: z.string() }).readonly(),
+  "git.running": z.object({ operation: z.string().nullable() }).readonly(),
 } as const satisfies Record<EventType, z.ZodType>;
 
 const envelope = <T extends EventType>(type: T) =>
@@ -186,6 +193,7 @@ export const EventEnvelope = z.discriminatedUnion("type", [
   envelope("cells.autoRun"),
   envelope("cell.diagnostics"),
   envelope("routes.changed"),
+  envelope("bridge.activity"),
   envelope("kernel.status"),
   envelope("realm.status"),
   envelope("debug.paused"),
@@ -198,6 +206,8 @@ export const EventEnvelope = z.discriminatedUnion("type", [
   envelope("keybindings.changed"),
   envelope("notebooks.changed"),
   envelope("git.changed"),
+  envelope("git.progress"),
+  envelope("git.running"),
 ]);
 export type EventEnvelope = z.infer<typeof EventEnvelope>;
 

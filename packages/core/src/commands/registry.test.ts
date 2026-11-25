@@ -39,6 +39,35 @@ describe("commands", () => {
 const debugReads = new Set(["debug.state", "debug.stack", "debug.scope", "debug.variables"]);
 const debugMutations = expected.filter((n) => n.startsWith("debug.") && !debugReads.has(n));
 
+/** The Source Control writes, in registry order (03-api §4.15). */
+const gitMutations = [
+  "git.stage",
+  "git.unstage",
+  "git.discard",
+  "git.commit",
+  "git.fetch",
+  "git.pull",
+  "git.push",
+  "git.publish",
+  "git.sync",
+  "git.cancel",
+  "git.abort",
+  "git.continue",
+  "git.branchCreate",
+  "git.switch",
+  "git.branchRename",
+  "git.branchDelete",
+  "git.stash",
+  "git.stashApply",
+  "git.stashPop",
+  "git.stashDrop",
+  "git.init",
+];
+
+const gitDestructive = ["git.discard", "git.abort", "git.stashDrop"];
+
+const gitStreaming = ["git.fetch", "git.pull", "git.push", "git.publish", "git.sync"];
+
 it("the tags mark the mutating commands as 03-api says, the debug.* that change state included", () => {
   const base = [
     "notebook.create",
@@ -64,10 +93,7 @@ it("the tags mark the mutating commands as 03-api says, the debug.* that change 
     ...["keybindings.set", "keybindings.reset", "keybindings.writeFile"],
     "examples.copy",
     "feedback.update",
-    "git.stage",
-    "git.unstage",
-    "git.discard",
-    "git.commit",
+    ...gitMutations,
     "cache.clear",
     "sql.install",
     "language.rename",
@@ -79,7 +105,7 @@ it("the tags mark destructive, internal, streaming, idempotent and planned comma
   const workspace = ["workspace.stop", "workspace.open"];
   const destructive = [...workspace, "notebook.close", "notebook.delete", "cell.delete"];
   const restarts = ["kernel.restart", "realm.restart"];
-  expect(tagged("destructive")).toEqual([...destructive, ...restarts, "git.discard"]);
+  expect(tagged("destructive")).toEqual([...destructive, ...restarts, ...gitDestructive]);
   const internal = ["realm.attach", "realm.detach", "realm.report", "events.subscribe"];
   expect(tagged("internal")).toEqual([
     ...internal,
@@ -95,6 +121,7 @@ it("the tags mark destructive, internal, streaming, idempotent and planned comma
     "packages.add",
     "packages.remove",
     "events.subscribe",
+    ...gitStreaming,
     "sql.install",
   ]);
   const reviews = ["cell.revert", "cell.markReviewed"];
@@ -112,7 +139,7 @@ it("the tags mark destructive, internal, streaming, idempotent and planned comma
     "cache.clear",
     "sql.install",
   ]);
-  expect(tagged("planned")).toEqual(["cell.snapshot"]);
+  expect(tagged("planned")).toEqual([]);
 });
 
 describe("commandByName and publicCommands", () => {

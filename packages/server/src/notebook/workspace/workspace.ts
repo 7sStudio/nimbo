@@ -151,7 +151,7 @@ async function closeAll(
 ): Promise<void> {
   stopListWatch();
   debugAdapter.stop();
-  parts.git.close();
+  await parts.git.close();
   await parts.language.close();
   await parts.packages.close();
   await parts.notebooks.closeAll();

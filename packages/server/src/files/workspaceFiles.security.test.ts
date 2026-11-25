@@ -60,17 +60,13 @@ describe("the workspace's .jsnb", () => {
   });
 });
 
+const jsnbFolders = ["logs", "recovery", "cache", "cache/npm", "cache/sql"];
+
 describe("the folders and the logs of .jsnb", () => {
   it("as symbolic links out of the workspace are refused WorkspaceUnusable, nothing written through them", async () => {
     await withWorkspace(async (ws) => {
       const outside = await within(ws, "outside");
-      for (const [index, folder] of [
-        "logs",
-        "recovery",
-        "cache",
-        "cache/npm",
-        "cache/sql",
-      ].entries()) {
+      for (const [index, folder] of jsnbFolders.entries()) {
         const work = await within(ws, `work-${String(index)}`);
         await mkdir(work.path(".jsnb", folder, ".."), { recursive: true });
         await symlink(outside.dir, work.path(".jsnb", folder));

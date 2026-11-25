@@ -269,9 +269,11 @@ Where next: run `nimbo` with no arguments to open Home, then open one of the [ex
   `execution.autoRunDependents` is on: then a cell's run re-runs its stale dependents, except cells marked manual.
 - The **bridge**: exported functions become async calls from client cells, exported values arrive as copies, and
   anything that cannot cross (a class instance, a live client) is refused with an error naming it.
+- **Push events**: `emit("progress", data)` in a server cell reaches `on("progress", (data) => …)` in a client
+  cell, live, for progress bars and dashboards fed by a loop or a timer.
 - **HTTP routes** with standard `Request` and `Response`, served at `/n/<notebook>/<path>`; every request is logged
   under its cell and in the Activity log.
-- Reload or leave the page and come back: the kernel keeps its state and client cells run again. Notebooks autosave.
+- Reload or leave the page and come back: the kernel keeps its state and the outputs stay; run client cells again to rebuild what they drew. Notebooks autosave.
 
 <img alt="Two cells: a server cell exports totalsByRegion, and a client cell awaits it and draws four bars with their totals; the Inspector's Bridge section shows the function's TypeScript signature, its caller cell 4 and the last call." src="docs/assets/readme/bridge-server-and-client-cells.png">
 
@@ -311,6 +313,8 @@ Where next: run `nimbo` with no arguments to open Home, then open one of the [ex
 - Each cell records who edited it last. An agent's edit that you have not reviewed keeps the code it replaced, marks
   the changed lines and offers **Mark reviewed**, **Revert** and **Full diff**; the Agent view lists them all.
 - You watch the agent's cells appear and run live in the page.
+- An agent reads what a client cell renders without a screenshot: `nimbo cell snapshot <cell>` (MCP
+  `cell_snapshot`) answers its visible text, and its sanitised HTML with `--html`.
 
 <img alt="The Agent view lists one edit to review: cell 3, orderTotal, lines 1, 4 to 5 and 7 changed by claude-code over MCP, with Mark reviewed, Revert and Full diff; in the notebook those lines carry a purple bar." src="docs/assets/readme/agent-edit-review.png">
 
@@ -318,7 +322,9 @@ Where next: run `nimbo` with no arguments to open Home, then open one of the [ex
 
 - A `.jsnb` file is JSON with each cell's source as a list of lines and stable cell ids, so it diffs and merges well.
   Secrets are never in it; outputs only if you turn on `outputs.save`.
-- A **Source Control** view (status, stage, unstage, discard, commit) and a rendered notebook diff, cell by cell.
+- A **Source Control** view (status, stage, unstage, discard, commit and amend) and a rendered notebook diff, cell by
+  cell; fetch, pull, push, publish and sync with your own git credentials and pull strategy, branches, stash, and the
+  history of the branch or of one notebook with its diff at any commit. What can lose work asks first.
 - `nimbo diff` prints the same diff in the terminal; `nimbo export page.html` writes the notebook as one HTML page.
 
 ### Keyboard and workspace
@@ -408,6 +414,7 @@ nimbo examples copy --name 01-data && nimbo open 01-data.jsnb
 | `nimbo add <package>`                               | Install npm packages into the workspace                          |
 | `nimbo debug set-breakpoint --cell <id> --line <n>` | Debug a server cell (`stack`, `scope`, `evaluate`, `resume`, …)  |
 | `nimbo diff`                                        | What git sees, notebooks cell by cell                            |
+| `nimbo git pull`                                    | Git from the CLI (`push`, `switch`, `stash`, `log`; `--yes`)     |
 | `nimbo export page.html`                            | The notebook as one HTML page                                    |
 | `nimbo config set ui.theme dark`                    | Change a setting (`--user` or `--workspace`)                     |
 | `nimbo stop`                                        | Stop nimbo for this workspace                                    |
@@ -423,7 +430,7 @@ nimbo examples copy --name 01-data && nimbo open 01-data.jsnb
 - The **page** is a client of the daemon and runs the client cells. The CLI and the MCP server are clients too; all
   three go through one registry of commands, so none can do what the others cannot.
 - A client cell's call to a server function goes page → daemon → kernel and back, its arguments and result copied and
-  redacted on the way.
+  the result redacted on the way.
 - The **`.jsnb`** file is plain JSON next to your code; secrets live in `.env`.
 
 ```mermaid
@@ -439,13 +446,14 @@ flowchart LR
   page <-->|"WebSocket, token"| daemon
   cli -->|"HTTP, token"| daemon
   mcp -->|"HTTP, token"| daemon
+  daemon <--> dbg["js-debug<br/>(the debugger)"]
   web -->|"/n/notebook/path"| daemon
   daemon <--> k1
   daemon <--> k2
   daemon --- files
 ```
 
-The specification lives in [docs/](docs/00-overview.md): architecture, API, kernel, bridge, file format and UI.
+The specification lives in [docs/](docs/00-overview.md): [architecture](docs/02-architecture.md), API, kernel, bridge, file format, code standards, testing and queries.
 
 ## Security and privacy
 
@@ -474,7 +482,6 @@ Known limits today:
 Planned, not yet available:
 
 - A headless browser page, so agents can run client cells and take screenshots on their own
-- Server-to-page push events (`emit` and `on`)
 - A tutorial mode that walks a new user through the concepts
 - Add-ons, starting with a Stripe add-on (webhook forwarding, signature checks, a request log)
 - A desktop app

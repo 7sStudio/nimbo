@@ -30,6 +30,8 @@ export type NodeKernel = Kernel &
     /** The current export table: each exported name and the cell that exported it. */
     readonly exports: () => readonly ExportEntry[];
     readonly routes: () => readonly Route[];
+    /** Whether a page holds the client realm: without one, `emit` drops at once (05-bridge §6). */
+    readonly listening: (listening: boolean) => void;
     /** SIGKILL now; like stop(), idempotent and never reported to onExit. */
     readonly kill: () => Promise<void>;
   };
@@ -59,6 +61,7 @@ async function begin(
     throw state.death;
   }
   state.session = session;
+  send(context, session, { type: "page", listening: options.pageListening?.() ?? true });
   const { inspectorUrl } = session.ready;
   return inspectorUrl === undefined ? {} : { inspectorUrl };
 }
@@ -114,5 +117,9 @@ export function createKernel(options: NodeKernelOptions, logFilter: LogFilter): 
     },
     exports: () => context.state.exports,
     routes: () => context.state.routes,
+    listening: (listening) => {
+      const { session } = context.state;
+      if (session) send(context, session, { type: "page", listening });
+    },
   };
 }

@@ -9,7 +9,7 @@ import { readNotebook } from "../../files/notebooks/notebookFile.js";
 import type { SessionContext } from "./context.js";
 import { loadDocument } from "./fileForm.js";
 import { restale } from "./edits.js";
-import { disposeUnserved } from "./runs/disposeDeleted.js";
+import { disposeUnclient, disposeUnserved } from "./runs/disposeDeleted.js";
 import type { CellRecord } from "./records.js";
 
 const sameCell = (a: CellRecord, b: CellRecord): boolean =>
@@ -55,13 +55,37 @@ function emitChanges(context: SessionContext, done: Plan, keptBefore: readonly C
 }
 
 /** The ids of the server cells now. */
-const serverCells = (context: SessionContext): readonly CellId[] =>
+const cellsOf = (context: SessionContext, type: "server" | "client"): readonly CellId[] =>
   context.cells
     .list()
-    .filter((record) => record.type === "server")
+    .filter((record) => record.type === type)
     .map((record) => record.id);
 
-/** Puts `next` in place of the session's cells: the events, the stale flags, the kernel's disposals; `removing` hears
+/** Read before the reload, run after it: a server cell the file removed or switched has its routes and timers end in
+ * the kernel, a client cell its timers and listeners end in the page. */
+function leftBehind(context: SessionContext): () => void {
+  const served = cellsOf(context, "server");
+  const clients = cellsOf(context, "client");
+  return () => {
+    for (const id of served) void disposeUnserved(context, id);
+    for (const id of clients) void disposeUnclient(context, id);
+  };
+}
+
+/** The stale cells after the reconcile: what depended on a removed, changed or added cell. */
+function restaleAfter(
+  context: SessionContext,
+  before: ReturnType<SessionContext["cells"]["graph"]>,
+  done: Plan,
+): void {
+  let stale: StaleMap = context.cells.stale();
+  for (const id of done.removed) stale = afterDelete(before, stale, id);
+  for (const id of [...done.changed, ...done.added])
+    stale = afterEdit(context.cells.graph(), stale, id);
+  restale(context, stale);
+}
+
+/** Puts `next` in place of the session's cells: the events, the stale flags, the realms' disposals; `removing` hears
  * each cell that goes before it does. */
 export function applyRecords(
   context: SessionContext,
@@ -82,7 +106,7 @@ export function applyRecords(
   };
   const before = context.cells.graph();
   const kept = context.cells.order().filter((id) => !done.removed.includes(id));
-  const served = serverCells(context);
+  const left = leftBehind(context);
   for (const id of done.removed) {
     removing(id);
     const last = context.cells.get(id)?.last;
@@ -90,14 +114,9 @@ export function applyRecords(
   }
   context.cells.replaceAll(done.next);
   emitChanges(context, done, kept);
-  let stale: StaleMap = context.cells.stale();
-  for (const id of done.removed) stale = afterDelete(before, stale, id);
-  for (const id of [...done.changed, ...done.added])
-    stale = afterEdit(context.cells.graph(), stale, id);
-  restale(context, stale);
+  restaleAfter(context, before, done);
   for (const id of done.changed) context.hooks.edited(id, before);
-  // a server cell the file removed or made a client or markdown cell: its routes and timers end in the kernel
-  for (const id of served) void disposeUnserved(context, id);
+  left();
   return done;
 }
 

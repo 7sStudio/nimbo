@@ -1,7 +1,7 @@
 // The context of a notebook session (02-architecture §2, §4): its cells from the loaded file, its kernel supervisor with
 // the kernel's log, status and routes as events, its autosave, its retained values, all sharing one emit and log.
-import type { IdGenerator, Settings } from "@jsnb/core";
-import type { KernelEntry } from "@jsnb/kernel-node";
+import type { IdGenerator, KernelStatus, Route, Settings } from "@jsnb/core";
+import type { EventBatch, ExportEntry, KernelEntry, LateOutput } from "@jsnb/kernel-node";
 
 import type { EventBus } from "../../events/bus.js";
 import type { Log } from "../../events/log.js";
@@ -66,6 +66,32 @@ const kernelConfig = (settings: Settings) => ({
 
 type Parts = { readonly emit: Emit; readonly log: Log; readonly hooks: SessionHooks };
 
+/** What the kernel reports outside a call: status and routes as events, the rest to the session's hooks. */
+function sinkOf(parts: Parts, writeLog: (line: string) => void) {
+  const { emit, hooks } = parts;
+  return {
+    status: (status: KernelStatus) => {
+      emit("kernel.status", status);
+    },
+    output: (late: LateOutput) => {
+      hooks.lateOutput(late);
+    },
+    exports: (names: readonly ExportEntry[]) => {
+      hooks.exports(names);
+    },
+    routes: (routes: readonly Route[]) => {
+      emit("routes.changed", { routes: [...routes] });
+    },
+    events: (batch: EventBatch) => {
+      hooks.events(batch);
+    },
+    ended: () => {
+      hooks.kernelEnded();
+    },
+    log: writeLog,
+  };
+}
+
 /** The notebook's kernel supervisor: status and routes as events, late outputs and exports to the session's hooks. */
 function kernelOf(
   options: SessionOptions,
@@ -73,7 +99,6 @@ function kernelOf(
   writeLog: (line: string) => void,
   launched: (budget: number) => void,
 ): KernelSupervisor {
-  const { emit, hooks } = parts;
   const config = () => {
     const made = kernelConfig(options.settings());
     launched(made.limits.retainMaxBytes); // the budget this kernel cuts full forms at
@@ -87,24 +112,8 @@ function kernelOf(
       entry: options.kernelEntry,
     },
     ...{ now: options.now, log: parts.log, config },
-    sink: {
-      status: (status) => {
-        emit("kernel.status", status);
-      },
-      output: (late) => {
-        hooks.lateOutput(late);
-      },
-      exports: (names) => {
-        hooks.exports(names);
-      },
-      routes: (routes) => {
-        emit("routes.changed", { routes: [...routes] });
-      },
-      ended: () => {
-        hooks.kernelEnded();
-      },
-      log: writeLog,
-    },
+    pageListening: () => parts.hooks.pageAttached(),
+    sink: sinkOf(parts, writeLog),
   });
 }
 
@@ -133,7 +142,7 @@ export type OwnedContext = SessionContext & {
   readonly moveLog: (to: string) => Promise<void>;
 };
 
-/** The context of a session over `options`: its kernel is created, not started. */
+/** The session's hooks before the parts that use them are wired. */
 /** The hooks before the session's parts wire theirs. */
 const defaultHooks = (): SessionHooks => ({
   lateOutput: () => undefined,
@@ -143,6 +152,9 @@ const defaultHooks = (): SessionHooks => ({
   debuggerLines: () => [],
   debugPause: () => Promise.resolve({ reason: "pause" }),
   debugResumed: () => Promise.resolve(),
+  events: () => undefined,
+  disposeClient: () => undefined,
+  pageAttached: () => false,
   edited: () => undefined,
   runEnded: () => Promise.resolve(),
   deleting: () => undefined,
@@ -150,6 +162,7 @@ const defaultHooks = (): SessionHooks => ({
   autoRunState: () => ({ running: null, pending: [] }),
 });
 
+/** The context of a session over `options`: its kernel is created, not started. */
 export function contextOf(options: SessionOptions, hooks: FileHooks = {}): OwnedContext {
   const { bus, now } = options;
   const log = options.log.child({ notebook: options.ref });

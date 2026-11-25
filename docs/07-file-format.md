@@ -85,6 +85,7 @@ Readable and diffable (JSON, fixed key order, one source line per array element)
   - *Unreadable file* (mid-write, git's conflict markers): the session keeps its cells, `notebook.reconciled { outcome: "unreadable", error }`, and the next change is tried again.
   - *Deleted or moved*: nothing is merged; the move rules below apply, and a file restored at the path is merged as any change.
   - *Off*: `files.mergeExternalChanges: false` leaves the session alone; the next save finds the conflict.
+  - *Git operations* (`git/tree.ts`, 03-api §4.15.1): a pull, switch, stash, apply, pop, abort, continue or discard holds the open notebooks' autosaves while git runs, then runs this merge for each at once (a discard saves the notebook first, so it ends as the index's version); the watch's own event for the same change finds the base already equal to the file and merges nothing again.
   - *The list*: notebooks created, deleted or renamed outside nimbo reach `notebooks.changed` (Home, the Explorer): on macOS and Windows from one recursive watch of the workspace, batched over 300 ms; everywhere, and only so on Linux, from a re-read every 5 s. Only open notebooks are merged, so a branch switch touching hundreds of files costs one list read and one merge per open notebook.
 - **Moves** (`workspace/moves.ts`): the session knows its file by device and inode, taken at open and from each write (an atomic write makes a new inode). Every 2 s for each open notebook, before any `notebook.open`, and inside a save that finds nothing at the path, the daemon looks for a file gone from its path: it scans the workspace's notebooks for that identity, and exactly one match inside the workspace, reached through no link and not open under another ref, is followed. The session takes the new ref and path in place: `notebook.moved { path, to }` on the old stream (whose subscribers then receive the new one), the kernel log renamed with it, the kernel running on, then `notebooks.changed`; the page reloads at the new address. `notebook.rename` of an open notebook moves the file between saves and follows it the same way. No match (moved out of the workspace, into a hidden folder, across devices, deleted) changes nothing: the next save writes the old path again. A notebook opened through a link is not followed. A save never recreates the workspace folder (`WorkspaceGone`, §7).
 
@@ -123,8 +124,11 @@ A workspace is a folder containing `.jsnb/` (03-api §2); the daemon creates it 
     keybindings.json  workspace keybindings (§6)
     loader.mjs      written at kernel start: the ESM loader packages are imported through (04-kernel §8.1)
     cache/
-      npm/<name>@<version>/  bundles for /npm/<spec> (04-kernel §8.1): index.js or <subpath>.js, meta.json (last),
-                             <bundle>.imports.json, <bundle>.inputs.json (linked packages)
+      npm/<name>@<version>/  bundles for /npm/<spec> (04-kernel §8.1): index.js or @<subpath>.js, meta.json (last);
+                             a split build's chunks/<hash>.js, group.json (entry, chunk, previous chunk sizes),
+                             unsplit.json (a package built entry by entry),
+                             group.imports.json, group.inputs.json (linked packages); a standalone
+                             bundle's <bundle>.imports.json, <bundle>.inputs.json (linked packages)
       npm/_/<key>/           bundles for /npm/_/<key>/..., folders reached from a bundle's imports
       npm/_index.json        { entries: { <key>: { name, version, folder, from } } }
       sql/                   the daemon SQL engine's transient load/export files and DuckDB's spill folder __nimbo_temp/ (11-query §3)

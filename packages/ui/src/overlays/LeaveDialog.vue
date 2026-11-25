@@ -1,5 +1,6 @@
 <!-- LeaveDialog: going to Home with changes that are not on disk (a save that failed or conflicts, text typed and not sent), laid out as shadcn's dialog: the question and one line under it, the close button as Cancel, then Don't Save and Save (Overwrite in a conflict, as the conflict banner's). Don't Save drops the typed text and, after a failed or conflicting save, reloads the notebook from its file so the daemon's copy loses the unsaved edits, then goes. -->
 <script setup lang="ts">
+import { consent } from "../commands/consent";
 import { computed } from "vue";
 
 import { useDispatcher } from "../commands/dispatch";
@@ -17,7 +18,7 @@ const conflict = computed(() => notebook.mirror.saveState === "conflict");
 /** Edits the daemon holds and could not write: only then does Don't Save reload from the file (autosave writes the rest). */
 const stuck = computed(() => conflict.value || notebook.mirror.saveState === "failed");
 
-const leave = () => dispatcher.dispatch("ui.home.open", { confirmed: true });
+const leave = () => dispatcher.dispatch("ui.home.open", { consent: consent() });
 /** Sends the typed text, then saves; a save that fails keeps the page (its banner says why). */
 async function save(): Promise<void> {
   ui.overlay = null;

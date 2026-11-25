@@ -11,6 +11,11 @@ export type AtomicWriteOptions = {
   /** Whether the file now at the path (its text, undefined when none) may be replaced: checked on the file the
    * replace actually took, which is put back when it may not (another program wrote it meanwhile). */
   readonly replaces?: (current: string | undefined) => boolean;
+  /**
+   * False: no fsync before the rename, for a cache file whose reader checks it against a record written durably
+   * after it (a crash can then leave it short, never half of another file's content under its name).
+   */
+  readonly durable?: boolean;
 };
 
 /** The write did not happen: the file at the path changed meanwhile and is left as that program wrote it. */
@@ -101,7 +106,7 @@ export async function writeAtomically(
   try {
     await handle.writeFile(text);
     await handle.chmod(mode); // the umask may have narrowed the mode open() was given
-    await handle.sync();
+    if (options.durable !== false) await handle.sync();
     const stats = await handle.stat();
     written = { dev: stats.dev, ino: stats.ino };
   } catch (error) {

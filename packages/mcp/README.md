@@ -34,8 +34,9 @@ that stops reading ends it at once, quietly.
 - The arguments are checked with the command's schema first: a bad call is `InvalidParams` and reaches no daemon.
   Nothing is defaulted: `notebook` is the notebook's path from the workspace root, as the schema requires. A notebook
   that exists but is not open is opened first and the call made again (`openingClosed` of `@jsnb/client`).
-- A planned tool (`cell_snapshot`), called by name, is answered `NotAvailable` (1009) from the registry once its arguments
-  check, and never seeks, starts or asks a daemon.
+- A planned tool (none now), called by name, is answered `NotAvailable` (1009) from the registry once its arguments
+  check, and never seeks, starts or asks a daemon. `cell_snapshot` answers a client cell's visible text (`html: true`
+  adds its sanitised HTML) from the tab holding the notebook; `bridge_events` counts the push events by name.
 - A success is the output as `structuredContent` and the same JSON as text (what `nimbo … --json` prints). A failure is
   `isError: true` with `{ code, name, message, data }` as JSON text, and no `structuredContent`.
 - A result's whole frame (structuredContent and text) carries at most 128 KiB, about 64 KiB of text, under Claude Code's
@@ -52,9 +53,13 @@ that stops reading ends it at once, quietly.
   `base` (the `textHash` from `cell_get`) to `cell_update` and `cell_run`: an edit over a source changed since (by the
   file, the page or another agent) is then a conflict, and without it the answer's `notice` says the cell had changed
   on disk.
-- Source Control: `git_status`, `git_diff` (a notebook cell by cell, hunks only),
-  `git_stage`, `git_unstage`, `git_discard` (destructive), `git_commit`; the server's instructions tell agents to read a
-  notebook's changes with `git_diff`, not by diffing its JSON.
+- Source Control: `git_status`, `git_diff` (a notebook cell by cell, hunks only; `commit` for a commit's change),
+  `git_log`, `git_show`, `git_branches`, `git_stashList` (read-only); `git_stage`, `git_unstage`, `git_commit` (with
+  `amend`), `git_fetch`, `git_pull`, `git_push`, `git_publish`, `git_sync`, `git_cancel`, `git_continue`,
+  `git_branchCreate`, `git_switch`, `git_branchRename`, `git_branchDelete`, `git_stash`, `git_stashApply`,
+  `git_stashPop`, `git_init`; `git_discard`, `git_abort` and `git_stashDrop` are destructive. Each description starts
+  with what it changes, and one that can lose work refuses without `confirm: true` (`GitFailed`, reason `confirm`).
+  The server's instructions tell agents to read a notebook's changes with `git_diff`, not by diffing its JSON.
 
 ## Resources
 

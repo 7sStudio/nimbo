@@ -106,6 +106,27 @@ export class ResultNotSerializable extends JsnbError {
   }
 }
 
+type Emitted = { readonly name: string; readonly type: string };
+const eventNotSerializableMessage = (data: Emitted | (Emitted & Sized)): string => {
+  const which = `The data of emit(${JSON.stringify(data.name)}, ...)`;
+  if ("bytes" in data)
+    return `${which} is ${oversized(data)}. Raise the setting, or emit part of it.`;
+  return `${which} is ${article(data.type)} ${data.type} and cannot be sent to the browser. Emit plain data.`;
+};
+
+/** A server `emit(name, data)` whose data is not plain data, or is too large (05-bridge §6). */
+export class EventNotSerializable extends JsnbError {
+  declare readonly data: Emitted | (Emitted & Sized);
+  constructor(data: Emitted | (Emitted & Sized), options: Cause = {}) {
+    super({
+      name: "EventNotSerializable",
+      message: eventNotSerializableMessage(data),
+      data,
+      ...options,
+    });
+  }
+}
+
 type Timeout = {
   readonly name: string;
   readonly args: readonly unknown[];

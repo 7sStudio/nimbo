@@ -11,6 +11,7 @@ import { useUndoStore } from "../store/undo.js";
 import { appCommands, askSettingsFirst } from "./app.js";
 import type { Args, Command } from "./command.js";
 import { stringArg, uiCommand as ui } from "./command.js";
+import { consented } from "./consent.js";
 
 import { editAt } from "./editAt.js";
 import { overlayCommands } from "./overlays.js";
@@ -151,7 +152,7 @@ const unsaved = (
 /** Going to Home asks first about unsaved Settings (JSON) text, then about notebook changes not on disk. */
 function leaveAsks(args: Args | undefined, store: ReturnType<typeof useUiStore>): boolean {
   if (askSettingsFirst(store, "ui.home.open", args)) return true;
-  if (args?.confirmed === true || !unsaved(useNotebookStore(), store)) return false;
+  if (consented(args) || !unsaved(useNotebookStore(), store)) return false;
   store.overlay = { kind: "confirmLeave" };
   return true;
 }

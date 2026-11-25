@@ -11,7 +11,7 @@ export {
   LoaderWriteFailed,
   UnsupportedNode,
 } from "./ipc/errors.js";
-export type { LateOutput, NodeKernelOptions } from "./ipc/kernelOptions.js";
+export type { EventBatch, LateOutput, NodeKernelOptions } from "./ipc/kernelOptions.js";
 export type { ExportEntry, KernelLimits } from "./ipc/messages.js";
 export type { RequestOptions } from "./ipc/kernelRequests.js";
 export type { NodeKernel } from "./ipc/nodeKernel.js";

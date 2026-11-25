@@ -58,13 +58,20 @@ function settingsDrafts() {
   };
 }
 
+/** What the diff page compares: a working file (staged: the index's side), a commit's change, a commit against the
+ * working tree (base), or an open notebook's file on disk against the page's state (disk: a conflict's Compare). */
+export type DiffTarget = {
+  readonly path: string;
+  readonly staged: boolean;
+  readonly commit?: string;
+  readonly base?: string;
+  readonly disk?: boolean;
+};
+
 /** The diff page's state. */
 const diffState = () => ({
-  /** The file the diff editor shows: its path and whether it is the index's side (Staged), or, with `disk`, an open
-   * notebook's file on disk against the page's state (a conflict's Compare). */
-  diff: ref<{ readonly path: string; readonly staged: boolean; readonly disk?: boolean } | null>(
-    null,
-  ),
+  /** The file the diff editor shows (DiffTarget). */
+  diff: ref<DiffTarget | null>(null),
   /** A step asked of the diff editor (Next or Previous Change); `at` tells a repeat apart. */
   diffStep: ref<{ readonly by: 1 | -1; readonly at: number } | null>(null),
 });

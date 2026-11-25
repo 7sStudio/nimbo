@@ -9,7 +9,7 @@ import type {
   NotebookState,
   Settings,
 } from "@jsnb/core";
-import type { ExportEntry, LateOutput } from "@jsnb/kernel-node";
+import type { EventBatch, ExportEntry, LateOutput } from "@jsnb/kernel-node";
 
 import type { EventInput } from "../../events/bus.js";
 import type { Log } from "../../events/log.js";
@@ -34,6 +34,12 @@ export type Emit = <T extends EventType>(type: T, data: EventInput<T>) => void;
 export type SessionHooks = {
   lateOutput: (late: LateOutput) => void;
   exports: (names: readonly ExportEntry[]) => void;
+  /** A flush of the kernel's `emit` calls (05-bridge §6). */
+  events: (batch: EventBatch) => void;
+  /** Whether a page holds the client realm, told to a kernel when it is ready (05-bridge §6). */
+  pageAttached: () => boolean;
+  /** A deleted client cell: the attached page runs its cleanups (its timers, listeners and `on` end). */
+  disposeClient: (cell: CellId) => void;
   /** The kernel died or a restart killed it: the exports it had are gone. */
   kernelEnded: () => void;
   /** Awaited before a server cell's code goes to the kernel: the debugger attaches first when the notebook debugs. */

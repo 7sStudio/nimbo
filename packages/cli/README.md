@@ -88,10 +88,13 @@ workspace-wide command given `-n` (`nimbo add x -n a.jsnb`) says it takes none.
 
 Agents also get, through the generated domains: `nimbo check` / `notebook diagnostics` (type errors without running),
 `nimbo notebook bridge` (the server functions client cells can call, with their TypeScript signatures and callers),
+`nimbo bridge events` (what server cells `emit`, by name: emitted, delivered, dropped and why),
+`nimbo cell snapshot --cell <id>` (a rendered client cell's visible text; `--html` adds its sanitised HTML, `--json`
+the whole answer; it needs the notebook open in a tab),
 `nimbo language rename --name <old> --new-name <new>` (F2's rename across cells, by name or by `--cell` and
 `--position`), `nimbo feedback list [--status all] [--full]` and `nimbo feedback update --id <id> --status done` (the
 notes left on the running app with Cmd Alt F), `nimbo examples list|copy`, `nimbo settings …`, `nimbo cache clear` (the
-package bundles, safe while notebooks run), `nimbo git status|diff|stage|unstage|discard|commit` (Source Control) and `nimbo workspace list-folders|recent-folders|open`.
+package bundles, safe while notebooks run), `nimbo git <verb>` (Source Control: `status`, `diff`, `stage`, `commit`, `fetch`, `pull`, `push`, `publish`, `sync`, `switch`, `branch-create`, `stash`, `stash-pop`, `log`, `show`, `init` and the rest; log, branches, stash list, pull and show print as git does; a verb that can lose work needs `--yes`, or a y/N on a terminal) and `nimbo workspace list-folders|recent-folders|open`.
 
 ## Shortcuts
 

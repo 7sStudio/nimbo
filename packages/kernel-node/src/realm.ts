@@ -179,6 +179,7 @@ export function createRealm(deps: RealmDeps): Realm {
     },
     workspace: deps.workspace,
     log: deps.log,
+    events: { ...deps, maxBytes: deps.config.limits.maxBytesPerValue },
     encode: (value) =>
       encode(value, { maxBytes: deps.config.limits.maxValueBytes, redact: environment.redact })
         .json,

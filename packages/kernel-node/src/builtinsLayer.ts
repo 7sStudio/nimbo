@@ -6,7 +6,8 @@ import type { Output } from "@jsnb/core";
 import { createDisplay } from "./builtins/display.js";
 import type { Disposers } from "./builtins/disposers.js";
 import { createDispose } from "./builtins/disposers.js";
-import { emit } from "./builtins/emit.js";
+import type { EventsMessage } from "./builtins/emit.js";
+import { createEmit } from "./builtins/emit.js";
 import { createWorkspaceRequire } from "./builtins/imports.js";
 import type { RouteTable } from "./builtins/routes.js";
 import { createTimers } from "./builtins/timers.js";
@@ -30,6 +31,13 @@ type BuiltinsDeps = {
   readonly afterCallback: (store: Store | undefined) => void;
   /** A value's wire form under the output limits, redacted (display.json). */
   readonly encode: (value: unknown) => unknown;
+  /** `emit`'s queue and its flush to the daemon (05-bridge §6). */
+  readonly events: {
+    readonly send: (message: EventsMessage) => void;
+    readonly schedule: (flush: () => void) => void;
+    readonly clock: () => string;
+    readonly maxBytes: number;
+  };
 };
 
 export type Builtins = {
@@ -37,6 +45,8 @@ export type Builtins = {
   readonly layer: Readonly<Record<string, unknown>>;
   /** Takes text written to stdout or stderr when a store is current (the sink's), else returns false. */
   readonly write: (stream: StreamName, text: string) => boolean;
+  /** The daemon's word on whether a page listens to `emit`. */
+  readonly listening: (listening: boolean) => void;
 };
 
 /** The wrapped timers and queueMicrotask over the realm's own (04-kernel §7), wired to the current store. */
@@ -65,6 +75,11 @@ export function createBuiltins(deps: BuiltinsDeps): Builtins {
     if (store) sink.emit(store, output);
   };
   const timers = wrappedTimers(deps);
+  const events = createEmit({
+    ...deps.events,
+    currentCell: () => stores.current()?.cell,
+    redact: deps.environment.redact,
+  });
   const layer = {
     console: createConsole((stream, text) => {
       if (!write(stream, text)) deps.log(stream, text);
@@ -77,10 +92,10 @@ export function createBuiltins(deps: BuiltinsDeps): Builtins {
     }),
     route: deps.routes.route,
     routeUrl: deps.routes.routeUrl,
-    emit,
+    emit: events.emit,
     dispose: createDispose(() => stores.current()?.cell, deps.disposers),
     require: createWorkspaceRequire(deps.workspace),
     ...timers,
   };
-  return { layer, write };
+  return { layer, write, listening: events.listening };
 }

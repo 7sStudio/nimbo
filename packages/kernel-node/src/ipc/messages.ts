@@ -1,5 +1,6 @@
 // The daemon ↔ kernel messages of 04-kernel §2.1 as Zod schemas, both directions, and the child's start config.
 import {
+  BridgeEvent,
   CellId,
   ErrorInfo,
   ExecStatus,
@@ -78,6 +79,8 @@ export const DaemonMessage = z.discriminatedUnion("type", [
   RouteRequest.unwrap().extend({ type: z.literal("route"), id: RequestId }),
   /** The cell was deleted: its disposers run now (its routes, timers and listeners end), its scope stays. */
   z.object({ type: z.literal("dispose"), id: RequestId, cell: CellId }),
+  /** Whether a page holds the client realm: without one, `emit` counts and drops at once (05-bridge §6). */
+  z.object({ type: z.literal("page"), listening: z.boolean() }),
   /** Requests whose signal aborted before their result: the kernel starts none of them (04-kernel §2.1). */
   z.object({ type: z.literal("cancel"), ids: z.array(RequestId).readonly() }),
   z.object({ type: z.literal("shutdown") }),
@@ -113,6 +116,19 @@ export type ExportEntry = z.infer<typeof ExportEntry>;
 export const CallRefusal = z.enum(["missing", "value"]);
 export type CallRefusal = z.infer<typeof CallRefusal>;
 
+/** Events the kernel dropped since its last flush, by name (null: names past the flush's name budget), with why
+ * (`overflow`: a burst past the queue; `noPage`: no page was listening) and the last one's time and cell. */
+export const DroppedEvents = z
+  .object({
+    name: z.string().nullable(),
+    count: z.number().int().positive(),
+    why: z.enum(["overflow", "noPage"]),
+    at: z.string(),
+    cell: CellId.optional(),
+  })
+  .readonly();
+export type DroppedEvents = z.infer<typeof DroppedEvents>;
+
 /** Kernel → daemon. `result.redacted` flags a call result that redaction changed (04-kernel §10); `result.refused` says
  * why the kernel refused a call before running anything (04-kernel §2.1). */
 export const KernelMessage = z.discriminatedUnion("type", [
@@ -144,5 +160,11 @@ export const KernelMessage = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("exports"), names: z.array(ExportEntry).readonly() }),
   z.object({ type: z.literal("routes"), routes: z.array(Route).readonly() }),
+  /** `emit(name, data)` calls since the last flush, and those the kernel dropped (05-bridge §6). */
+  z.object({
+    type: z.literal("events"),
+    events: z.array(BridgeEvent).readonly(),
+    dropped: z.array(DroppedEvents).readonly(),
+  }),
 ]);
 export type KernelMessage = z.infer<typeof KernelMessage>;

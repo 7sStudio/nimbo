@@ -276,6 +276,7 @@ function conflicted(saver: Saver, cells: readonly string[]): void {
 const stateOf = (saver: Saver) => ({
   savedAt: saver.savedAt,
   dirty: saver.dirty,
+  mutated: saver.mutated,
   conflict: saver.conflict,
   conflictCells: saver.conflictCells,
 });
