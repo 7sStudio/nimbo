@@ -2,7 +2,11 @@
 // answered at once with reason busy naming it, so nothing waits unseen behind it; git.cancel stops whichever runs.
 import { refusal } from "./tree.js";
 
-type Running = { readonly name: string; readonly controller: AbortController };
+type Running = {
+  readonly name: string;
+  readonly controller: AbortController;
+  done?: Promise<unknown>;
+};
 
 export type Operations = {
   /** Runs a write with its abort signal; busy while another runs. */
@@ -11,6 +15,8 @@ export type Operations = {
   readonly cancel: () => string | null;
   /** The write under way, or null. */
   readonly running: () => string | null;
+  /** Settles when no write runs. */
+  readonly idle: () => Promise<void>;
 };
 
 const busy = (name: string, running: string): Error =>
@@ -26,11 +32,13 @@ export function createOperations(onChange: (running: string | null) => void): Op
   return {
     run: async (name, work) => {
       if (current !== undefined) throw busy(name, current.name);
-      const mine = { name, controller: new AbortController() };
+      const mine: Running = { name, controller: new AbortController() };
       current = mine;
       onChange(name);
       try {
-        return await work(mine.controller.signal);
+        const done = work(mine.controller.signal);
+        mine.done = done.catch(() => undefined);
+        return await done;
       } finally {
         current = undefined;
         onChange(null);
@@ -42,5 +50,8 @@ export function createOperations(onChange: (running: string | null) => void): Op
       return current.name;
     },
     running: () => current?.name ?? null,
+    idle: async () => {
+      await current?.done;
+    },
   };
 }

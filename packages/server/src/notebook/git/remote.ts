@@ -22,7 +22,7 @@ import { statusOf } from "./status.js";
 import { refusal, treeChange } from "./tree.js";
 
 /** A long operation's signal and progress. */
-export type Long = Pick<GitOptions, "signal" | "onProgress">;
+export type Long = Pick<GitOptions, "signal" | "onProgress" | "onHardKill">;
 
 type Strategy = GitPullOutcome["strategy"];
 

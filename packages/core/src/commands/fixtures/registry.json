@@ -10457,7 +10457,20 @@
         },
         "kind": {
           "type": "string",
-          "enum": ["notebook", "text", "binary", "tooLarge"]
+          "enum": ["notebook", "text", "binary", "tooLarge", "submodule"]
+        },
+        "submodule": {
+          "type": "object",
+          "properties": {
+            "before": {
+              "type": ["string", "null"]
+            },
+            "after": {
+              "type": ["string", "null"]
+            }
+          },
+          "required": ["before", "after"],
+          "additionalProperties": false
         },
         "reason": {
           "type": "string",

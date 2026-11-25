@@ -1,6 +1,8 @@
 // git.diff (03-api §4.13): the two sides of one file, which `staged` and `base` pick, then a
 // notebook diff through core's diffNotebooks when both sides parse, else a text diff; binary and oversized sides are
 // named, not diffed. An agent's answer leaves the cells' full sources out: the hunks say what changed.
+import { join } from "node:path";
+
 import type { z } from "zod";
 
 import type { DiffCellSide, gitDiff, GitRepo, NotebookDiff, NotebookDocument } from "@jsnb/core";
@@ -191,9 +193,70 @@ async function mustBeKnown(found: RepoLocation, path: string): Promise<void> {
     });
 }
 
+/** Whether `at` is a submodule (a gitlink, mode 160000) in HEAD or the index. */
+async function isSubmodule(context: GitContext, found: RepoLocation, at: string): Promise<boolean> {
+  const read = { read: true, allowFailure: true } as const;
+  const [head, index] = await Promise.all([
+    context.run(found.top, ["--literal-pathspecs", "ls-tree", "HEAD", "--", at], read),
+    context.run(found.top, ["--literal-pathspecs", "ls-files", "--stage", "--", at], read),
+  ]);
+  return [head, index].some((run) => run.stdout.toString("utf8").startsWith("160000 "));
+}
+
+/** The commit `spec` (`HEAD:sub`, `:0:sub`) records, or null. */
+async function recorded(context: GitContext, top: string, spec: string): Promise<string | null> {
+  const run = await context.run(top, ["rev-parse", "--verify", "--quiet", spec], {
+    read: true,
+    allowFailure: true,
+  });
+  return run.code === 0 ? run.stdout.toString("utf8").trim() : null;
+}
+
+/** Which commits a submodule's diff compares, as specs; no `toSpec` for the working side (its checkout's HEAD). */
+async function submoduleSpecs(context: GitContext, input: DiffInput, at: string) {
+  if (input.commit !== undefined) {
+    const commit = await checkRevision(context.root, input.commit, "commit");
+    const short = commit.slice(0, 7);
+    return {
+      from: `${short}^`,
+      fromSpec: `${commit}^1:${at}`,
+      to: short,
+      toSpec: `${commit}:${at}`,
+    };
+  }
+  if (input.base !== undefined) {
+    const base = await checkRevision(context.root, input.base);
+    return { from: input.base, fromSpec: `${base}:${at}`, to: "worktree", toSpec: undefined };
+  }
+  if (input.staged)
+    return { from: "HEAD", fromSpec: `HEAD:${at}`, to: "index", toSpec: `:0:${at}` };
+  return { from: "index", fromSpec: `:0:${at}`, to: "worktree", toSpec: undefined };
+}
+
+/** A submodule's diff, as git shows it: the commit each side records (the working side is the submodule's HEAD). */
+async function submoduleDiff(
+  context: GitContext,
+  found: RepoLocation,
+  input: DiffInput,
+  path: string,
+): Promise<DiffOutput | undefined> {
+  const at = `${found.prefix}${path}`;
+  if (!(await isSubmodule(context, found, at))) return undefined;
+  const sides = await submoduleSpecs(context, input, at);
+  const before = await recorded(context, found.top, sides.fromSpec);
+  const after =
+    sides.toSpec === undefined
+      ? await recorded(context, join(context.root, ...path.split("/")), "HEAD")
+      : await recorded(context, found.top, sides.toSpec);
+  const { from, to } = sides;
+  return { path, from, to, kind: "submodule", submodule: { before, after } };
+}
+
 export async function diffFile(context: GitContext, input: DiffInput): Promise<DiffOutput> {
   const found = await required(context);
-  const path = await checkPath(context.root, input.path);
+  const path = await checkPath(context.root, input.path, "path", found.gitDirs);
+  const submodule = await submoduleDiff(context, found, input, path);
+  if (submodule !== undefined) return submodule;
   const sides = await sidesOf(context, found, input, path);
   if (sides.before.kind === "none" && sides.after.kind === "none") {
     if (input.commit !== undefined)

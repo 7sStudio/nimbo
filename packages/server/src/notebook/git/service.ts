@@ -1,6 +1,8 @@
 // The git service behind the Source Control commands (03-api §4.15): the status and a file's diff (diff.ts); the
 // writes (writes.ts), remotes (remote.ts), branches (branches.ts), stash (stash.ts) and history (history.ts); each
 // write runs through operations.ts (one at a time, long ones cancellable) and is announced once it ends (announce.ts).
+import { join } from "node:path";
+
 import type { z } from "zod";
 
 import type { gitDiff, GitRepo } from "@jsnb/core";
@@ -22,7 +24,7 @@ import { runnerOf, withOpenEdits } from "./context.js";
 import { diffFile } from "./diff.js";
 import type { GitOptions } from "./exec.js";
 import { log, show } from "./history.js";
-import { clearLeftLocks, locksIn } from "./locks.js";
+import { afterCancel, locksIn, mergeTemporaries } from "./locks.js";
 import type { Operations } from "./operations.js";
 import { createOperations } from "./operations.js";
 import type { Long } from "./remote.js";
@@ -175,22 +177,33 @@ const scoped = (context: GitContext, extra: GitOptions): GitContext => ({
   run: (cwd, args, options = {}) => context.run(cwd, args, { ...extra, ...options }),
 });
 
-/** Runs a write; when it was cancelled, removes the lock files its git left and says what state it left. */
+/** Runs a write; when it was cancelled, cleans up what its git left and says what state it left. */
 async function cancellable<T>(
   context: GitContext,
   signal: AbortSignal,
-  work: () => Promise<T>,
+  work: (extra: GitOptions) => Promise<T>,
 ): Promise<T> {
   const found = await context.location();
-  const before = found === undefined ? new Set<string>() : await locksIn(found.gitDir);
+  const before = {
+    locks: found === undefined ? new Set<string>() : await locksIn(found.gitDir),
+    temporaries: found === undefined ? new Set<string>() : await mergeTemporaries(found.top),
+  };
+  let killed = false;
+  const onHardKill = (): void => {
+    killed = true;
+  };
   try {
-    return await work();
+    return await work({ signal, onHardKill });
   } catch (error) {
     if (!signal.aborted || found === undefined) throw error;
-    await clearLeftLocks(found.gitDir, before);
+    const left = await afterCancel(found.gitDir, found.top, before, killed);
     const { state } = await statusOf(found, context.options);
-    const left = state === "clean" ? "" : `; the repository is ${state}: continue or abort it`;
-    throw refusal("cancel", "cancelled", `cancelled${left}`);
+    const states = state === "clean" ? "" : `; the repository is ${state}: continue or abort it`;
+    const locks =
+      left.length === 0
+        ? ""
+        : `; ${left.map((name) => join(found.gitDir, name)).join(", ")} is held by another git or left behind: once no git runs, delete it`;
+    throw refusal("cancel", "cancelled", `cancelled${states}${locks}`);
   }
 }
 
@@ -207,15 +220,17 @@ export function createGitService(options: GitServiceOptions) {
   const short: Short = (name, work) =>
     announced(() =>
       operations.run(name, (signal) =>
-        cancellable(context, signal, () => work(scoped(context, { signal }))),
+        cancellable(context, signal, (extra) => work(scoped(context, extra))),
       ),
     );
   const long: LongRun = (name, work) =>
     announced(() =>
-      operations.run(name, (signal) => {
-        const run = { signal, onProgress: progressOf(options.bus, name) };
-        return cancellable(context, signal, () => work(run, scoped(context, run)));
-      }),
+      operations.run(name, (signal) =>
+        cancellable(context, signal, (extra) => {
+          const run = { ...extra, onProgress: progressOf(options.bus, name) };
+          return work(run, scoped(context, run));
+        }),
+      ),
     );
   return {
     ...reads(context, operations),
@@ -223,7 +238,12 @@ export function createGitService(options: GitServiceOptions) {
     ...remotes(context, short, long),
     ...branchWrites(context, short),
     cancel: () => ({ cancelled: operations.cancel() }),
-    close: announcer.close,
+    /** The daemon's stop: the write under way is cancelled (SIGTERM, then SIGKILL) and waited for. */
+    close: async () => {
+      operations.cancel();
+      await operations.idle();
+      announcer.close();
+    },
   };
 }
 

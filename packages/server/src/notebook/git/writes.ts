@@ -15,24 +15,25 @@ import type { GitContext } from "./context.js";
 import { required, saveOpen, sessionOf } from "./context.js";
 import { checkMessage, checkPath } from "./paths.js";
 import { isAncestor } from "./refs.js";
+import type { RepoLocation } from "./status.js";
 import { locate, statusOf } from "./status.js";
 import { refusal } from "./tree.js";
 
 type CommitOutput = z.input<typeof gitCommit.output>;
 
-const checked = (context: GitContext, paths: readonly string[]) =>
-  Promise.all(paths.map((path) => checkPath(context.root, path, "paths")));
+const checked = (context: GitContext, found: RepoLocation, paths: readonly string[]) =>
+  Promise.all(paths.map((path) => checkPath(context.root, path, "paths", found.gitDirs)));
 
 export async function stage(context: GitContext, paths: readonly string[]): Promise<void> {
-  await required(context);
-  const list = await checked(context, paths);
+  const found = await required(context);
+  const list = await checked(context, found, paths);
   await saveOpen(context, list);
   await context.run(context.root, ["--literal-pathspecs", "add", "--", ...list]);
 }
 
 export async function unstage(context: GitContext, paths: readonly string[]): Promise<void> {
   const found = await required(context);
-  const list = await checked(context, paths);
+  const list = await checked(context, found, paths);
   const repo = await statusOf(found, context.options);
   // before the first commit there is no HEAD to restore the index from
   const args =
@@ -54,7 +55,7 @@ export async function discard(
   confirm: boolean,
 ): Promise<void> {
   const found = await required(context);
-  const list = await checked(context, paths);
+  const list = await checked(context, found, paths);
   if (!confirm)
     throw refusal(
       "restore",

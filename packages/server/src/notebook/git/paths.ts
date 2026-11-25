@@ -2,7 +2,7 @@
 // workspace folder, inside it (no `..`, no absolute path, no leading `-`), and no symbolic link on its folders leads out
 // of it; a revision is a plain name git resolves to a commit. Every path reaches git after `--`.
 import { lstat, realpath } from "node:fs/promises";
-import { dirname, join, relative, sep } from "node:path";
+import { basename, dirname, join, relative, sep } from "node:path";
 
 import { InvalidParams } from "@jsnb/core";
 
@@ -53,7 +53,12 @@ async function linkTarget(file: string): Promise<string | undefined> {
 
 /** Checks one workspace path; answers it in git's form (`/` separators). A name starting with `-` is a file's: git
  * gets every path after `--`. */
-export async function checkPath(root: string, path: string, field = "path"): Promise<string> {
+export async function checkPath(
+  root: string,
+  path: string,
+  field = "path",
+  gitDirs: readonly string[] = [],
+): Promise<string> {
   if (path.includes("\0")) throw refused(field, path, "a path cannot hold a NUL byte");
   const posix = path.split("\\").join("/");
   if (posix.startsWith("/") || /^[A-Za-z]:/u.test(posix))
@@ -65,7 +70,7 @@ export async function checkPath(root: string, path: string, field = "path"): Pro
   if (clean === "") throw refused(field, path, "name a file");
   if (clean.split("/").some((part) => isGitDir(part)))
     throw refused(field, path, "a path cannot be inside the .git folder");
-  await checkLinks(root, clean, (why) => refused(field, path, why));
+  await checkLinks(root, clean, gitDirs, (why) => refused(field, path, why));
   return clean;
 }
 
@@ -74,16 +79,19 @@ export async function checkPath(root: string, path: string, field = "path"): Pro
 async function checkLinks(
   root: string,
   clean: string,
+  gitDirs: readonly string[],
   refuse: (why: string) => InvalidParams,
 ): Promise<void> {
   const realRoot = await realpath(root);
   const file = join(root, ...clean.split("/"));
   const folder = await existingFolder(dirname(file));
-  if (!isInside(realRoot, folder) || intoGitDir(realRoot, folder))
+  if (!isInside(realRoot, folder))
     throw refuse("a symbolic link takes it outside the workspace folder");
-  const target = await linkTarget(file);
-  if (target !== undefined && intoGitDir(realRoot, target))
-    throw refuse("a symbolic link takes it into the .git folder");
+  const target = (await linkTarget(file)) ?? join(folder, basename(file));
+  const inGit = (at: string) =>
+    intoGitDir(realRoot, at) || gitDirs.some((dir) => isInside(dir, at));
+  if (inGit(folder) || inGit(target))
+    throw refuse("a path cannot be inside the repository's git folder");
 }
 
 const revisionPattern = /^[A-Za-z0-9][A-Za-z0-9._/@~^-]*$/u;

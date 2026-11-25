@@ -40,7 +40,9 @@ export const gitDiff = defineCommand({
     from: z.string(),
     /** What the new side is: `index`, `worktree`, or `none` for a deleted file. */
     to: z.string(),
-    kind: z.enum(["notebook", "text", "binary", "tooLarge"]),
+    kind: z.enum(["notebook", "text", "binary", "tooLarge", "submodule"]),
+    /** A submodule's change: the commit each side records, null where that side has none. */
+    submodule: z.object({ before: z.string().nullable(), after: z.string().nullable() }).optional(),
     /** Why a .jsnb file was diffed as text: a side that does not parse (conflict markers, broken JSON). */
     reason: z.literal("notebookUnreadable").optional(),
     notebook: NotebookDiff.optional(),

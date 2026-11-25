@@ -27,6 +27,8 @@ export type GitOptions = {
   readonly path?: string;
   /** Kills git's process group; the run fails with reason cancelled. */
   readonly signal?: AbortSignal;
+  /** Called when a cancelled git did not end on SIGTERM and was killed. */
+  readonly onHardKill?: () => void;
   /** Each line git writes on stderr as it runs (`--progress`), redacted. */
   readonly onProgress?: (line: string) => void;
 };
@@ -188,10 +190,11 @@ const signalGroup = (child: ChildProcess, signal: NodeJS.Signals): void => {
 
 /** Stops git and what it started (a credential helper, ssh, a hook), its own process group: SIGTERM first, so git
  * removes its lock and temporary files, SIGKILL after a grace period. */
-function killerOf(child: ChildProcess): () => void {
+function killerOf(child: ChildProcess, options: GitOptions): () => void {
   return () => {
     signalGroup(child, "SIGTERM");
     const hard = setTimeout(() => {
+      options.onHardKill?.();
       signalGroup(child, "SIGKILL");
     }, graceMs);
     hard.unref();
@@ -257,7 +260,7 @@ export function git(
       stdio: ["ignore", "pipe", "pipe"],
       detached: true,
     });
-    const kill = killerOf(child);
+    const kill = killerOf(child, options);
     const state = collect(child, options, kill);
     const timer = options.read === true ? setTimeout(kill, readTimeoutMs) : undefined;
     const onAbort = (): void => {

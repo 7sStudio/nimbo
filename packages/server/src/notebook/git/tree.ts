@@ -59,11 +59,14 @@ async function reconcileOpen(context: GitContext, held: readonly Held[]): Promis
     if (!context.notebooks.openRefs().includes(ref)) continue;
     const { autosave } = session.context;
     if (await autosave.inSync()) continue;
-    const edited = autosave.state().mutated;
     const disk = await worktree(context.root, ref);
-    if (edited) autosave.conflicted();
+    if (autosave.state().mutated) autosave.conflicted();
     else if (disk.kind === "none") await context.notebooks.close(ref).catch(() => undefined);
-    else await session.reload().catch(() => undefined); // conflict markers: its autosave suspends at the next edit
+    else {
+      // conflict markers fail the read: the state stays and its autosave suspends at the next edit
+      const reloaded = await session.reloadUnlessEdited().catch(() => true);
+      if (!reloaded) autosave.conflicted();
+    }
   }
 }
 

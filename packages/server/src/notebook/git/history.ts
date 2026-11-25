@@ -48,7 +48,10 @@ export async function log(
   },
 ): Promise<{ commits: GitCommitSummary[]; more: boolean }> {
   const found = await required(context);
-  const path = input.path === undefined ? undefined : await checkPath(context.root, input.path);
+  const path =
+    input.path === undefined
+      ? undefined
+      : await checkPath(context.root, input.path, "path", found.gitDirs);
   const head = input.ref === undefined ? await headOid(context, found) : undefined;
   if (input.ref === undefined && head === null) return { commits: [], more: false };
   const from =
