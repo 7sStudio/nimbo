@@ -1,7 +1,8 @@
 // External edits against the session's own changes (07-file-format §5): a page edit made on a text the file replaced
-// since, an open conflict that outlives later edits of other cells, a write of another program landing during the
-// daemon's, an explicit save, the saved state after a merge, a move after an atomic rewrite, the review trail of an
-// agent's edit the file undid, a file caught mid-write, and the list's announcements.
+// since, an edit on a text another editor replaced (an editor's own drafts in flight excepted), an open conflict that
+// outlives later edits of other cells, a write of another program landing during the daemon's, an explicit save, the
+// saved state after a merge, a move after an atomic rewrite, the review trail of an agent's edit the file undid, a
+// file caught mid-write, and the list's announcements.
 import { readdirSync, writeFileSync } from "node:fs";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 
@@ -132,6 +133,75 @@ describe("an agent's edit over a change made on disk", () => {
       expect(based.notice).toBeUndefined();
       const conflict = await daemon.events.until("notebook.conflict");
       expect(conflict.data.cells).toEqual([third]);
+    });
+  });
+});
+
+describe("an edit whose base another editor replaced since", () => {
+  it("is a conflict whatever replaced the text, the page's typing kept for a revert", async () => {
+    await withDaemon(async (daemon, ws) => {
+      const { ids } = await threeSaved(daemon);
+      const third = ids[2];
+      const read = await daemon.client.cell.get({ notebook, cell: third });
+      await edit(ws.path(notebook), (doc) => {
+        cellOf(doc, third).source = ["a - b"];
+      });
+      await reconciled(daemon, (d) => d.changed.includes(third));
+      const page = await connectDaemon(daemon, { client: "ui" });
+      try {
+        const base = textHash("a - b");
+        await page.client.cell.update({ notebook, cell: third, source: "a - b // typed", base });
+        const agent = await daemon.client.cell.update({
+          notebook,
+          cell: third,
+          source: "a * b",
+          base: read.textHash,
+        });
+        expect(agent.cell.source).toBe("a * b");
+        const conflict = await daemon.events.until("notebook.conflict");
+        expect(conflict.data.cells).toEqual([third]);
+        const reverted = await daemon.client.cell.revert({ notebook, cell: third });
+        expect(reverted.cell.source).toBe("a - b // typed");
+      } finally {
+        page.client.close();
+      }
+    });
+  });
+});
+
+describe("an edit whose base the same editor replaced since", () => {
+  it("is not a conflict for the editor's own drafts in flight, and is one in another's cell.run", async () => {
+    await withDaemon(async (daemon) => {
+      const { ids } = await threeSaved(daemon);
+      const second = ids[1];
+      const page = await connectDaemon(daemon, { client: "ui" });
+      try {
+        // the second draft sent before the first's answer: both name the text the page had
+        const base = textHash("export const b = 2");
+        await page.client.cell.update({
+          notebook,
+          cell: second,
+          source: "export const b = 7",
+          base,
+        });
+        await page.client.cell.update({
+          notebook,
+          cell: second,
+          source: "export const b = 8",
+          base,
+        });
+        expect((await daemon.client.notebook.get({ notebook })).notebook.conflict).toBeUndefined();
+        await daemon.client.cell.run({
+          notebook,
+          cell: second,
+          source: "export const b = 9",
+          base,
+        });
+        const conflict = await daemon.events.until("notebook.conflict");
+        expect(conflict.data.cells).toEqual([second]);
+      } finally {
+        page.client.close();
+      }
     });
   });
 });

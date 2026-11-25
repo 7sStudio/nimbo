@@ -54,7 +54,7 @@ const editableMeta = z.strictObject({
 export const cellUpdate = defineCommand({
   name: "cell.update",
   description:
-    "Change the source, the type or the meta (merged; a null key removes it; meta.title names the cell). Dependents become stale when the source changes. Pass base, the textHash cell.get gave for the source the edit was made on: a source the file on disk changed since then makes the cell a conflict instead of a silent overwrite. Without base, notice says when the cell's source had come from the file on disk: read it again.",
+    "Change the source, the type or the meta (merged; a null key removes it; meta.title names the cell). Dependents become stale when the source changes. Pass base, the textHash cell.get gave for the source the edit was made on: a source changed since then (by the file on disk, the page or another agent) makes the cell a conflict instead of a silent overwrite. Without base, notice says when the cell's source had come from the file on disk: read it again.",
   input: z.object({
     ...ref,
     source: z.string().optional(),

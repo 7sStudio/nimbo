@@ -21,7 +21,14 @@ import type { Editor } from "./provenance.js";
 import type { ExportRequest } from "./exported.js";
 import { compareCell, exportNotebook } from "./exported.js";
 import type { ExternalState } from "./external.js";
-import { conflictOn, diskNotice, externalState, reconcileExternal, staleEdit } from "./external.js";
+import {
+  conflictOn,
+  diskNotice,
+  externalState,
+  ownEdit,
+  reconcileExternal,
+  staleEdit,
+} from "./external.js";
 import { savesOutputs, textOf } from "./fileForm.js";
 import { moveRecovery } from "../../files/notebooks/recovery.js";
 import { recoverOnOpen, recoveryKeeper } from "./recoveryCopy.js";
@@ -104,8 +111,8 @@ function removeCell(
   void disposeDeleted(context, cell, ended);
 }
 
-/** The cell edits of the session, each answered in the API's form. A page edit made on a text the file replaced
- * since holds its cell in conflict (external.ts); any other edit of the code ends what the session knew of the
+/** The cell edits of the session, each answered in the API's form. An edit whose base is not the cell's text holds
+ * its cell in conflict (external.ts); any other edit of the code ends what the session knew of the
  * file's text for that cell. */
 function edits(context: SessionContext, state: ExternalState) {
   const api = (record: Parameters<typeof context.cells.api>[0]) => context.cells.api(record);
@@ -117,8 +124,11 @@ function edits(context: SessionContext, state: ExternalState) {
     cell: (cell: CellId) => api(context.cells.require(cell)),
     add: (input: AddCell, editor: Editor) => api(addCell(context, input, editor)),
     update: (input: UpdateCell, editor: Editor) => {
-      const stale = staleEdit(context, state, input);
+      const stale = staleEdit(context, state, input, editor);
+      const before = textHash(context.cells.require(input.cell).source);
       const record = updateCell(context, input, editor);
+      if (textHash(record.source) !== before)
+        ownEdit(context, state, { cell: input.cell, before, stale }, editor);
       if (stale) conflictOn(context, [input.cell]);
       return api(input.source === undefined && input.type === undefined ? record : own(record));
     },

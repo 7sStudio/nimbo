@@ -3,8 +3,8 @@
 // the session left alone change them in place (stamped `client: "file"` for review, outputs and status kept where the
 // code did not change, the kernel left alone); a cell both sides changed is held in conflict, with autosave
 // suspended, until the user chooses or the file stops differing from it; the daemon writes only when the session's own
-// unsaved edits stay on top. A page edit made on a text the file has replaced since (cell.update's `base`) holds its
-// cell in conflict too, whatever the timing. A file that does not parse is read again once after a moment, then left
+// unsaved edits stay on top. An edit whose `base` (cell.update's, cell.run's) is not the cell's text holds its cell in
+// conflict too, whatever replaced that text (the file, the page, an agent) and whatever the timing. A file that does not parse is read again once after a moment, then left
 // out until it changes. Runs in the queue of the file's writes, so a write of the daemon is never taken for another
 // program's.
 import type { CellId, CellMerge, CellType, DocumentCell } from "@jsnb/core";
@@ -16,6 +16,7 @@ import { analysisOf } from "./analysis.js";
 import type { SessionContext } from "./context.js";
 import type { LoadedDocument } from "./fileForm.js";
 import { loadDocument, savesOutputs } from "./fileForm.js";
+import type { Editor } from "./provenance.js";
 import { stamped } from "./provenance.js";
 import type { CellRecord } from "./records.js";
 import type { Plan } from "./reload.js";
@@ -31,13 +32,25 @@ export type ExternalState = {
   readonly held: Map<CellId, DocumentCell | null>;
   /** Both sides reordered the same cells: the base stays as it was until the conflict ends. */
   order: boolean;
+  /** Per cell, the editor whose edits made its text, the textHash of that text and of the texts its edits were made
+   * on: a later edit of its own may still name one of them (a draft sent while the previous one was under way). */
+  readonly own: Map<
+    CellId,
+    { readonly by: string; readonly last: string; readonly bases: string[] }
+  >;
 };
 
 export const externalState = (): ExternalState => ({
   fromDisk: new Map(),
   held: new Map(),
   order: false,
+  own: new Map(),
 });
+
+const editorKey = (editor: Editor): string => `${editor.client}:${editor.agent ?? ""}`;
+
+/** How many of an editor's own earlier texts its edit may name as base. */
+const ownBases = 8;
 
 export type ExternalOutcome = "same" | "resumed" | "merged" | "conflict" | "unreadable" | "missing";
 
@@ -254,9 +267,11 @@ export async function reconcileExternal(
 }
 
 /**
- * A page edit (cell.update's `base`) made on a text the file replaced since: the edit is taken, so the page keeps what
- * it typed, and the cell is held in conflict against the text both started from, the file's version still on disk.
- * Answers whether it was such an edit.
+ * An edit whose `base` is not the cell's text (an agent's read before the file or the page changed it, a draft typed on
+ * a text replaced since), unless the text is the same editor's own and `base` one it went through: the edit is taken,
+ * so its text is kept, and the cell is held in conflict against the text the edit started from when the session knows
+ * it (the file's change of it), else against no base, the file's version still on disk. Answers whether it was such an
+ * edit.
  */
 export function staleEdit(
   context: SessionContext,
@@ -266,15 +281,58 @@ export function staleEdit(
     readonly source?: string | undefined;
     readonly base?: string | undefined;
   },
+  editor: Editor,
 ): boolean {
   const record = context.cells.get(edit.cell);
   if (record === undefined || edit.base === undefined || edit.source === undefined) return false;
   if (edit.source === record.source) return false;
   const now = textHash(record.source);
-  const disk = state.fromDisk.get(edit.cell);
-  if (edit.base === now || disk?.hash !== now) return false;
-  state.held.set(edit.cell, { ...documentCell(record), ...disk.before });
+  if (edit.base === now || ownText(state, { cell: edit.cell, now, base: edit.base }, editor))
+    return false;
+  state.held.set(edit.cell, heldBase(state, record, { now, base: edit.base }));
   return true;
+}
+
+/** The cell's text `now` is `editor`'s own, and `base` one of the texts its edits went through. */
+function ownText(
+  state: ExternalState,
+  at: { readonly cell: CellId; readonly now: string; readonly base: string },
+  editor: Editor,
+): boolean {
+  const own = state.own.get(at.cell);
+  return own?.by === editorKey(editor) && own.last === at.now && own.bases.includes(at.base);
+}
+
+/** The base a stale edit's cell is held against: the text before the file's change of it, when the edit was made on
+ * it or the cell still has the file's text; else none. */
+function heldBase(
+  state: ExternalState,
+  record: CellRecord,
+  hashes: { readonly now: string; readonly base: string },
+): DocumentCell | null {
+  const disk = state.fromDisk.get(record.id);
+  if (disk === undefined) return null;
+  if (disk.hash !== hashes.now && textHash(disk.before.source) !== hashes.base) return null;
+  return { ...documentCell(record), ...disk.before };
+}
+
+/** `editor` changed the cell's text from the text hashed `before`: its next edit may name either. */
+export function ownEdit(
+  context: SessionContext,
+  state: ExternalState,
+  edit: { readonly cell: CellId; readonly before: string; readonly stale: boolean },
+  editor: Editor,
+): void {
+  const record = context.cells.get(edit.cell);
+  if (record === undefined) return;
+  const by = editorKey(editor);
+  const previous = state.own.get(edit.cell);
+  const bases = previous?.by === by && previous.last === edit.before ? previous.bases : [];
+  state.own.set(edit.cell, {
+    by,
+    last: textHash(record.source),
+    bases: (edit.stale ? bases : [...bases, edit.before]).slice(-ownBases),
+  });
 }
 
 /** The conflict on `cells`: notebook.reconciled says so, then notebook.conflict (autosave suspended). */
