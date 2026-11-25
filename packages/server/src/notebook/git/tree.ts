@@ -54,7 +54,7 @@ async function holdWrites(context: GitContext, released: Promise<void>): Promise
 }
 
 /** After a git operation: each open notebook brought in step with its file without losing an edit. */
-export async function reconcileOpen(context: GitContext, held: readonly Held[]): Promise<void> {
+async function reconcileOpen(context: GitContext, held: readonly Held[]): Promise<void> {
   for (const { ref, session } of held) {
     if (!context.notebooks.openRefs().includes(ref)) continue;
     const { autosave } = session.context;

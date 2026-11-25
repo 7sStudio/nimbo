@@ -30,7 +30,7 @@ const ignorable = /[\u200b-\u200f\u202a-\u202e\u206a-\u206f\ufeff]/gu;
 
 /** Whether a path segment names a git directory on some file system: `.git` in any case, with ignorable code points,
  * trailing dots or spaces (NTFS), or its 8.3 short name `git~1`. */
-export function isGitDir(segment: string): boolean {
+function isGitDir(segment: string): boolean {
   const plain = segment
     .normalize("NFC")
     .replace(ignorable, "")
