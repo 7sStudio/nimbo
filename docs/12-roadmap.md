@@ -41,4 +41,4 @@ Constraint on every UI item: the page's first load stays within its 500 KB budge
 
 ## 6. Source Control
 
-Next, in the order users ask for them: push, pull and fetch; branch create and switch; stash; history and blame; staging one hunk or one cell; a merge editor for conflicted notebooks.
+Next, in the order users ask for them: staging one hunk or one cell; a three-way merge editor for conflicted notebooks; output diffs through the viewer; blame; a git `textconv` driver for `.jsnb`; adding and removing remotes, clone, tags and force push; several repositories and submodules in one workspace.

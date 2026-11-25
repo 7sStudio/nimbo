@@ -317,7 +317,9 @@ Where next: run `nimbo` with no arguments to open Home, then open one of the [ex
 
 - A `.jsnb` file is JSON with each cell's source as a list of lines and stable cell ids, so it diffs and merges well.
   Secrets are never in it; outputs only if you turn on `outputs.save`.
-- A **Source Control** view (status, stage, unstage, discard, commit) and a rendered notebook diff, cell by cell.
+- A **Source Control** view (status, stage, unstage, discard, commit and amend) and a rendered notebook diff, cell by
+  cell; fetch, pull, push, publish and sync with your own git credentials and pull strategy, branches, stash, and the
+  history of the branch or of one notebook with its diff at any commit. What can lose work asks first.
 - `nimbo diff` prints the same diff in the terminal; `nimbo export page.html` writes the notebook as one HTML page.
 
 ### Keyboard and workspace
@@ -407,6 +409,7 @@ nimbo examples copy --name 01-data && nimbo open 01-data.jsnb
 | `nimbo add <package>`                               | Install npm packages into the workspace                          |
 | `nimbo debug set-breakpoint --cell <id> --line <n>` | Debug a server cell (`stack`, `scope`, `evaluate`, `resume`, …)  |
 | `nimbo diff`                                        | What git sees, notebooks cell by cell                            |
+| `nimbo git pull`                                    | Git from the CLI (`push`, `switch`, `stash`, `log`; `--yes`)     |
 | `nimbo export page.html`                            | The notebook as one HTML page                                    |
 | `nimbo config set ui.theme dark`                    | Change a setting (`--user` or `--workspace`)                     |
 | `nimbo stop`                                        | Stop nimbo for this workspace                                    |
