@@ -2,6 +2,8 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignore": [".worktrees/**", ".agents/**", ".claude/**", ".opencode/**"],
+  // system tools the daemon runs (the git service asks pgrep whether another git runs)
+  "ignoreBinaries": ["pgrep"],
   "workspaces": {
     ".": {
       "entry": ["tools/*.mjs", "tools/boundaries.config.js", "tools/ci.sh"],
