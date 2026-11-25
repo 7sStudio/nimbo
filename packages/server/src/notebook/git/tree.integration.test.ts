@@ -1,13 +1,14 @@
 // A git operation rewriting an open notebook's file goes through the merge of external edits (07-file-format §5),
 // once: a pull changing another cell than the one typed in keeps both with no conflict; one changing the typed cell is
 // one conflict holding the typing, the pulled text on disk, a recovery copy kept; a discard with unsaved typing ends
-// as the index's version; a stash and its pop carry the saved change away and back around the unsaved typing.
+// as the index's version; a stash saves the typing first, so it takes and its pop brings back what the page showed;
+// with files.mergeExternalChanges off the app's own discard and pull still bring the notebook in step.
 import { existsSync } from "node:fs";
 import { readdir, readFile } from "node:fs/promises";
 
 import { withWorkspace } from "@jsnb/test-tools/workspace";
 import type { Workspace } from "@jsnb/test-tools/workspace";
-import { expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { startDaemon } from "../../fixtures/daemon.js";
 import { cellOf, docOf, edit } from "../../fixtures/external.js";
@@ -104,7 +105,7 @@ it("ends a discard with unsaved typing as the index's version, with no conflict"
   });
 });
 
-it("stashes the saved change and pops it back around the unsaved typing", async () => {
+it("saves the unsaved typing before a stash, so the stash takes it and its pop brings it back", async () => {
   await withWorkspace(async (ws) => {
     await makeRepo(ws.dir, { [notebook]: cells("const a = 1;", "const b = 1;") });
     await edit(ws.path(notebook), (doc) => {
@@ -113,13 +114,74 @@ it("stashes the saved change and pops it back around the unsaved typing", async 
     const daemon = await typed(ws);
     expect(await sources(daemon)).toEqual(["const a = 2;", "const b = 5;"]);
     expect(await daemon.client.git.stash({})).toEqual({ created: true });
-    expect(await onDisk(ws, "c_bbbbbb")).toBe("const b = 1;");
-    expect(await sources(daemon)).toEqual(["const a = 2;", "const b = 1;"]);
+    expect(await onDisk(ws, "c_aaaaaa")).toBe("const a = 1;");
+    expect(await sources(daemon)).toEqual(["const a = 1;", "const b = 1;"]);
     expect(await daemon.client.git.stashPop({ index: 0 })).toEqual({
       result: "applied",
       conflicts: [],
     });
     expect(await sources(daemon)).toEqual(["const a = 2;", "const b = 5;"]);
     expect(await settled(daemon, "notebook.conflict")).toEqual([]);
+  });
+});
+
+it("stashes a notebook whose only change is unsaved typing, and pops it with autosave on", async () => {
+  await withWorkspace(async (ws) => {
+    await makeRepo(ws.dir, { [notebook]: cells("const a = 1;", "const b = 1;") });
+    const daemon = await startDaemon(ws);
+    await daemon.client.settings.set({ key: "files.autoSave", value: "afterDelay" });
+    await daemon.client.settings.set({ key: "files.autoSaveDelay", value: 5000 });
+    await daemon.client.notebook.open({ path: notebook });
+    await daemon.client.cell.update({ notebook, cell: "c_aaaaaa", source: "const a = 2;" });
+    expect(await daemon.client.git.stash({})).toEqual({ created: true });
+    expect(await settled(daemon, "notebook.conflict")).toEqual([]); // and no write after it
+    expect(sh(ws.dir, "status", "--porcelain").trim()).toBe("");
+    expect(await daemon.client.git.stashPop({ index: 0 })).toEqual({
+      result: "applied",
+      conflicts: [],
+    });
+    expect(await sources(daemon)).toEqual(["const a = 2;", "const b = 1;"]);
+  });
+});
+
+describe("with files.mergeExternalChanges off", () => {
+  /** A daemon with merging off and autosave at once, the notebook open with "const b = 5;" saved but not committed. */
+  async function savedEdit(ws: Workspace) {
+    const daemon = await startDaemon(ws);
+    await daemon.client.settings.set({ key: "files.mergeExternalChanges", value: false });
+    await daemon.client.notebook.open({ path: notebook });
+    await daemon.client.cell.update({ notebook, cell: "c_bbbbbb", source: "const b = 5;" });
+    await daemon.client.notebook.save({ notebook });
+    return daemon;
+  }
+
+  it("still brings an open notebook in step with a discard", async () => {
+    await withWorkspace(async (ws) => {
+      await makeRepo(ws.dir, { [notebook]: cells("const a = 1;", "const b = 1;") });
+      const daemon = await savedEdit(ws);
+      await daemon.client.git.discard({ paths: [notebook], confirm: true });
+      expect(await onDisk(ws, "c_bbbbbb")).toBe("const b = 1;");
+      expect(await sources(daemon)).toEqual(["const a = 1;", "const b = 1;"]);
+      const state = (await daemon.client.notebook.get({ notebook })).notebook;
+      expect(state.conflict).toBeUndefined();
+      await daemon.client.cell.update({ notebook, cell: "c_aaaaaa", source: "const a = 3;" });
+      await daemon.client.notebook.save({ notebook }); // no conflict: the session's base is the file
+      expect(await onDisk(ws, "c_bbbbbb")).toBe("const b = 1;");
+    });
+  });
+
+  it("still brings an open notebook in step with a pull", async () => {
+    await withWorkspace(async (ws) => {
+      await makeRepo(ws.dir, { [notebook]: cells("const a = 1;", "const b = 1;") });
+      await withRemote(ws.dir, async ({ other }) => {
+        await pushFrom(other, { [notebook]: cells("const a = 1;", "const b = 9;") });
+        const daemon = await startDaemon(ws);
+        await daemon.client.settings.set({ key: "files.mergeExternalChanges", value: false });
+        await daemon.client.notebook.open({ path: notebook });
+        await daemon.client.git.pull({});
+        expect(await sources(daemon)).toEqual(["const a = 1;", "const b = 9;"]);
+        expect((await daemon.client.notebook.get({ notebook })).notebook.conflict).toBeUndefined();
+      });
+    });
   });
 });

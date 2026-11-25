@@ -9,7 +9,7 @@ import { failureOf } from "./exec.js";
 import { checkMessage } from "./paths.js";
 import { conflictsNow } from "./refs.js";
 import type { RepoLocation } from "./status.js";
-import { refusal, treeChange } from "./tree.js";
+import { refusal, saveEdited, treeChange } from "./tree.js";
 
 type Entry = { readonly index: number; readonly oid?: string | undefined };
 
@@ -26,6 +26,7 @@ export async function stashPush(
     ...(input.untracked ? ["--include-untracked"] : []),
     ...(message === "" ? [] : [`--message=${message}`]),
   ];
+  await saveEdited(context, "stash");
   return treeChange(context, async () => {
     const run = await context.run(found.top, args);
     return {

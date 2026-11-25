@@ -68,8 +68,8 @@ export type Session = SessionRuns & {
   /** notebook.compareDisk: the file on disk against the text a save would write now. */
   readonly compareDisk: (content: boolean) => Promise<ReturnType<typeof diffDisk>>;
   readonly reload: () => Promise<NotebookState>;
-  /** A git operation rewrote the file: merged now, as the watch would (07 §5); `off` when merging is off. */
-  readonly mergeDisk: () => Promise<ExternalOutcome | "off">;
+  /** A git operation of the app rewrote the file: merged now, as the watch would (07 §5), with merging on or off. */
+  readonly mergeDisk: () => Promise<ExternalOutcome>;
   readonly graph: () => GraphView;
   readonly errors: () => ErrorsView;
   readonly outputQuery: (request: OutputQueryRequest) => Promise<OutputQueryAnswer>;
@@ -248,8 +248,8 @@ function externalParts(
       if (on()) await context.autosave.exclusive(merge);
     },
   });
-  const mergeNow = async (): Promise<ExternalOutcome | "off"> =>
-    on() ? context.autosave.exclusive(merge) : "off";
+  // the app's own git operations: brought in step whatever files.mergeExternalChanges says of other programs' edits
+  const mergeNow = (): Promise<ExternalOutcome> => context.autosave.exclusive(merge);
   return { state, watch, mergeNow };
 }
 

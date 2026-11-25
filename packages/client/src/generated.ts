@@ -348,7 +348,7 @@ const git = (call: Caller) =>
     branchRename: bind(call, gitBranchRename),
     /** Changes the repository: delete local branch name (git branch -d). A branch whose commits are on no other branch or upstream fails with reason unmerged; force: true deletes it anyway (git branch -D), which can lose those commits, so force needs confirm: true. The current branch cannot be deleted. */
     branchDelete: bind(call, gitBranchDelete),
-    /** Changes the working tree: stash the changes (git stash push), with message, and untracked files too with untracked. Open notebooks keep their unsaved edits; each file it rewrites is merged into its open notebook by cell after (a cell both changed is a conflict). Answers created: false when there was nothing to stash. */
+    /** Changes the working tree: stash the changes (git stash push), with message, and untracked files too with untracked. Open notebooks' unsaved edits are saved first, so the stash takes what the page shows; each file it rewrites is merged into its open notebook by cell after. Answers created: false when there was nothing to stash. */
     stash: bindOptional(call, gitStash, {}),
     /** The stashes, newest first (index 0 is stash@{0}). */
     stashList: bindOptional(call, gitStashList, {}),

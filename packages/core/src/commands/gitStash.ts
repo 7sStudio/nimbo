@@ -20,7 +20,7 @@ const applied = z.object({
 export const gitStash = defineCommand({
   name: "git.stash",
   description:
-    "Changes the working tree: stash the changes (git stash push), with message, and untracked files too with untracked. Open notebooks keep their unsaved edits; each file it rewrites is merged into its open notebook by cell after (a cell both changed is a conflict). Answers created: false when there was nothing to stash.",
+    "Changes the working tree: stash the changes (git stash push), with message, and untracked files too with untracked. Open notebooks' unsaved edits are saved first, so the stash takes what the page shows; each file it rewrites is merged into its open notebook by cell after. Answers created: false when there was nothing to stash.",
   input: z.object({
     message: z.string().optional(),
     untracked: z.boolean().default(false),
