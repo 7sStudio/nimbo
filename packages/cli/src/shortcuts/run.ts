@@ -1,6 +1,7 @@
 // `nimbo run <cell...>` (cell.run for each, waiting, in order) and `nimbo run --all | --above <cell> | --deps <cell> |
-// --stale` (notebook.run with that selection) (03-api §8, §4.2); exit 1 when a run ended in error.
-import type { Execution, Selection } from "@jsnb/core";
+// --stale` (notebook.run with that selection) (03-api §8, §4.2); exit 1 when a run ended in error,
+// a dependent execution.autoRunDependents ran included.
+import type { AutoRunReport, Execution, Selection } from "@jsnb/core";
 import { cellRun, notebookRun } from "@jsnb/core";
 
 import { openedByStart } from "../daemon/notebook.js";
@@ -10,7 +11,7 @@ import { exitCodes } from "../errors/exit.js";
 import type { Io } from "../io/io.js";
 import { write } from "../io/io.js";
 import { executionText, runLineLimit } from "../render/outputs.js";
-import { resultExit, resultText } from "../render/results.js";
+import { autoRunText, resultExit, resultText } from "../render/results.js";
 import type { ShortcutArgs } from "./shortcut.js";
 import {
   notebookFlagHelp,
@@ -28,6 +29,8 @@ const options = {
   deps: { type: "string" },
   stale: { type: "boolean" },
   "timeout-ms": { type: "string" },
+  // --no-wait-auto, read by parseArgs as wait-auto: false (allowNegative)
+  "wait-auto": { type: "boolean" },
 } as const;
 
 const help = `nimbo run <cell...> | --all | --above <cell> | --deps <cell> | --stale: run cells
@@ -35,12 +38,14 @@ const help = `nimbo run <cell...> | --all | --above <cell> | --deps <cell> | --s
 With cells, runs each with cell.run in the order given, waiting for each. With a selection, runs the notebook's cells
 with notebook.run: --all every cell, --above <cell> the cells above it, --deps <cell> it and the cells that depend on
 it, --stale the stale cells. Each output shows its first 30 lines; nimbo outputs <cell> prints the rest. Exits 1
-when a run ended in error.
+when a run ended in error. With execution.autoRunDependents on, a cell's run also lists the dependents it ran
+(auto-run:), waiting for them in the same timeout unless --no-wait-auto.
 
 Flags:
 ${notebookFlagHelp}
   --timeout-ms <n>        how long to wait for each run (default 30000); a run still going is reported, not stopped
-  --json                  print { executions } (cells) or notebook.run's output (a selection) as JSON
+  --no-wait-auto          answer once each cell's own run ended; the dependents it started go on
+  --json                  print { executions, autoRun? } (cells) or notebook.run's output (a selection) as JSON
 `;
 
 /** The selection the flags ask for, or undefined for cells given by id; more than one is a usage error. */
@@ -97,14 +102,24 @@ async function run(argv: readonly string[], io: Io): Promise<ExitCode> {
       await write(io.stdout, resultText("notebook.run", output, args.json));
       return resultExit("notebook.run", output);
     }
+    const waitAutoRun = args.values["wait-auto"] !== false;
     const executions: Execution[] = [];
+    const autoRun: (AutoRunReport & { readonly cell: string })[] = [];
     for (const cell of args.positionals) {
-      const { execution } = await session.call(cellRun, { notebook, cell, ...wait });
-      executions.push(execution);
-      if (!args.json) await write(io.stdout, executionText(execution, runLineLimit));
+      const output = await session.call(cellRun, { notebook, cell, ...wait, waitAutoRun });
+      executions.push(output.execution);
+      if (output.autoRun) autoRun.push({ cell, ...output.autoRun });
+      if (!args.json) {
+        await write(io.stdout, executionText(output.execution, runLineLimit));
+        await write(io.stdout, autoRunText(output, runLineLimit));
+      }
     }
-    if (args.json) await write(io.stdout, `${JSON.stringify({ executions })}\n`);
-    return resultExit("cell.run", { executions });
+    if (args.json) {
+      const extra = autoRun.length > 0 ? { autoRun } : {};
+      await write(io.stdout, `${JSON.stringify({ executions, ...extra })}\n`);
+    }
+    const autoRuns = autoRun.flatMap((each) => each.executions);
+    return resultExit("cell.run", { executions: [...executions, ...autoRuns] });
   });
 }
 

@@ -6,6 +6,7 @@ import type {
   DebugState,
   Diagnostic,
   EventEnvelope,
+  EventOf,
   Execution,
   NotebookState,
 } from "@jsnb/core";
@@ -48,6 +49,13 @@ const moved = (cells: readonly Cell[], order: readonly CellId[]): readonly Cell[
 const without = <V>(map: ReadonlyMap<CellId, V>, id: CellId): ReadonlyMap<CellId, V> =>
   new Map([...map].filter(([key]) => key !== id));
 
+/** A cells.autoRun change applied to the cascade the mirror holds. */
+function withAutoRun(mirror: Mirror, change: EventOf<"cells.autoRun">["data"]): Mirror {
+  const gone = new Set(change.removed);
+  const pending = [...mirror.autoRun.pending.filter((id) => !gone.has(id)), ...change.added];
+  return { ...mirror, autoRun: { running: change.running, pending } };
+}
+
 function reduceCell(mirror: Mirror, event: EventEnvelope): Mirror {
   switch (event.type) {
     case "cell.added":
@@ -74,6 +82,8 @@ function reduceCell(mirror: Mirror, event: EventEnvelope): Mirror {
     }
     case "cell.diagnostics":
       return withDiagnostics(mirror, [event.data]);
+    case "cells.autoRun":
+      return withAutoRun(mirror, event.data);
     case "cells.stale": {
       const stale = new Set(event.data.cells);
       return withNotebook(mirror, (notebook) => ({

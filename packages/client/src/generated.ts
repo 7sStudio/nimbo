@@ -153,7 +153,7 @@ const cell = (call: Caller) =>
     move: bind(call, cellMove),
     /** Delete a cell. Its scope bindings stay in the kernel until restart; dependents become stale. */
     delete: bind(call, cellDelete),
-    /** Run one cell. With wait, returns when the run reaches a terminal status, timeoutMs elapses, or the kernel pauses in the debugger (then `paused` says where; go on with debug.resume). */
+    /** Run one cell. With wait, returns when the run reaches a terminal status, timeoutMs elapses, or the kernel pauses in the debugger (then `paused` says where; go on with debug.resume). With execution.autoRunDependents on, `autoRun` lists the stale dependents the run started; waitAutoRun waits for them too, in the same timeoutMs. */
     run: bind(call, cellRun),
     /** The last run of a cell with all its outputs, or null if it never ran. */
     outputs: bind(call, cellOutputs),

@@ -265,7 +265,8 @@ Where next: run `nimbo` with no arguments to open Home, then open one of the [ex
 
 - Run a cell, all, everything above, a cell and its dependents, or only the stale ones; interrupt and restart the
   kernel.
-- A dependency graph marks the cells whose inputs changed as **stale**; nothing re-runs behind your back.
+- A dependency graph marks the cells whose inputs changed as **stale**; nothing re-runs behind your back unless
+  `execution.autoRunDependents` is on: then a cell's run re-runs its stale dependents, except cells marked manual.
 - The **bridge**: exported functions become async calls from client cells, exported values arrive as copies, and
   anything that cannot cross (a class instance, a live client) is refused with an error naming it.
 - **HTTP routes** with standard `Request` and `Response`, served at `/n/<notebook>/<path>`; every request is logged

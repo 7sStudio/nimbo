@@ -51,6 +51,7 @@ function endUnsent(context: SessionContext, state: RealmState): void {
 
 /** Every client cell idle with no outputs, the page's record and what it held forgotten. */
 function clearClientCells(context: SessionContext, state: RealmState): void {
+  context.hooks.realmEnded("client");
   state.record.clear();
   state.held.clear();
   for (const record of context.cells.list()) {

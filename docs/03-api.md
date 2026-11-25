@@ -99,12 +99,12 @@ Path rules for `path` and `to`: inside the workspace, no `..`, a `.jsnb` file. A
 |---|---|---|---|
 | `cell.add` | `{ notebook, type, source? = "", after?, run? = false, id? }` | `{ cell: Cell, execution?: Execution }` | mutating. `run` runs and waits as `cell.run` (a client cell with no page: `REALM_NOT_ATTACHED`, nothing added). `id` (unused, else `CONFLICT`) lets undo restore a deleted cell. |
 | `cell.get` | `{ notebook, cell }` | `{ cell: Cell }` | |
-| `cell.update` | `{ notebook, cell, source?, type?, meta? }` | `{ cell: Cell }` | mutating, idempotent. A `source` change marks dependents stale; a running cell keeps its old code for that run; a server cell retyped away is disposed in the kernel. `meta` is merged, `null` removes a key; editable: `title`, `showBindings`, `collapsed`, `headingCollapsed`, `outputsHidden`, `outputView`, `outputQuery`, `outputHeight`, `outputColumns`. `meta.lastEdit` is server-owned (`INVALID_PARAMS` if sent), stamped only when `source` or `type` changed. |
+| `cell.update` | `{ notebook, cell, source?, type?, meta? }` | `{ cell: Cell }` | mutating, idempotent. A `source` change marks dependents stale; a running cell keeps its old code for that run; a server cell retyped away is disposed in the kernel once its run under way ended. `meta` is merged, `null` removes a key; editable: `title`, `showBindings`, `collapsed`, `headingCollapsed`, `outputsHidden`, `outputView`, `outputQuery`, `outputHeight`, `outputColumns`, `manual`. `meta.lastEdit` is server-owned (`INVALID_PARAMS` if sent), stamped only when `source` or `type` changed. |
 | `cell.revert` | `{ notebook, cell }` | `{ cell: Cell }` | mutating, idempotent. Restores the review's `previousSource`/`previousType` as the caller's edit; no review: answered as is, no event. |
 | `cell.markReviewed` | `{ notebook, cell }` | `{ cell: Cell }` | mutating, idempotent. Drops `meta.lastEdit.review`, keeping who and when. |
 | `cell.move` | `{ notebook, cell, after }` | `{ order: CellId[] }` | mutating, idempotent |
 | `cell.delete` | `{ notebook, cell }` | `{}` | destructive. Its bindings stay in the kernel until restart; dependents go stale. Its disposers run (04-kernel §7) once its run ended: routes 404, timers and listeners stop, later registrations disposed at once. Its queued runs end `interrupted`; its run under way ends as by `kernel.interrupt`. |
-| `cell.run` | `{ notebook, cell, source?, wait? = true, timeoutMs? = 30000 }` | `{ execution: Execution }` | mutating. §4.3.1. |
+| `cell.run` | `{ notebook, cell, source?, wait? = true, timeoutMs? = 30000, waitAutoRun? = true }` | `{ execution: Execution, autoRun?: AutoRunReport }` | mutating. §4.3.1. |
 | `cell.outputs` | `{ notebook, cell }` | `{ execution: Execution \| null }` | The last run with all its outputs. |
 | `cell.compare` | `{ notebook, cell, limit? = 200 }` | `{ comparison: RunComparison \| null, previous: Execution \| null, current: Execution \| null }` | The last finished run against the one before it (a saved run counts), from core's `compareRuns`: `same` (status, value, printed text and error equal, duration aside); `status` and `durationMs` before and after; `value`: the last value output, or the JSON of a `display.json` or `display.table`, walked node by node into `added` / `removed` / `changed` entries with JSONPath paths (arrays by index, a `$type` marker one leaf), the first `limit` plus `more`, `truncated` when either value was cut, null when neither run has a value; `text`: stdout and stderr as a line diff; `error`: `name: message` before and after. `comparison` is null until the cell has two runs. The cell menu's Compare with Previous Run. |
 | `cell.outputValue` | `{ notebook, cell, execution?, index?, path? = "$", offset? = 0, limit? = 2000 }` | `{ json, total, truncated }` | A slice of one `value` output: the children of `path` from `offset`, ≤ `limit`, each capped. Default: the last `value` output of the last run. Only the last run is kept; another execution, a non-value `index`, or a value no longer retained is `INVALID_PARAMS` on `execution`/`index`. |
@@ -119,6 +119,7 @@ Path rules for `path` and `to`: inside the workspace, no `..`, a `.jsnb` file. A
 - Markdown: `status: "ok"`, no outputs.
 - Client cells go to the attached realm; with none, the call fails `REALM_NOT_ATTACHED`.
 - Pre-flight: an uninstalled import ends the run `error` `MissingPackage` with `data.names`, nothing executed (04-kernel §4).
+- With `execution.autoRunDependents` on, a run that ends `ok` runs its stale dependents (04-kernel §4.1), and a waiting answer carries `autoRun`: the runs it started, the dependents still `pending` and those `skipped` (`{ cell, reason, by? }`, `reason` one of `manual`, `notRun`, `cycle`, `noPage`, `upstream`, `edited`, `ran`, `deleted`, `stopped`). `waitAutoRun` waits for them too, within the same `timeoutMs`; without it the answer lists what was started or waits at the moment the cell's own run ended. No `autoRun` when nothing depends on the cell or the setting is off.
 - A run that never finishes stays `running` until `kernel.interrupt`, `kernel.restart` (client: `{ all }`) or its page detaches. Cells registering `route()`/`on()` finish at once; later activity arrives as `event` outputs.
 
 ### 4.4 kernel (server realm)
@@ -203,7 +204,7 @@ Files: user `$XDG_CONFIG_HOME/nimbo/settings.json` (default `~/.config/nimbo/`, 
 |---|---|---|
 | `bridge.rpcTimeoutMs` | `60000` | client wait for a server function |
 | `bridge.maxBytesPerValue` | `5242880` | largest binary crossing the bridge whole (05-bridge §2) |
-| `execution.autoRunDependents` | `false` | **planned** |
+| `execution.autoRunDependents` | `false` | after a `cell.run` ends `ok`, run its stale dependents (04-kernel §4.1); `meta.manual` cells are left alone |
 | `files.autoSave` | `"afterDelay"` | `afterDelay`, `onFocusChange`, `interval`, `off` |
 | `files.autoSaveDelay` / `files.autoSaveMaxWait` | `1000` / `10000` | ms |
 | `files.autoSaveInterval` | `120000` | ms |
@@ -310,6 +311,7 @@ type Cell = {
     outputQuery?: { mode: "filter" | "jsonpath" | "jq" | "sql"; query: string; at?: string };   // 11-query §4
     outputHeight?: "capped" | "fit";
     outputColumns?: { hidden?: string[]; order?: string[] };   // the grid's column layout, keys as strings
+    manual?: boolean;                                     // never run by execution.autoRunDependents (04-kernel §4.1)
     lastEdit?: EditInfo;                               // server-owned
   };
   status: ExecStatus; stale: boolean;
@@ -346,7 +348,13 @@ type Execution = {
   outputs: Output[]; error?: ErrorInfo;
   stoppedBy?: CellId;                                  // notebook.run's stopOnError
   requestedBy?: { client: "ui" | "cli" | "mcp" | "file"; agent?: string };
+  autoRun?: { cell: CellId; execution: ExecutionId };   // started by execution.autoRunDependents after that run (04-kernel §4.1)
   restored?: true;                                     // read from the file's saved outputs (07-file-format §2), not run by this kernel
+};
+
+type AutoRunReport = {                                 // cell.run's autoRun (§4.3.1)
+  executions: Execution[]; pending: CellId[];
+  skipped: { cell: CellId; reason: "manual" | "notRun" | "cycle" | "noPage" | "upstream" | "edited" | "ran" | "deleted" | "stopped"; by?: CellId }[];
 };
 
 type Output =
@@ -359,7 +367,8 @@ type Output =
 
 type ErrorInfo = { name: string; message: string; frames: Frame[]; raw: string; data?: Record<string, unknown> };
 type Frame = { cell?: CellId; line: number; col: number; fn?: string; file?: string };
-type NotebookState = { path: string; cells: Cell[]; kernel: KernelStatus; realm: RealmStatus; savedAt: string | null; dirty: boolean; debug?: DebugState };   // §4.9
+type NotebookState = { path: string; cells: Cell[]; kernel: KernelStatus; realm: RealmStatus; savedAt: string | null; dirty: boolean; debug?: DebugState;   // §4.9
+  autoRun?: { running: CellId | null; pending: CellId[] } };   // the cascade under way, waiting cells in run order (04-kernel §4.1)
 type Binding = { name: string; kind: "const" | "let" | "var" | "function" | "class" | "import"; preview: string; definedBy: CellId; exported: boolean };
 type BindingValue = Binding & { json: unknown; repr: string; truncated: boolean };
 type Route = { spec: string; method: string; path: string; url: string; cell: CellId; registeredAt: string; hits: number };   // 04-kernel §8
@@ -385,6 +394,7 @@ Envelope: `{ notebook, seq, ts, type, data }`; workspace-level events carry `not
 | `cell.status` | `{ cell, execution, status, count? }` | every transition; `count` once the run started |
 | `cell.output` | `{ cell, execution, output: Output }` | as produced |
 | `cells.stale` | `{ cells: CellId[] }` | the full stale list, when it changed |
+| `cells.autoRun` | `{ running: CellId \| null, added: CellId[], removed: CellId[] }` | `execution.autoRunDependents`: a change of `NotebookState.autoRun`, at most one per step; `running` null and nothing waiting once done (04-kernel §4.1) |
 | `cell.diagnostics` | `{ cell, diagnostics: Diagnostic[] }` | a warm notebook's cell got new diagnostics |
 | `routes.changed` | `{ routes: Route[] }` | a route registered, replaced, disposed or hit |
 | `kernel.status` / `realm.status` | `KernelStatus` / `RealmStatus` | |
@@ -511,7 +521,7 @@ nimbo outputs <cell> [--where <chips> [--at <jsonpath>] | --query <jsonpath> | -
                                   last outputs; one query flag, run on the daemon (cell.outputQuery); --full streams
                                   the whole value (§7.5) with no query or format; csv is SQL rows or an array of
                                   records or equal-length arrays; pretty shows partial answers with a note
-nimbo run <cell...>                cell.run each, waiting
+nimbo run <cell...>                cell.run each, waiting; lists the dependents auto-run (auto-run:), --no-wait-auto answers before them
 nimbo run --all | --above <cell> | --deps <cell> | --stale    notebook.run; both take --timeout-ms
 nimbo add <pkg...>                 packages.add
 nimbo errors                       notebook.errors

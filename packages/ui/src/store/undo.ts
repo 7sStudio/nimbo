@@ -39,6 +39,7 @@ export const sendable = ({
   outputQuery,
   outputHeight,
   outputColumns,
+  manual,
 }: CellMeta) => ({
   ...{
     title,
@@ -50,6 +51,7 @@ export const sendable = ({
     outputQuery,
     outputHeight,
     outputColumns,
+    manual,
   },
 });
 

@@ -50,6 +50,7 @@ describe("CellMeta", () => {
       "outputQuery",
       "outputHeight",
       "outputColumns",
+      "manual",
       "lastEdit",
     ]);
     expect(Object.keys(cellMetaShape)).toEqual([...cellMetaKeys]);
