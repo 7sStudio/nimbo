@@ -172,7 +172,10 @@ function languageOf(
 ): Language {
   const { settings, secrets, notebooks } = parts;
   return createLanguage({
-    ...{ root: options.facts.root, bus: options.bus, log: options.log, session: notebooks.require },
+    root: options.facts.root,
+    bus: options.bus,
+    log: options.log,
+    session: notebooks.require,
     envNames: async () => ({
       server: await secrets.list(),
       client: Object.keys(await secrets.publicEnv()),
@@ -213,8 +216,12 @@ const listWatchOf = (
   announce: () => Promise<void>,
 ): (() => void) =>
   watchNotebookList({
-    ...{ root: options.facts.root, openRefs: () => notebooks.openRefs(), announce },
-    ...{ log: options.log, debounceMs: 300, everyMs: options.listCheckMs ?? 5000 },
+    root: options.facts.root,
+    openRefs: () => notebooks.openRefs(),
+    announce,
+    log: options.log,
+    debounceMs: 300,
+    everyMs: options.listCheckMs ?? 5000,
   });
 
 /** The headless realm's browser pages, its profiles in `.jsnb/headless/`, when the daemon gave its page credentials. */
@@ -273,9 +280,19 @@ export async function openWorkspace(options: WorkspaceOptions): Promise<Workspac
   const listChanged = announcer(facts.root, () => notebooks.openRefs(), bus, log); // read once created
   const notebooks = createNotebooks({
     debugAdapter,
-    ...{ root: facts.root, logsDir: jsnb.logs, bus, log, ids: options.ids, now: options.now },
-    ...{ settings: settings.current, port: options.port, kernelEntry: options.kernelEntry },
-    ...{ engines, sqlDirectory: jsnb.sqlCache, realm, requestTimeoutMs: requestTimeoutOf(options) },
+    root: facts.root,
+    logsDir: jsnb.logs,
+    bus,
+    log,
+    ids: options.ids,
+    now: options.now,
+    settings: settings.current,
+    port: options.port,
+    kernelEntry: options.kernelEntry,
+    engines,
+    sqlDirectory: jsnb.sqlCache,
+    realm,
+    requestTimeoutMs: requestTimeoutOf(options),
     listChanged,
     recoveryDir: jsnb.recovery,
     ...(options.moveCheckMs === undefined ? {} : { moveCheckMs: options.moveCheckMs }),

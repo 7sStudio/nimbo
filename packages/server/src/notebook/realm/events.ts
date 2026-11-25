@@ -236,8 +236,14 @@ function statsOf(channel: Channel, query: Parameters<EventChannel["stats"]>[0]):
 
 export function createEventChannel(context: SessionContext, state: RealmState): EventChannel {
   const channel: Channel = {
-    ...{ context, state, stats: new Map(), other: null },
-    ...{ pending: [], pendingBytes: 0, inFlight: false, signal: undefined },
+    context,
+    state,
+    stats: new Map(),
+    other: null,
+    pending: [],
+    pendingBytes: 0,
+    inFlight: false,
+    signal: undefined,
   };
   return {
     take: ({ events, dropped }) => {

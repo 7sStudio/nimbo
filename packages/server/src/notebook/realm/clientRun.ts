@@ -118,8 +118,13 @@ function paramsOf(
   const { execution, resolution } = sent;
   const unbound = Object.keys(resolution.unbound).length > 0 ? { unbound: resolution.unbound } : {};
   return {
-    ...{ execution: execution.id, cell: execution.cell, code: sent.code, map: sent.map },
-    ...{ ...given, limits: limitsOf(context.settings()), ...unbound },
+    execution: execution.id,
+    cell: execution.cell,
+    code: sent.code,
+    map: sent.map,
+    ...given,
+    limits: limitsOf(context.settings()),
+    ...unbound,
   };
 }
 

@@ -101,13 +101,14 @@ export async function outputQuery(
     request.mode === "sql"
       ? await sqlQuery(context, parts, request, { key: `${run.id}:${String(request.index)}`, root })
       : await jsonQuery(parts.engines, {
-          ...{ mode: request.mode, query: request.query, at: request.at },
-          ...{ root, limit: request.limit },
+          mode: request.mode,
+          query: request.query,
+          at: request.at,
+          root,
+          limit: request.limit,
           key: retained ? heldKey(context.holdKey, run.id, request.index) : undefined,
-          ...{
-            timeoutMs: timerMs(settings["query.timeoutMs"]),
-            maxBytes: settings["outputs.maxValueBytes"],
-          },
+          timeoutMs: timerMs(settings["query.timeoutMs"]),
+          maxBytes: settings["outputs.maxValueBytes"],
         });
   return { mode: request.mode, ...answer, durationMs: Math.round(performance.now() - started) };
 }

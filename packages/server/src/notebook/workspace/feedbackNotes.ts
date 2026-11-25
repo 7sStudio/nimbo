@@ -36,8 +36,13 @@ function noteOf(entry: FeedbackEntry, dir: string, full: boolean): FeedbackNote 
     Object.entries(entry.shots).map(([which, name]) => [which, join(dir, name)]),
   );
   return {
-    ...{ id: entry.id, at: entry.at, status: entry.status, text: entry.text },
-    ...{ where: whereOf(entry), selector: entry.selector, shots },
+    id: entry.id,
+    at: entry.at,
+    status: entry.status,
+    text: entry.text,
+    where: whereOf(entry),
+    selector: entry.selector,
+    shots,
     page: { kind, path, notebook, ...(cell === undefined ? {} : { cell }) },
     app: { version: entry.app.version, commit: entry.app.commit },
     ...(full ? detailsOf(entry) : {}),

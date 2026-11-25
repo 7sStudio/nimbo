@@ -151,9 +151,15 @@ const codeText = (error: unknown): string => {
 /** Opens `path` for appending with rotation; a file that cannot be opened yet is opened at the next line. */
 export function openRotatingFile(path: string, options: RotationOptions = {}): RotatingFile {
   const file: File = {
-    ...{ path, maxBytes: options.maxBytes ?? 1_048_576, files: options.files ?? defaultFiles },
-    ...{ writeSync: options.writeSync ?? writeSync, fd: undefined, size: 0 },
-    ...{ cut: false, failure: "", closed: false },
+    path,
+    maxBytes: options.maxBytes ?? 1_048_576,
+    files: options.files ?? defaultFiles,
+    writeSync: options.writeSync ?? writeSync,
+    fd: undefined,
+    size: 0,
+    cut: false,
+    failure: "",
+    closed: false,
   };
   try {
     reopen(file);

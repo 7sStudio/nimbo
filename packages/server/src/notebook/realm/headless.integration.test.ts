@@ -110,7 +110,10 @@ suite(`the headless realm on${skipped}`, { timeout: 60_000 }, () => {
         const png = Buffer.from(shot.image?.data ?? "", "base64");
         expect(png.subarray(1, 4).toString()).toBe("PNG");
         const small = await daemon.client.cell.snapshot({
-          ...{ notebook, cell, image: true, imageMaxBytes: 4096 },
+          notebook,
+          cell,
+          image: true,
+          imageMaxBytes: 4096,
         });
         expect(Buffer.from(small.image?.data ?? "", "base64").length).toBeLessThanOrEqual(4096);
       },
