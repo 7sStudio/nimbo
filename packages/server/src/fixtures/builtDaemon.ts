@@ -1,6 +1,6 @@
 // The built daemon as `nimbo open` forks it (02-architecture §7): `node dist/main.js` over a test's workspace, its user
 // config folder inside it, its listening line read from stdout, its exit awaited, killed when the test ends. The tests
-// of the process entry and the 09-testing §7 budgets run it (server:integration, after `pnpm build`).
+// of the process entry and of a run on the built daemon use it (server:integration, after `pnpm build`).
 import type { ChildProcess } from "node:child_process";
 import { spawn } from "node:child_process";
 import { existsSync } from "node:fs";

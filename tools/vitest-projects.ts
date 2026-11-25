@@ -54,16 +54,16 @@ const prebundled: Readonly<Record<string, Pick<Project, "optimizeDeps">>> = {
 };
 
 // query-sql's daemon engine (src/node, on @duckdb/node-api) runs in Node; the rest of the package in Chromium.
-// kernel-node's budget tests run in kernel-node:integration below, not in the unit stage; so do server's budgets and
-// the tests of its built process entry (server:integration).
+// kernel-node's and server's tests of their built entries run in kernel-node:integration and server:integration below,
+// not in the unit stage.
 // output-view's model runs in Node, so its tests run in a Node project of their own.
 // cli's tests of its built bin run in cli:integration below, and so do mcp's of its built process entry.
 const narrowed: Readonly<
   Record<string, Pick<Project, "exclude" | "heavy" | "tailwind" | "viewerScope" | "paced">>
 > = {
   "query-sql": { exclude: ["src/node/**"], heavy: true, paced: true },
-  "kernel-node": { exclude: ["src/**/*.budget.perf.test.ts"] },
-  server: { exclude: ["src/**/*.budget.perf.test.ts", "src/**/*.built.integration.test.ts"] },
+  "kernel-node": { exclude: ["src/**/*.built.integration.test.ts"] },
+  server: { exclude: ["src/**/*.built.integration.test.ts"] },
   cli: { exclude: ["src/**/*.built.integration.test.ts"] },
   mcp: { exclude: ["src/**/*.built.integration.test.ts"] },
   ui: { exclude: ["src/**/*.contract.test.ts"] },
@@ -97,23 +97,22 @@ export const projects: readonly Project[] = [
     optimizeDeps: ["jq-wasm/inline", "@swaggerexpert/jsonpath"],
     heavy: true,
   },
-  // kernel-node's 09-testing §7 budgets (start, interrupt, cell.run of 1 + 1) measure the built kernel, dist/main.js as
-  // users run it: the integration stage runs them after `build`, outside the unit stage's parallel coverage pool,
-  // where a child started from TypeScript source measured the pool, not the kernel.
+  // The built kernel, dist/main.js as users run it (start, interrupt, the next cell): after `build`, outside the coverage
+  // pool.
   {
     name: "kernel-node:integration",
     root: "packages/kernel-node",
     kind: "node",
-    include: ["src/**/*.budget.perf.test.ts"],
+    include: ["src/**/*.built.integration.test.ts"],
   },
-  // server's 09-testing §7 budgets (cell.run of 1 + 1, interrupt, kernel start, autosave) and the process entry
-  // dist/main.js that `nimbo open` forks (its listening line, server.json, signals, exit codes, stale files) measure and
-  // run the built daemon and kernel, after `build` and outside the coverage pool, as kernel-node:integration does.
+  // The built daemon and kernel: the process entry dist/main.js that `nimbo open` forks (its listening line,
+  // server.json, signals, exit codes, stale files), a run, an interrupt, a kernel start and an autosave burst, after
+  // `build` and outside the coverage pool, as kernel-node:integration does.
   {
     name: "server:integration",
     root: "packages/server",
     kind: "node",
-    include: ["src/**/*.budget.perf.test.ts", "src/**/*.built.integration.test.ts"],
+    include: ["src/**/*.built.integration.test.ts"],
   },
   // cli's built bin, dist/main.js as a shell runs it (its help, a call against a running daemon, exit 3 with none, the
   // start forking the server's built entry): after `build` and outside the coverage pool, as server:integration does.

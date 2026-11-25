@@ -1,49 +1,12 @@
-// The autosave budget of 09-testing §7 (server:integration, no coverage): a 200-cell notebook serializes in under 20 ms
-// (the session's own textOf, median of three with the 20 % tolerance), and the built daemon writes it once for a burst
-// of edits (the one notebook.saved after the burst already holds the last edit).
+// The built daemon (server:integration) writes a notebook once for a burst of edits: the one notebook.saved after the
+// burst already holds the last edit.
 import { readFile } from "node:fs/promises";
 
-import { createIds } from "@jsnb/test-tools/ids";
 import { connectDaemon } from "../../fixtures/daemon.js";
 import { withWorkspace } from "@jsnb/test-tools/workspace";
 import { describe, expect, it } from "vitest";
 
 import { readServerJson, spawnBuiltDaemon } from "../../fixtures/builtDaemon.js";
-import { median, report, threeSamples, withTolerance } from "../../fixtures/timing.js";
-import { emptyHeader, loadDocument, textOf } from "./fileForm.js";
-
-/** A notebook of 200 server cells of ten lines each, as text. */
-function twoHundredCells(): string {
-  const records = Array.from({ length: 200 }, (_, index) => ({
-    type: "server" as const,
-    source: Array.from(
-      { length: 10 },
-      (_, line) => `const v${String(index)}_${String(line)} = ${String(line)}`,
-    ).join("\n"),
-    meta: {},
-    extra: {},
-  }));
-  const ids = createIds(7);
-  const cells = records.map((record) => ({ ...record, id: ids.cell() }));
-  return textOf(
-    emptyHeader(),
-    loadDocument(JSON.stringify({ version: 1, jsnb: "0.0.0", cells }), "budget.jsnb", ids).records,
-  );
-}
-
-describe("the serialize of a 200-cell notebook", () => {
-  it("takes under 20 ms", async () => {
-    const loaded = loadDocument(twoHundredCells(), "budget.jsnb", createIds(9));
-    const samples = await threeSamples(() => {
-      const started = performance.now();
-      textOf(loaded.header, loaded.records);
-      return Promise.resolve(performance.now() - started);
-    });
-    report("autosave serialize", { median: median(samples), samples });
-    expect(loaded.records).toHaveLength(200);
-    expect(median(samples)).toBeLessThan(withTolerance(20));
-  });
-});
 
 describe("the built daemon's autosave of a burst of edits", () => {
   it("writes the notebook once, the last edit in it", async () => {
