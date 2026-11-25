@@ -87,7 +87,7 @@ export const isVoid = (element: Element): boolean =>
   element.namespaceURI === htmlNs && voids.has(element.localName);
 
 /** A URL the page could open, as the URL parser reads it: tabs, newlines, controls and spaces do not hide a scheme. */
-export function safeUrl(value: string): boolean {
+function safeUrl(value: string): boolean {
   // eslint-disable-next-line no-control-regex -- the C0 controls are what the URL parser strips
   const bare = value.replace(/[\u0000- \u007f]/gu, "");
   const scheme = /^([^/?#]*?):/u.exec(bare)?.[1];

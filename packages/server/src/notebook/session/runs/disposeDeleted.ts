@@ -37,6 +37,13 @@ export async function disposeUnserved(context: SessionContext, cell: CellId): Pr
   await disposeInKernel(context, cell);
 }
 
+/** A client cell that is not one any more (switched, or removed by notebook.reload): the page disposes it unless it is
+ * a client cell again by the time this runs. */
+export async function disposeUnclient(context: SessionContext, cell: CellId): Promise<void> {
+  await Promise.resolve();
+  if (context.cells.get(cell)?.type !== "client") context.hooks.disposeClient(cell);
+}
+
 async function disposeInKernel(context: SessionContext, cell: CellId): Promise<void> {
   const kernel = context.kernel.live();
   if (!kernel) return;

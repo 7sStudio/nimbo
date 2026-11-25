@@ -10,7 +10,7 @@ import type { SessionContext } from "./context.js";
 import type { Editor } from "./provenance.js";
 import { reviewed, stamped } from "./provenance.js";
 import type { CellRecord } from "./records.js";
-import { disposeUnserved } from "./runs/disposeDeleted.js";
+import { disposeUnclient, disposeUnserved } from "./runs/disposeDeleted.js";
 
 /** As cell.add's parsed input carries it (an absent key may be undefined). */
 export type AddCell = {
@@ -73,6 +73,13 @@ function mergedMeta(current: CellRecord["meta"], update: UpdateCell["meta"]): Ce
   return FileCellMeta.parse(Object.fromEntries(kept));
 }
 
+/** A cell switched away from server or client: its routes and timers end in the kernel, its listeners and timers in
+ * the page (a no-op when it is still what it was). */
+function disposeSwitched(context: SessionContext, was: CellType, cell: CellId): void {
+  if (was === "server") void disposeUnserved(context, cell);
+  if (was === "client") void disposeUnclient(context, cell);
+}
+
 export function updateCell(context: SessionContext, input: UpdateCell, editor: Editor): CellRecord {
   const record = context.cells.require(input.cell);
   const before = context.cells.graph();
@@ -91,8 +98,7 @@ export function updateCell(context: SessionContext, input: UpdateCell, editor: E
   }
   if (code) record.analysis = analysisOf(record.type, record.source);
   context.emit("cell.updated", { cell: context.cells.api(record) });
-  // a server cell switched to client or markdown: its routes and timers end in the kernel (no-op for a server cell)
-  if (was.type === "server") void disposeUnserved(context, record.id);
+  disposeSwitched(context, was.type, record.id);
   if (code) {
     const old = afterEdit(before, context.cells.stale(), record.id);
     restale(context, afterEdit(context.cells.graph(), old, record.id));

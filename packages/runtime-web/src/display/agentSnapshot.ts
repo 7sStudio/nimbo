@@ -44,17 +44,24 @@ const yieldToPage = (): Promise<void> =>
 /** The first child the walk reads: a same-origin frame's body's, else the element's own. */
 const firstOf = (element: Element): Node | null =>
   element instanceof HTMLIFrameElement
-    ? (element.contentDocument?.body?.firstChild ?? null)
+    ? (element.contentDocument?.body.firstChild ?? null)
     : element.firstChild;
+
+/** One node of the walk: text to the visitor, an element entered unless it is past the depth budget (true then). */
+function visit(stack: Frame[], node: Node, visitor: Visitor): boolean {
+  if (isText(node)) visitor.text(node);
+  if (!isElement(node)) return false;
+  if (stack.length > maxDepth) return true;
+  if (visitor.enter(node) === "children") stack.push({ element: node, next: firstOf(node) });
+  return false;
+}
 
 /** Walks `root`'s descendants depth first without recursion; true when a budget cut it short. */
 async function walk(root: Element, visitor: Visitor): Promise<boolean> {
   const stack: Frame[] = [{ element: root, next: root.firstChild }];
   let nodes = 0;
   let cut = false;
-  while (stack.length > 0) {
-    const top = stack.at(-1);
-    if (!top) break;
+  for (let top = stack.at(-1); top !== undefined; top = stack.at(-1)) {
     const node = top.next;
     if (node === null) {
       stack.pop();
@@ -65,14 +72,7 @@ async function walk(root: Element, visitor: Visitor): Promise<boolean> {
     nodes += 1;
     if (nodes > maxNodes || visitor.full()) return true;
     if (nodes % nodesPerSlice === 0) await yieldToPage();
-    if (isText(node)) visitor.text(node);
-    else if (isElement(node)) {
-      if (stack.length > maxDepth) {
-        cut = true;
-        continue;
-      }
-      if (visitor.enter(node) === "children") stack.push({ element: node, next: firstOf(node) });
-    }
+    if (visit(stack, node, visitor)) cut = true;
   }
   return cut;
 }
@@ -150,25 +150,31 @@ const escapeText = (text: string): string =>
   text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 const escapeValue = (text: string): string => escapeText(text).replaceAll('"', "&quot;");
 
+/** The live state of a form control, which its markup may not say: a box's check, an input's value (a typed password
+ * as ***), an option's selection. */
+function formState(element: Element): string {
+  if (element instanceof HTMLOptionElement) return element.selected ? ' selected=""' : "";
+  if (!(element instanceof HTMLInputElement)) return "";
+  if (element.type === "checkbox" || element.type === "radio")
+    return element.checked ? ' checked=""' : "";
+  if (element.type === "password") return element.value === "" ? "" : ' value="***"';
+  return element.type === "file" ? "" : ` value="${escapeValue(element.value)}"`;
+}
+
+/** Markup attributes the live state stands for instead. */
+const stateful = (element: Element, name: string): boolean =>
+  (element instanceof HTMLInputElement && (name === "value" || name === "checked")) ||
+  (element instanceof HTMLOptionElement && name === "selected");
+
 /** The element's attributes as the HTML says them: allowlisted ones, with the live form state written in. */
 function attributesOf(element: Element): string {
   const parts: string[] = [];
   for (const attribute of element.attributes) {
-    if (element instanceof HTMLInputElement && ["value", "checked"].includes(attribute.name))
-      continue;
-    if (element instanceof HTMLOptionElement && attribute.name === "selected") continue;
+    if (stateful(element, attribute.name)) continue;
     if (allowedAttribute(element, attribute.name, attribute.value))
       parts.push(` ${attribute.name}="${escapeValue(attribute.value)}"`);
   }
-  if (element instanceof HTMLInputElement) {
-    if (element.type === "checkbox" || element.type === "radio") {
-      if (element.checked) parts.push(' checked=""');
-    } else if (element.type === "password") {
-      if (element.value !== "") parts.push(' value="***"');
-    } else if (element.type !== "file") parts.push(` value="${escapeValue(element.value)}"`);
-  }
-  if (element instanceof HTMLOptionElement && element.selected) parts.push(' selected=""');
-  return parts.join("");
+  return parts.join("") + formState(element);
 }
 
 function htmlVisitor(maxBytes: number, out: string[]): Visitor {

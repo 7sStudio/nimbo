@@ -62,39 +62,49 @@ describe("agentSnapshot's text", () => {
   });
 });
 
-/** Parses `html` in a fresh same-origin frame as a page would; answers how many payloads ran and the document. */
+/** Parses `html` as a page would, in a same-origin frame's document (scripts run there) and through innerHTML;
+ * answers how many payloads ran and the frame's document. */
 async function reparse(html: string): Promise<{ readonly ran: number; readonly doc: Document }> {
   let ran = 0;
   Reflect.set(window, "__hit", () => (ran += 1));
   const frame = document.createElement("iframe");
+  const loaded = new Promise((resolve) => {
+    frame.addEventListener("load", resolve, { once: true });
+  });
+  frame.srcdoc = `<!doctype html><body>${html}</body>`;
   document.body.append(frame);
   mounted.push(frame);
-  const doc = frame.contentDocument;
-  if (!doc) throw new Error("no frame document");
-  doc.open();
-  doc.write(`<!doctype html><body>${html}</body>`);
-  doc.close();
+  await loaded;
   const holder = document.createElement("div");
   holder.innerHTML = html;
   await new Promise((resolve) => setTimeout(resolve, 200));
+  const doc = frame.contentDocument;
+  if (!doc) throw new Error("no frame document");
   return { ran, doc };
+}
+
+const executableTags =
+  "script, style, iframe, object, embed, base, link, meta, use, foreignObject, animate, set, math";
+const scriptedAttributes = new Set(["style", "srcset", "srcdoc"]);
+
+/** What an attribute could run or load: an event handler, a style or source set, a URL of another scheme. */
+function attributeRisk(element: Element, { name, value }: Attr): string | undefined {
+  if (name.startsWith("on") || scriptedAttributes.has(name)) return `${element.localName}[${name}]`;
+  // eslint-disable-next-line no-control-regex -- the C0 controls the URL parser strips
+  const bare = value.replace(/[\u0000-\u0020\u007f]/gu, "").toLowerCase();
+  const scheme = /^([^/?#]*?):/u.exec(bare)?.[1];
+  return scheme !== undefined && !["http", "https", "mailto"].includes(scheme)
+    ? `${element.localName}[${name}=${scheme}:]`
+    : undefined;
 }
 
 /** Anything in `doc` that could run code or load another document. */
 function executable(doc: Document): string[] {
-  const found: string[] = [];
-  const tags =
-    "script, style, iframe, object, embed, base, link, meta, use, foreignObject, animate, set, math";
-  for (const element of doc.body.querySelectorAll(tags)) found.push(element.localName);
+  const found = [...doc.body.querySelectorAll(executableTags)].map((element) => element.localName);
   for (const element of doc.body.querySelectorAll("*"))
-    for (const { name, value } of element.attributes) {
-      // eslint-disable-next-line no-control-regex -- the C0 controls the URL parser strips
-      const bare = value.replace(/[\u0000- \u007f]/gu, "").toLowerCase();
-      const scheme = /^([^/?#]*?):/u.exec(bare)?.[1];
-      if (name.startsWith("on") || name === "style" || name === "srcset" || name === "srcdoc")
-        found.push(`${element.localName}[${name}]`);
-      if (scheme !== undefined && !["http", "https", "mailto"].includes(scheme))
-        found.push(`${element.localName}[${name}=${scheme}:]`);
+    for (const attribute of element.attributes) {
+      const risk = attributeRisk(element, attribute);
+      if (risk !== undefined) found.push(risk);
     }
   return found;
 }

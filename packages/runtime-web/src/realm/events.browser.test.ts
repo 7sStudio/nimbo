@@ -39,13 +39,17 @@ describe("realm.event", () => {
       ["constructor", 1],
     ]);
   });
+});
 
+describe("realm.event", () => {
   it("gives a latest listener only the last event of its name in a batch", async () => {
     await world.run("globalThis.got = []\non('p', (d) => got.push(d), { latest: true })");
     await world.realm.handle("realm.event", { events: [1, 2, 3].map((i) => event("p", i)) });
     expect(got()).toEqual([3]);
   });
+});
 
+describe("realm.event", () => {
   it("lets the page run between slices of a slow listener's deliveries", async () => {
     await world.run(
       "on('slow', () => { const end = performance.now() + 5; while (performance.now() < end); })",
@@ -58,7 +62,9 @@ describe("realm.event", () => {
     clearInterval(timer);
     expect(ticks).toBeGreaterThan(5);
   });
+});
 
+describe("realm.event", () => {
   it("cuts an event output to the value limit and keeps at most 1 MB of event data a run", async () => {
     const listening = await world.run("on('big', () => 1)");
     const big = "x".repeat(300_000);
@@ -73,7 +79,9 @@ describe("realm.event", () => {
     expect(kept.length).toBeLessThan(6);
     for (const output of kept) expect(JSON.stringify(output).length).toBeLessThan(270_000);
   });
+});
 
+describe("realm.event", () => {
   it("refuses an on() name over 200 characters as emit does", async () => {
     const run = await world.run(`on("${"n".repeat(201)}", () => 1)`);
     expect(run.status.error).toMatchObject({ name: "TypeError" });

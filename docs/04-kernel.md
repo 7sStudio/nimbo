@@ -49,12 +49,13 @@ Start errors (each a `JsnbError` with typed `data`):
 | → kernel | `route` | `{ id, method, path, search, headers, rawBody }`: `path` below `/n/<name>` in route form (§8); `search` as the daemon's URL parser keeps it (`""` or `?a=1&a=2`, order and repeats kept); `rawBody` base64 |
 | → kernel | `cancel` | `{ ids }`: requests whose signal aborted; the kernel records the last 1 000 on arrival and drops them unanswered when reached; one already started runs on, its late result ignored. Sent at once, never held behind an interrupt |
 | → kernel | `dispose` | `{ id, cell }`: the cell was deleted or is no longer a server cell; its disposers run under its last run's store (§7); a throwing cleanup is a log notice |
+| → kernel | `page` | `{ listening }`: whether a page holds the client realm, sent when the kernel is ready and on every attach and detach; without one `emit` counts and drops at once (05-bridge §6) |
 | → kernel | `shutdown` | |
 | kernel → | `ready` | `{ pid, inspectorUrl? }` |
 | kernel → | `output` | `{ execution, output: Output, full? }` (`full`: uncapped form of a truncated value, §5.2) |
 | kernel → | `status` | `{ execution, status, error?, durationMs }`: `running` (`durationMs: 0`) right before the cell function is called, then one terminal `ok` or `error`; `interrupted` when the interrupt hook took the execution before its cell was called (§6) |
 | kernel → | `result` | `{ id, value?, error?, redacted?, refused? }` answering `call`, `snapshot`, `bindings`, `route`, `dispose`. `redacted: true` when redaction changed a call result (§10). `refused` on a call refused before running: `missing` (no current export of that name) or `value` (the export is not a function). A route's `value` is a `RouteResponse` with base64 `body` |
-| kernel → | `events` | `{ events: { name, data, at, cell? }[], dropped: Record<name, count> }`: the `emit` calls since the last flush (at most 1 000 between flushes, the oldest dropped and counted by name; 05-bridge §6) |
+| kernel → | `events` | `{ events: { name, data, at, cell? }[], dropped: { name \| null, count, why: "overflow" \| "noPage", at, cell? }[] }`: the `emit` calls since the last flush (at most 1 000 and 16 MB between flushes, the oldest dropped) and the drops by name, null for names past 1 000 a flush (05-bridge §6) |
 | kernel → | `exports` | `{ names: { name, cell }[] }` after each run |
 | kernel → | `routes` | `{ routes: Route[] }`: the whole table on every change (registration, replacement, disposal, hit), for `kernel.routes` and `routes.changed` (03-api §4.4, §6) |
 

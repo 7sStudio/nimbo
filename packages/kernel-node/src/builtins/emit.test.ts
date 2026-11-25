@@ -58,7 +58,9 @@ describe("emit", () => {
     flush();
     expect(sent[1]?.events.map((event) => event.name)).toEqual(["again"]);
   });
+});
 
+describe("emit", () => {
   it("keeps the latest of a burst past the count or the bytes and counts the dropped by name", () => {
     const { emit, sent, flush } = harness({ limits: { maxQueued: 3 } });
     emit("start", 0);
@@ -75,7 +77,9 @@ describe("emit", () => {
     expect(bytes.sent[0]?.events).toHaveLength(2);
     expect(bytes.sent[0]?.dropped).toMatchObject([{ name: "big", count: 3, why: "overflow" }]);
   });
+});
 
+describe("emit", () => {
   it("queues nothing while no page listens, counting the drops as noPage", () => {
     const { emit, listening, sent, flush } = harness();
     listening(false);
@@ -94,7 +98,9 @@ describe("emit", () => {
     flush();
     expect(sent[1]?.events.map((event) => event.data)).toEqual([3]);
   });
+});
 
+describe("emit", () => {
   it("counts prototype names as names, and past the name budget under null", () => {
     const { emit, listening, sent, flush } = harness({ limits: { maxNames: 2 } });
     listening(false);
@@ -134,7 +140,9 @@ describe("emit's refusals", () => {
     expect(flushes).toEqual([]);
     expect(sent).toEqual([]);
   });
+});
 
+describe("emit's refusals", () => {
   it("takes Dates, Maps and cycles as the bridge does, redacting every string", () => {
     const { emit, sent, flush } = harness();
     const loop: Record<string, unknown> = { key: "sk_live_secret" };
@@ -147,7 +155,9 @@ describe("emit's refusals", () => {
     expect(JSON.stringify(first?.data)).not.toContain("sk_live_secret");
     expect(second?.data).not.toBeUndefined();
   });
+});
 
+describe("emit's refusals", () => {
   it("refuses a name that is not a short string", () => {
     const { emit } = harness();
     expect(() => {

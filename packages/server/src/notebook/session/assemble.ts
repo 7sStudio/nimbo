@@ -136,6 +136,20 @@ export type OwnedContext = SessionContext & {
   readonly moveLog: (to: string) => Promise<void>;
 };
 
+/** The session's hooks before the parts that use them are wired. */
+const idleHooks = (): SessionHooks => ({
+  lateOutput: () => undefined,
+  exports: () => undefined,
+  events: () => undefined,
+  disposeClient: () => undefined,
+  pageAttached: () => false,
+  kernelEnded: () => undefined,
+  beforeServerRun: () => Promise.resolve(),
+  debuggerLines: () => [],
+  debugPause: () => Promise.resolve({ reason: "pause" }),
+  debugResumed: () => Promise.resolve(),
+});
+
 /** The context of a session over `options`: its kernel is created, not started. */
 export function contextOf(options: SessionOptions, hooks: FileHooks = {}): OwnedContext {
   const { bus, now } = options;
@@ -145,18 +159,7 @@ export function contextOf(options: SessionOptions, hooks: FileHooks = {}): Owned
     bus.emit(context.ref, type, data);
   };
   const place = livePlace(() => context);
-  const sessionHooks: SessionHooks = {
-    lateOutput: () => undefined,
-    exports: () => undefined,
-    events: () => undefined,
-    disposeClient: () => undefined,
-    pageAttached: () => false,
-    kernelEnded: () => undefined,
-    beforeServerRun: () => Promise.resolve(),
-    debuggerLines: () => [],
-    debugPause: () => Promise.resolve({ reason: "pause" }),
-    debugResumed: () => Promise.resolve(),
-  };
+  const sessionHooks = idleHooks();
   const cells = createCellStore(options.loaded.records);
   const kernelLog = followingKernelLog(options.logsDir, options.ref, log);
   const parts = { emit, log, hooks: sessionHooks };

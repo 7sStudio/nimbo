@@ -13,7 +13,7 @@ import type { RealmState } from "./state.js";
 
 type Drop = "noPage" | "noListener" | "overflow";
 
-export type EventStat = {
+type EventStat = {
   readonly name: string;
   emitted: number;
   delivered: number;
@@ -23,9 +23,9 @@ export type EventStat = {
   cell: CellId | null;
 };
 
-export type OtherNames = { names: number; emitted: number; delivered: number; dropped: number };
+type OtherNames = { names: number; emitted: number; delivered: number; dropped: number };
 
-export type EventStats = {
+type EventStats = {
   readonly attached: boolean;
   readonly total: number;
   readonly events: readonly EventStat[];
@@ -61,7 +61,19 @@ type Channel = {
   readonly pending: Pending[];
   pendingBytes: number;
   inFlight: boolean;
+  /** The bridge.activity event waiting to go out, at most one a second. */
+  signal: ReturnType<typeof setTimeout> | undefined;
 };
+
+/** Tells subscribers the counts moved, a second after the first change since the last time it did. */
+function signal(channel: Channel): void {
+  if (channel.signal !== undefined) return;
+  channel.signal = setTimeout(() => {
+    channel.signal = undefined;
+    channel.context.emit("bridge.activity", { at: channel.context.now().toISOString() });
+  }, 1000);
+  channel.signal.unref();
+}
 
 const otherOf = (channel: Channel): OtherNames =>
   (channel.other ??= { names: 0, emitted: 0, delivered: 0, dropped: 0 });
@@ -96,9 +108,7 @@ function emitted(channel: Channel, name: string, at: string): EventStat {
 function count(
   channel: Channel,
   name: string,
-  delivered: number,
-  dropped: number,
-  why: Drop,
+  { delivered = 0, dropped = 0, why }: { delivered?: number; dropped?: number; why: Drop },
 ): void {
   const stat = channel.stats.get(name);
   const row = stat ?? otherOf(channel);
@@ -116,7 +126,7 @@ function answered(channel: Channel, events: readonly BridgeEvent[], answer: unkn
   for (const { name } of events) sent.set(name, (sent.get(name) ?? 0) + 1);
   for (const [name, total] of sent) {
     const listened = Math.min(heard.get(name) ?? 0, total);
-    count(channel, name, listened, total - listened, "noListener");
+    count(channel, name, { delivered: listened, dropped: total - listened, why: "noListener" });
   }
 }
 
@@ -141,7 +151,8 @@ function pump(channel: Channel): void {
   if (channel.inFlight || pending.length === 0) return;
   const { attachment } = state;
   if (!attachment) {
-    for (const { event } of pending.splice(0)) count(channel, event.name, 0, 1, "noPage");
+    for (const { event } of pending.splice(0))
+      count(channel, event.name, { dropped: 1, why: "noPage" });
     channel.pendingBytes = 0;
     return;
   }
@@ -151,9 +162,10 @@ function pump(channel: Channel): void {
     .request("realm.event", { events }, attachment.detached.signal)
     .then((answer) => {
       answered(channel, events, answer);
+      signal(channel);
     })
     .catch((error: unknown) => {
-      for (const event of events) count(channel, event.name, 0, 1, "noPage");
+      for (const event of events) count(channel, event.name, { dropped: 1, why: "noPage" });
       context.log.debug({ err: error }, "the page did not take realm.event");
     })
     .finally(() => {
@@ -169,7 +181,7 @@ function queue(channel: Channel, event: BridgeEvent): void {
   stat.lastAt = event.at;
   stat.cell = event.cell ?? null;
   if (!channel.state.attachment) {
-    count(channel, event.name, 0, 1, "noPage");
+    count(channel, event.name, { dropped: 1, why: "noPage" });
     return;
   }
   const bytes = JSON.stringify(event.data).length;
@@ -182,7 +194,7 @@ function queue(channel: Channel, event: BridgeEvent): void {
     const oldest = channel.pending.shift();
     if (!oldest) break;
     channel.pendingBytes -= oldest.bytes;
-    count(channel, oldest.event.name, 0, 1, "overflow");
+    count(channel, oldest.event.name, { dropped: 1, why: "overflow" });
   }
 }
 
@@ -199,7 +211,7 @@ function takeDropped(channel: Channel, dropped: EventBatch["dropped"]): void {
     stat.emitted += n;
     stat.lastAt = at;
     stat.cell = cell ?? null;
-    count(channel, name, 0, n, why);
+    count(channel, name, { dropped: n, why });
   }
 }
 
@@ -218,13 +230,14 @@ function statsOf(channel: Channel, query: Parameters<EventChannel["stats"]>[0]):
 export function createEventChannel(context: SessionContext, state: RealmState): EventChannel {
   const channel: Channel = {
     ...{ context, state, stats: new Map(), other: null },
-    ...{ pending: [], pendingBytes: 0, inFlight: false },
+    ...{ pending: [], pendingBytes: 0, inFlight: false, signal: undefined },
   };
   return {
     take: ({ events, dropped }) => {
       takeDropped(channel, dropped);
       for (const event of events) queue(channel, event);
       pump(channel);
+      signal(channel);
     },
     stats: (query) => statsOf(channel, query),
   };

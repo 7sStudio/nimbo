@@ -107,21 +107,13 @@ const dropLine = (row: NonNullable<EventRow>[number]): string =>
   row.dropped === 0 || row.lastDrop === null
     ? ""
     : `${String(row.dropped)} dropped, last: ${dropWords[row.lastDrop]}`;
-// Side effect: the counts are read once the notebook is here, then a second after a client cell gets an event output.
+// Side effect: the counts are read once the notebook is here, then a second after the daemon reports bridge activity.
 watch(
   () =>
-    store.started && store.mirror.notebook !== null
-      ? store.cellsInOrder
-          .filter((cell) => cell.type === "client")
-          .map((cell) => {
-            const outputs = store.lastExecutionOf(cell.id)?.outputs ?? [];
-            return outputs.filter((output) => output.kind === "event").length;
-          })
-          .join(",")
-      : null,
+    store.started && store.mirror.notebook !== null ? (store.mirror.bridgeActivity ?? "") : null,
   (key) => {
     if (key !== null && eventsTimer === undefined)
-      eventsTimer = setTimeout(() => void readEvents(), 1000);
+      eventsTimer = setTimeout(() => void readEvents(), 300);
   },
   { immediate: true },
 );

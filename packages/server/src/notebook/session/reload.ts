@@ -8,7 +8,7 @@ import { readNotebook } from "../../files/notebooks/notebookFile.js";
 import type { SessionContext } from "./context.js";
 import { loadDocument } from "./fileForm.js";
 import { restale } from "./edits.js";
-import { disposeUnserved } from "./runs/disposeDeleted.js";
+import { disposeUnclient, disposeUnserved } from "./runs/disposeDeleted.js";
 import type { CellRecord } from "./records.js";
 
 const sameCell = (a: CellRecord, b: CellRecord): boolean =>
@@ -63,10 +63,10 @@ function emitChanges(context: SessionContext, done: Plan, keptBefore: readonly C
 }
 
 /** The ids of the server cells now. */
-const serverCells = (context: SessionContext): readonly CellId[] =>
+const cellsOf = (context: SessionContext, type: "server" | "client"): readonly CellId[] =>
   context.cells
     .list()
-    .filter((record) => record.type === "server")
+    .filter((record) => record.type === type)
     .map((record) => record.id);
 
 /** Re-reads the file and reconciles; NOTEBOOK_NOT_FOUND when the file is gone. */
@@ -78,7 +78,8 @@ export async function reloadSession(context: SessionContext): Promise<void> {
   const before = context.cells.graph();
   const done = plan(context.cells.list(), loaded.records);
   const kept = context.cells.order().filter((id) => !done.removed.includes(id));
-  const served = serverCells(context);
+  const served = cellsOf(context, "server");
+  const clients = cellsOf(context, "client");
   for (const id of done.removed) {
     const last = context.cells.get(id)?.last;
     if (last) context.runs.retained.drop(last.id); // a removed cell's run goes with it
@@ -93,5 +94,7 @@ export async function reloadSession(context: SessionContext): Promise<void> {
   restale(context, stale);
   // a server cell the file removed or made a client or markdown cell: its routes and timers end in the kernel
   for (const id of served) void disposeUnserved(context, id);
+  // a client cell the file removed or switched: its timers and listeners end in the page
+  for (const id of clients) void disposeUnclient(context, id);
   context.autosave.reloaded(read.text, loaded.dirty);
 }

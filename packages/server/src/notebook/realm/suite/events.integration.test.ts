@@ -220,6 +220,24 @@ describe("emit and on across the bridge", () => {
   });
 });
 
+describe("emit and on across the bridge", () => {
+  it("stops a listener when its cell turns markdown, and signals bridge activity", async () => {
+    await withBridge(async (world) => {
+      const { client, server, run, page, daemon, notebook } = world;
+      const ui = await client(listener);
+      await run(ui);
+      await daemon.client.cell.update({ notebook, cell: ui, type: "markdown" });
+      await expect.poll(() => page.containerText(ui)).toBeNull();
+      await server('emit("tick", 1)');
+      expect(await until(world, "tick", (stat) => stat.dropped === 1)).toMatchObject({
+        delivered: 0,
+        lastDrop: "noListener",
+      });
+      await daemon.events.until("bridge.activity", () => true);
+    });
+  });
+});
+
 describe("cell.snapshot", () => {
   it("reads a rendered client cell sanitised, with form values, its text in reading order, cut to maxBytes", async () => {
     await withBridge(async (world) => {
@@ -257,43 +275,48 @@ root.querySelector("#s").value = "b"`);
 });
 
 describe("cell.snapshot", () => {
-  it(
-    "answers rendered false for a cell not run, refuses a server cell and an image, times out on a busy page, and needs a page",
-    { timeout: 30_000 },
-    async () => {
-      await withBridge(async (world) => {
-        const { client, server, daemon, notebook, page } = world;
-        const ui = await client("display.html('x')");
-        expect(await daemon.client.cell.snapshot({ notebook, cell: ui })).toEqual({
-          text: "",
-          rendered: false,
-          truncated: false,
-        });
-        const back = await server("1");
-        await expect(daemon.client.cell.snapshot({ notebook, cell: back })).rejects.toMatchObject({
-          name: "InvalidParams",
-        });
-        await expect(
-          daemon.client.cell.snapshot({ notebook, cell: ui, image: true }),
-        ).rejects.toMatchObject({
-          name: "NotAvailable",
-        });
-        await world.run(
-          await client(
-            "setTimeout(() => { const end = Date.now() + 7000; while (Date.now() < end); }, 100)",
-          ),
-        );
-        await new Promise((resolve) => setTimeout(resolve, 400));
-        await expect(daemon.client.cell.snapshot({ notebook, cell: ui })).rejects.toMatchObject({
-          name: "PageTimeout",
-          data: { request: "realm.snapshot", timeoutMs: 5000 },
-        });
-        await new Promise((resolve) => setTimeout(resolve, 2500));
-        await page.detach();
-        await expect(daemon.client.cell.snapshot({ notebook, cell: ui })).rejects.toMatchObject({
-          name: "RealmNotAttached",
-        });
+  it("answers rendered false for a cell not run, refuses a server cell and an image, and needs a page", async () => {
+    await withBridge(async (world) => {
+      const { client, server, daemon, notebook, page } = world;
+      const ui = await client("display.html('x')");
+      expect(await daemon.client.cell.snapshot({ notebook, cell: ui })).toEqual({
+        text: "",
+        rendered: false,
+        truncated: false,
       });
-    },
-  );
+      const back = await server("1");
+      await expect(daemon.client.cell.snapshot({ notebook, cell: back })).rejects.toMatchObject({
+        name: "InvalidParams",
+      });
+      await expect(
+        daemon.client.cell.snapshot({ notebook, cell: ui, image: true }),
+      ).rejects.toMatchObject({
+        name: "NotAvailable",
+      });
+      await page.detach();
+      await expect(daemon.client.cell.snapshot({ notebook, cell: ui })).rejects.toMatchObject({
+        name: "RealmNotAttached",
+      });
+    });
+  });
+});
+
+describe("cell.snapshot", () => {
+  it("answers PAGE_TIMEOUT when the page is too busy to answer", { timeout: 30_000 }, async () => {
+    await withBridge(async (world) => {
+      const { client, daemon, notebook } = world;
+      const ui = await client("display.html('x')");
+      await world.run(
+        await client(
+          "setTimeout(() => { const end = Date.now() + 7000; while (Date.now() < end); }, 100)",
+        ),
+      );
+      await new Promise((resolve) => setTimeout(resolve, 400));
+      await expect(daemon.client.cell.snapshot({ notebook, cell: ui })).rejects.toMatchObject({
+        name: "PageTimeout",
+        data: { request: "realm.snapshot", timeoutMs: 5000 },
+      });
+      await new Promise((resolve) => setTimeout(resolve, 2500));
+    });
+  });
 });

@@ -6,7 +6,14 @@
 import type { BridgeEvent, CellId } from "@jsnb/core";
 import { encodeStrict, EventNotSerializable } from "@jsnb/core";
 
-import type { DroppedEvents } from "../ipc/messages.js";
+/** Events dropped since the last flush, by name (null: names past the flush's budget); the ipc schema's shape. */
+type DroppedEvents = {
+  readonly name: string | null;
+  readonly count: number;
+  readonly why: "overflow" | "noPage";
+  readonly at: string;
+  readonly cell?: CellId;
+};
 
 /** The kernel's `events` message (04-kernel §2.1). */
 export type EventsMessage = {
@@ -114,35 +121,41 @@ function createTallies(maxNames: number) {
   };
 }
 
+/** The queue between two flushes: bounded by count and bytes, the oldest dropped into `tallies`. */
+function createQueue(limits: QueueLimits, tallies: ReturnType<typeof createTallies>) {
+  const queue: Queued[] = [];
+  let bytes = 0;
+  return {
+    push: (queued: Queued): void => {
+      queue.push(queued);
+      bytes += queued.bytes;
+      while (
+        queue.length > limits.maxQueued ||
+        (bytes > limits.maxQueuedBytes && queue.length > 1)
+      ) {
+        const oldest = queue.shift();
+        if (!oldest) return;
+        bytes -= oldest.bytes;
+        tallies.add(oldest.event.name, "overflow", oldest.event.at, oldest.event.cell);
+      }
+    },
+    take: (): BridgeEvent[] => {
+      bytes = 0;
+      return queue.splice(0).map((each) => each.event);
+    },
+  };
+}
+
 /** `emit` as cells call it, and the daemon's word on whether a page listens. */
 export function createEmit(deps: EmitDeps): Emit {
   const limits = { ...defaults, ...deps.limits };
-  const queue: Queued[] = [];
-  let queuedBytes = 0;
   const tallies = createTallies(limits.maxNames);
+  const queue = createQueue(limits, tallies);
   let listening = true;
   let scheduled = false;
   const flush = (): void => {
     scheduled = false;
-    const events = queue.splice(0).map((each) => each.event);
-    queuedBytes = 0;
-    deps.send({ type: "events", events, dropped: tallies.take() });
-  };
-  const later = (): void => {
-    if (scheduled) return;
-    scheduled = true;
-    deps.schedule(flush);
-  };
-  const trim = (): void => {
-    while (
-      queue.length > limits.maxQueued ||
-      (queuedBytes > limits.maxQueuedBytes && queue.length > 1)
-    ) {
-      const oldest = queue.shift();
-      if (!oldest) return;
-      queuedBytes -= oldest.bytes;
-      tallies.add(oldest.event.name, "overflow", oldest.event.at, oldest.event.cell);
-    }
+    deps.send({ type: "events", events: queue.take(), dropped: tallies.take() });
   };
   const emit = (name: unknown, data?: unknown): undefined => {
     const checked = checkedName(name);
@@ -154,10 +167,11 @@ export function createEmit(deps: EmitDeps): Emit {
     else {
       const event = { name: redacted, data: wire.json, at };
       queue.push({ event: cell === undefined ? event : { ...event, cell }, bytes: wire.bytes });
-      queuedBytes += wire.bytes;
-      trim();
     }
-    later();
+    if (!scheduled) {
+      scheduled = true;
+      deps.schedule(flush);
+    }
     return undefined;
   };
   return {
