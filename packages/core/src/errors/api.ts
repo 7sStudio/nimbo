@@ -1,5 +1,4 @@
 // The call failures of 03-api §7.4: one JsnbError subclass per JSON-RPC error code, with its message template.
-// Over 170 lines because every code of the table is a class with its template.
 import type { InterruptContext } from "../model/kernel.js";
 import type { ErrorInfo } from "../model/output.js";
 import { JsnbError } from "./jsnbError.js";

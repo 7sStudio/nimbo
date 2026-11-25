@@ -1,5 +1,4 @@
 // The recursive encoder behind encode and encodeStrict: one walk over a value with a mode, budgets and refs.
-// Over 170 lines because every kind of the wire form (form.ts) has its branch here.
 import { bytesOf, toBase64 } from "./bytes.js";
 import type { Path } from "./form.js";
 import {
@@ -40,7 +39,6 @@ type State = {
 };
 
 type Cursor = { readonly path: Path; readonly depth: number };
-type Visitor = (value: unknown, at: Cursor, state: State) => unknown;
 
 const nodeCost = 8;
 
@@ -128,42 +126,48 @@ function visit(value: unknown, at: Cursor, state: State): unknown {
   state.nodes += 1;
   state.bytes += nodeCost;
   const kind = kindOf(value);
-  const leaf = leaves[kind];
-  if (leaf) return leaf(value, at, state);
-  return typeof value === "object" && value !== null
-    ? reference(value, kind, at, state)
-    : undefinedMarker;
+  switch (kind) {
+    case "primitive":
+      return typeof value === "string" ? text(value, state) : value;
+    case "undefined":
+    case "symbol":
+      return undefinedMarker;
+    case "specialNumber":
+      return typeof value === "number" ? numberMarker(value) : undefinedMarker;
+    case "bigint":
+      return typeof value === "bigint" ? bigintMarker(value) : undefinedMarker;
+    case "function":
+      if (typeof value !== "function") return undefinedMarker;
+      return state.options.strict ? fail(state, at.path, "Function") : functionMarker(value.name);
+    case "date":
+      return value instanceof Date ? dateMarker(value) : undefinedMarker;
+    case "regexp":
+      return value instanceof RegExp ? regexpMarker(value) : undefinedMarker;
+    case "error":
+      if (!(value instanceof Error)) return undefinedMarker;
+      if (state.options.strict) return fail(state, at.path, className(value));
+      return errorMarker(value.name, text(value.message, state));
+    case "bytes":
+      return typeof value === "object" && value !== null
+        ? bytes(value, at, state)
+        : undefinedMarker;
+    default:
+      return typeof value === "object" && value !== null
+        ? reference(value, kind, at, state)
+        : undefinedMarker;
+  }
 }
 
-const leaves: Partial<Record<Kind, Visitor>> = {
-  primitive: (value, _at, state) => (typeof value === "string" ? text(value, state) : value),
-  undefined: () => undefinedMarker,
-  symbol: () => undefinedMarker,
-  specialNumber: (value) => (typeof value === "number" ? numberMarker(value) : undefinedMarker),
-  bigint: (value) => (typeof value === "bigint" ? bigintMarker(value) : undefinedMarker),
-  function: (value, at, state) => {
-    if (typeof value !== "function") return undefinedMarker;
-    return state.options.strict ? fail(state, at.path, "Function") : functionMarker(value.name);
-  },
-  date: (value) => (value instanceof Date ? dateMarker(value) : undefinedMarker),
-  regexp: (value) => (value instanceof RegExp ? regexpMarker(value) : undefinedMarker),
-  error: (value, at, state) => {
-    if (!(value instanceof Error)) return undefinedMarker;
-    if (state.options.strict) return fail(state, at.path, className(value));
-    return errorMarker(value.name, text(value.message, state));
-  },
-  bytes: (value, at, state) => {
-    const object = typeof value === "object" && value !== null ? value : undefined;
-    const view = object ? bytesOf(object) : undefined;
-    if (!object || !view) return undefinedMarker;
-    if (state.options.strict && view.length > state.options.bytesLimit) {
-      return fail(state, at.path, className(object), view.length); // the value's own class: Buffer, Float64Array
-    }
-    const base64 = toBase64(view.subarray(0, state.options.bytesLimit));
-    state.bytes += base64.length;
-    return bytesMarker(view.length, base64);
-  },
-};
+function bytes(value: object, at: Cursor, state: State): unknown {
+  const view = bytesOf(value);
+  if (!view) return undefinedMarker;
+  if (state.options.strict && view.length > state.options.bytesLimit) {
+    return fail(state, at.path, className(value), view.length); // the value's own class: Buffer, Float64Array
+  }
+  const base64 = toBase64(view.subarray(0, state.options.bytesLimit));
+  state.bytes += base64.length;
+  return bytesMarker(view.length, base64);
+}
 
 /** Containers: a repeated object becomes a ref, a too-deep one a truncated marker, the rest is walked. */
 function reference(value: object, kind: Kind, at: Cursor, state: State): unknown {
