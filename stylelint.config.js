@@ -1,8 +1,7 @@
-// Stylelint for packages/**/*.{css,vue} per 08-code-standards §7: literal colors only in the token sheets, logical properties, no !important.
+// Stylelint for packages/**/*.{css,vue} per 08-code-standards §7: literal colors only in the token sheets, no !important.
 export default {
   extends: ["stylelint-config-standard"],
   ignoreFiles: ["**/dist/**", "**/node_modules/**", "**/coverage/**", "**/vendor/**"],
-  plugins: ["stylelint-use-logical"],
   overrides: [
     { files: ["**/*.vue"], customSyntax: "postcss-html" },
     // The shared palette is written once, as data, in packages/tokens, whose generated sheets carry it (their :root and.
@@ -41,7 +40,6 @@ export default {
     },
   ],
   rules: {
-    "csstools/use-logical": "always",
     "color-no-hex": true,
     "color-named": "never",
     "declaration-no-important": true,

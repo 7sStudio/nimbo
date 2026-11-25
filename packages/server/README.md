@@ -84,4 +84,4 @@ of 03-api §8 map on them.
 - `@jsnb/test-tools/contract`: `checkSurface(has, { internal })`, the registry contract the cli and mcp also run.
 - The npm registry is the one stub (`@jsnb/test-tools/registry`, shared with the cli): the real package manager runs
   against it.
-- `server:integration` (after `pnpm build`) runs `dist/main.js` and the 09-testing §7 budgets on the built daemon.
+- `server:integration` (after `pnpm build`) runs `dist/main.js` and the built daemon's run, interrupt, kernel start and autosave tests.

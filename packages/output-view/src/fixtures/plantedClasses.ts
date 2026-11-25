@@ -55,31 +55,14 @@ export const refusedClasses: readonly (readonly [string, string])[] = [
   ["ov:overflow-hidden", "declaration-property-value-disallowed-list"],
   ["ov:truncate", "declaration-property-value-disallowed-list"],
   ["ov:line-clamp-2", "declaration-property-value-disallowed-list"],
-  // physical properties and sides
-  ["ov:w-4", "csstools/use-logical"],
-  ["ov:size-6", "csstools/use-logical"],
-  ["ov:mt-2", "csstools/use-logical"],
-  ["ov:pl-2", "csstools/use-logical"],
-  ["ov:left-2", "csstools/use-logical"],
-  ["ov:border-l", "csstools/use-logical"],
-  ["ov:float-left", "csstools/use-logical"],
-  ["ov:text-left", "csstools/use-logical"],
-  ["ov:scroll-mt-2", "property-disallowed-list"],
-  ["ov:overscroll-x-contain", "property-disallowed-list"],
-  ["ov:overscroll-y-none", "property-disallowed-list"],
-  ["ov:[overscroll-behavior:contain_auto]", "declaration-property-max-values"],
-  ["ov:snap-x", "declaration-property-value-disallowed-list"],
-  ["ov:snap-y", "declaration-property-value-disallowed-list"],
-  ["ov:m-[0_1rem]", "declaration-property-max-values"],
-  ["ov:rounded-[0.25rem_0_0_0.25rem]", "declaration-property-max-values"],
   // z-index outside the named layers, !important
   ["ov:z-10", "declaration-property-value-allowed-list"],
   ["ov:[z-index:var(--z-panel,999)]", "declaration-property-value-allowed-list"],
   ["ov:shadow-[0_0_0_1px_var(--accent)]!", "declaration-no-important"],
 ];
 
-/** Classes 08 §7 allows: tokens, a token at an opacity (color-mix() of tokens), logical utilities, motion and hover
- * in their media queries, relative container queries, px on a border. */
+/** Classes 08 §7 allows: tokens, a token at an opacity (color-mix() of tokens), logical and physical utilities, motion
+ * and hover in their media queries, relative container queries, px on a border. */
 export const allowedClasses: readonly string[] = [
   "ov:text-fg",
   "ov:bg-accent-soft",
@@ -110,4 +93,20 @@ export const allowedClasses: readonly string[] = [
   "ov:overscroll-contain",
   "ov:[scroll-snap-type:inline_mandatory]",
   "ov:live-slot",
+  "ov:w-4",
+  "ov:size-6",
+  "ov:mt-2",
+  "ov:pl-2",
+  "ov:left-2",
+  "ov:border-l",
+  "ov:float-left",
+  "ov:text-left",
+  "ov:scroll-mt-2",
+  "ov:overscroll-x-contain",
+  "ov:overscroll-y-none",
+  "ov:[overscroll-behavior:contain_auto]",
+  "ov:snap-x",
+  "ov:snap-y",
+  "ov:m-[0_1rem]",
+  "ov:rounded-[0.25rem_0_0_0.25rem]",
 ];

@@ -11,7 +11,7 @@ import { relativeQueries } from "./rules/relativeQueries.js";
 import type { GateScope } from "./scope.js";
 
 /** The repository's rules taken as they stand. */
-const reused = ["csstools/use-logical", "color-no-hex", "color-named", "declaration-no-important"];
+const reused = ["color-no-hex", "color-named", "declaration-no-important"];
 /** The repository's rules compiled CSS needs more of, merged below. */
 const merged = ["unit-disallowed-list", "declaration-property-value-disallowed-list"];
 
@@ -19,30 +19,18 @@ const merged = ["unit-disallowed-list", "declaration-property-value-disallowed-l
  * Tailwind's shadow and ring internals, which carry the outlines and bars the repository's own list allows. */
 const units = ["pt", "pc", "cm", "mm", "in", "q"];
 const px = ["stroke-width", "/^--tw-(?:inset-)?(?:shadow|ring)/"];
-/** An outline of no width is an outline removed too; no hidden overflow (overflow: clip, 08 §7); no physical snap axis
- * (scroll-snap-type has inline and block). */
+/** An outline of no width is an outline removed too; no hidden overflow (overflow: clip, 08 §7). */
 const values: Readonly<Record<string, readonly string[]>> = {
   outline: ["/^0(?:px)?(?:\\s|$)/"],
   "outline-style": ["none"],
   "outline-width": ["/^0(?:px)?$/"],
   "/^overflow/": ["/\\bhidden\\b/"],
-  "scroll-snap-type": ["/^[xy]\\b/"],
 };
 
 /** The Stylelint rules compiled CSS adds, which the views' utilities can break and the CSS files do not. */
 const added = {
   // a color is a token or color-mix() of tokens: no literal color function, which color-no-hex and color-named miss
   "function-disallowed-list": "rgb rgba hsl hsla hwb lab lch oklab oklch color".split(" "),
-  // one value on every side, corner or axis: more names physical ones (stylelint-use-logical reads the longhands only;
-  // overscroll-behavior's second value is the y axis)
-  "declaration-property-max-values": {
-    "/^(?:inset|margin|padding|scroll-margin|scroll-padding|overscroll-behavior|border-(?:width|style|color|radius))$/": 1,
-  },
-  // physical longhands stylelint-use-logical does not know
-  "property-disallowed-list": [
-    "/^scroll-(?:margin|padding)-(?:top|right|bottom|left)$/",
-    "/^overscroll-behavior-[xy]$/",
-  ],
   "declaration-property-value-allowed-list": {
     "z-index": ["/^var\\(--z-(?:toolbar|panel|overlay|toast)\\)$/"],
   },

@@ -1,10 +1,12 @@
-// Gzips the ui page bundle (every asset the built index.html references, under base /ui/ or none) and fails above 500 KB (08-code-standards §10).
+// Gzips the ui page bundle (every asset the built index.html references, under base /ui/ or none) and fails above 2 MB:
+// a tripwire for a large library imported into the first load by accident, not a target. The page is served from
+// 127.0.0.1, so its size costs parse time only.
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { gzipSync } from "node:zlib";
 
 const dist = "packages/ui/dist";
-const budget = 500 * 1024;
+const limit = 2 * 1024 * 1024;
 const html = join(dist, "index.html");
 
 if (!existsSync(html)) {
@@ -29,9 +31,11 @@ for (const ref of refs) {
   console.log(`${(size / 1024).toFixed(1).padStart(8)} KB  ${ref}`);
 }
 console.log(
-  `${(total / 1024).toFixed(1).padStart(8)} KB  total gzipped (budget ${budget / 1024} KB)`,
+  `${(total / 1024).toFixed(1).padStart(8)} KB  total gzipped (tripwire ${limit / 1024} KB)`,
 );
-if (total > budget) {
-  console.error("The initial page bundle is over budget (08-code-standards §10).");
+if (total > limit) {
+  console.error(
+    "The page's first load passed the tripwire: look for a large library imported eagerly by accident.",
+  );
   process.exit(1);
 }

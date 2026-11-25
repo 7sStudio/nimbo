@@ -1,4 +1,4 @@
-// The built kernel for the budget tests (09-testing §7): the package's dist/index.js, whose createNodeKernel forks its
+// The built kernel for the integration stage: the package's dist/index.js, whose createNodeKernel forks its
 // default entry, dist/main.js, exactly what users run; a workspace of its own, and the kernel killed at the end.
 import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -20,7 +20,7 @@ const isCreate = (value: unknown): value is CreateNodeKernel => typeof value ===
 export async function loadBuiltKernel(): Promise<CreateNodeKernel> {
   if (!existsSync(distMain)) {
     throw new Error(
-      `The budget tests measure the built kernel and ${distMain} is missing: run pnpm build first.`,
+      `The integration tests run the built kernel and ${distMain} is missing: run pnpm build first.`,
     );
   }
   const built: unknown = await import(distIndex.href);
@@ -36,7 +36,7 @@ export function withBuiltKernel<T>(
   fn: (kernel: NodeKernel, ws: Workspace) => Promise<T>,
 ): Promise<T> {
   return withWorkspace(async (ws) => {
-    const kernel = create({ workspace: ws.dir, notebook: "budget.jsnb", port: 4321 });
+    const kernel = create({ workspace: ws.dir, notebook: "built.jsnb", port: 4321 });
     onTestFinished(() => kernel.kill());
     try {
       return await fn(kernel, ws);

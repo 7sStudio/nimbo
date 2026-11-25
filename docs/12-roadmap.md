@@ -8,8 +8,6 @@ What is open. Each item gets its design in the document that owns the topic when
 
 These settings exist in the registry with their schemas as the contract and answer `NOT_AVAILABLE` (1009) until built (03 §3): the `planned` settings `editor.keymap: "vim"` and `secrets.allowLiveKeys`. Building one replaces its stub.
 
-Constraint on every UI item: the page's first load stays within its 500 KB budget; anything new on the page is a chunk loaded on first use.
-
 ## 2. Kernel, realms and execution
 
 - **Snapshot images from a tab** (S): `cell.snapshot { image }` comes from the headless realm only; a tab could render its container to a PNG in the page.

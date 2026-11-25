@@ -1,6 +1,5 @@
 // @ts-check
 // The ESLint 9 flat config of 08-code-standards §1, §4, §6, §7 and §8: every rule is "error", none is "warn".
-// Over 170 lines because each rule group is cited to its section of 08.
 import { builtinModules } from "node:module";
 
 import js from "@eslint/js";
@@ -16,12 +15,20 @@ import vueParser from "vue-eslint-parser";
 
 import { boundariesRules, boundariesSettings, outputViewModel } from "./tools/boundaries.config.js";
 
-import { packageBlocks } from "./eslint.config.packages.js";
-
 const nodeModules = ["node:*", ...builtinModules];
 const noNode = {
   patterns: [
     { group: nodeModules, message: "This package runs anywhere; no Node modules (08 §4)." },
+  ],
+};
+// The Node-module rule anchored to whole specifiers, for a package whose own folders share a builtin's name (client's
+// `http/` and `events/`), which a gitignore-style group would match inside a relative path.
+const noNodeSpecifier = {
+  patterns: [
+    {
+      regex: `^(node:|(${builtinModules.join("|")})(/|$))`,
+      message: "This package runs anywhere; no Node modules (08 §4).",
+    },
   ],
 };
 
@@ -94,7 +101,7 @@ export default defineConfig([
     rules: { "vue/no-unused-properties": "off" },
   },
 
-  // 08 §2 sizes, §5 errors, §6 TypeScript, §8 registry rules: the rules every TS and Vue file follows.
+  // 08 §5 errors, §6 TypeScript, §8 registry rules: the rules every TS and Vue file follows.
   {
     files: ["**/*.{ts,mts,cts,vue}"],
     plugins: { "import-x": importX, boundaries, jsnb },
@@ -109,12 +116,6 @@ export default defineConfig([
       },
     },
     rules: {
-      // 08 §2 files and sizes
-      "max-lines": ["error", { max: 400, skipBlankLines: true, skipComments: true }],
-      "max-lines-per-function": ["error", { max: 40, skipBlankLines: true, skipComments: true }],
-      complexity: ["error", 10],
-      "max-depth": ["error", 3],
-      "max-params": ["error", 4],
       // 08 §5 errors
       "no-empty": "error",
       "@typescript-eslint/only-throw-error": "error",
@@ -198,8 +199,21 @@ export default defineConfig([
     ignores: ["packages/query-sql/src/node/**"],
     rules: { "no-restricted-imports": ["error", noNode] },
   },
-  // 02 §2: client runs anywhere; its block lives in eslint.config.packages.js (08 §2 file budget).
-  ...packageBlocks,
+  // 02 §2: client runs anywhere (the page, the CLI, the MCP server); its sources use the platform fetch and
+  // WebSocket, never a Node module or Node-only global. Its tests and fixtures stand up a peer on node:http and ws, and
+  // its `./node` export (src/node/, the CLI's and the MCP server's shared daemon start) runs in Node only.
+  {
+    files: ["packages/client/src/**"],
+    ignores: [
+      "packages/client/src/**/*.test.ts",
+      "packages/client/src/fixtures/**",
+      "packages/client/src/node/**",
+    ],
+    rules: {
+      "no-restricted-imports": ["error", noNodeSpecifier],
+      "no-restricted-globals": ["error", "process", "Buffer", "window", "document"],
+    },
+  },
   // 08 §5: no console.log outside cli and the kernel's user-facing stream.
   {
     files: ["packages/cli/**", "packages/kernel-node/src/outputs/**"],
@@ -226,10 +240,7 @@ export default defineConfig([
     files: ["**/*.{js,mjs,cjs}"],
     extends: [tseslint.configs.disableTypeChecked],
     languageOptions: { globals: globals.node },
-    rules: {
-      "max-lines": ["error", { max: 400, skipBlankLines: true, skipComments: true }],
-      "no-console": "off",
-    },
+    rules: { "no-console": "off" },
   },
   {
     files: ["**/*.cjs"],

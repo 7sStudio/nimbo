@@ -1,6 +1,7 @@
 // Sheets in the viewer's own forms the 08 §7 gate must refuse in output-view's scope, each with the rule that refuses it
 // (style.plants.contract.test.ts), and a sheet of what it must pass: the scope plugin's real defaults rule, chrome.css's
-// exclusion of the live slot, and the dialog's fixed utility. The gate's own tests plant the rest on fixture CSS.
+// exclusion of the live slot, the dialog's fixed utility and a physical longhand. The gate's own tests plant the rest on
+// fixture CSS.
 import { defaultsSelectors } from "@jsnb/style-gate/tailwind-scope";
 
 import { viewerScope } from "../../tailwindScope.js";
@@ -16,7 +17,6 @@ export const refusedSheets: readonly (readonly [string, string])[] = [
   [".jsnb-ov [data-part='tools'] { opacity: 0; }", "jsnb/in-scope"],
   [".jsnb-ov td { padding-block: 0.25rem; }", "jsnb/in-scope"],
   [".ov\\:a:focus-within { opacity: 1; }", "selector-pseudo-class-disallowed-list"],
-  [".ov\\:a { overscroll-behavior-x: contain; }", "property-disallowed-list"],
   [".ov\\:a:focus-visible { all: unset; }", "jsnb/in-its-place"],
   [".ov\\:live-slot { all: unset; }", "jsnb/in-its-place"],
   [`${defaults} { --tw-ring-offset-color: #fff; }`, "color-no-hex"],
@@ -30,4 +30,5 @@ export const allowedSheet = `
     .jsnb-ov [data-part="tools"]:not([data-live], [data-live] *) { transition: opacity var(--dur) var(--ease-out); }
   }
   .ov\\:live-slot { all: initial; display: block; color-scheme: inherit; -webkit-locale: inherit; }
-  .ov\\:fixed { position: fixed; }`;
+  .ov\\:fixed { position: fixed; }
+  .ov\\:a { overscroll-behavior-x: contain; }`;

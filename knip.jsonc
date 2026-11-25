@@ -83,10 +83,8 @@
       "entry": [],
       "project": ["*.js"],
     },
-    // The 08 §7 gate on compiled stylesheets (its entry is package.json's export). Its tests name stylelint-use-logical in
-    // the configuration they hand Stylelint, which loads it by name; knip sees no import of it.
+    // The 08 §7 gate on compiled stylesheets (its entry is package.json's export).
     "tools/style-gate": {
-      "ignoreDependencies": ["stylelint-use-logical"],
       "project": ["src/**/*.ts"],
     },
   },

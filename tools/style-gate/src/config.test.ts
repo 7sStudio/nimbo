@@ -1,9 +1,9 @@
 // Tests the gate's configuration (config.ts) on the repository's rules as stylelint.resolveConfig() gives them: it takes
-// four as they are, merges what compiled CSS needs into the px and outline rules, and refuses a configuration that no
+// three as they are, merges what compiled CSS needs into the px and outline rules, and refuses a configuration that no
 // longer sets one of them or sets it in a shape it cannot extend.
 import stylelint from "stylelint";
 import type { Config } from "stylelint";
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 
 import { gateConfig } from "./config.js";
 import { repository, repositoryRules, scope } from "./fixtures/repository.js";
@@ -14,17 +14,13 @@ type Rules = NonNullable<Config["rules"]>;
 const resolved = (rules: Rules): Promise<Config | undefined> =>
   stylelint.resolveConfig(repository.file, { config: { ...repository.config, rules } });
 
-// The first resolveConfig() loads stylelint-use-logical: setup, not any one test's time.
-beforeAll(() => resolved(repositoryRules));
-
 const px = ["/^border(?!.*radius)/", "/^outline/", "box-shadow", "--shadow"];
 const compiledPx = ["stroke-width", "/^--tw-(?:inset-)?(?:shadow|ring)/"];
 const absolute = ["pt", "pc", "cm", "mm", "in", "q"];
 
 describe("the repository's rules", () => {
-  it("takes the four it reuses as stylelint.config.js sets them", async () => {
+  it("takes the three it reuses as stylelint.config.js sets them", async () => {
     expect(gateConfig(await resolved(repositoryRules), scope).rules).toMatchObject({
-      "csstools/use-logical": ["always"],
       "color-no-hex": [true],
       "color-named": ["never"],
       "declaration-no-important": [true],
@@ -43,7 +39,6 @@ describe("the repository's rules", () => {
         "outline-style": ["none"],
         "outline-width": ["/^0(?:px)?$/"],
         "/^overflow/": ["/\\bhidden\\b/"],
-        "scroll-snap-type": ["/^[xy]\\b/"],
       },
     ]);
   });
@@ -75,7 +70,7 @@ describe("a configuration the gate cannot run on", () => {
   it("names each rule the repository no longer sets", async () => {
     const { "color-named": named, "unit-disallowed-list": units, ...rest } = repositoryRules;
     expect([named, units]).not.toContain(undefined);
-    expect(() => gateConfig(undefined, scope)).toThrow(/no longer sets csstools\/use-logical/u);
+    expect(() => gateConfig(undefined, scope)).toThrow(/no longer sets color-no-hex/u);
     const config = await resolved(rest);
     expect(() => gateConfig(config, scope)).toThrow(
       "stylelint.config.js no longer sets color-named, unit-disallowed-list for the package",
