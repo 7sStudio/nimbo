@@ -108,7 +108,14 @@ export const notebookRun = defineCommand({
   }),
   output: z.object({
     executions: z.array(Execution),
-    skipped: z.array(z.object({ cell: CellId, code: z.literal("REALM_NOT_ATTACHED") })),
+    /** `message`: why no page could run them (REALM_NOT_ATTACHED's message: the setting, or the headless failure). */
+    skipped: z.array(
+      z.object({
+        cell: CellId,
+        code: z.literal("REALM_NOT_ATTACHED"),
+        message: z.string().optional(),
+      }),
+    ),
   }),
   tags: { mutating: true },
 });

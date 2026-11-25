@@ -24,11 +24,12 @@ export const realmRestart = defineCommand({
 export const realmAttach = defineCommand({
   name: "realm.attach",
   description:
-    "Called by the page over its WebSocket. The first attach wins; later tabs are view-only until one takes over (takeover), which detaches the first and tells it with realm.reset { takenOver }.",
+    "Called by the page over its WebSocket. The first attach wins; later tabs are view-only until one takes over (takeover), which detaches the first and tells it with realm.reset { takenOver }; a tab takes the realm from the headless page at once. kind headless needs key, the one-time key the daemon gave its own headless page.",
   input: z.object({
     notebook: NotebookRef,
     kind: z.enum(["tab", "headless"]),
     takeover: z.boolean().default(false),
+    key: z.string().max(200).optional(),
   }),
   output: z.object({ realmId: z.string() }),
   tags: { internal: true },
