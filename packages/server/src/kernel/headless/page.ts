@@ -4,11 +4,19 @@
 // would attach beside. It starts the realm through the page's entry with the token and the notebook passed over the
 // browser's pipe, never in a URL, and takes a cell container's PNG for cell.snapshot. A navigation of the top frame
 // elsewhere is aborted, so the page stays.
-import type { CDPSession, Page } from "puppeteer-core";
+import type { CDPSession, CookieData, Page } from "puppeteer-core";
 import { z } from "zod";
 
 import type { Log } from "../../events/log.js";
-import type { PageTarget } from "./browser.js";
+
+export type PageTarget = {
+  /** `http://127.0.0.1:<port>`: the only origin the page's top frame may load. */
+  readonly origin: string;
+  /** The path loaded first, below `origin`. */
+  readonly path: string;
+  /** The page cookies, set before the first load. */
+  readonly cookies: readonly CookieData[];
+};
 
 export type Shot = {
   readonly data: string;

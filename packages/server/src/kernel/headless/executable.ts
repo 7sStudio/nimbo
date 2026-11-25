@@ -27,7 +27,7 @@ const linuxNames = [
 const linuxFixed = ["/opt/google/chrome/chrome", "/snap/bin/chromium"];
 
 /** Whether `path` is an executable regular file. */
-export function isExecutable(path: string): boolean {
+function isExecutable(path: string): boolean {
   try {
     accessSync(path, constants.X_OK);
     return statSync(path).isFile();

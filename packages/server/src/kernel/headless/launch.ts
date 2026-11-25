@@ -34,7 +34,7 @@ export function notFound(setting: string | null, looked: readonly string[]): Hea
   );
 }
 
-export function launchFailed(path: string, error: unknown): HeadlessFailed {
+function launchFailed(path: string, error: unknown): HeadlessFailed {
   if (/No usable sandbox/iu.test(error instanceof Error ? error.message : String(error)))
     return new HeadlessFailed(
       `${path} cannot start with its sandbox on this system (No usable sandbox: unprivileged user namespaces are off, as in many containers). Allow them, or turn realm.headlessSandbox off to run client cells without the browser's sandbox.`,

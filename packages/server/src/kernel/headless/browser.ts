@@ -8,12 +8,12 @@ import { rmSync } from "node:fs";
 import { mkdtemp } from "node:fs/promises";
 import { join } from "node:path";
 
-import type { Browser, CookieData, Page } from "puppeteer-core";
+import type { Browser, Page } from "puppeteer-core";
 
 import type { Log } from "../../events/log.js";
 import { findBrowser } from "./executable.js";
 import { alive, end, HeadlessFailed, launch, notFound, prepareProfiles } from "./launch.js";
-import type { GuardedPage } from "./page.js";
+import type { GuardedPage, PageTarget } from "./page.js";
 import { guardPage } from "./page.js";
 
 export { HeadlessFailed } from "./launch.js";
@@ -24,15 +24,6 @@ export type HeadlessBrowserOptions = {
   readonly log: Log;
   /** realm.headlessBrowser and realm.headlessSandbox, read at each launch. */
   readonly settings: () => { readonly browser: string | null; readonly sandbox: boolean };
-};
-
-export type PageTarget = {
-  /** `http://127.0.0.1:<port>`: the only origin the page's top frame may load. */
-  readonly origin: string;
-  /** The path loaded first, below `origin`. */
-  readonly path: string;
-  /** The page cookies, set before the first load. */
-  readonly cookies: readonly CookieData[];
 };
 
 export type HeadlessBrowser = {

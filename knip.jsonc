@@ -56,7 +56,8 @@
     "packages/ui": {
       "entry": [
         "index.html",
-        "headless.html",
+        // the headless realm's page, a Vite build of its own (vite.config.ts, NIMBO_UI_PAGE=headless)
+        "src/realm/headless.ts",
         "e2e/**/*.ts",
         "src/primitives/*/*.vue",
         "src/primitives/*/variants.ts",
