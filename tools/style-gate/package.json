@@ -32,7 +32,6 @@
     "stylelint": "^17.16.0"
   },
   "devDependencies": {
-    "stylelint-use-logical": "^2.1.3",
     "typescript": "~5.9.3"
   }
 }

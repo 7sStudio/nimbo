@@ -11,7 +11,7 @@ The rules every package follows, enforced by a tool where one exists; the rest s
 | Types | `tsc -b` over the project references (the emit is the build, 02-architecture §10), plus `vue-tsc --noEmit` for `ui`, `output-view` and `tests/output-view`; flags in §6 | `pnpm typecheck` |
 | Lint | ESLint 9 flat config (`eslint.config.js`): `typescript-eslint` strict and stylistic type-checked, `eslint-plugin-vue`, `eslint-plugin-import-x`, `eslint-plugin-boundaries` (`tools/boundaries.config.js`), our plugin `tools/eslint-rules/` (§8) | `pnpm lint` (with ESLint's cache), `pnpm lint:full` (without) |
 | Format | Prettier 3 with `prettier-plugin-tailwindcss`; no formatting rules in ESLint (`eslint-config-prettier`) | pre-commit, `pnpm format:check` |
-| CSS | Stylelint (`stylelint.config.js`): `stylelint-config-standard`, `stylelint-use-logical` and §7's rules | `pnpm lint`, pre-commit |
+| CSS | Stylelint (`stylelint.config.js`): `stylelint-config-standard` and §7's rules | `pnpm lint`, pre-commit |
 | Dead code | `knip` (`knip.jsonc`): unused files, exports, dependencies per workspace | `pnpm knip` |
 | Package graph | `dependency-cruiser` (`.dependency-cruiser.cjs`) across packages; `eslint-plugin-boundaries` inside one | `pnpm depcruise`, `pnpm lint` |
 | Tests | Vitest and Playwright (09-testing) | `pnpm run ci` |
@@ -131,7 +131,7 @@ Vue (`flat/recommended` plus):
 CSS (Stylelint plus review):
 - Literal colors only in the token sheets: `packages/tokens/src/page.css` and `viewer.css` (generated), `ui`'s `theme/tokens.css`, output-view's `theme.css`. Everywhere else `color-no-hex` and `color-named: never`; a color is `var(--token)` or `color-mix()` of tokens.
 - Layer order `properties, tokens, base, components, utilities`; the reset lives in `base` under `.jsnb-ui`; nothing of ours styles an element outside `.jsnb-ui` or `.jsnb-ov`; Tailwind is imported without Preflight (utilities only).
-- Logical properties only (`csstools/use-logical`); `gap` between siblings.
+- `gap` between siblings.
 - `:focus-visible` is the focus style; `outline: none` and `outline: 0` are banned.
 - `:hover` inside `@media (hover: hover) and (pointer: fine)`; animation inside `@media (prefers-reduced-motion: no-preference)`; durations `--dur`, `--dur-fade`, easing `--ease-out`.
 - Relative units in `ui` and `output-view`: `rem`, `em`, `cap`, percentages, `fr`, `min()`/`max()`/`clamp()`; `px` only on borders, outlines and shadows (`unit-disallowed-list`). A setting in px (`outputs.maxHeightPx`) becomes CSS at the TS boundary.

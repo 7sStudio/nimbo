@@ -19,7 +19,6 @@ export const defaults = scope.defaults.join(", ");
 
 /** stylelint.config.js's rules for output-view's CSS files, as the gate reuses them. */
 export const repositoryRules: NonNullable<Config["rules"]> = {
-  "csstools/use-logical": "always",
   "color-no-hex": true,
   "color-named": "never",
   "declaration-no-important": true,
@@ -37,7 +36,6 @@ export const repositoryRules: NonNullable<Config["rules"]> = {
 export const repository = {
   file: fileURLToPath(new URL("dist/style.css", import.meta.url)),
   config: {
-    plugins: ["stylelint-use-logical"],
     ignoreFiles: ["**/dist/**"],
     rules: repositoryRules,
   },

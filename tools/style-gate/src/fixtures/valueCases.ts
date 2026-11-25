@@ -65,38 +65,6 @@ export const valueCases: readonly Case[] = [
     passed: [".x\\:a { --tw-shadow: 0 0 #0000; }"],
   },
   {
-    rule: "csstools/use-logical",
-    refused: [
-      ".x\\:a { left: 0.25rem; }",
-      ".x\\:a { position: sticky; left: 0; }",
-      ".x\\:a { text-align: left; }",
-      ".x\\:a { width: 1rem; }",
-    ],
-    passed: [".x\\:a { inset-inline-start: 0.25rem; text-align: start; inline-size: 1rem; }"],
-  },
-  {
-    rule: "property-disallowed-list",
-    refused: [
-      ".x\\:a { scroll-margin-top: 1rem; }",
-      ".x\\:a { overscroll-behavior-x: contain; }",
-      ".x\\:a { overscroll-behavior-y: none; }",
-    ],
-    passed: [".x\\:a { scroll-margin-block-start: 1rem; overscroll-behavior-inline: contain; }"],
-  },
-  {
-    rule: "declaration-property-max-values",
-    refused: [
-      ".x\\:a { margin: 0 1rem; }",
-      ".x\\:a { border-radius: 0.25rem 0 0 0.25rem; }",
-      ".x\\:a { overscroll-behavior: contain auto; }",
-    ],
-    passed: [
-      ".x\\:a { margin: calc(var(--x) * 2); inset: min(1rem, 2vw); padding: clamp(0.25rem, 1vw, 1rem); }",
-      ".x\\:a { border-color: color-mix(in oklch, var(--fg) 20%, var(--bg)); border-radius: var(--r); }",
-      ".x\\:a { inset-inline: 0 auto; margin-inline: 0 auto; overscroll-behavior: contain; }",
-    ],
-  },
-  {
     rule: "unit-disallowed-list",
     refused: [
       ".x\\:a { border-radius: 6px; }",
@@ -126,12 +94,10 @@ export const valueCases: readonly Case[] = [
       ".x\\:a { outline-width: 0; }",
       ".x\\:a { overflow: hidden auto; }",
       ".x\\:a { overflow-x: hidden; }",
-      ".x\\:a { scroll-snap-type: x mandatory; }",
-      ".x\\:a { scroll-snap-type: y var(--tw-scroll-snap-strictness); }",
     ],
     passed: [
-      ".x\\:a { outline: 2px solid var(--accent); overflow: clip; scroll-snap-type: inline mandatory; }",
-      ".x\\:a { scroll-snap-type: block; }",
+      ".x\\:a { outline: 2px solid var(--accent); overflow: clip; scroll-snap-type: x mandatory; }",
+      ".x\\:a { left: 0; width: 1rem; margin: 0 1rem; text-align: left; scroll-margin-top: 1rem; }",
     ],
   },
   {
