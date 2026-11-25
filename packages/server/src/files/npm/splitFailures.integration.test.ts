@@ -122,7 +122,7 @@ describe("a package's odd exports and names", () => {
 });
 
 describe("a package that cannot be split in time", () => {
-  it("is remembered for its version and built entry by entry, never timing out twice", async () => {
+  it("is remembered for its version, in the cache too, and built entry by entry, never timing out twice", async () => {
     await withWorkspace(async (ws) => {
       await writeFiles(ws, heavyBrokenEntries(20, 6000));
       const modules = await modulesOf(ws, { timeoutMs: 300 });
@@ -130,6 +130,9 @@ describe("a package that cannot be split in time", () => {
       expect([modules.noted("together"), modules.noted("one by one")]).toEqual([1, 1]);
       expect(body(await modules.get("many/m3"))).toContain("m3");
       expect(modules.noted("together")).toBe(1);
+      const later = await modulesOf(ws, { timeoutMs: 300 }); // a daemon started later: marked in the cache
+      expect(body(await later.get("many/m4"))).toContain("m4");
+      expect(later.noted("together")).toBe(0);
     });
   }, 30_000); // writes 6000 modules
 });

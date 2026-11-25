@@ -8,7 +8,8 @@
 // is its content's hash, so it is what the entry that imports it was built with; a chunk the cache lacks builds the
 // package again (esbuild makes the same chunk from the same files). The chunks of the build before are kept (a page
 // that loaded its entries may still import one), older ones removed when the package is written again; a manifest is
-// read once per identity of its file. A split bundle the cache cannot hold is still served.
+// read once per identity of its file. `unsplit.json` marks a registry package whose split build could not be
+// made. A split bundle the cache cannot hold is still served.
 import { lstat, readdir, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 
@@ -196,5 +197,43 @@ export async function cacheGroup(
       "a split bundle could not be cached; it is built again next time",
     );
     return false;
+  }
+}
+
+const Unsplit = z.object({ reason: z.string(), stamp: z.string() });
+
+/** The stamp an unsplit mark holds: the package folder's time, which an install that adds or replaces a file moves. */
+const packageStamp = (spec: CachedSpec): Promise<string> =>
+  lstat(spec.found.folder).then(
+    (stats) => String(stats.mtimeMs),
+    () => "",
+  );
+
+/**
+ * Why the cache holds `spec`'s package as one that cannot be split (`unsplit.json`, a registry package's only: a
+ * linked one is being edited), so a daemon started later goes straight to its entries one by one; undefined when not.
+ */
+export async function heldUnsplit(where: Where, spec: CachedSpec): Promise<string | undefined> {
+  if (isLinkedPackage(spec.found.folder)) return undefined;
+  const folder = await cacheFolder(where.cacheDir, spec.dir);
+  if (folder?.present !== true || !(await current(folder.path))) return undefined;
+  const read = await readCacheFile(join(folder.path, "unsplit.json"), maxManifestBytes);
+  const mark = read === undefined ? undefined : Unsplit.safeParse(parsedJson(read)).data;
+  return mark?.stamp === (await packageStamp(spec)) ? mark.reason : undefined;
+}
+
+/** Marks `spec`'s package in the cache as one that cannot be split; a write that fails is noted. */
+export async function cacheUnsplit(where: Where, spec: CachedSpec, reason: string): Promise<void> {
+  if (isLinkedPackage(spec.found.folder)) return;
+  try {
+    const folder = await madeCacheFolder(where.cacheDir, spec.dir);
+    if (folder === undefined) return;
+    const mark = { reason, stamp: await packageStamp(spec) };
+    await writeAtomically(join(folder, "unsplit.json"), `${JSON.stringify(mark)}\n`);
+    if (!(await current(folder))) {
+      await writeAtomically(join(folder, "meta.json"), metaText(spec.name, spec.found.version));
+    }
+  } catch (error) {
+    where.log.warn({ err: error, dir: spec.dir }, "a package's unsplit mark could not be cached");
   }
 }
