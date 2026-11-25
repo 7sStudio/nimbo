@@ -206,7 +206,7 @@ The daemon follows a notebook moved or renamed on disk (by device and inode, eve
 ### 4.6 An agent's edit through MCP
 
 1. The agent calls a tool such as `cell_update` (a registry command, `.` written `_`) over stdio [mcp].
-2. The MCP server finds the workspace from its working folder and reads `server.json`. A mutating tool starts the daemon when none runs (detached, as the CLI's `--background`, without a UI folder); a read-only tool does not.
+2. The MCP server finds the workspace from its working folder and reads `server.json`. A mutating tool starts the daemon when none runs (detached, as the CLI's `--background`, with the same `--ui` build, `@jsnb/client/node` computing it for both); a read-only tool does not.
 3. The call goes as one `POST /rpc` declaring `client=mcp` and the agent's name from MCP `initialize`.
 4. The daemon applies the edit, re-analyses the cell, marks dependents stale, and stamps `meta.lastEdit { by: "agent", client: "mcp", agent, at }`; an agent's edit keeps the code from before the first unreviewed edit, so the page shows the changed lines until the user edits the cell, marks it reviewed or reverts it (`server/src/notebook/session/provenance.ts`).
 5. Events reach the page, which shows the edit at once; the autosave writes the file.

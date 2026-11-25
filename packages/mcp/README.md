@@ -65,7 +65,8 @@ that stops reading ends it at once, quietly.
 Found as the CLI finds it, from the folder the server runs in, at every call: `.jsnb/server.json` read with core's
 schema, its pid alive, `workspace.info` answering with the file's `startedAt`, and its root the workspace's real path
 (a copied or moved workspace is never served by another folder's daemon). A `mutating` tool
-starts the daemon when none runs, from `@jsnb/server/main` resolved at run time, and opens the notebook it names
+starts the daemon when none runs, from `@jsnb/server/main` resolved at run time and with the CLI's `--ui` build
+(`@jsnb/ui`, or `NIMBO_UI_DIR`; `@jsnb/client/node` computes it for both), and opens the notebook it names
 first; any other tool answers `DaemonNotRunning`. Calls go over HTTP declared `client=mcp` with the agent's name from
 `initialize`, so every cell the agent touches carries it in `meta.lastEdit`. The code is the CLI's written once more
 (`src/daemon`), since `cli` and `mcp` may not import each other (02 §2).
@@ -74,6 +75,8 @@ first; any other tool answers `DaemonNotRunning`. Calls go over HTTP declared `c
 
 - `NIMBO_DAEMON_ENTRY`: the daemon's entry to start instead of `@jsnb/server/main`, only as an absolute path to an
   existing file.
+- `NIMBO_UI_DIR`: the built UI the daemon it starts serves at `/ui/` instead of `@jsnb/ui`'s, only as an absolute
+  path to an existing folder.
 - `XDG_CONFIG_HOME` (or `%APPDATA%`): where the daemon it starts keeps the user settings.
 
 ## Errors of its own
@@ -84,7 +87,7 @@ first; any other tool answers `DaemonNotRunning`. Calls go over HTTP declared `c
 | `DaemonForeign`        | server.json names another folder's daemon (a copied or moved workspace); nothing is sent |
 | `ServerFileUnreadable` | `.jsnb/server.json` cannot be read                                                       |
 | `DaemonStartFailed`    | the daemon a mutating tool started ended before it listened, or stayed silent 60 s       |
-| `InvalidArguments`     | `NIMBO_DAEMON_ENTRY` is not an absolute path to a file                                   |
+| `InvalidArguments`     | `NIMBO_DAEMON_ENTRY` is not an absolute path to a file, or `NIMBO_UI_DIR` to a folder    |
 | `WorkingFolderGone`    | the folder the server runs in was deleted or moved                                       |
 | `UnknownTool`          | (JSON-RPC -32602) a call to a name that is no tool                                       |
 | `UnknownResource`      | (JSON-RPC -32002) a URI that is neither `nimbo://notebook/…` nor `nimbo://cell/…/<id>`   |

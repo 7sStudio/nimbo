@@ -24,6 +24,7 @@
     "@jsnb/client": "workspace:*",
     "@jsnb/core": "workspace:*",
     "@jsnb/server": "workspace:*",
+    "@jsnb/ui": "workspace:*",
     "@modelcontextprotocol/sdk": "1.32.2",
     "zod": "^4.6.5"
   },
