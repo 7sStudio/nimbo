@@ -16,7 +16,7 @@ const maxLeft = 64;
 export type Budget = { readonly deadline: number; trials: number };
 
 /** The package could not be split within the search's budget. */
-export class SplitGaveUp extends Error {
+class SplitGaveUp extends Error {
   constructor(reason: string) {
     super(`its entries could not be bundled together: ${reason}`);
     this.name = "SplitGaveUp";
