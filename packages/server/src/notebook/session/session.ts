@@ -201,38 +201,6 @@ function debuggerOf(options: SessionOptions, context: SessionContext): DebugSess
   return debug;
 }
 
-/** The merge of another program's edits into the session (07 §5), unless files.mergeExternalChanges is off: run by
- * the watch on the file, and by a write that finds the file changed. */
-function externalParts(
-  options: SessionOptions,
-  context: SessionContext,
-  parts: {
-    readonly runs: SessionRuns;
-    readonly hook: FileHookSlots;
-  },
-) {
-  const state = externalState();
-  const merge = () => reconcileExternal(context, state, (cell) => void parts.runs.dropRuns(cell));
-  const on = () => context.settings()["files.mergeExternalChanges"];
-  parts.hook.run = async () => {
-    if (!on()) return "off";
-    const outcome = await merge();
-    return outcome === "conflict" || outcome === "unreadable" ? outcome : "merged";
-  };
-  const watch = watchFile({
-    path: () => context.path,
-    log: context.log,
-    debounceMs: options.watchDebounceMs ?? 100,
-    everyMs: options.fileCheckMs ?? 2000,
-    check: async () => {
-      if (on()) await context.autosave.exclusive(merge);
-    },
-  });
-  // the app's own git operations: brought in step whatever files.mergeExternalChanges says of other programs' edits
-  const mergeNow = (): Promise<ExternalOutcome> => context.autosave.exclusive(merge);
-  return { state, watch, mergeNow };
-}
-
 /** notebook.reload: the file's text in place of the session's; the cells whose text it changed are the file's (a page
  * edit still made on their old text is a conflict), and the conflict is over. */
 async function reloaded(context: SessionContext, state: ExternalState): Promise<void> {
@@ -307,7 +275,25 @@ export function createSession(options: SessionOptions): Session {
   const runs = createRuns(context, realm);
   const query = queryParts(options, context);
   const debug = debuggerOf(options, context);
-  const { state, watch, mergeNow } = externalParts(options, context, { runs, hook });
+  // the merge of another program's edits into the session (07 §5), unless files.mergeExternalChanges is off: run by
+  // the watch on the file, and by a write that finds the file changed
+  const state = externalState();
+  const merge = () => reconcileExternal(context, state, (cell) => void runs.dropRuns(cell));
+  const on = () => context.settings()["files.mergeExternalChanges"];
+  hook.run = async () => {
+    if (!on()) return "off";
+    const outcome = await merge();
+    return outcome === "conflict" || outcome === "unreadable" ? outcome : "merged";
+  };
+  const watch = watchFile({
+    path: () => context.path,
+    log: context.log,
+    debounceMs: options.watchDebounceMs ?? 100,
+    everyMs: options.fileCheckMs ?? 2000,
+    check: async () => {
+      if (on()) await context.autosave.exclusive(merge);
+    },
+  });
   const opened = recoveryParts(options, context, { state, hook });
   return {
     ...runs,
@@ -334,7 +320,8 @@ export function createSession(options: SessionOptions): Session {
       await reloaded(context, state);
       return stateOf(context, realm.status(), debug.state());
     },
-    mergeDisk: mergeNow,
+    // the app's own git operations: brought in step whatever files.mergeExternalChanges says of other programs' edits
+    mergeDisk: () => context.autosave.exclusive(merge),
     graph: () => graphOf(context),
     errors: () => errorsOf(context),
     outputQuery: (request) => outputQuery(context, query, request),

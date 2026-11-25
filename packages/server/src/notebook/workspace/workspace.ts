@@ -17,7 +17,6 @@ import type { GitService } from "../git/service.js";
 import { createGitService } from "../git/service.js";
 import type { Language, LanguageOptions } from "../language/language.js";
 import { createLanguage } from "../language/language.js";
-import type { Adapter } from "../../kernel/debug/adapter.js";
 import { createAdapter } from "../../kernel/debug/adapter.js";
 import type { JsonEngines } from "../query/engines.js";
 import { createJsonEngines } from "../query/engines.js";
@@ -100,19 +99,6 @@ export type WorkspaceOptions = {
   readonly languageWorker?: LanguageOptions["worker"];
 };
 
-/** workspace.info: the daemon's facts, the kernels' Node and every notebook of the workspace, open or not. */
-async function infoOf(
-  facts: DaemonFacts,
-  notebooks: Notebooks,
-  nodeVersion: () => Promise<string>,
-): Promise<WorkspaceInfo> {
-  const [list, node] = await Promise.all([
-    notebookList(facts.root, notebooks.openRefs()),
-    nodeVersion(),
-  ]);
-  return { ...facts, apiVersion, nodeVersion: node, notebooks: list };
-}
-
 /**
  * The notebooks.changed announcer: each call reads the list as it is then and emits it on the workspace stream,
  * one after another, so the last event carries the latest list; a list that cannot be read is logged, never thrown.
@@ -132,97 +118,6 @@ function announcer(root: string, opened: () => readonly string[], bus: EventBus,
     return last;
   };
 }
-
-/** How long a session waits for its kernel's or its page's answer: the option, else 10 s. */
-const requestTimeoutOf = (options: WorkspaceOptions): number =>
-  options.requestTimeoutMs ?? defaultRequestTimeoutMs;
-
-/** One callback that runs `first`, then the language service's, set once it exists. */
-const both = (first: () => void, later: { readonly language: () => void }) => (): void => {
-  first();
-  later.language();
-};
-
-/** Closes the workspace's services: js-debug (the kernels' debug sessions end with it), the language worker, the
- * installs, the notebooks, the headless browser, the engines; the notebook list's watch first. */
-async function closeAll(
-  parts: Pick<
-    Workspace,
-    "language" | "packages" | "notebooks" | "engines" | "settings" | "keybindings" | "git"
-  >,
-  services: { readonly debugAdapter: Adapter; readonly headless: HeadlessService | undefined },
-  stopListWatch: () => void,
-): Promise<void> {
-  stopListWatch();
-  services.debugAdapter.stop();
-  await parts.git.close();
-  await parts.language.close();
-  await parts.packages.close();
-  await parts.notebooks.closeAll();
-  await services.headless?.stop();
-  await parts.engines.dispose();
-  parts.settings.close();
-  parts.keybindings.close();
-}
-
-/** The language service over the workspace's notebooks, its `.env` names and its settings. */
-function languageOf(
-  options: WorkspaceOptions,
-  parts: { settings: SettingsService; secrets: SecretsService; notebooks: Notebooks },
-): Language {
-  const { settings, secrets, notebooks } = parts;
-  return createLanguage({
-    root: options.facts.root,
-    bus: options.bus,
-    log: options.log,
-    session: notebooks.require,
-    envNames: async () => ({
-      server: await secrets.list(),
-      client: Object.keys(await secrets.publicEnv()),
-    }),
-    setting: (key) => settings.current()[key],
-    ...(options.languageWorker ? { worker: options.languageWorker } : {}),
-  });
-}
-
-/** The settings and the keybindings, each from the user's file and the workspace's (07-file-format §6). */
-async function openPreferences(
-  options: WorkspaceOptions,
-): Promise<Pick<Workspace, "settings" | "keybindings">> {
-  const { userConfigDir, jsnb, bus, log } = options;
-  const user = join(userConfigDir, settingsFileName);
-  const settings = await openSettings({ user, workspace: jsnb.settingsFile }, bus, log);
-  const files = {
-    user: join(userConfigDir, keybindingsFileName),
-    workspace: join(jsnb.dir, keybindingsFileName),
-  };
-  return { settings, keybindings: await openKeybindings(files, bus, log) };
-}
-
-/** packages.add and packages.remove through the workspace's package manager. */
-const packagesOf = (options: WorkspaceOptions, settings: SettingsService) =>
-  createPackages(options.facts.root, {
-    bus: options.bus,
-    log: options.log,
-    settings: settings.current,
-    redact: options.redact,
-    timeoutMs: options.installTimeoutMs ?? 600_000,
-  });
-
-/** The watch on the notebook list for files created, deleted or renamed outside nimbo (listWatch.ts). */
-const listWatchOf = (
-  options: WorkspaceOptions,
-  notebooks: Notebooks,
-  announce: () => Promise<void>,
-): (() => void) =>
-  watchNotebookList({
-    root: options.facts.root,
-    openRefs: () => notebooks.openRefs(),
-    announce,
-    log: options.log,
-    debounceMs: 300,
-    everyMs: options.listCheckMs ?? 5000,
-  });
 
 /** The headless realm's browser pages, its profiles in `.jsnb/headless/`, when the daemon gave its page credentials. */
 function headlessOf(
@@ -268,12 +163,24 @@ function watchHeadlessOff(
 
 /** Opens the workspace's services (the settings files are read and watched from here on). */
 export async function openWorkspace(options: WorkspaceOptions): Promise<Workspace> {
-  const { facts, jsnb, bus, log } = options;
-  const { settings, keybindings } = await openPreferences(options);
+  const { facts, jsnb, bus, log, onEnvWrite } = options;
+  // the settings and the keybindings, each from the user's file and the workspace's (07-file-format §6)
+  const settings = await openSettings(
+    { user: join(options.userConfigDir, settingsFileName), workspace: jsnb.settingsFile },
+    bus,
+    log,
+  );
+  const keybindingFiles = {
+    user: join(options.userConfigDir, keybindingsFileName),
+    workspace: join(jsnb.dir, keybindingsFileName),
+  };
+  const keybindings = await openKeybindings(keybindingFiles, bus, log);
   const engines = createJsonEngines(settings.current);
-  const envWrites = { language: (): void => undefined };
-  const onEnvWrite = both(options.onEnvWrite, envWrites);
-  const secrets = createSecrets(join(facts.root, ".env"), onEnvWrite);
+  let languageEnvChanged = (): void => undefined; // the language service's, once it exists
+  const secrets = createSecrets(join(facts.root, ".env"), () => {
+    onEnvWrite();
+    languageEnvChanged();
+  });
   const headless = headlessOf(options, settings);
   const realm = { redact: options.redact, publicEnv: secrets.publicEnv, headless };
   const debugAdapter = createAdapter({ log });
@@ -292,32 +199,77 @@ export async function openWorkspace(options: WorkspaceOptions): Promise<Workspac
     engines,
     sqlDirectory: jsnb.sqlCache,
     realm,
-    requestTimeoutMs: requestTimeoutOf(options),
+    requestTimeoutMs: options.requestTimeoutMs ?? defaultRequestTimeoutMs,
     listChanged,
     recoveryDir: jsnb.recovery,
     ...(options.moveCheckMs === undefined ? {} : { moveCheckMs: options.moveCheckMs }),
   });
-  const stopListWatch = listWatchOf(options, notebooks, listChanged);
+  // the watch on the notebook list for files created, deleted or renamed outside nimbo (listWatch.ts)
+  const stopListWatch = watchNotebookList({
+    root: facts.root,
+    openRefs: () => notebooks.openRefs(),
+    announce: listChanged,
+    log,
+    debounceMs: 300,
+    everyMs: options.listCheckMs ?? 5000,
+  });
   const stopHeadlessWatch = watchHeadlessOff(options, settings, notebooks);
   const nodeVersion = kernelNodeVersion(settings);
-  const language = languageOf(options, { settings, secrets, notebooks });
-  envWrites.language = language.envChanged;
-  const workspace: Workspace = {
+  // the language service over the workspace's notebooks, its `.env` names and its settings
+  const language = createLanguage({
+    root: facts.root,
+    bus,
+    log,
+    session: notebooks.require,
+    envNames: async () => ({
+      server: await secrets.list(),
+      client: Object.keys(await secrets.publicEnv()),
+    }),
+    setting: (key) => settings.current()[key],
+    ...(options.languageWorker ? { worker: options.languageWorker } : {}),
+  });
+  languageEnvChanged = language.envChanged;
+  const packages = createPackages(facts.root, {
+    bus,
+    log,
+    settings: settings.current,
+    redact: options.redact,
+    timeoutMs: options.installTimeoutMs ?? 600_000,
+  });
+  const git = createGitService({ root: facts.root, bus, notebooks, log });
+  return {
     facts,
     settings,
     keybindings,
     secrets,
-    packages: packagesOf(options, settings),
+    packages,
     notebooks,
     engines,
     language,
-    git: createGitService({ root: facts.root, bus, notebooks, log }),
-    info: () => infoOf(facts, notebooks, nodeVersion),
+    git,
+    // the daemon's facts, the kernels' Node and every notebook of the workspace, open or not
+    info: async () => {
+      const [list, node] = await Promise.all([
+        notebookList(facts.root, notebooks.openRefs()),
+        nodeVersion(),
+      ]);
+      return { ...facts, apiVersion, nodeVersion: node, notebooks: list };
+    },
     clearCache: serialClear(jsnb.npmCache, log),
-    close: () => {
+    // js-debug (the kernels' debug sessions end with it), the language worker, the installs, the notebooks, the
+    // headless browser, the engines; the watches first
+    close: async () => {
       stopHeadlessWatch();
-      return closeAll(workspace, { debugAdapter, headless }, stopListWatch);
+      stopListWatch();
+      debugAdapter.stop();
+      await git.close();
+      await language.close();
+      await packages.close();
+      await notebooks.closeAll();
+      await headless?.stop();
+      await engines.dispose();
+      settings.close();
+      keybindings.close();
     },
   };
-  return workspace;
 }
