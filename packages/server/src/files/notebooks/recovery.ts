@@ -32,7 +32,7 @@ export type RecoveryRead =
   | { readonly kind: "unusable"; readonly reason: string; readonly empty: boolean };
 
 /** `.jsnb` or its `recovery/` is not a real folder now (a symbolic link put there after the daemon started). */
-export class RecoveryFolderRefused extends JsnbError {
+class RecoveryFolderRefused extends JsnbError {
   declare readonly data: { readonly path: string; readonly reason: string };
   constructor(data: { readonly path: string; readonly reason: string }) {
     super({
