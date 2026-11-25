@@ -67,7 +67,12 @@ function worldOf(daemon: Daemon, workspace: Workspace, book: TestNotebook): Rout
   const rerun = async (cell: string) =>
     (await daemon.client.cell.run({ notebook, cell })).execution;
   return {
-    ...{ daemon, workspace, book, notebook, base, rerun },
+    daemon,
+    workspace,
+    book,
+    notebook,
+    base,
+    rerun,
     cell: async (source) => {
       const { cell, execution } = await book.ran(source);
       if (execution.status !== "ok") throw new Error(`the cell ended ${execution.status}`);

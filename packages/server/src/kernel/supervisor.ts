@@ -1,18 +1,130 @@
 // One notebook's kernel (02-architecture §7, 04-kernel §2, §6, §9): a NodeKernel created and started on open, stopped on
 // close, killed and replaced by a restart (a run asking for the kernel meanwhile gets the new one), replaced by the next
 // run after it died on its own, never by a read; its kernel.status (starting, idle, busy, paused, dead with the exit)
-// emitted on every change. The daemon's long-lived handle on the notebook's Kernel (08-code-standards §6 keeps classes
-// for those).
-import type { CellId, KernelStatus } from "@jsnb/core";
+// emitted on every change. Each kernel takes its options from the supervisor's and the settings of the moment
+// (`kernel.nodePath`, the output limits), and its callbacks are passed on only while it is the supervisor's current
+// kernel, so a replaced kernel's late messages reach nobody. The daemon's long-lived handle on the notebook's Kernel
+// (08-code-standards §6 keeps classes for those).
+import type { CellId, KernelState, KernelStatus, Route } from "@jsnb/core";
 import { KernelDead } from "@jsnb/core";
-import type { Exit, NodeKernel } from "@jsnb/kernel-node";
+import type {
+  EventBatch,
+  Exit,
+  ExportEntry,
+  KernelEntry,
+  KernelLimits,
+  LateOutput,
+  NodeKernel,
+} from "@jsnb/kernel-node";
+import { createNodeKernel } from "@jsnb/kernel-node";
 
-import type { SupervisorOptions } from "./launch.js";
-import { launchKernel } from "./launch.js";
+import type { Log } from "../events/log.js";
 import type { PauseClock } from "./pauses.js";
 import { createPauseClock } from "./pauses.js";
-import type { KernelFacts } from "./status.js";
-import { exitOf, startingFacts, statusOf } from "./status.js";
+
+type KernelFacts = {
+  state: KernelState;
+  pid: number | null;
+  startedAt: string | null;
+  inspectorUrl: string | null;
+  executing: CellId | null;
+  paused: boolean;
+  exit: Exit | undefined;
+};
+
+/** The facts of a kernel being started. */
+const startingFacts = (): KernelFacts => ({
+  state: "starting",
+  pid: null,
+  startedAt: null,
+  inspectorUrl: null,
+  executing: null,
+  paused: false,
+  exit: undefined,
+});
+
+function stateOf(facts: KernelFacts): KernelState {
+  if (facts.state === "dead" || facts.state === "starting") return facts.state;
+  if (facts.paused) return "paused";
+  return facts.executing === null ? "idle" : "busy";
+}
+
+/** The status `kernel.status` and its event carry. */
+function statusOf(facts: KernelFacts): KernelStatus {
+  const state = stateOf(facts);
+  return {
+    state,
+    pid: facts.pid,
+    startedAt: facts.startedAt,
+    executing: facts.executing,
+    inspectorUrl: facts.inspectorUrl,
+    ...(state === "dead" ? facts.exit : {}),
+  };
+}
+
+/** The exit a failed start reports, when it is the kernel's death. */
+const exitOf = (error: unknown): Exit | undefined =>
+  error instanceof KernelDead ? error.data : undefined;
+
+type KernelSink = {
+  readonly status: (status: KernelStatus) => void;
+  readonly output: (late: LateOutput) => void;
+  readonly exports: (names: readonly ExportEntry[]) => void;
+  readonly routes: (routes: readonly Route[]) => void;
+  readonly events: (batch: EventBatch) => void;
+  /** The kernel is gone (it died, or a restart killed it): its exports and routes with it. */
+  readonly ended: () => void;
+  readonly log: (line: string) => void;
+};
+
+type SupervisorOptions = {
+  readonly workspace: string;
+  readonly notebook: string;
+  readonly port: () => number;
+  readonly entry: KernelEntry | undefined;
+  /** `kernel.nodePath` and the output limits, read at each kernel's creation. */
+  readonly config: () => { readonly nodePath: string | null; readonly limits: KernelLimits };
+  readonly now: () => Date;
+  readonly sink: KernelSink;
+  readonly log: Log;
+  /** Whether a page holds the client realm, read when a kernel is ready. */
+  readonly pageListening?: () => boolean;
+};
+
+/** What the supervisor hears from the kernel it launches. */
+type LaunchHooks = {
+  /** Whether this kernel is still the supervisor's current one. */
+  readonly current: () => boolean;
+  readonly paused: (paused: boolean) => void;
+  readonly exit: (exit: Exit) => void;
+};
+
+/** A new kernel, not started. */
+function launchKernel(options: SupervisorOptions, hooks: LaunchHooks): NodeKernel {
+  const { nodePath, limits } = options.config();
+  const { sink } = options;
+  const whileCurrent =
+    <T>(pass: (value: T) => void) =>
+    (value: T): void => {
+      if (hooks.current()) pass(value);
+    };
+  return createNodeKernel({
+    workspace: options.workspace,
+    notebook: options.notebook,
+    nodePath,
+    limits,
+    port: options.port(),
+    ...(options.entry === undefined ? {} : { entry: options.entry }),
+    onOutput: whileCurrent(sink.output),
+    onExports: whileCurrent(sink.exports),
+    onRoutes: whileCurrent(sink.routes),
+    onEvents: whileCurrent(sink.events),
+    ...(options.pageListening === undefined ? {} : { pageListening: options.pageListening }),
+    onPause: whileCurrent(hooks.paused),
+    onExit: hooks.exit,
+    onLog: sink.log,
+  });
+}
 
 type Instance = { readonly kernel: NodeKernel; readonly started: Promise<NodeKernel> };
 

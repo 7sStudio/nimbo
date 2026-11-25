@@ -25,8 +25,15 @@ export async function openTestWorkspace(folder: Folder): Promise<Workspace> {
   const root = await resolveWorkspace(folder.dir);
   return openWorkspace({
     facts: { root, serverVersion: "0.0.0", pid: process.pid, startedAt: "s" },
-    ...{ jsnb: await prepareJsnbDir(root), userConfigDir: folder.path(".user") },
-    ...{ bus: createEventBus(now), log: quiet, onEnvWrite: () => undefined },
-    ...{ ids: createIds(1), now, port: () => 0, kernelEntry, redact: (text: string) => text },
+    jsnb: await prepareJsnbDir(root),
+    userConfigDir: folder.path(".user"),
+    bus: createEventBus(now),
+    log: quiet,
+    onEnvWrite: () => undefined,
+    ids: createIds(1),
+    now,
+    port: () => 0,
+    kernelEntry,
+    redact: (text: string) => text,
   });
 }
