@@ -89,14 +89,14 @@ async function report(
   const asJson = how.json;
   const { path, created, url, browser } = opened;
   if (asJson) {
-    const shown = browser ? {} : { url };
     const json = {
       path: path ?? null,
       home: path === undefined,
       created,
       started: how.mode !== "running",
+      browser,
+      ...(browser ? {} : { url }),
     };
-    Object.assign(json, { browser, ...shown });
     await write(io.stdout, `${JSON.stringify(json)}\n`);
     return;
   }

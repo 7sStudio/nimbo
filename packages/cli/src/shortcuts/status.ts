@@ -54,7 +54,10 @@ async function reportOf(session: Session) {
       const { notebook } = await session.call(notebookGet, { notebook: path });
       const { kernel, realm, conflict, recovered } = notebook;
       notebooks.push({
-        ...{ path, open, kernel, realm },
+        path,
+        open,
+        kernel,
+        realm,
         ...(conflict ? { conflict } : {}),
         ...(recovered ? { recovered } : {}),
       });

@@ -5,16 +5,124 @@
 // streams and errors through `nimbo outputs`); notebook_run cell by cell, each by its own size, with cell_outputs, the
 // CLI and notebook_errors when a run failed; a run's outcome (how many cells ended how, the first failures) first; cell_bindings through kernel_scope; a slice with the limit that takes as many of its entries
 // as fit, or a deeper path once one entry is too large; jq's one result through a query that slices it, since its limit
-// counts results; any other read through the same command on the CLI with the call's own flags. A tool that changes
+// counts results; git_diff one changed cell at a time; any other read through the same command on the CLI with the call's own flags. A tool that changes
 // something is never told to do it again.
 import type { AnyCommand, Execution } from "@jsnb/core";
 
 import { byteSize } from "../errors/size.js";
 import { jsnb, shellWord } from "../errors/words.js";
-import type { Args, Exchange, Overshoot, Part } from "./adviceParts.js";
-import { gitDiffAdvice } from "./gitDiffAdvice.js";
-import { sliceAdvice } from "./sliceAdvice.js";
-import { call, flagsOf, frameOf, isRecord, largest, partsOf, textOf } from "./adviceParts.js";
+import { outputResult } from "./results.js";
+
+type Args = Readonly<Record<string, unknown>>;
+
+/** A call's arguments (as its schema read them) and the output it would have answered with. */
+export type Exchange = { readonly input: Args; readonly output: Args };
+
+/** How far past the cap the result went, in bytes. */
+type Overshoot = { readonly bytes: number; readonly cap: number };
+
+/** A call as the agent sends it: the tool's name and its arguments as JSON. */
+const call = (tool: string, args: Args): string => `${tool} ${JSON.stringify(args)}`;
+
+const isRecord = (value: unknown): value is Args =>
+  typeof value === "object" && value !== null && !Array.isArray(value);
+
+const textOf = (value: unknown): string | undefined =>
+  typeof value === "string" ? value : undefined;
+
+const kebab = (key: string): string =>
+  key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+
+/** One argument as its flags: a boolean as --x or --no-x, an array of scalars repeated, any other object as JSON. */
+function flagOf(key: string, value: unknown): string[] {
+  const flag = `--${kebab(key)}`;
+  if (typeof value === "boolean") return [value ? flag : `--no-${kebab(key)}`];
+  if (typeof value === "string" || typeof value === "number") return [flag, String(value)];
+  if (Array.isArray(value) && value.every((item) => typeof item === "string"))
+    return value.flatMap((item: string) => [flag, item]);
+  return value === undefined ? [] : [flag, JSON.stringify(value)];
+}
+
+/** A call's arguments as the CLI's generated flags (03-api §8). */
+const flagsOf = (input: Args): string[] =>
+  Object.entries(input).flatMap(([key, value]) => flagOf(key, value));
+
+/** One part of a run's outputs: a value output (`index`), or one cell's displays, streams and error together. */
+type Part = { readonly cell: string; readonly index?: number; readonly bytes: number };
+
+/** The parts of `executions`' outputs, with their sizes. */
+function partsOf(executions: readonly Execution[]): {
+  readonly values: readonly Part[];
+  readonly others: readonly Part[];
+} {
+  const values: Part[] = [];
+  const others: Part[] = [];
+  for (const execution of executions) {
+    let rest = execution.error === undefined ? 0 : byteSize(JSON.stringify(execution.error));
+    execution.outputs.forEach((output, index) => {
+      const bytes = byteSize(JSON.stringify(output));
+      if (output.kind === "value") values.push({ cell: execution.cell, index, bytes });
+      else rest += bytes;
+    });
+    if (rest > 0) others.push({ cell: execution.cell, bytes: rest });
+  }
+  return { values, others };
+}
+
+/** The largest of `parts`, or undefined for none. */
+const largest = (parts: readonly Part[]): Part | undefined =>
+  parts.reduce<Part | undefined>(
+    (top, part) => (part.bytes > (top?.bytes ?? -1) ? part : top),
+    undefined,
+  );
+
+/** The frame `output` makes as a tool's result: structuredContent and its text copy, as the cap measures it. */
+const frameOf = (output: Args): number => byteSize(JSON.stringify(outputResult(output)));
+
+/** A slice's entries (cell_outputValue's children, cell_outputQuery's rows, paths or values) and the output of `n`. */
+type Entries = { readonly count: number; readonly first: (n: number) => Args };
+
+function entriesOf(output: Args): Entries | undefined {
+  const { json, result } = output;
+  if (Array.isArray(json))
+    return { count: json.length, first: (n) => ({ ...output, json: json.slice(0, n) }) };
+  if (isRecord(json)) {
+    const pairs = Object.entries(json);
+    return {
+      count: pairs.length,
+      first: (n) => ({ ...output, json: Object.fromEntries(pairs.slice(0, n)) }),
+    };
+  }
+  if (!isRecord(result)) return undefined;
+  // JSONPath answers paths and values side by side: every list among them is cut at the same count.
+  const lists = ["rows", "paths", "value"].flatMap((name) => {
+    const list = result[name];
+    return Array.isArray(list) ? [[name, list] as const] : [];
+  });
+  if (lists.length === 0) return undefined;
+  const count = Math.max(...lists.map(([, list]) => list.length));
+  const cut = (n: number): Args =>
+    Object.fromEntries(lists.map(([name, list]) => [name, list.slice(0, n)]));
+  return { count, first: (n) => ({ ...output, result: { ...result, ...cut(n) } }) };
+}
+
+/**
+ * How many of a slice's first entries fit `cap` as one result (the same call with that limit answers them, whatever
+ * their sizes), with a twentieth spare for the envelope; 0 when not even one does, undefined for a slice of no entries
+ * (one scalar).
+ */
+function fittingEntries(output: Args, cap: number): number | undefined {
+  const entries = entriesOf(output);
+  if (entries === undefined) return undefined;
+  const room = cap * 0.95;
+  let [low, high] = [0, entries.count];
+  while (low < high) {
+    const middle = Math.ceil((low + high) / 2);
+    if (frameOf(entries.first(middle)) <= room) low = middle;
+    else high = middle - 1;
+  }
+  return low;
+}
 
 /** A notebook's path as a cell resource carries it, each segment percent-encoded as the resources' own URIs are. */
 const cellUriOf = (path: string): string =>
@@ -181,6 +289,80 @@ function cliAdvice(command: AnyCommand, { input }: Exchange): string {
   const [domain = "", verb = ""] = command.name.split(".");
   const words = verb.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
   return `Ask for less with narrower arguments; outside MCP, ${jsnb(domain, words, ...flagsOf(input), "--json")} gives the whole answer.`;
+}
+
+/**
+ * cell_outputValue and cell_outputQuery: the limit that takes as many of the slice's first entries as fit the cap,
+ * counted from the entries it came back with, whatever their sizes (one step); or, when not even one fits, a deeper
+ * path, a narrower query, or the CLI.
+ */
+function sliceAdvice(command: AnyCommand, exchange: Exchange, overshoot: Overshoot): string {
+  const { input, output } = exchange;
+  const tool = command.name === "cell.outputValue" ? "cell_outputValue" : "cell_outputQuery";
+  const whole = `outside MCP, ${jsnb("outputs", String(input.cell), "--full", "-n", String(input.notebook))} gives the whole value`;
+  if (output.mode === "jq" && Number(output.total) <= 1)
+    return jqAdvice(exchange, overshoot, whole);
+  const fitting = fittingEntries(output, overshoot.cap);
+  if (fitting === undefined || fitting < 1) return tooLargeAlone(tool, input, fitting, whole);
+  const narrow = tool === "cell_outputValue" ? "or a deeper path" : "or a query that narrows them";
+  return `Ask for fewer entries (a smaller limit) ${narrow}: ${call(tool, { ...input, limit: fitting })}; ${whole}.`;
+}
+
+/** A slice of which not even one entry fits: a narrower query, a deeper path, or (one scalar) the CLI. */
+function tooLargeAlone(
+  tool: string,
+  input: Args,
+  fitting: number | undefined,
+  whole: string,
+): string {
+  if (tool === "cell_outputQuery")
+    return `One result is too large even alone: narrow the query to a part of it; ${whole}.`;
+  const path = textOf(input.path) ?? "$";
+  return fitting === undefined
+    ? `The value at ${path} is one scalar too large for one result; ${whole}.`
+    : `One entry is too large for one result even alone: read inside it with a deeper path (one of its keys or indexes below ${path}); ${whole}.`;
+}
+
+/**
+ * jq's one result too large: its limit counts jq's results, not the entries inside one, so a smaller limit answers the
+ * same; an array result is sliced in the query itself, as many entries as fit, and anything else narrowed by a path.
+ */
+function jqAdvice({ input, output }: Exchange, { cap }: Overshoot, whole: string): string {
+  const query = textOf(input.query) ?? ".";
+  const fitting = fittingEntries(output, cap);
+  if (fitting !== undefined && fitting >= 1)
+    return `Its one result is an array too large to send: slice it in the query, ${call("cell_outputQuery", { ...input, query: `(${query}\n) | .[0:${String(fitting)}]` })}; ${whole}.`;
+  return `Its one result is too large to send: narrow the query to a part of it (a path into the result); ${whole}.`;
+}
+
+/** The ids of a notebook diff's changed cells, in the new order. */
+function changedCells(output: Exchange["output"]): readonly string[] {
+  const notebook = output.notebook;
+  if (!isRecord(notebook) || !Array.isArray(notebook.rows)) return [];
+  return notebook.rows.flatMap((row: unknown) => {
+    if (!isRecord(row) || row.status === "unchanged") return [];
+    const side = isRecord(row.after) ? row.after : isRecord(row.before) ? row.before : undefined;
+    const id = textOf(side?.id);
+    return id === undefined ? [] : [id];
+  });
+}
+
+function gitDiffAdvice({ input, output }: Exchange): string {
+  const path = textOf(input.path) ?? "<path>";
+  const base = textOf(input.base);
+  const against = {
+    ...(input.staged === true ? { staged: true } : {}),
+    ...(base === undefined ? {} : { base }),
+  };
+  const cells = changedCells(output);
+  const [first] = cells;
+  const whole = `outside MCP, ${jsnb("diff", path, ...(input.staged === true ? ["--staged"] : []), ...(base === undefined ? [] : ["--base", base]))} prints the whole diff.`;
+  if (first === undefined) return `Ask for less with narrower arguments; ${whole}`;
+  const shown =
+    cells.length > 20
+      ? `${cells.slice(0, 20).join(", ")} and ${String(cells.length - 20)} more`
+      : cells.join(", ");
+  return `Read the diff one changed cell at a time with ${call("git_diff", { path, ...against, cell: first })}; the changed cells are ${shown}. Or, ${whole}`;
 }
 
 type Advice = (command: AnyCommand, exchange: Exchange, overshoot: Overshoot) => string;

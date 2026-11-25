@@ -1,9 +1,8 @@
 // The header's state for an OutputView: the summary, the toolbar's switches (wrap, timestamps, raw stack), the grid's
 // selection, the engines that leave the Query button on, the menus' items, and the actions behind the tools.
-import type { ComputedRef, Ref } from "vue";
+import type { Ref } from "vue";
 import { computed, ref } from "vue";
 
-import type { QueryEngines } from "../model/engines.js";
 import type { ShownView, SwitchView } from "../model/detect.js";
 import type { Summary } from "../model/summary.js";
 import { summarize, summaryText } from "../model/summary.js";
@@ -36,54 +35,6 @@ type Tree = {
   collapseAll(): void;
   reveal(path: readonly (string | number)[]): void;
 };
-type Shared = {
-  readonly summary: ComputedRef<Summary>;
-  readonly engines: ComputedRef<QueryEngines | undefined>;
-};
-
-function toolbarOf(props: Readonly<OutputViewProps>, out: Out, shared: Shared) {
-  return computed<ToolbarState>(() => ({
-    summary: shared.summary.value,
-    shown: out.shown.shown.value,
-    views: out.shown.views.value,
-    find: out.find.value,
-    query: shared.engines.value === undefined ? undefined : out.bar.open.value,
-    fit: out.layout.height.value === "fit",
-    notTransferable:
-      props.options?.notTransferable === true && kindOf(out.value.json.value) === "instance",
-    timestamps: props.timestamps !== undefined,
-    nested: out.nested,
-  }));
-}
-
-function menusOf(props: Readonly<OutputViewProps>, out: Out, selection: Ref<readonly number[]>) {
-  const input = out.shown.input;
-  const fullUrl = computed(() => (out.value.truncated.value ? props.fullValueUrl : undefined));
-  const scope = computed((): ExportScope => {
-    if (!out.value.truncated.value) return "whole";
-    return fullUrl.value === undefined ? "slice" : "full";
-  });
-  return {
-    copyItems: computed(() =>
-      input.value
-        ? copyItems(
-            input.value,
-            () => out.shown.text.value,
-            placeOf(out.context, out.value.json.value).root,
-          )
-        : [],
-    ),
-    exportItems: computed(() =>
-      input.value ? exportItems(input.value, selection.value, scope.value) : [],
-    ),
-    fetchFull: computed(() => {
-      const url = fullUrl.value;
-      if (url === undefined) return undefined;
-      return (signal: AbortSignal) => out.value.fetchFullValue(url, signal);
-    }),
-  };
-}
-
 export function useChrome(
   props: Readonly<OutputViewProps>,
   out: Out,
@@ -111,17 +62,49 @@ export function useChrome(
     },
   });
   const switches = { wrap: ref(true), times: ref(false), raw: ref(false) };
+  const fullUrl = computed(() => (out.value.truncated.value ? props.fullValueUrl : undefined));
+  const scope = computed((): ExportScope => {
+    if (!out.value.truncated.value) return "whole";
+    return fullUrl.value === undefined ? "slice" : "full";
+  });
   return {
     summary: computed(() => summaryText(summary.value)),
     engines,
-    toolbar: toolbarOf(props, out, { summary, engines }),
+    toolbar: computed<ToolbarState>(() => ({
+      summary: summary.value,
+      shown: out.shown.shown.value,
+      views: out.shown.views.value,
+      find: out.find.value,
+      query: engines.value === undefined ? undefined : out.bar.open.value,
+      fit: out.layout.height.value === "fit",
+      notTransferable:
+        props.options?.notTransferable === true && kindOf(out.value.json.value) === "instance",
+      timestamps: props.timestamps !== undefined,
+      nested: out.nested,
+    })),
     actions,
     selection,
     switches,
     toggle: (name: keyof typeof switches, on: boolean): void => {
       switches[name].value = on;
     },
-    ...menusOf(props, out, selection),
+    copyItems: computed(() =>
+      input.value
+        ? copyItems(
+            input.value,
+            () => out.shown.text.value,
+            placeOf(out.context, out.value.json.value).root,
+          )
+        : [],
+    ),
+    exportItems: computed(() =>
+      input.value ? exportItems(input.value, selection.value, scope.value) : [],
+    ),
+    fetchFull: computed(() => {
+      const url = fullUrl.value;
+      if (url === undefined) return undefined;
+      return (signal: AbortSignal) => out.value.fetchFullValue(url, signal);
+    }),
   };
 }
 

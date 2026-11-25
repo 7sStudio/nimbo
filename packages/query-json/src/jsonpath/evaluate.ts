@@ -1,6 +1,5 @@
 // The only file that imports @swaggerexpert/jsonpath or sees its AST (11-query §2): compile a query and classify its
 // cost, select normalized paths in the worker or, with a time slice, in the calling thread.
-// Over 150 lines because everything that touches the library (parser, AST, evaluator, realm) stays in this one file.
 import type { EvaluationRealmInterface } from "@swaggerexpert/jsonpath";
 import { evaluate, JSONEvaluationRealm, parse } from "@swaggerexpert/jsonpath";
 

@@ -171,7 +171,7 @@ function styleOf(io: Io, json: boolean): Style {
 }
 
 type Out = (text: string) => Promise<void>;
-type Questions = Pick<Screen, "confirm" | "choose">;
+type Questions = Pick<Screen, "confirm" | "choose" | "chooseMany">;
 
 const listed = (
   style: Style,
@@ -229,30 +229,28 @@ function questions(out: Out, style: Style, lines: Lines, interactive: boolean): 
         await hint(`Type a number from 1 to ${String(options.length)}.`);
       }
     },
-  };
-}
-
-function toggles(out: Out, style: Style, lines: Lines, interactive: boolean): Screen["chooseMany"] {
-  const hint = (text: string): Promise<void> => out(`  ${style.dim(text)}\n`);
-  return async (text, options) => {
-    const on = options.map((option) => option.checked);
-    if (!interactive) return on;
-    await out(`${style.accent("?")} ${style.strong(text)}\n`);
-    for (;;) {
-      await out(
-        listed(
-          style,
-          options,
-          (index) => `${on[index] === true ? style.toned("ok", "[x]") : "[ ]"} `,
-        ),
-      );
-      await out(`  ${style.dim("Type numbers to switch them on or off, or Enter to continue:")} `);
-      const answer = (await lines.next()).trim();
-      if (answer === "") return on;
-      const picked = numbers(answer, on.length);
-      if (picked === undefined) await hint(`Type numbers from 1 to ${String(options.length)}.`);
-      for (const index of picked ?? []) on[index] = on[index] !== true;
-    }
+    chooseMany: async (text, options) => {
+      const on = options.map((option) => option.checked);
+      if (!interactive) return on;
+      await out(`${style.accent("?")} ${style.strong(text)}\n`);
+      for (;;) {
+        await out(
+          listed(
+            style,
+            options,
+            (index) => `${on[index] === true ? style.toned("ok", "[x]") : "[ ]"} `,
+          ),
+        );
+        await out(
+          `  ${style.dim("Type numbers to switch them on or off, or Enter to continue:")} `,
+        );
+        const answer = (await lines.next()).trim();
+        if (answer === "") return on;
+        const picked = numbers(answer, on.length);
+        if (picked === undefined) await hint(`Type numbers from 1 to ${String(options.length)}.`);
+        for (const index of picked ?? []) on[index] = on[index] !== true;
+      }
+    },
   };
 }
 
@@ -312,25 +310,12 @@ export function openScreen(io: Io, command: string, options: ScreenOptions = {})
   return {
     ...style,
     ...questions(out, style, lines, interactive),
-    chooseMany: toggles(out, style, lines, interactive),
     interactive,
     columns: columnsOf(io),
     signal: abort.signal,
     line: (text = "") => out(`${text}\n`),
     heading: (text) => out(`${style.strong(text)}\n`),
     step: (tone, text, detail) => out(stepLine(style, tone, text, detail)),
-    ...blocks(out, style),
-    progress: progressOf(io, style, !json && io.outputIsTTY === true, out),
-    close: () => {
-      removeSignal();
-      lines.close();
-    },
-  };
-}
-
-/** The screen's text blocks: aligned rows, a command to copy, a callout. */
-function blocks(out: Out, style: Style): Pick<Screen, "rows" | "command" | "callout"> {
-  return {
     rows: async (rows, indent = 2) => {
       const width = Math.max(0, ...rows.map(([key]) => key.length));
       const pad = " ".repeat(indent);
@@ -349,6 +334,11 @@ function blocks(out: Out, style: Style): Pick<Screen, "rows" | "command" | "call
     callout: async (tone, title, more = []) => {
       await out(`${style.mark(tone)} ${style.strong(title)}\n`);
       if (more.length > 0) await out(more.map((text) => `  ${text}\n`).join(""));
+    },
+    progress: progressOf(io, style, !json && io.outputIsTTY === true, out),
+    close: () => {
+      removeSignal();
+      lines.close();
     },
   };
 }

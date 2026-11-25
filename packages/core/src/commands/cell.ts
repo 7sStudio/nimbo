@@ -1,5 +1,4 @@
 // The cell commands of 03-api §4.3.
-// Over 150 lines because the thirteen cell commands of the table live together, one descriptor each.
 import { z } from "zod";
 
 import { BindingValue } from "../model/binding.js";

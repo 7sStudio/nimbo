@@ -92,10 +92,9 @@ export const valueCases: readonly Case[] = [
       ".x\\:a { outline: 0 solid var(--accent); }",
       ".x\\:a { outline-style: none; }",
       ".x\\:a { outline-width: 0; }",
-      ".x\\:a { overflow: hidden auto; }",
-      ".x\\:a { overflow-x: hidden; }",
     ],
     passed: [
+      ".x\\:a { overflow: hidden auto; overflow-x: hidden; }",
       ".x\\:a { outline: 2px solid var(--accent); overflow: clip; scroll-snap-type: x mandatory; }",
       ".x\\:a { left: 0; width: 1rem; margin: 0 1rem; text-align: left; scroll-margin-top: 1rem; }",
     ],

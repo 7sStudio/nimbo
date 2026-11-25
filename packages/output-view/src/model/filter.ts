@@ -78,52 +78,47 @@ function findOperator(text: string): Found | undefined {
   return found;
 }
 
-type Value = { readonly value: string; readonly quoted: boolean };
-
-/** The value after the operator: a quoted JSON-style string, or the bare text up to the comma. */
-function readValue(op: ChipOp, rest: string, position: number): Value | FilterError {
-  if (rest.startsWith('"') || rest.startsWith("'")) {
-    const quoted = scanString(rest, 0);
-    if (quoted?.end === rest.length) return { value: quoted.value, quoted: true };
-    const message = `The quoted value at position ${String(position)} is not closed, or text follows it.`;
-    return { message, position };
-  }
-  if (rest !== "") return { value: rest, quoted: false };
-  return { message: `A value is missing after "${op}" at position ${String(position)}.`, position };
-}
-
-/** A quoted value stays a string even when it reads like a number or a keyword. */
-function quotedChip(key: string, op: ChipOp, value: string): Chip {
-  const chip = makeChip(key, op, value);
-  return chip.op === "exists" || isTextOp(chip.op) ? chip : { key: chip.key, op: chip.op, value };
-}
-
-function chipFrom(key: string, op: ChipOp, rest: string, valueAt: number): Chip | FilterError {
-  if (op === "exists") {
-    if (rest === "") return makeChip(key, op);
-    return { message: `"exists" takes no value; remove "${rest}".`, position: valueAt };
-  }
-  const value = readValue(op, rest, valueAt);
-  if ("message" in value) return value;
-  return value.quoted ? quotedChip(key, op, value.value) : makeChip(key, op, value.value);
-}
-
 function parseClause(clause: Clause): Chip | FilterError {
   const found = findOperator(clause.text);
   if (found === undefined) {
     const message = `No operator in "${clause.text.trim()}"; use =, !=, >, <, >=, <=, contains, startsWith, matches or exists.`;
     return { message, position: clause.start };
   }
+  const { op } = found;
   const where = clause.start + found.at;
   const key = clause.text.slice(0, found.at).trim();
   if (key === "") {
     return {
-      message: `A key is missing before "${found.op}" at position ${String(where)}.`,
+      message: `A key is missing before "${op}" at position ${String(where)}.`,
       position: where,
     };
   }
+  // The value after the operator: a quoted JSON-style string, or the bare text up to the comma.
   const rest = clause.text.slice(found.at + found.length).trim();
-  return chipFrom(key, found.op, rest, where + found.length + 1);
+  const valueAt = where + found.length + 1;
+  if (op === "exists") {
+    if (rest === "") return makeChip(key, op);
+    return { message: `"exists" takes no value; remove "${rest}".`, position: valueAt };
+  }
+  if (rest.startsWith('"') || rest.startsWith("'")) {
+    const quoted = scanString(rest, 0);
+    if (quoted?.end !== rest.length) {
+      const message = `The quoted value at position ${String(valueAt)} is not closed, or text follows it.`;
+      return { message, position: valueAt };
+    }
+    // A quoted value stays a string even when it reads like a number or a keyword.
+    const chip = makeChip(key, op, quoted.value);
+    return chip.op === "exists" || isTextOp(chip.op)
+      ? chip
+      : { key: chip.key, op: chip.op, value: quoted.value };
+  }
+  if (rest === "") {
+    return {
+      message: `A value is missing after "${op}" at position ${String(valueAt)}.`,
+      position: valueAt,
+    };
+  }
+  return makeChip(key, op, rest);
 }
 
 /**

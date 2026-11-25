@@ -19,12 +19,11 @@ const merged = ["unit-disallowed-list", "declaration-property-value-disallowed-l
  * Tailwind's shadow and ring internals, which carry the outlines and bars the repository's own list allows. */
 const units = ["pt", "pc", "cm", "mm", "in", "q"];
 const px = ["stroke-width", "/^--tw-(?:inset-)?(?:shadow|ring)/"];
-/** An outline of no width is an outline removed too; no hidden overflow (overflow: clip, 08 §7). */
+/** An outline of no width is an outline removed too. */
 const values: Readonly<Record<string, readonly string[]>> = {
   outline: ["/^0(?:px)?(?:\\s|$)/"],
   "outline-style": ["none"],
   "outline-width": ["/^0(?:px)?$/"],
-  "/^overflow/": ["/\\bhidden\\b/"],
 };
 
 /** The Stylelint rules compiled CSS adds, which the views' utilities can break and the CSS files do not. */

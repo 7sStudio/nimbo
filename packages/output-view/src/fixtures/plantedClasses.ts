@@ -47,14 +47,11 @@ export const refusedClasses: readonly (readonly [string, string])[] = [
   ["ov:inline-[300px]", "unit-disallowed-list"],
   ["ov:translate-x-[10px]", "unit-disallowed-list"],
   ["ov:text-[13px]", "unit-disallowed-list"],
-  // outlines removed, hidden overflow
+  // outlines removed
   ["ov:outline-none", "declaration-property-value-disallowed-list"],
   ["ov:outline-0", "declaration-property-value-disallowed-list"],
   ["ov:outline-hidden", "declaration-property-value-disallowed-list"],
   ["ov:[outline:none]", "declaration-property-value-disallowed-list"],
-  ["ov:overflow-hidden", "declaration-property-value-disallowed-list"],
-  ["ov:truncate", "declaration-property-value-disallowed-list"],
-  ["ov:line-clamp-2", "declaration-property-value-disallowed-list"],
   // z-index outside the named layers, !important
   ["ov:z-10", "declaration-property-value-allowed-list"],
   ["ov:[z-index:var(--z-panel,999)]", "declaration-property-value-allowed-list"],
@@ -80,6 +77,9 @@ export const allowedClasses: readonly string[] = [
   "ov:ps-2",
   "ov:inset-s-0",
   "ov:overflow-clip",
+  "ov:overflow-hidden",
+  "ov:truncate",
+  "ov:line-clamp-2",
   "ov:z-(--z-panel)",
   "ov:fixed",
   "ov:motion-safe:transition-opacity",

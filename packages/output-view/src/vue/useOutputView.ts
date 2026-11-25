@@ -11,7 +11,6 @@ import type { QueryPin } from "../model/query.js";
 import { writeClipboard } from "./clipboard.js";
 import type { ViewerContext } from "./context.js";
 import { placeOf, viewerKey } from "./context.js";
-import type { Drill } from "./fullscreen.js";
 import { drillKey } from "./fullscreen.js";
 import type { CopyEvent, JumpTarget, OutputHeight, OutputViewProps } from "./options.js";
 import { useLayout } from "./useLayout.js";
@@ -19,8 +18,6 @@ import { useQueryBar } from "./useQueryBar.js";
 import { useSearch } from "./useSearch.js";
 import { useShown } from "./useShown.js";
 import { useSqlTable } from "./useSqlTable.js";
-import type { Tasks } from "./useTasks.js";
-import type { Tooltips } from "./tooltip.js";
 import { viewerTooltips } from "./tooltip.js";
 import { useTasks } from "./useTasks.js";
 import { useValue } from "./useValue.js";
@@ -44,12 +41,19 @@ function hintContext(props: Readonly<OutputViewProps>): HintContext {
   };
 }
 
-function useQuerying(
-  props: Readonly<OutputViewProps>,
-  value: ReturnType<typeof useValue>,
-  layout: ReturnType<typeof useLayout>,
-  notify: Notify & { readonly fail: (message: string) => void },
-) {
+export type Fullscreen = { open: boolean; json: unknown; path: Path };
+
+export function useOutputView(props: Readonly<OutputViewProps>, notify: Notify) {
+  const tasks = useTasks();
+  const value = useValue(props, toRef(props, "output"));
+  const layout = useLayout(props, notify);
+  const late = shallowRef<ReturnType<typeof useShown>>();
+  const search = useSearch({
+    json: computed(() => late.value?.json.value),
+    timeZone: computed(() => props.options?.timeZone),
+    initial: props.options?.search,
+  });
+
   const engines = toRef(props, "engines");
   const table = useSqlTable({
     engines,
@@ -58,7 +62,7 @@ function useQuerying(
     fullValueUrl: toRef(props, "fullValueUrl"),
     fetchFullValue: value.fetchFullValue,
     alias: toRef(props, "alias"),
-    report: notify.fail,
+    report: tasks.fail,
   });
   const view = computed(() => {
     const checked = value.checked.value;
@@ -75,71 +79,39 @@ function useQuerying(
       if (props.options?.readonly !== true) notify.pin(pin);
     },
   });
-  return { table, bar };
-}
 
-export type Fullscreen = { open: boolean; json: unknown; path: Path };
-
-/** Opens the dialog; or, nested in it, goes down from this viewer's own value or shows another root there. */
-function opener(
-  value: ReturnType<typeof useValue>,
-  notify: Notify,
-  fullscreen: Fullscreen,
-  drill: Drill | undefined,
-) {
-  return (json: unknown, path: Path): void => {
-    if (drill && json === value.json.value) drill.down(path);
-    else if (drill) drill.open(json, path);
-    else {
-      Object.assign(fullscreen, { open: true, json, path });
-      notify.fullscreen();
-    }
-  };
-}
-
-/** The context every view reads (context.ts), provided to the views below. */
-function provideViewer(
-  props: Readonly<OutputViewProps>,
-  value: ReturnType<typeof useValue>,
-  notify: Notify & { readonly tasks: Tasks; readonly tips: Tooltips },
-  fullscreen: Fullscreen,
-): ViewerContext {
+  // Shallow: the value stays raw (no deep proxy over a large tree), so the dialog can tell the output's own value.
+  const fullscreen = shallowReactive<Fullscreen>({ open: false, json: undefined, path: [] });
+  const { tips, owns: ownsTips } = viewerTooltips();
   const drill = inject(drillKey, undefined);
   const context: ViewerContext = {
     theme: computed(() => props.options?.theme),
     hints: computed(() => hintContext(props)),
     copy: async (what, text) => {
       if (await writeClipboard(text)) notify.copy({ what, text });
-      else notify.tasks.fail("The browser did not allow copying to the clipboard.");
+      else tasks.fail("The browser did not allow copying to the clipboard.");
     },
     jump: notify.jump,
     loadMore: computed(() => (props.onLoadMore ? value.loadMore : undefined)),
-    run: notify.tasks.run,
-    fail: notify.tasks.fail,
-    openFullscreen: opener(value, notify, fullscreen, drill),
+    run: tasks.run,
+    fail: tasks.fail,
+    // Opens the dialog; or, nested in it, goes down from this viewer's own value or shows another root there.
+    openFullscreen: (json, path) => {
+      if (drill && json === value.json.value) drill.down(path);
+      else if (drill) drill.open(json, path);
+      else {
+        fullscreen.open = true;
+        fullscreen.json = json;
+        fullscreen.path = path;
+        notify.fullscreen();
+      }
+    },
     drills: drill !== undefined,
     place: computed(() => drill?.place.value),
-    tips: notify.tips,
+    tips,
   };
   provide(viewerKey, context);
-  return context;
-}
 
-export function useOutputView(props: Readonly<OutputViewProps>, notify: Notify) {
-  const tasks = useTasks();
-  const value = useValue(props, toRef(props, "output"));
-  const layout = useLayout(props, notify);
-  const late = shallowRef<ReturnType<typeof useShown>>();
-  const search = useSearch({
-    json: computed(() => late.value?.json.value),
-    timeZone: computed(() => props.options?.timeZone),
-    initial: props.options?.search,
-  });
-  const { table, bar } = useQuerying(props, value, layout, { ...notify, fail: tasks.fail });
-  // Shallow: the value stays raw (no deep proxy over a large tree), so the dialog can tell the output's own value.
-  const fullscreen = shallowReactive<Fullscreen>({ open: false, json: undefined, path: [] });
-  const { tips, owns: ownsTips } = viewerTooltips();
-  const context = provideViewer(props, value, { ...notify, tasks, tips }, fullscreen);
   const shown = useShown({
     checked: value.checked,
     json: value.json,

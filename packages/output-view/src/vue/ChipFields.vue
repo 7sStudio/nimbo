@@ -22,7 +22,11 @@ function onKeydown(event: KeyboardEvent): void {
   if (event.key === "Escape") emit("cancel");
   else if (event.key === "Enter" && draft.key.trim() !== "") {
     emit("commit", makeChip(draft.key, draft.op, draft.value), event.metaKey || event.ctrlKey);
-    if (props.chip === undefined) Object.assign(draft, { key: "", op: "=", value: "" });
+    if (props.chip === undefined) {
+      draft.key = "";
+      draft.op = "=";
+      draft.value = "";
+    }
   } else return;
   event.preventDefault();
   event.stopPropagation();

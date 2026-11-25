@@ -69,45 +69,6 @@ function realmServices(options: {
   return { service, dispose };
 }
 
-const builtinTexts = (env: EnvNames): [Realm, string][] => [
-  ["server", serverBuiltins(env.server)],
-  ["client", clientBuiltins(env.client)],
-];
-
-/** The scanned cells and their virtual files, for the notebook's code cells in document order. */
-function buildCells(
-  input: readonly LanguageCell[],
-  scans: ReturnType<typeof declarationCache>,
-  fileOf: (id: CellId) => string,
-): { scanned: ScannedCell[]; cells: VirtualCell[] } {
-  const scanned = input.map((cell) => ({
-    id: cell.id,
-    realm: cell.type,
-    declarations: scans.of(cell),
-  }));
-  const cells = input.map((cell, index) =>
-    virtualCell({
-      ...{ id: cell.id, realm: cell.type, source: cell.source, fileOf, kindIn: scans.kindIn },
-      declarations: scans.of(cell),
-      visibility: visibility(scanned, index),
-    }),
-  );
-  scans.keep(new Set(input.map((cell) => cell.id)));
-  return { scanned, cells };
-}
-
-/** Writes the cells' files into memory, deletes those of cells gone, and returns the cells by file name. */
-function writeCells(
-  memory: MemoryFiles,
-  previous: ReadonlyMap<string, VirtualCell>,
-  cells: readonly VirtualCell[],
-): Map<string, VirtualCell> {
-  const byFile = new Map(cells.map((cell) => [cell.fileName, cell]));
-  for (const fileName of previous.keys()) if (!byFile.has(fileName)) memory.delete(fileName);
-  for (const cell of cells) memory.set(cell.fileName, cell.text);
-  return byFile;
-}
-
 export function createNotebookFiles(options: {
   readonly root: string;
   readonly notebook: string;
@@ -122,7 +83,8 @@ export function createNotebookFiles(options: {
   let scanned: ScannedCell[] = [];
   let byFile = new Map<string, VirtualCell>();
   const setEnv = (env: EnvNames): void => {
-    for (const [realm, text] of builtinTexts(env)) memory.set(builtinFile(realm), text);
+    memory.set(builtinFile("server"), serverBuiltins(env.server));
+    memory.set(builtinFile("client"), clientBuiltins(env.client));
   };
   setEnv({ server: [], client: [] });
 
@@ -134,10 +96,33 @@ export function createNotebookFiles(options: {
   ];
   const services = realmServices({ ...options, root, memory, rootFiles });
 
+  const fileOf = (id: CellId): string => cellFileName(root, key, id);
+
+  /** Rebuilds the code cells' virtual files in document order, writes them into memory and deletes those of cells
+   * gone. */
   const sync = (input: readonly LanguageCell[], env?: EnvNames): void => {
     if (env) setEnv(env);
-    ({ scanned, cells } = buildCells(input, scans, (id) => cellFileName(root, key, id)));
-    byFile = writeCells(memory, byFile, cells);
+    scanned = input.map((cell) => ({
+      id: cell.id,
+      realm: cell.type,
+      declarations: scans.of(cell),
+    }));
+    cells = input.map((cell, index) =>
+      virtualCell({
+        id: cell.id,
+        realm: cell.type,
+        source: cell.source,
+        fileOf,
+        kindIn: scans.kindIn,
+        declarations: scans.of(cell),
+        visibility: visibility(scanned, index),
+      }),
+    );
+    scans.keep(new Set(input.map((cell) => cell.id)));
+    const previous = byFile;
+    byFile = new Map(cells.map((cell) => [cell.fileName, cell]));
+    for (const fileName of previous.keys()) if (!byFile.has(fileName)) memory.delete(fileName);
+    for (const cell of cells) memory.set(cell.fileName, cell.text);
   };
 
   return {

@@ -1,5 +1,5 @@
 // Each settings key's title, description and status (03-api §4.10): for the Settings page, the CLI and the JSON
-// Schema, beside the schema of schema.ts. Over 100 lines because every key carries its own description.
+// Schema, beside the schema of schema.ts.
 import type { SettingMeta, SettingsKey } from "./keys.js";
 
 const stable = (title: string, description: string): SettingMeta => ({

@@ -6,7 +6,7 @@ import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
 import { ResultTooLarge } from "../errors/mcp.js";
 import { byteSize } from "../errors/size.js";
-import type { Exchange } from "./adviceParts.js";
+import type { Exchange } from "./advice.js";
 import { adviceFor } from "./advice.js";
 import { failureResult } from "./results.js";
 import { toolName } from "./tools.js";
