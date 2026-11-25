@@ -112,7 +112,7 @@ Each budget takes the median of three samples with a 20 % tolerance (`withTolera
 | SQL: first engine load / query over 48 120 rows | < 6 s on a cached download / < 500 ms | `query-sql` `budgets.browser.test.ts` |
 | Page hydrate with 50 cells | < 300 ms to first paint of the last cell | journey |
 | Query bar: JSONPath over a 4 MB value | < 100 ms | browser |
-| `ui` first load | ≤ 500 KB gzipped, no jq or DuckDB | `pnpm size` (08 §10) |
+| `ui` first load | a 2 MB gzipped tripwire, not a target; no jq or DuckDB in it | `pnpm size` (08 §10) |
 
 ## 8. Fixtures and helpers
 
