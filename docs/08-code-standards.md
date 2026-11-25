@@ -114,7 +114,7 @@ A **call failure** is an error (JSON-RPC code, `ApiError { code, name, data }`);
 - `import type` for types (`consistent-type-imports`); `node:` prefix for built-ins.
 - Immutable by default: `readonly` in public types; reducers return new objects.
 - Functions over classes; classes only for errors and long-lived stateful things (`Kernel`, `Realm`, the daemon's `Notebook` session); no inheritance beyond `JsnbError`.
-- Public functions carry a JSDoc sentence; comments explain why, not what.
+- Comments are few and explain a non-obvious why, not what.
 - Dates are ISO strings in schemas, never `Date` in state; durations in ms, named `…Ms`.
 
 ## 7. Vue and CSS
