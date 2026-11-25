@@ -15,7 +15,7 @@ afterEach(async () => {
 });
 
 const event = (name: string, data: unknown) => ({ name, data, at: "2026-11-24T10:00:00.000Z" });
-const got = () => Reflect.get(globalThis, "got") as unknown;
+const got = (): unknown => Reflect.get(globalThis, "got");
 
 describe("realm.event", () => {
   it("counts prototype names as names and delivers to their listeners", async () => {

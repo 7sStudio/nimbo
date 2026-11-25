@@ -81,10 +81,7 @@ function pageReadHandlers(session: (notebook: string) => Promise<Open>): readonl
           reason:
             "an image needs a headless browser realm, which nimbo does not have yet; read text and html instead.",
         });
-      const shot = await open.realm.snapshot(cell, maxBytes);
-      return html === true
-        ? shot
-        : { text: shot.text, rendered: shot.rendered, truncated: shot.truncated };
+      return open.realm.snapshot(cell, maxBytes, html === true);
     }),
   ];
 }

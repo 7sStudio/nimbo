@@ -1,23 +1,87 @@
-// A container as an agent reads it (cell.snapshot, 03-api §4.3): `text` is the accessible text in reading order (form
-// controls as their values, images as their alt text, hidden parts left out, a block per line), `html` a copy with no
-// script, style or event handler and the live form values written as attributes; each cut to `maxBytes` of UTF-8.
+// A container as an agent reads it (cell.snapshot, 03-api §4.3). `text` is the accessible text in reading order (form
+// controls as their values, images as their alt text, hidden parts, scripts and styles left out, a block per line).
+// `html`, only when asked for, is serialised here from an allowlist: allowlisted HTML and SVG elements with
+// allowlisted attributes, URLs only http, https, mailto or relative, text and values escaped, so parsing it again runs
+// nothing; comments, raw-text and embedding elements go with their content, unknown elements leave only their
+// children. Both walks are iterative and bounded (nodes, depth, `maxBytes`), and yield to the page as they go.
+import {
+  allowedAttribute,
+  droppedWithContent,
+  emittedElement,
+  isVoid,
+} from "./snapshotAllowlist.js";
 
 export type AgentSnapshot = {
-  readonly html: string;
   readonly text: string;
+  readonly html?: string;
   readonly truncated: boolean;
 };
 
-const dropped = new Set(["SCRIPT", "STYLE", "TEMPLATE", "NOSCRIPT", "LINK", "META"]);
-const blocks = new Set([
-  ..."ADDRESS ARTICLE ASIDE BLOCKQUOTE BR DD DETAILS DIALOG DIV DL DT FIELDSET FIGCAPTION FIGURE FOOTER FORM".split(
+const maxNodes = 20_000;
+const maxDepth = 200;
+const nodesPerSlice = 1000;
+
+type Visitor = {
+  /** "children" walks into the element, "skip" leaves it whole. */
+  readonly enter: (element: Element) => "children" | "skip";
+  readonly leave: (element: Element) => void;
+  readonly text: (node: Text) => void;
+  /** True once the output reached its budget. */
+  readonly full: () => boolean;
+};
+
+type Frame = { readonly element: Element; next: Node | null };
+
+// node types, not instanceof: a same-origin frame's nodes come from another realm
+const isText = (node: Node): node is Text => node.nodeType === Node.TEXT_NODE;
+const isElement = (node: Node): node is Element => node.nodeType === Node.ELEMENT_NODE;
+
+const yieldToPage = (): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, 0);
+  });
+
+/** The first child the walk reads: a same-origin frame's body's, else the element's own. */
+const firstOf = (element: Element): Node | null =>
+  element instanceof HTMLIFrameElement
+    ? (element.contentDocument?.body?.firstChild ?? null)
+    : element.firstChild;
+
+/** Walks `root`'s descendants depth first without recursion; true when a budget cut it short. */
+async function walk(root: Element, visitor: Visitor): Promise<boolean> {
+  const stack: Frame[] = [{ element: root, next: root.firstChild }];
+  let nodes = 0;
+  let cut = false;
+  while (stack.length > 0) {
+    const top = stack.at(-1);
+    if (!top) break;
+    const node = top.next;
+    if (node === null) {
+      stack.pop();
+      if (stack.length > 0) visitor.leave(top.element);
+      continue;
+    }
+    top.next = node.nextSibling;
+    nodes += 1;
+    if (nodes > maxNodes || visitor.full()) return true;
+    if (nodes % nodesPerSlice === 0) await yieldToPage();
+    if (isText(node)) visitor.text(node);
+    else if (isElement(node)) {
+      if (stack.length > maxDepth) {
+        cut = true;
+        continue;
+      }
+      if (visitor.enter(node) === "children") stack.push({ element: node, next: firstOf(node) });
+    }
+  }
+  return cut;
+}
+
+const blocks = new Set(
+  "address article aside blockquote br dd details dialog div dl dt fieldset figcaption figure footer form h1 h2 h3 h4 h5 h6 header hr li main nav ol p pre section summary table tr ul caption legend option".split(
     " ",
   ),
-  ..."H1 H2 H3 H4 H5 H6 HEADER HR LI MAIN NAV OL P PRE SECTION SUMMARY TABLE TR UL CAPTION LEGEND OPTION".split(
-    " ",
-  ),
-]);
-const urlAttributes = new Set(["href", "src", "action", "formaction", "xlink:href"]);
+);
 
 function hidden(element: Element): boolean {
   if (element.getAttribute("aria-hidden") === "true" || element.hasAttribute("hidden")) return true;
@@ -30,7 +94,7 @@ function isBlock(element: Element): boolean {
     if (display !== "" && !display.startsWith("inline") && display !== "contents") return true;
   }
   // a chart's SVG labels read one per line
-  return blocks.has(element.tagName) || element instanceof SVGTextElement;
+  return blocks.has(element.localName) || element instanceof SVGTextElement;
 }
 
 /** What an input says: its value (its placeholder in brackets when empty), a box's state; nothing for a secret. */
@@ -41,8 +105,7 @@ function inputText(input: HTMLInputElement): string {
   return empty && input.placeholder !== "" ? `[${input.placeholder}]` : input.value;
 }
 
-/** What a form control, a progress bar, a meter or an image says: its value, a select's chosen options, a bar's
- * `value/max`, an image's alt text. */
+/** What a form control, a progress bar, a meter or an image says. */
 function controlText(element: Element): string | undefined {
   if (element instanceof HTMLInputElement) return inputText(element);
   if (element instanceof HTMLTextAreaElement) return element.value;
@@ -53,82 +116,91 @@ function controlText(element: Element): string | undefined {
   return element instanceof HTMLImageElement ? element.alt : undefined;
 }
 
-/** An element's own text: a control's, a same-origin frame's body, a label-only element's aria-label, or its children's. */
-function inner(element: Element, out: string[]): void {
-  const control = controlText(element);
-  if (control !== undefined) {
-    out.push(` ${control} `);
-    return;
-  }
-  if (element instanceof HTMLIFrameElement) {
-    const body = element.contentDocument?.body;
-    if (body) collect(body, out);
-    return;
-  }
-  const label = element.getAttribute("aria-label");
-  if (label !== null && element.textContent.trim() === "") out.push(` ${label} `);
-  else for (const child of element.childNodes) collect(child, out);
+function textVisitor(maxBytes: number, out: string[]): Visitor {
+  let length = 0;
+  const push = (part: string): void => {
+    out.push(part);
+    length += part.length;
+  };
+  return {
+    enter: (element) => {
+      if (hidden(element)) return "skip";
+      if (element instanceof HTMLIFrameElement) return "children";
+      if (droppedWithContent(element)) return "skip";
+      if (isBlock(element)) push("\n");
+      const control = controlText(element);
+      const label = element.getAttribute("aria-label");
+      if (control !== undefined) push(` ${control} `);
+      else if (label !== null && element.firstChild === null) push(` ${label} `);
+      else return "children";
+      if (isBlock(element)) push("\n");
+      return "skip";
+    },
+    leave: (element) => {
+      if (isBlock(element)) push("\n");
+    },
+    text: (node) => {
+      push(node.data.replace(/\s+/gu, " "));
+    },
+    full: () => length > maxBytes,
+  };
 }
 
-function collect(node: Node, out: string[]): void {
-  if (node.nodeType === Node.TEXT_NODE) {
-    out.push((node.textContent ?? "").replace(/\s+/gu, " "));
-    return;
+const escapeText = (text: string): string =>
+  text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+const escapeValue = (text: string): string => escapeText(text).replaceAll('"', "&quot;");
+
+/** The element's attributes as the HTML says them: allowlisted ones, with the live form state written in. */
+function attributesOf(element: Element): string {
+  const parts: string[] = [];
+  for (const attribute of element.attributes) {
+    if (element instanceof HTMLInputElement && ["value", "checked"].includes(attribute.name))
+      continue;
+    if (element instanceof HTMLOptionElement && attribute.name === "selected") continue;
+    if (allowedAttribute(element, attribute.name, attribute.value))
+      parts.push(` ${attribute.name}="${escapeValue(attribute.value)}"`);
   }
-  if (!(node instanceof Element) || dropped.has(node.tagName) || hidden(node)) return;
-  const block = isBlock(node);
-  if (block) out.push("\n");
-  inner(node, out);
-  if (block) out.push("\n");
-}
-
-/** The accessible text of `root`, one block per line. */
-function accessibleText(root: Element): string {
-  const out: string[] = [];
-  for (const child of root.childNodes) collect(child, out);
-  return out
-    .join("")
-    .split("\n")
-    .map((line) => line.replace(/ +/gu, " ").trim())
-    .filter((line) => line !== "")
-    .join("\n");
-}
-
-/** Writes the live form state of `live` on the copy `copy` as attributes, so the HTML says what the user sees. */
-function writeFormState(live: Element, copy: Element): void {
-  if (live instanceof HTMLInputElement) {
-    if (live.type === "checkbox" || live.type === "radio")
-      copy.toggleAttribute("checked", live.checked);
-    else if (live.type !== "password" && live.type !== "file")
-      copy.setAttribute("value", live.value);
-  } else if (live instanceof HTMLTextAreaElement) copy.textContent = live.value;
-  else if (live instanceof HTMLOptionElement) copy.toggleAttribute("selected", live.selected);
-}
-
-function clean(element: Element): void {
-  for (const attribute of [...element.attributes]) {
-    const name = attribute.name.toLowerCase();
-    const scripted = urlAttributes.has(name) && /^\s*javascript:/iu.test(attribute.value);
-    if (name.startsWith("on") || name === "srcdoc" || scripted)
-      element.removeAttribute(attribute.name);
+  if (element instanceof HTMLInputElement) {
+    if (element.type === "checkbox" || element.type === "radio") {
+      if (element.checked) parts.push(' checked=""');
+    } else if (element.type === "password") {
+      if (element.value !== "") parts.push(' value="***"');
+    } else if (element.type !== "file") parts.push(` value="${escapeValue(element.value)}"`);
   }
+  if (element instanceof HTMLOptionElement && element.selected) parts.push(' selected=""');
+  return parts.join("");
 }
 
-/** A copy of `root`'s children without scripts or handlers, with the live form values. */
-function sanitizedHtml(root: Element): string {
-  const copy = root.cloneNode(true);
-  if (!(copy instanceof Element)) return "";
-  const lives = [...root.querySelectorAll("*")];
-  const copies = [...copy.querySelectorAll("*")];
-  lives.forEach((live, at) => {
-    const twin = copies[at];
-    if (twin) writeFormState(live, twin);
-  });
-  for (const element of copies) {
-    if (dropped.has(element.tagName)) element.remove();
-    else clean(element);
-  }
-  return copy.innerHTML;
+function htmlVisitor(maxBytes: number, out: string[]): Visitor {
+  let length = 0;
+  const push = (part: string): void => {
+    out.push(part);
+    length += part.length;
+  };
+  const open = new WeakSet<Element>();
+  return {
+    enter: (element) => {
+      if (droppedWithContent(element)) return "skip";
+      const kind = emittedElement(element);
+      if (kind === "skip") return "skip";
+      if (kind === "unwrap") return "children";
+      push(`<${element.localName}${attributesOf(element)}>`);
+      if (isVoid(element)) return "skip";
+      if (element instanceof HTMLTextAreaElement) {
+        push(`${escapeText(element.value)}</textarea>`);
+        return "skip";
+      }
+      open.add(element);
+      return "children";
+    },
+    leave: (element) => {
+      if (open.has(element)) push(`</${element.localName}>`);
+    },
+    text: (node) => {
+      push(escapeText(node.data));
+    },
+    full: () => length > maxBytes,
+  };
 }
 
 const encoder = new TextEncoder();
@@ -148,8 +220,26 @@ function cut(text: string, maxBytes: number): { readonly text: string; readonly 
   return { text: text.slice(0, end), cut: true };
 }
 
-export function agentSnapshot(container: Element, maxBytes: number): AgentSnapshot {
-  const html = cut(sanitizedHtml(container), maxBytes);
-  const text = cut(accessibleText(container), maxBytes);
-  return { html: html.text, text: text.text, truncated: html.cut || text.cut };
+const lines = (parts: readonly string[]): string =>
+  parts
+    .join("")
+    .split("\n")
+    .map((line) => line.replace(/ +/gu, " ").trim())
+    .filter((line) => line !== "")
+    .join("\n");
+
+export async function agentSnapshot(
+  container: Element,
+  options: { readonly maxBytes: number; readonly html: boolean },
+): Promise<AgentSnapshot> {
+  const { maxBytes } = options;
+  const textParts: string[] = [];
+  const textWalkCut = await walk(container, textVisitor(maxBytes, textParts));
+  const text = cut(lines(textParts), maxBytes);
+  if (!options.html) return { text: text.text, truncated: textWalkCut || text.cut };
+  const htmlParts: string[] = [];
+  const htmlWalkCut = await walk(container, htmlVisitor(maxBytes, htmlParts));
+  const html = cut(htmlParts.join(""), maxBytes);
+  const truncated = textWalkCut || text.cut || htmlWalkCut || html.cut;
+  return { text: text.text, html: html.text, truncated };
 }

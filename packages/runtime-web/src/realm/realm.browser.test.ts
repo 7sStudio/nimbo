@@ -115,14 +115,13 @@ describe("Realm.handle, failed runs", () => {
 describe("Realm.handle, realm.snapshot", () => {
   it("answers the container's html and text, and nothing for a cell without one", async () => {
     const result = await world.run("display.html('<ul><li>a@b.c</li><li>d</li></ul>')");
-    expect(await world.realm.handle("realm.snapshot", { cell: result.cell })).toEqual({
+    expect(await world.realm.handle("realm.snapshot", { cell: result.cell, html: true })).toEqual({
       html: "<ul><li>a@b.c</li><li>d</li></ul>",
       text: "a@b.c\nd",
       rendered: true,
       truncated: false,
     });
     expect(await world.realm.handle("realm.snapshot", { cell: nextCell() })).toEqual({
-      html: "",
       text: "",
       rendered: false,
       truncated: false,

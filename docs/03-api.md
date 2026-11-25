@@ -443,6 +443,7 @@ The UI store is a pure reducer over these events plus `notebook.get`.
 | 1012 | `NOTEBOOK_OPEN` | `{ path }` |
 | 1013 | `GitFailed` | `{ command, code, message }`: git refused or failed (its own first lines: a hook's output, "nothing to commit"), or no repository (`command: "repository"`) |
 | 1014 | `NOT_PAUSED` | `{ command }`: a step, resume or read of the stack, a scope or variables while the kernel is not paused |
+| 1015 | `PAGE_TIMEOUT` | `{ notebook, request, timeoutMs }`: the attached page did not answer the daemon's request (`cell.snapshot`'s `realm.snapshot`) in time |
 | 2001 | `BRIDGE_CALL_FAILED` | `{ error: ErrorInfo }`: the function threw or is not a current export (`ExportNotRun`, `KernelRestarted`, `NotExported`; 05 §4, §7) |
 
 A named `JsnbError` without its own code (`OutputQueryFailed`, `Packages*`, `DaemonStopping`, `Notebook*` path errors, `Folder*`, `RenameRefused`, …) is `-32603` with `data: { name, data }`. Anything else thrown is a daemon bug: `-32603`, stack in `.jsnb/logs/daemon.log`.

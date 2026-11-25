@@ -37,7 +37,11 @@ export type SessionRealm = RealmPart & {
   /** bridge.events: each event name's counts. */
   readonly events: EventChannel["stats"];
   /** cell.snapshot: the client cell's container as the attached page renders it. */
-  readonly snapshot: (cell: CellId, maxBytes: number) => Promise<RealmSnapshotAnswer>;
+  readonly snapshot: (
+    cell: CellId,
+    maxBytes: number,
+    html: boolean,
+  ) => Promise<RealmSnapshotAnswer>;
   /** The notebook closes: the page is detached. */
   readonly close: () => void;
 };
@@ -135,7 +139,8 @@ export function createRealm(context: SessionContext, deps: RealmDeps): SessionRe
     },
     bridgeCall: (fn, args) => bridgeCall(context, state, fn, args),
     events: events.stats,
-    snapshot: (cell, maxBytes) => snapshotCell(context, state, deps, { cell, maxBytes }),
+    snapshot: (cell, maxBytes, html) =>
+      snapshotCell(context, state, deps, { cell, maxBytes, html }),
     close: () => {
       if (state.attachment) detach(context, state, state.attachment.realmId);
     },

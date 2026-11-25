@@ -34,4 +34,6 @@ exports[`the API errors > undefined carries code 1011 and is a JsnbError 1`] = `
 
 exports[`the API errors > undefined carries code 1012 and is a JsnbError 1`] = `"demo.jsnb is open. Close it with notebook.close first, then delete or rename it."`;
 
+exports[`the API errors > undefined carries code 1015 and is a JsnbError 1`] = `"The page holding demo.jsnb did not answer realm.snapshot within 5s: a client cell may keep it busy. Try again, or reload the page."`;
+
 exports[`the API errors > undefined carries code 2001 and is a JsnbError 1`] = `"The server function failed: TypeError: x"`;

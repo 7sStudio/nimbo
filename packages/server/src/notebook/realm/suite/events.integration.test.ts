@@ -257,28 +257,43 @@ root.querySelector("#s").value = "b"`);
 });
 
 describe("cell.snapshot", () => {
-  it("answers rendered false for a cell not run, refuses a server cell and an image, and needs a page", async () => {
-    await withBridge(async (world) => {
-      const { client, server, daemon, notebook, page } = world;
-      const ui = await client("display.html('x')");
-      expect(await daemon.client.cell.snapshot({ notebook, cell: ui })).toEqual({
-        text: "",
-        rendered: false,
-        truncated: false,
+  it(
+    "answers rendered false for a cell not run, refuses a server cell and an image, times out on a busy page, and needs a page",
+    { timeout: 30_000 },
+    async () => {
+      await withBridge(async (world) => {
+        const { client, server, daemon, notebook, page } = world;
+        const ui = await client("display.html('x')");
+        expect(await daemon.client.cell.snapshot({ notebook, cell: ui })).toEqual({
+          text: "",
+          rendered: false,
+          truncated: false,
+        });
+        const back = await server("1");
+        await expect(daemon.client.cell.snapshot({ notebook, cell: back })).rejects.toMatchObject({
+          name: "InvalidParams",
+        });
+        await expect(
+          daemon.client.cell.snapshot({ notebook, cell: ui, image: true }),
+        ).rejects.toMatchObject({
+          name: "NotAvailable",
+        });
+        await world.run(
+          await client(
+            "setTimeout(() => { const end = Date.now() + 7000; while (Date.now() < end); }, 100)",
+          ),
+        );
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        await expect(daemon.client.cell.snapshot({ notebook, cell: ui })).rejects.toMatchObject({
+          name: "PageTimeout",
+          data: { request: "realm.snapshot", timeoutMs: 5000 },
+        });
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+        await page.detach();
+        await expect(daemon.client.cell.snapshot({ notebook, cell: ui })).rejects.toMatchObject({
+          name: "RealmNotAttached",
+        });
       });
-      const back = await server("1");
-      await expect(daemon.client.cell.snapshot({ notebook, cell: back })).rejects.toMatchObject({
-        name: "InvalidParams",
-      });
-      await expect(
-        daemon.client.cell.snapshot({ notebook, cell: ui, image: true }),
-      ).rejects.toMatchObject({
-        name: "NotAvailable",
-      });
-      await page.detach();
-      await expect(daemon.client.cell.snapshot({ notebook, cell: ui })).rejects.toMatchObject({
-        name: "RealmNotAttached",
-      });
-    });
-  });
+    },
+  );
 });

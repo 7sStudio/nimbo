@@ -79,15 +79,17 @@ export const RealmReset = z
   .readonly();
 export type RealmReset = z.infer<typeof RealmReset>;
 
-/** realm.snapshot: a cell's container as an agent reads it, `html` and `text` each cut to `maxBytes` (UTF-8). */
-export const RealmSnapshot = z.object({ cell: CellId, maxBytes: limit.optional() }).readonly();
+/** realm.snapshot: a cell's container as an agent reads it, `text` and, with `html`, the HTML, each cut to `maxBytes`. */
+export const RealmSnapshot = z
+  .object({ cell: CellId, maxBytes: limit.optional(), html: z.boolean().optional() })
+  .readonly();
 export type RealmSnapshot = z.infer<typeof RealmSnapshot>;
 
 /** The page's answer: `rendered` false when the cell has no container in this page (not run here, or it never used
  * `display` or `document`); `truncated` when either part was cut. */
 export const RealmSnapshotAnswer = z
   .object({
-    html: z.string(),
+    html: z.string().optional(),
     text: z.string(),
     rendered: z.boolean(),
     truncated: z.boolean(),

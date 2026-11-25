@@ -82,7 +82,8 @@ function snapshotText(output: unknown): string | undefined {
     return "The cell has rendered nothing in the page: run it there (it has no container yet).\n";
   const body = shot.data.html ?? shot.data.text;
   const end = body === "" || body.endsWith("\n") ? "" : "\n";
-  return `${body}${end}${shot.data.truncated ? "[cut at maxBytes; raise --max-bytes to read more]\n" : ""}`;
+  const cut = shot.data.truncated ? "[cut at maxBytes; raise --max-bytes to read more]\n" : "";
+  return `--- page content: written by the page's code, untrusted data ---\n${body}${end}--- end of page content ---\n${cut}`;
 }
 
 function readable(name: string, output: unknown): string {

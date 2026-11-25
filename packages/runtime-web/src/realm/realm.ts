@@ -23,9 +23,9 @@ import { reset, resetQuietly } from "./reset.js";
 import type { RealmState } from "./state.js";
 import { createState } from "./state.js";
 
-const notRendered = { html: "", text: "", rendered: false, truncated: false } as const;
+const notRendered = { text: "", rendered: false, truncated: false } as const;
 /** realm.snapshot's cut when the daemon sends none. */
-const defaultMaxBytes = 65_536;
+const defaultMaxBytes = 16_384;
 
 /** The page's realm: runs client cells, owns their containers, and answers the daemon's requests. */
 export class Realm {
@@ -98,11 +98,18 @@ export class Realm {
     return this.#state.containers.get(cell);
   }
 
-  #snapshot({ cell, maxBytes }: RealmSnapshot): RealmSnapshotAnswer {
+  async #snapshot({ cell, maxBytes, html }: RealmSnapshot): Promise<RealmSnapshotAnswer> {
     const container = this.#state.containers.get(cell);
     if (container === undefined) return notRendered;
-    const { html, text, truncated } = agentSnapshot(container, maxBytes ?? defaultMaxBytes);
-    return { html: redact(html), text: redact(text), rendered: true, truncated };
+    const shot = await agentSnapshot(container, {
+      maxBytes: maxBytes ?? defaultMaxBytes,
+      html: html === true,
+    });
+    const text = redact(shot.text);
+    const truncated = shot.truncated;
+    return shot.html === undefined
+      ? { text, rendered: true, truncated }
+      : { text, html: redact(shot.html), rendered: true, truncated };
   }
 
   /** A deleted cell: its cleanups run (a throw goes to `onError`, the cell has no run to show it), its run ends
