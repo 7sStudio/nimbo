@@ -148,7 +148,7 @@ async function outputText(
 }
 
 /** The split bundle of `pkg`; rejects when it would hold a file outside the package, refused when the rule keeps one. */
-export async function bundleGroup(
+async function bundleGroup(
   pkg: GroupPackage,
   resolver: Resolver,
   signal: AbortSignal,

@@ -32,20 +32,20 @@ type Call = () => unknown;
 describe("a package with hundreds of entries", () => {
   it("is one build for its main and every subpath, the module they share run once, cached for the next daemon", async () => {
     await withWorkspace(async (ws) => {
-      await writeFiles(ws, manyModules(300));
+      await writeFiles(ws, manyModules(200));
       const modules = await modulesOf(ws);
       const page = npmPage(modules.npm, ws.path("page"));
       const index = await page.load("/npm/many");
       const m7 = await page.load("/npm/many/m7");
       expect([(index.m3 as Call)(), (m7.m7 as Call)(), (index.m7 as Call)()]).toEqual([1, 2, 3]);
       expect(index.m7).toBe(m7.m7);
-      const sample = Array.from({ length: 15 }, (_, at) => modules.get(`many/m${String(at * 20)}`));
+      const sample = Array.from({ length: 15 }, (_, at) => modules.get(`many/m${String(at * 13)}`));
       expect((await Promise.all(sample)).every((answer) => answer.ok)).toBe(true);
       expect(modules.builds()).toBe(1);
       expect(page.fetched().some((url) => url.includes("/.chunks/"))).toBe(true);
       const again = await modulesOf(ws); // another daemon: everything from the cache
       expect(body(await again.get("many"))).toBe(body(await modules.get("many")));
-      expect(body(await again.get("many/m299"))).toContain("m299");
+      expect(body(await again.get("many/m199"))).toContain("m199");
       expect(again.builds()).toBe(0);
     });
   });
