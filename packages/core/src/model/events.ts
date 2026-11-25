@@ -81,9 +81,14 @@ export const eventData = {
     .readonly(),
   "cell.output": z.object({ cell: CellId, execution: ExecutionId, output: Output }).readonly(),
   "cells.stale": z.object({ cells: z.array(CellId).readonly() }).readonly(),
-  /** execution.autoRunDependents at work: the dependent running now and those waiting, in order; both empty once done. */
+  /** execution.autoRunDependents at work, as a change of NotebookState.autoRun: the dependent running now, and the
+   * cells that started or stopped waiting. */
   "cells.autoRun": z
-    .object({ running: CellId.nullable(), pending: z.array(CellId).readonly() })
+    .object({
+      running: CellId.nullable(),
+      added: z.array(CellId).readonly(),
+      removed: z.array(CellId).readonly(),
+    })
     .readonly(),
   "cell.diagnostics": CellDiagnostics,
   "routes.changed": z.object({ routes: z.array(Route).readonly() }).readonly(),

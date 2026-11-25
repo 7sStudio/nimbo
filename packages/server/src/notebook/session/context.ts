@@ -1,6 +1,13 @@
 // What every part of an open notebook's session shares: its ref and file, its cells, the document's own fields, the
 // events it emits (on its own stream), the kernel, the autosave, the clock and ids, the settings and the log.
-import type { CellId, DebugPause, EventType, IdGenerator, Settings } from "@jsnb/core";
+import type {
+  CellId,
+  DebugPause,
+  EventType,
+  IdGenerator,
+  NotebookState,
+  Settings,
+} from "@jsnb/core";
 import type { ExportEntry, LateOutput } from "@jsnb/kernel-node";
 
 import type { EventInput } from "../../events/bus.js";
@@ -38,6 +45,10 @@ export type SessionHooks = {
   debugResumed: () => Promise<void>;
   /** A cell's code or type changed (an edit, a revert, a reload): it leaves an auto-run cascade (04-kernel §4.1). */
   edited: (cell: CellId) => void;
+  /** The kernel ended (died, restarted, closed) or the page's realm was reset: what ran there is gone. */
+  realmEnded: (realm: "server" | "client") => void;
+  /** NotebookState.autoRun: the cascade under way. */
+  autoRunState: () => NonNullable<NotebookState["autoRun"]>;
 };
 
 /** What the runs share: the retained full values and whether the daemon itself is ending the kernel. */

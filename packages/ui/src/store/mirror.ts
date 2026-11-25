@@ -70,6 +70,7 @@ export function hydrated(mirror: Mirror, state: NotebookState, seq: number): Mir
     saveState: state.dirty ? "writing" : "saved",
     saveError: null,
     closed: false,
+    autoRun: state.autoRun ?? { running: null, pending: [] },
   };
 }
 

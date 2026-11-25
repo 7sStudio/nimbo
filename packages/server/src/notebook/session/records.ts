@@ -55,6 +55,9 @@ export type CellRecord = {
   last: ExecutionRecord | undefined;
   /** The finished run before `last` (cell.compare's "previous run"); a saved run counts. */
   previous?: ExecutionRecord | undefined;
+  /** The code and type of the cell's last run that started in its realm, forgotten when the realm ends: what
+   * execution.autoRunDependents may run again (04-kernel §4.1). */
+  ran?: { readonly source: string; readonly type: CellType } | undefined;
 };
 
 export const terminalStatuses: ReadonlySet<ExecStatus> = new Set(["ok", "error", "interrupted"]);

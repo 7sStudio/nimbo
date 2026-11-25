@@ -2,7 +2,7 @@
 // queue has nothing else to run the next of them runs, dependencies first, so whatever anyone asks for meanwhile runs
 // before the rest of the cascade. A failure, or a dependent left alone, holds back what depends on it; an edit takes
 // the cell out; interrupt, restart and close stop it all. Each cell.run's ticket answers which dependents it started.
-import type { AutoRunReport, AutoRunSkip, CellId, Execution } from "@jsnb/core";
+import type { AutoRunReport, AutoRunSkip, CellId, Execution, Graph } from "@jsnb/core";
 import { autoRunOrder, cyclicCells, dependentsOf, nextAutoRun } from "@jsnb/core";
 
 import type { SessionContext } from "../context.js";
@@ -36,6 +36,15 @@ export type AutoRun = {
   readonly stop: () => void;
   /** The ticket a cell.run's run got, once it ended well with the setting on. */
   readonly ticket: (run: QueuedRun) => Ticket | undefined;
+  /** The kernel ended or the page's realm was reset: the cascade stops, and what ran there no longer counts. */
+  readonly realmEnded: (realm: "server" | "client") => void;
+  /** NotebookState.autoRun: the dependent running and those waiting, in run order. */
+  readonly state: () => { readonly running: CellId | null; readonly pending: readonly CellId[] };
+  /** The API form of a ticket, the executions as `form` gives them, what still waits in run order. */
+  readonly report: (
+    ticket: Ticket,
+    form: (execution: ExecutionRecord) => Execution,
+  ) => AutoRunReport;
 };
 
 type State = {
@@ -49,22 +58,28 @@ type State = {
   /** Every cell this cascade planned: one whose latest run did not end well holds its dependents back. */
   readonly seen: Set<CellId>;
   running: { readonly run: QueuedRun; edited: boolean } | undefined;
-  shown: string;
+  /** What the page was last told (cells.autoRun): the running cell and the waiting ones. */
+  shown: { running: CellId | null; pending: Set<CellId> };
+  /** A cells.autoRun is due at the next turn: the changes of one turn go out as one event. */
+  flushing: boolean;
   poll: NodeJS.Timeout | undefined;
 };
 
-const idleState = JSON.stringify({ running: null, pending: [] });
 const pollMs = 250;
 
-/** The API form of a ticket, the executions as `form` gives them. */
-export const reportOf = (
+const reportOf = (
+  graph: Graph,
   ticket: Ticket,
   form: (execution: ExecutionRecord) => Execution,
 ): AutoRunReport => ({
   executions: ticket.started.map((run) => form(run.execution)),
-  pending: [...ticket.undecided],
+  pending: autoRunOrder(graph, ticket.undecided),
   skipped: [...ticket.skipped],
 });
+
+/** Whether the cell's code as it is now ran in its realm, as its type now: auto-run never runs code unseen. */
+const hasRun = (record: CellRecord): boolean =>
+  record.ran?.source === record.source && record.ran.type === record.type;
 
 function newTicket(from: ExecutionRecord): Ticket {
   let settle = (): void => undefined;
@@ -83,14 +98,25 @@ function settleWhenDecided(ticket: Ticket): void {
 const settingOn = (state: State): boolean =>
   state.context.settings()["execution.autoRunDependents"];
 
-/** cells.autoRun, when what runs or waits changed. */
+/** cells.autoRun with what changed since the page was last told, if anything did. */
+function flush(state: State): void {
+  state.flushing = false;
+  const running = state.running?.run.execution.cell ?? null;
+  const { shown, pending } = state;
+  const added = [...pending.keys()].filter((id) => !shown.pending.has(id));
+  const removed = [...shown.pending].filter((id) => !pending.has(id));
+  if (running === shown.running && added.length === 0 && removed.length === 0) return;
+  state.shown = { running, pending: new Set(pending.keys()) };
+  state.context.emit("cells.autoRun", { running, added, removed });
+}
+
+/** Tells the page once this turn's changes are made (a step ends a run and starts the next in one turn). */
 function show(state: State): void {
-  const order = autoRunOrder(state.context.cells.graph(), new Set(state.pending.keys()));
-  const shape = { running: state.running?.run.execution.cell ?? null, pending: order };
-  const key = JSON.stringify(shape);
-  if (key === state.shown) return;
-  state.shown = key;
-  state.context.emit("cells.autoRun", shape);
+  if (state.flushing) return;
+  state.flushing = true;
+  setImmediate(() => {
+    flush(state);
+  });
 }
 
 function forgetIfDone(state: State): void {
@@ -113,17 +139,28 @@ const holds = (state: State, id: CellId): boolean =>
   (state.seen.has(id) && !state.pending.has(id) && state.context.cells.get(id)?.status !== "ok");
 
 /** Why a dependent due now is left alone, if it is. */
-function reasonFor(state: State, cell: CellId, entry: Pending): Omit<Skip, "cell"> | undefined {
+function reasonFor(
+  state: State,
+  graph: Graph,
+  record: CellRecord,
+  entry: Pending,
+): Omit<Skip, "cell"> | undefined {
   const { cells } = state.context;
-  const record = cells.get(cell);
-  if (!record) return { reason: "deleted" };
-  if (record.last !== entry.last || cells.stale()[cell] !== true) return { reason: "ran" };
+  if (record.last !== entry.last || cells.stale()[record.id] !== true) return { reason: "ran" };
   if (record.meta.manual === true) return { reason: "manual" };
-  const node = cells.graph().cells.find((c) => c.id === cell);
+  const node = graph.cells.find((c) => c.id === record.id);
   const by = node?.dependsOn.find((id) => holds(state, id));
   if (by !== undefined) return { reason: "upstream", by };
-  if (record.status === "idle") return { reason: "notRun" };
+  if (!hasRun(record)) return { reason: "notRun" };
+  return realmGone(state, record);
+}
+
+/** A client cell with no page to run in, or a server cell with no kernel: a cascade never starts a kernel, and one
+ * that ended took what the dependents need with it. */
+function realmGone(state: State, record: CellRecord): Omit<Skip, "cell"> | undefined {
   if (record.type === "client" && !state.realmAttached()) return { reason: "noPage" };
+  if (record.type === "server" && state.context.kernel.live() === undefined)
+    return { reason: "stopped" };
   return undefined;
 }
 
@@ -162,18 +199,30 @@ function skipCycle(state: State): void {
   state.pending.clear();
 }
 
+/** Waiting cells deleted since: they leave as `deleted`, and hold back nothing (they are out of the graph). */
+function dropDeleted(state: State): void {
+  for (const [id, entry] of state.pending) {
+    if (state.context.cells.get(id)) continue;
+    state.pending.delete(id);
+    skip(id, entry, "deleted");
+  }
+}
+
 /** Decides the dependents due in order until one starts or none is left. */
 function advance(state: State): void {
+  dropDeleted(state);
+  const graph = state.context.cells.graph();
   for (;;) {
-    const cell = nextAutoRun(state.context.cells.graph(), new Set(state.pending.keys()));
+    const cell = nextAutoRun(graph, new Set(state.pending.keys()));
     if (cell === undefined) {
       skipCycle(state);
       return;
     }
     const entry = state.pending.get(cell);
+    const record = state.context.cells.get(cell);
     state.pending.delete(cell);
-    if (!entry) continue;
-    const left = reasonFor(state, cell, entry);
+    if (!entry || !record) continue;
+    const left = reasonFor(state, graph, record, entry);
     if (left === undefined) {
       start(state, cell, entry);
       return;
@@ -192,8 +241,17 @@ function later(state: State): void {
   }, pollMs);
 }
 
+/** Nothing waits or runs: the page hears the cascade ended, if it has not yet. */
+function quiet(state: State): void {
+  if (state.shown.running !== null || state.shown.pending.size > 0) show(state);
+  forgetIfDone(state);
+}
+
 function idle(state: State): void {
-  if (state.pending.size === 0 && state.running === undefined && state.shown === idleState) return;
+  if (state.pending.size === 0 && state.running === undefined && !state.flushing) {
+    quiet(state);
+    return;
+  }
   if (state.pending.size > 0 && !settingOn(state)) {
     stop(state);
     return;
@@ -211,8 +269,8 @@ function idle(state: State): void {
 function plannedReason(record: CellRecord, cyclic: ReadonlySet<CellId>): AutoRunSkip | undefined {
   if (cyclic.has(record.id)) return "cycle";
   if (record.meta.manual === true) return "manual";
-  if (record.status === "idle") return "notRun";
-  return record.status === "queued" || record.status === "running" ? "ran" : undefined;
+  if (record.status === "queued" || record.status === "running") return "ran";
+  return hasRun(record) ? undefined : "notRun";
 }
 
 /** A cell.run's run ended well: its stale dependents, the ones it cannot run decided at once. */
@@ -257,6 +315,12 @@ function ended(state: State, run: QueuedRun): void {
   if (run.trigger === true && status === "ok" && settingOn(state)) plan(state, run);
 }
 
+function realmEnded(state: State, realm: "server" | "client"): void {
+  for (const record of state.context.cells.list())
+    if (record.type === realm) record.ran = undefined;
+  if (state.pending.size > 0) stop(state);
+}
+
 function edited(state: State, cell: CellId): void {
   if (state.running?.run.execution.cell === cell) state.running.edited = true;
   const entry = state.pending.get(cell);
@@ -267,23 +331,30 @@ function edited(state: State, cell: CellId): void {
   show(state);
 }
 
+const newState = (
+  context: SessionContext,
+  queue: RunQueue,
+  realmAttached: () => boolean,
+): State => ({
+  context,
+  queue,
+  realmAttached,
+  pending: new Map(),
+  tickets: new WeakMap(),
+  held: new Set(),
+  seen: new Set(),
+  running: undefined,
+  shown: { running: null, pending: new Set() },
+  flushing: false,
+  poll: undefined,
+});
+
 export function createAutoRun(
   context: SessionContext,
   queue: RunQueue,
   realmAttached: () => boolean,
 ): AutoRun {
-  const state: State = {
-    context,
-    queue,
-    realmAttached,
-    pending: new Map(),
-    tickets: new WeakMap(),
-    held: new Set(),
-    seen: new Set(),
-    running: undefined,
-    shown: idleState,
-    poll: undefined,
-  };
+  const state = newState(context, queue, realmAttached);
   return {
     ended: (run) => {
       ended(state, run);
@@ -298,5 +369,13 @@ export function createAutoRun(
       stop(state);
     },
     ticket: (run) => state.tickets.get(run),
+    realmEnded: (realm) => {
+      realmEnded(state, realm);
+    },
+    state: () => ({
+      running: state.running?.run.execution.cell ?? null,
+      pending: autoRunOrder(context.cells.graph(), new Set(state.pending.keys())),
+    }),
+    report: (ticket, form) => reportOf(context.cells.graph(), ticket, form),
   };
 }

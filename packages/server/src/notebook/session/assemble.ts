@@ -128,6 +128,20 @@ export type OwnedContext = SessionContext & {
 };
 
 /** The context of a session over `options`: its kernel is created, not started. */
+/** The hooks before the session's parts wire theirs. */
+const defaultHooks = (): SessionHooks => ({
+  lateOutput: () => undefined,
+  exports: () => undefined,
+  kernelEnded: () => undefined,
+  beforeServerRun: () => Promise.resolve(),
+  debuggerLines: () => [],
+  debugPause: () => Promise.resolve({ reason: "pause" }),
+  debugResumed: () => Promise.resolve(),
+  edited: () => undefined,
+  realmEnded: () => undefined,
+  autoRunState: () => ({ running: null, pending: [] }),
+});
+
 export function contextOf(options: SessionOptions, hooks: FileHooks = {}): OwnedContext {
   const { bus, now } = options;
   const log = options.log.child({ notebook: options.ref });
@@ -136,16 +150,8 @@ export function contextOf(options: SessionOptions, hooks: FileHooks = {}): Owned
     bus.emit(context.ref, type, data);
   };
   const place = livePlace(() => context);
-  const sessionHooks: SessionHooks = {
-    lateOutput: () => undefined,
-    exports: () => undefined,
-    kernelEnded: () => undefined,
-    beforeServerRun: () => Promise.resolve(),
-    debuggerLines: () => [],
-    debugPause: () => Promise.resolve({ reason: "pause" }),
-    debugResumed: () => Promise.resolve(),
-    edited: () => undefined,
-  };
+  const sessionHooks = defaultHooks();
+
   const cells = createCellStore(options.loaded.records);
   const kernelLog = followingKernelLog(options.logsDir, options.ref, log);
   const parts = { emit, log, hooks: sessionHooks };

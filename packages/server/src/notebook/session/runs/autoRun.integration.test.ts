@@ -60,7 +60,7 @@ describe("execution.autoRunDependents", () => {
       expect(graph.cells.filter((cell) => cell.stale)).toEqual([]);
       await daemon.events.until(
         "cells.autoRun",
-        (e) => e.data.running === null && e.data.pending.length === 0,
+        (e) => e.data.running === null && e.data.added.length === 0,
       );
     });
   });
@@ -201,7 +201,7 @@ describe("execution.autoRunDependents", () => {
       expect(listed).toEqual([b]);
       await daemon.events.until(
         "cells.autoRun",
-        (e) => e.data.running === null && e.data.pending.length === 0,
+        (e) => e.data.running === null && e.data.added.length === 0,
       );
     });
   });
@@ -219,6 +219,82 @@ describe("execution.autoRunDependents", () => {
       const graph = await daemon.client.notebook.graph({ notebook: book.notebook });
       expect(graph.cells.find((cell) => cell.id === b)?.stale).toBe(true);
       expect(daemon.events.all().some((e) => e.type === "cells.autoRun")).toBe(false);
+    });
+  });
+});
+
+describe("execution.autoRunDependents", () => {
+  it("never runs code that has not run: a cell whose run never started, or edited since its run", async () => {
+    await withDaemon(async (daemon) => {
+      const book = await createNotebook(daemon);
+      const { notebook } = book;
+      const a = await book.add("let a = 1");
+      await book.add("throw new Error('stop')");
+      const c = await book.add("const c = a + 1");
+      const all = await daemon.client.notebook.run({ notebook, select: "all" });
+      expect(all.executions.map((execution) => execution.status)).toEqual([
+        "ok",
+        "error",
+        "interrupted",
+      ]);
+      await on(daemon);
+      const first = await daemon.client.cell.run({ notebook, cell: a, source: "let a = 2" });
+      expect(first.autoRun?.skipped).toEqual([{ cell: c, reason: "notRun" }]);
+      expect(first.autoRun?.executions).toEqual([]);
+      expect((await daemon.client.cell.run({ notebook, cell: c })).execution.status).toBe("ok");
+      await daemon.client.cell.update({ notebook, cell: c, source: "const c = a + 2" });
+      const edited = await daemon.client.cell.run({ notebook, cell: a, source: "let a = 3" });
+      expect(edited.autoRun?.skipped).toEqual([{ cell: c, reason: "notRun" }]);
+    });
+  });
+});
+
+describe("execution.autoRunDependents", () => {
+  it("stops when the kernel dies and never starts a kernel for the rest", async () => {
+    await withDaemon(async (daemon) => {
+      const book = await createNotebook(daemon);
+      const { notebook } = book;
+      const [a, dies, q, z] = await ranCells(daemon, book, [
+        "let a = 1",
+        "if (a > 1) process.exit(3)",
+        "await Promise.resolve()\nconst q = a + 1",
+        "const z = q + 1",
+      ]);
+      await on(daemon);
+      const ran = await daemon.client.cell.run({ notebook, cell: a ?? "", source: "let a = 2" });
+      expect(statuses(ran.autoRun)).toEqual([[dies, "error"]]);
+      expect(ran.autoRun?.skipped).toEqual([
+        { cell: q, reason: "stopped" },
+        { cell: z, reason: "stopped" },
+      ]);
+      expect((await daemon.client.kernel.status({ notebook })).state).toBe("dead");
+    });
+  });
+});
+
+describe("execution.autoRunDependents", () => {
+  it("names a waiting cell deleted meanwhile as deleted, and the page hydrates the cascade from notebook.get", async () => {
+    await withDaemon(async (daemon) => {
+      const book = await createNotebook(daemon);
+      const { notebook } = book;
+      const [a, slow, gone, after] = await ranCells(daemon, book, [
+        "let a = 1",
+        "const s = a\nif (a > 1) await new Promise((r) => setTimeout(r, 300))",
+        "const g = a + 1",
+        "const h = s + 1",
+      ]);
+      await on(daemon);
+      const answer = daemon.client.cell.run({ notebook, cell: a ?? "", source: "let a = 2" });
+      await daemon.events.until("cells.autoRun", (e) => e.data.running === slow);
+      const { notebook: state } = await daemon.client.notebook.get({ notebook });
+      expect(state.autoRun).toEqual({ running: slow, pending: [gone, after] });
+      await daemon.client.cell.delete({ notebook, cell: gone ?? "" });
+      const ran = await answer;
+      expect(statuses(ran.autoRun)).toEqual([
+        [slow, "ok"],
+        [after, "ok"],
+      ]);
+      expect(ran.autoRun?.skipped).toEqual([{ cell: gone, reason: "deleted" }]);
     });
   });
 });

@@ -10,7 +10,6 @@ import type { Editor } from "../provenance.js";
 import type { ExecutionRecord } from "../records.js";
 import { terminalStatuses, toExecution } from "../records.js";
 import type { AutoRun } from "./autoRun.js";
-import { reportOf } from "./autoRun.js";
 import { createExecution } from "./executions.js";
 import type { Batch, RunQueue } from "./queue.js";
 import { queuedRun } from "./queue.js";
@@ -126,7 +125,7 @@ export async function runCell(
     execution: answer(run.execution, wait),
     ...(ticket === undefined
       ? {}
-      : { autoRun: reportOf(ticket, (execution) => answer(execution, wait)) }),
+      : { autoRun: runs.autoRun.report(ticket, (execution) => answer(execution, wait)) }),
   };
 }
 

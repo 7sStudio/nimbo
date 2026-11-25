@@ -159,11 +159,12 @@ const word = "ui:font-medium ui:text-fg-2";
       type="button"
       :class="item"
       data-testid="status-auto-run"
-      title="Stop auto-run: interrupt"
+      :disabled="props.model.runsOff"
+      :title="props.model.runsOff ? 'Auto-run' : 'Stop auto-run: interrupt'"
       @click="emit('command', 'kernel.interrupt')"
     >
       Auto-run <span :class="[word, 'ui:text-hot']">{{ props.model.autoRun }}</span>
-      <Square class="ui:block-2.5 ui:inline-2.5" aria-hidden="true" />
+      <Square v-if="!props.model.runsOff" class="ui:block-2.5 ui:inline-2.5" aria-hidden="true" />
     </button>
     <span class="ui:flex-1" />
     <span data-testid="mode" :data-mode="props.model.mode" class="ui:font-medium ui:text-fg-2">{{

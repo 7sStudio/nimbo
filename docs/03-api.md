@@ -367,7 +367,8 @@ type Output =
 
 type ErrorInfo = { name: string; message: string; frames: Frame[]; raw: string; data?: Record<string, unknown> };
 type Frame = { cell?: CellId; line: number; col: number; fn?: string; file?: string };
-type NotebookState = { path: string; cells: Cell[]; kernel: KernelStatus; realm: RealmStatus; savedAt: string | null; dirty: boolean; debug?: DebugState };   // §4.9
+type NotebookState = { path: string; cells: Cell[]; kernel: KernelStatus; realm: RealmStatus; savedAt: string | null; dirty: boolean; debug?: DebugState;   // §4.9
+  autoRun?: { running: CellId | null; pending: CellId[] } };   // the cascade under way, waiting cells in run order (04-kernel §4.1)
 type Binding = { name: string; kind: "const" | "let" | "var" | "function" | "class" | "import"; preview: string; definedBy: CellId; exported: boolean };
 type BindingValue = Binding & { json: unknown; repr: string; truncated: boolean };
 type Route = { spec: string; method: string; path: string; url: string; cell: CellId; registeredAt: string; hits: number };   // 04-kernel §8
@@ -393,7 +394,7 @@ Envelope: `{ notebook, seq, ts, type, data }`; workspace-level events carry `not
 | `cell.status` | `{ cell, execution, status, count? }` | every transition; `count` once the run started |
 | `cell.output` | `{ cell, execution, output: Output }` | as produced |
 | `cells.stale` | `{ cells: CellId[] }` | the full stale list, when it changed |
-| `cells.autoRun` | `{ running: CellId \| null, pending: CellId[] }` | `execution.autoRunDependents`: the dependent running and those waiting, in order, when that changed; both empty once done (04-kernel §4.1) |
+| `cells.autoRun` | `{ running: CellId \| null, added: CellId[], removed: CellId[] }` | `execution.autoRunDependents`: a change of `NotebookState.autoRun`, at most one per step; `running` null and nothing waiting once done (04-kernel §4.1) |
 | `cell.diagnostics` | `{ cell, diagnostics: Diagnostic[] }` | a warm notebook's cell got new diagnostics |
 | `routes.changed` | `{ routes: Route[] }` | a route registered, replaced, disposed or hit |
 | `kernel.status` / `realm.status` | `KernelStatus` / `RealmStatus` | |

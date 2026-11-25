@@ -696,6 +696,33 @@
               },
               "required": ["state", "paused", "breakpoints"],
               "additionalProperties": false
+            },
+            "autoRun": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "running": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^c_[0-9a-z]{6}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "pending": {
+                  "readOnly": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^c_[0-9a-z]{6}$"
+                  }
+                }
+              },
+              "required": ["running", "pending"],
+              "additionalProperties": false
             }
           },
           "required": ["path", "cells", "kernel", "realm", "savedAt", "dirty"],
@@ -1122,6 +1149,33 @@
               },
               "required": ["state", "paused", "breakpoints"],
               "additionalProperties": false
+            },
+            "autoRun": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "running": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^c_[0-9a-z]{6}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "pending": {
+                  "readOnly": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^c_[0-9a-z]{6}$"
+                  }
+                }
+              },
+              "required": ["running", "pending"],
+              "additionalProperties": false
             }
           },
           "required": ["path", "cells", "kernel", "realm", "savedAt", "dirty"],
@@ -1547,6 +1601,33 @@
                 }
               },
               "required": ["state", "paused", "breakpoints"],
+              "additionalProperties": false
+            },
+            "autoRun": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "running": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^c_[0-9a-z]{6}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "pending": {
+                  "readOnly": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^c_[0-9a-z]{6}$"
+                  }
+                }
+              },
+              "required": ["running", "pending"],
               "additionalProperties": false
             }
           },
@@ -2011,6 +2092,33 @@
                 }
               },
               "required": ["state", "paused", "breakpoints"],
+              "additionalProperties": false
+            },
+            "autoRun": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "running": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "pattern": "^c_[0-9a-z]{6}$"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "pending": {
+                  "readOnly": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^c_[0-9a-z]{6}$"
+                  }
+                }
+              },
+              "required": ["running", "pending"],
               "additionalProperties": false
             }
           },
