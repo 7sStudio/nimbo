@@ -1,12 +1,17 @@
-// Launching and ending the headless browser (02-architecture §8): puppeteer-core over the pipe (no debugging port on
-// TCP), the sandbox on unless realm.headlessSandbox is off, permission prompts denied, popups blocked and any window a
-// page opens closed, downloads denied, in a fresh 0700 profile under `.jsnb/headless/`; the failures worded for the
-// user, the sandbox's own named.
-import { chmod, lstat, mkdir, readdir, rm } from "node:fs/promises";
+// Launching and ending the headless browser (02-architecture §8). The daemon spawns the browser itself, in a process
+// group of its own, and connects puppeteer-core over its pipe (no debugging port on TCP), so it always holds the process:
+// a browser that hangs at start is killed with its group after a bound, and a stop kills a launch in flight. The sandbox
+// stays on unless realm.headlessSandbox is off; permission prompts are denied, popups blocked and any window a page
+// opens closed, downloads denied; the background fetches Chrome lets a flag or a preference stop are stopped; crash
+// data goes to the fresh 0700 profile under `.jsnb/headless/`, never to the user's own browser's crash database.
+import type { ChildProcess } from "node:child_process";
+import { spawn } from "node:child_process";
+import { chmod, lstat, mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
+import { Readable, Writable } from "node:stream";
 
 import { JsnbError } from "@jsnb/core";
-import type { Browser } from "puppeteer-core";
+import type { Browser, ConnectionTransport } from "puppeteer-core";
 import puppeteer, { TargetType } from "puppeteer-core";
 
 import type { Log } from "../../events/log.js";
@@ -18,11 +23,24 @@ export class HeadlessFailed extends JsnbError {
   }
 }
 
-const launchTimeoutMs = 30_000;
+/** The browser and the process the daemon spawned for it. */
+export type Launched = {
+  readonly browser: Browser;
+  readonly child: ChildProcess;
+  readonly profile: string;
+};
+
+/** How long a launch has, from the spawn to a browser that answers. */
+export const launchTimeoutMs = 15_000;
+/** Every protocol call to the browser; puppeteer's own default is three minutes. */
+const protocolTimeoutMs = 30_000;
+/** How long a polite close, then an exit after SIGKILL, may take. */
 const closeTimeoutMs = 3000;
 
-const firstLine = (error: unknown): string =>
-  (error instanceof Error ? error.message : String(error)).split("\n")[0]?.trim() ?? "";
+const firstLine = (text: string): string => text.split("\n")[0]?.trim() ?? "";
+
+const messageOf = (error: unknown): string =>
+  error instanceof Error ? error.message : String(error);
 
 export function notFound(setting: string | null, looked: readonly string[]): HeadlessFailed {
   if (setting !== null)
@@ -34,14 +52,21 @@ export function notFound(setting: string | null, looked: readonly string[]): Hea
   );
 }
 
-function launchFailed(path: string, error: unknown): HeadlessFailed {
-  if (/No usable sandbox/iu.test(error instanceof Error ? error.message : String(error)))
+function launchFailed(path: string, error: unknown, stderr: string): HeadlessFailed {
+  if (/No usable sandbox/iu.test(`${messageOf(error)}\n${stderr}`))
     return new HeadlessFailed(
       `${path} cannot start with its sandbox on this system (No usable sandbox: unprivileged user namespaces are off, as in many containers). Allow them, or turn realm.headlessSandbox off to run client cells without the browser's sandbox.`,
       { cause: error },
     );
-  return new HeadlessFailed(`${path} did not start: ${firstLine(error)}`, { cause: error });
+  const said = firstLine(stderr.trim().split("\n").at(-1) ?? "");
+  const why = said === "" ? firstLine(messageOf(error)) : said;
+  return new HeadlessFailed(`${path} did not start: ${why}`, { cause: error });
 }
+
+const hung = (path: string): HeadlessFailed =>
+  new HeadlessFailed(
+    `the browser at ${path} hung at start: it did not answer within ${String(launchTimeoutMs / 1000)} s and was killed. Point realm.headlessBrowser at Chrome, Chromium or Edge.`,
+  );
 
 const codeOf = (error: unknown): unknown =>
   error instanceof Error ? Reflect.get(error, "code") : undefined;
@@ -67,12 +92,78 @@ export async function prepareProfiles(dir: string, log: Log): Promise<void> {
     });
 }
 
-/** The launch flags beyond puppeteer's defaults; popups stay blocked (its default unblocks them). */
-const launchArgs = (sandbox: boolean): string[] => [
-  "--deny-permission-prompts",
-  "--disable-features=MediaRouter",
-  ...(sandbox ? [] : ["--no-sandbox"]),
+/** Background fetches Chrome lets a flag stop: component updates, network time, domain reliability, autofill and
+ * optimisation-guide downloads, certificate-transparency lists, link pings. */
+const quiet = [
+  "--disable-component-update",
+  "--disable-domain-reliability",
+  "--no-pings",
+  "--no-default-browser-check",
+  "--disable-features=NetworkTimeServiceQuerying,AutofillServerCommunication,CertificateTransparencyComponentUpdater,OptimizationGuideModelDownloading,OptimizationHintsFetching,InterestFeedContentSuggestions,PrivacySandboxSettings4",
 ];
+
+/** The profile's first preferences: no Safe Browsing lookups, no sign-in, no search suggestions. */
+const preferences = {
+  safebrowsing: { enabled: false },
+  signin: { allowed: false },
+  search: { suggest_enabled: false },
+};
+
+/** puppeteer's flags (its `--disable-features` merged with ours), the pipe, popups left blocked. */
+async function argsOf(profile: string, sandbox: boolean): Promise<string[]> {
+  const extra = ["--deny-permission-prompts", ...quiet, ...(sandbox ? [] : ["--no-sandbox"])];
+  const args = await puppeteer.defaultArgs({ headless: true, userDataDir: profile, args: extra });
+  return [...args.filter((arg) => arg !== "--disable-popup-blocking"), "--remote-debugging-pipe"];
+}
+
+/** CDP over the browser's pipe: fd 3 it reads, fd 4 it writes, each message ended by a NUL. */
+function pipeTransport(child: ChildProcess): ConnectionTransport {
+  const input = child.stdio[3];
+  const output = child.stdio[4];
+  if (!(input instanceof Writable) || !(output instanceof Readable))
+    throw new HeadlessFailed("the browser's pipe did not open.");
+  const transport: ConnectionTransport = {
+    send: (message) => {
+      input.write(`${message}\0`);
+    },
+    close: () => {
+      input.end();
+    },
+  };
+  let pending = "";
+  output.setEncoding("utf8");
+  output.on("data", (chunk: string) => {
+    pending += chunk;
+    for (let end = pending.indexOf("\0"); end >= 0; end = pending.indexOf("\0")) {
+      const message = pending.slice(0, end);
+      pending = pending.slice(end + 1);
+      transport.onmessage?.(message);
+    }
+  });
+  output.on("close", () => transport.onclose?.());
+  input.on("error", () => undefined);
+  output.on("error", () => undefined);
+  return transport;
+}
+
+/** Kills the browser's process group (its helpers with it), then waits a bounded time for it to exit. */
+export async function kill(child: ChildProcess): Promise<void> {
+  if (child.exitCode !== null || child.signalCode !== null) return;
+  const exited = new Promise<void>((resolve) => {
+    child.once("exit", () => {
+      resolve();
+    });
+  });
+  try {
+    if (child.pid !== undefined) process.kill(-child.pid, "SIGKILL");
+  } catch {
+    child.kill("SIGKILL");
+  }
+  await Promise.race([exited, delay(closeTimeoutMs)]);
+}
+
+const delay = (ms: number): Promise<void> =>
+  new Promise((resolve) => setTimeout(resolve, ms).unref());
 
 /** Downloads denied, and every popup or window a page opens closed at once. */
 async function lockDown(browser: Browser, log: Log): Promise<void> {
@@ -88,51 +179,66 @@ async function lockDown(browser: Browser, log: Log): Promise<void> {
   });
 }
 
-/** The browser at `path` in `profile`, locked down; HeadlessFailed (the profile removed) when it does not start. */
+/** The browser at `path` spawned in `profile`, connected and locked down within launchTimeoutMs; HeadlessFailed, its
+ * process group killed and the profile removed, when it fails, hangs, or `signal` aborts (a stop). */
 export async function launch(
   path: string,
   profile: string,
-  { sandbox, log }: { readonly sandbox: boolean; readonly log: Log },
-): Promise<Browser> {
-  try {
-    const browser = await puppeteer.launch({
-      ...{ executablePath: path, pipe: true, headless: true, userDataDir: profile },
-      args: launchArgs(sandbox),
-      ignoreDefaultArgs: ["--disable-popup-blocking"],
-      defaultViewport: { width: 1024, height: 768 },
-      ...{ handleSIGINT: false, handleSIGTERM: false, handleSIGHUP: false },
-      timeout: launchTimeoutMs,
+  options: { readonly sandbox: boolean; readonly log: Log; readonly signal: AbortSignal },
+): Promise<Launched> {
+  await mkdir(join(profile, "Default"));
+  await writeFile(join(profile, "Default", "Preferences"), JSON.stringify(preferences));
+  const child = spawn(path, await argsOf(profile, options.sandbox), {
+    detached: true,
+    stdio: ["ignore", "ignore", "pipe", "pipe", "pipe"],
+    env: { ...process.env, BREAKPAD_DUMP_LOCATION: join(profile, "Crashpad") },
+  });
+  let stderr = "";
+  child.stderr?.on("data", (chunk: Buffer) => {
+    stderr = `${stderr}${chunk.toString("utf8")}`.slice(-4000);
+  });
+  const bound = new AbortController();
+  const failed = new Promise<never>((_resolve, reject) => {
+    child.once("error", reject);
+    const timer = setTimeout(() => {
+      reject(hung(path));
+    }, launchTimeoutMs);
+    timer.unref();
+    const stopping = (): void => {
+      reject(new HeadlessFailed("the daemon is stopping."));
+    };
+    options.signal.addEventListener("abort", stopping, { signal: bound.signal });
+    bound.signal.addEventListener("abort", () => {
+      clearTimeout(timer);
     });
-    await lockDown(browser, log);
-    return browser;
+  });
+  failed.catch(() => undefined);
+  try {
+    const connected = puppeteer.connect({
+      transport: pipeTransport(child),
+      protocolTimeout: protocolTimeoutMs,
+      defaultViewport: { width: 1024, height: 768 },
+    });
+    connected.catch(() => undefined);
+    const browser = await Promise.race([connected, failed]);
+    await Promise.race([lockDown(browser, options.log), failed]);
+    return { browser, child, profile };
   } catch (error) {
+    await kill(child);
     await rm(profile, { recursive: true, force: true });
-    throw launchFailed(path, error);
+    throw error instanceof HeadlessFailed ? error : launchFailed(path, error, stderr);
+  } finally {
+    bound.abort();
   }
 }
 
 /** Whether the browser still answers and its process runs. */
-export function alive(browser: Browser): boolean {
-  const child = browser.process();
-  return (
-    browser.connected && (child === null || (child.exitCode === null && child.signalCode === null))
-  );
-}
+export const alive = ({ browser, child }: Launched): boolean =>
+  browser.connected && child.exitCode === null && child.signalCode === null;
 
-/** Ends the browser: a polite close, then SIGKILL; its profile goes once it exited. */
-export async function end(browser: Browser, profile: string): Promise<void> {
-  const child = browser.process();
-  const exited =
-    child?.exitCode !== null
-      ? Promise.resolve()
-      : new Promise<void>((resolve) => {
-          child.once("exit", () => {
-            resolve();
-          });
-        });
-  const timeout = new Promise<void>((resolve) => setTimeout(resolve, closeTimeoutMs).unref());
-  await Promise.race([browser.close().catch(() => undefined), timeout]);
-  if (child !== null && child.exitCode === null && child.signalCode === null) child.kill("SIGKILL");
-  await Promise.race([exited, timeout]);
+/** Ends the browser: a polite close bounded in time, then its group killed; its profile goes once it exited. */
+export async function end({ browser, child, profile }: Launched): Promise<void> {
+  await Promise.race([browser.close().catch(() => undefined), delay(closeTimeoutMs)]);
+  await kill(child);
   await rm(profile, { recursive: true, force: true });
 }
