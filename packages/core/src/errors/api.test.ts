@@ -17,7 +17,7 @@ import {
   Unauthorized,
 } from "./api.js";
 import { NotebookOpen } from "./notebook.js";
-import { RealmAttached, RealmNotAttached } from "./realm.js";
+import { PageTimeout, RealmAttached, RealmNotAttached } from "./realm.js";
 import { isJsnbError } from "./jsnbError.js";
 
 describe("apiErrorName", () => {
@@ -40,6 +40,7 @@ const catalogue = [
   [new NotAvailable({ feature: "debug.pause" }), 1009],
   [new InterruptRefused({ context: "Timeout", cell: "c_a1b2c3" }), 1010],
   [new RealmAttached({ notebook: "demo.jsnb" }), 1011],
+  [new PageTimeout({ notebook: "demo.jsnb", request: "realm.snapshot", timeoutMs: 5000 }), 1015],
   [new NotebookOpen({ path: "demo.jsnb" }), 1012],
   [new BridgeCallFailed({ error: { name: "TypeError", message: "x", frames: [], raw: "" } }), 2001],
 ] as const;

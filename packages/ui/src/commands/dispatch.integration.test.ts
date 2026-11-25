@@ -32,7 +32,6 @@ describe("registry commands", () => {
         page: false,
       });
       expect(await dispatcher.dispatch("packages.add")).toBe(false);
-      expect(await dispatcher.dispatch("cell.snapshot")).toBe(false);
       expect(await dispatcher.dispatch("no.such")).toBe(false);
       expect(await dispatcher.dispatch("cell.delete")).toBe(true);
       await whenTrue(() => store.cellsInOrder.length === 0);

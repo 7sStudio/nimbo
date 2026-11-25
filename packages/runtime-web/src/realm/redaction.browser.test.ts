@@ -40,9 +40,11 @@ describe("every output of a run", () => {
     });
     expect(run.status.error).toMatchObject({ message: "bad ***" });
     expect(run.status.error?.raw).not.toContain(secret.slice(8));
-    expect(await world.realm.handle("realm.snapshot", { cell: run.cell })).toEqual({
+    expect(await world.realm.handle("realm.snapshot", { cell: run.cell, html: true })).toEqual({
       html: "***",
       text: "***",
+      rendered: true,
+      truncated: false,
     });
   });
 });

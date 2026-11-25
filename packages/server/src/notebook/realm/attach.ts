@@ -25,6 +25,7 @@ export function detach(
   // `held` and `finished` stay: a page whose socket came back attaches again with its runs and stubs, reports late
   // outputs on runs it ran, and a restart must still list what it holds; a page that holds none of them is not harmed
   attachment.detached.abort();
+  context.kernel.live()?.listening(false);
   if (!quiet) context.emit("realm.status", realmStatusOf(state));
   return true;
 }
@@ -54,6 +55,7 @@ export function attach(
   const realmId = `realm_${randomUUID()}`;
   const attachedAt = context.now().toISOString();
   state.attachment = { realmId, page, kind, attachedAt, detached: new AbortController() };
+  context.kernel.live()?.listening(true);
   page.closed.addEventListener(
     "abort",
     () => {

@@ -6,15 +6,16 @@ What is open. Each item gets its design in the document that owns the topic when
 
 ## 1. Registered but not built
 
-These commands and settings exist in the registry with their schemas as the contract and answer `NOT_AVAILABLE` (1009) until built (03 §3): `cell.snapshot`, the server's `emit` (`kernel-node/src/builtins/emit.ts`), and the `planned` settings `editor.keymap: "vim"` and `secrets.allowLiveKeys`. Building one replaces its stub.
+These settings exist in the registry with their schemas as the contract and answer `NOT_AVAILABLE` (1009) until built (03 §3): the `planned` settings `editor.keymap: "vim"` and `secrets.allowLiveKeys`, and `cell.snapshot`'s `image`. Building one replaces its stub.
 
 Constraint on every UI item: the page's first load stays within its 500 KB budget; anything new on the page is a chunk loaded on first use.
 
 ## 2. Kernel, realms and execution
 
 - **Headless client realm** (L): client cells run without a tab, in the system's Chrome driven through `puppeteer-core`, opt-in by a setting; a human's tab always takes the realm over.
-- **Push events** (S to M): the server's `emit(name, data)` and a client cell's `on(name, handler)`, delivered over the realm's socket.
-- **`cell.snapshot`** (S, M with images): a client cell's rendered DOM as data for agents, and as an image.
+- **`cell.snapshot` images** (M): a client cell's container as an image, with the headless client realm.
+- **Re-run client cells after a reload** (S): a reloaded or reconnected page runs again, in order, the client cells it had run, so their DOM and `on` listeners come back without a click.
+- **`cell.snapshot` HTML in other browsers** (S): the allowlist serialiser and its hostile-shape tests run in Chromium only; run them in Firefox and WebKit too.
 - **File watcher** (M): external edits of an open `.jsnb` file are noticed and offered as a reload or a merge instead of a conflict at the next save.
 - **`/npm/` bundler on large packages** (M): a client cell importing a package with hundreds of subpath modules (`date-fns`) times out while every subpath is bundled; bundle on demand or pre-bundle the package once.
 - **Vue single-file components** (M or L): today client cells use Vue's full build with template strings or `h()`; `.vue` imports compiled on the daemon, and JSX later.

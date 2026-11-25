@@ -1,4 +1,4 @@
-<!-- BridgeSection: the inspector's Bridge group: the functions server cells export for client cells to call. Each export has its name and the cell that exports it (a click goes to it), its TypeScript signature in syntax colours as the hover shows it (notebook.bridge; the parameters as the cell writes them while the language service has none), wrapped to three lines and opened whole with its documentation from a click, the client cells that call it (each a link), and the last call this page made, when it was and how it ended (the Activity log's row). -->
+<!-- BridgeSection: the inspector's Bridge group: the functions server cells export for client cells to call, then the events server cells emit (bridge.events: per name the count, the last time and how many were dropped and why), read again a second after an event output reaches a client cell. Each export has its name and the cell that exports it (a click goes to it), its TypeScript signature in syntax colours as the hover shows it (notebook.bridge; the parameters as the cell writes them while the language service has none), wrapped to three lines and opened whole with its documentation from a click, the client cells that call it (each a link), and the last call this page made, when it was and how it ended (the Activity log's row). -->
 <script setup lang="ts">
 import type { BridgeExport as Remote } from "@jsnb/core";
 import { computed, onBeforeUnmount, shallowRef, watch } from "vue";
@@ -19,6 +19,7 @@ const dispatcher = useDispatcher();
 const info = [
   "Functions server cells export. Client cells call them like local functions; they run in Node and return the result.",
   "Callers: client cells that use it. Last call: this page's latest call.",
+  "Events: what server cells emit(name, data) to client cells' on(name, callback).",
 ];
 const store = useNotebookStore();
 const ui = useUiStore();
@@ -90,6 +91,36 @@ async function expand(row: Row): Promise<void> {
   ui.overlay = { kind: "hint", title: row.name, html: `${code}${docs}` };
 }
 
+type EventRow = Awaited<ReturnType<typeof store.bridgeEvents>>;
+const events = shallowRef<NonNullable<EventRow>>([]);
+let eventsTimer: ReturnType<typeof setTimeout> | undefined;
+const readEvents = async () => {
+  eventsTimer = undefined;
+  const answer = await store.bridgeEvents();
+  if (answer !== null) events.value = answer;
+};
+const dropWords = { noPage: "no page", noListener: "no listener", overflow: "too fast" } as const;
+/** "28 · 23:14:58"; the drops go on a line of their own. */
+const countLine = (row: NonNullable<EventRow>[number]): string =>
+  `${String(row.emitted)} · ${timeOf(row.lastAt).slice(0, 8)}`;
+const dropLine = (row: NonNullable<EventRow>[number]): string =>
+  row.dropped === 0 || row.lastDrop === null
+    ? ""
+    : `${String(row.dropped)} dropped, last: ${dropWords[row.lastDrop]}`;
+// Side effect: the counts are read once the notebook is here, then a second after the daemon reports bridge activity.
+watch(
+  () =>
+    store.started && store.mirror.notebook !== null ? (store.mirror.bridgeActivity ?? "") : null,
+  (key) => {
+    if (key !== null && eventsTimer === undefined)
+      eventsTimer = setTimeout(() => void readEvents(), 300);
+  },
+  { immediate: true },
+);
+onBeforeUnmount(() => {
+  clearTimeout(eventsTimer);
+});
+
 const activity = useActivityStore();
 /** "14:01:10, ok in 3.1 ms", or the failure; none before this page made a call. */
 const lastCalls = computed(() => {
@@ -110,7 +141,7 @@ const lastCalls = computed(() => {
 </script>
 
 <template>
-  <Section name="bridge" title="Bridge" :info="info" :count="rows.length">
+  <Section name="bridge" title="Bridge" :info="info" :count="rows.length + events.length">
     <ul
       v-if="rows.length > 0"
       aria-label="Exports"
@@ -172,6 +203,31 @@ const lastCalls = computed(() => {
             >{{ lastCalls.get(each.name) ?? "none" }}</span
           >
         </p>
+      </li>
+    </ul>
+    <ul
+      v-if="events.length > 0"
+      aria-label="Events"
+      class="ui:m-0 ui:mbs-2 ui:flex ui:list-none ui:flex-col ui:gap-1 ui:p-0"
+    >
+      <li v-for="row in events" :key="row.name" class="ui:flex ui:flex-col ui:px-1.75 ui:text-tiny">
+        <span class="ui:flex ui:items-center ui:gap-2">
+          <span
+            class="ui:flex-1 ui:ellipsis ui:font-mono ui:text-fg ui:min-inline-0"
+            data-part="event"
+            :title="row.name"
+            >{{ row.name }}</span
+          >
+          <span
+            class="ui:shrink-0 ui:font-mono ui:text-muted"
+            data-part="event-counts"
+            :title="`${String(row.delivered)} delivered`"
+            >{{ countLine(row) }}</span
+          >
+        </span>
+        <span v-if="dropLine(row) !== ''" class="ui:text-muted" data-part="event-drops">{{
+          dropLine(row)
+        }}</span>
       </li>
     </ul>
   </Section>

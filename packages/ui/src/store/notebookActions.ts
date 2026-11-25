@@ -2,7 +2,7 @@
 // Runs do not wait; their progress arrives as events. A failure becomes a toast and the action resolves undefined
 // (attempt.ts). Undo of a delete is undo.ts.
 import type { Cell, CellId, CellPosition, CellType, Selection } from "@jsnb/core";
-import { isJsnbError, languageLsp, languageRename, notebookBridge } from "@jsnb/core";
+import { bridgeEvents, isJsnbError, languageLsp, languageRename, notebookBridge } from "@jsnb/core";
 import type { SocketClient } from "@jsnb/client";
 
 import type { Attempt } from "./attempt.js";
@@ -207,6 +207,13 @@ function languageActions({ client, notebook, attempt }: Context) {
           .call(notebookBridge, { notebook: notebook() })
           .catch(() => null)
       )?.exports ?? null,
+    /** bridge.events: each event name's counts; null when the call fails. */
+    bridgeEvents: async () =>
+      (
+        await client()
+          .call(bridgeEvents, { notebook: notebook() })
+          .catch(() => null)
+      )?.events ?? null,
     /** language.rename: the refusal's reason, or null once every cell changed; another failure is a toast. */
     rename: async (cell: CellId, position: CellPosition, newName: string) => {
       try {

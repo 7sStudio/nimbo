@@ -24,6 +24,7 @@ export const apiErrorCodes = {
   NOTEBOOK_OPEN: 1012,
   GIT_FAILED: 1013,
   NOT_PAUSED: 1014,
+  PAGE_TIMEOUT: 1015,
   BRIDGE_CALL_FAILED: 2001,
 } as const;
 export type ApiErrorName = keyof typeof apiErrorCodes;

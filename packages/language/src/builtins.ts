@@ -64,7 +64,7 @@ ${serverDisplay}
   ): () => void;
   /** The public URL of a route path. */
   export function routeUrl(path: string): string;
-  /** Pushes an event to the page's \`on(name, cb)\` (v1.x). */
+  /** Sends plain data to the client cells listening with \`on(name, callback)\` in the open page; dropped when no page is open. */
   export function emit(name: string, data?: unknown): void;
   /** Registers a cleanup that runs before the cell runs again, and when it is deleted. */
   export function dispose(cleanup: () => unknown): void;
@@ -89,8 +89,14 @@ export function clientBuiltins(env: readonly string[]): string {
   };
   /** Registers a cleanup that runs before the cell runs again, and when it is deleted. */
   export function dispose(cleanup: () => unknown): void;
-  /** Listens to a server cell's \`emit(name, data)\` (v1.x). */
-  export function on(name: string, callback: (data: unknown) => void): void;
+  /** Calls \`callback\` with the data of each server \`emit(name, data)\`; returns a function that stops listening. The
+   * listener ends when the cell runs again. \`on<T>\` types the data; with \`latest\` it gets only the newest event
+   * of a burst. */
+  export function on<T = any>(
+    name: string,
+    callback: (data: T) => void,
+    options?: { readonly latest?: boolean },
+  ): () => void;
 }
 declare module "nimbo:bridge" {
   /** A server export as a client cell receives it: a function answers through a promise, data crosses as it is. */

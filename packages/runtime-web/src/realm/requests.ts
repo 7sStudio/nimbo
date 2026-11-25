@@ -7,6 +7,8 @@ export const realmRequestMethods = [
   "realm.reset",
   "realm.snapshot",
   "realm.interrupt",
+  "realm.event",
+  "realm.dispose",
 ] as const;
 export type RealmRequestMethod = (typeof realmRequestMethods)[number];
 

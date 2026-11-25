@@ -1,5 +1,6 @@
-// The realm's call failures of 03-api §7.4: a client cell run with no page (1004) and a second page that tries to
-// attach while another runs the client cells (1011); each is an ApiError of the catalogue in api.ts.
+// The realm's call failures of 03-api §7.4: a client cell run with no page (1004), a second page that tries to attach
+// while another runs the client cells (1011), and a page that does not answer the daemon's request in time (1015);
+// each is an ApiError of the catalogue in api.ts.
 import { ApiError } from "./api.js";
 
 type Cause = { readonly cause?: unknown };
@@ -32,5 +33,22 @@ export class RealmAttached extends ApiError {
       data,
       ...options,
     });
+  }
+}
+
+type PageTimeoutData = {
+  readonly notebook: string;
+  readonly request: string;
+  readonly timeoutMs: number;
+};
+
+const pageTimeoutMessage = ({ notebook, request, timeoutMs }: PageTimeoutData): string =>
+  `The page holding ${notebook} did not answer ${request} within ${String(timeoutMs / 1000)}s: a client cell may keep it busy. Try again, or reload the page.`;
+
+/** The attached page did not answer one of the daemon's requests (`realm.snapshot`) in time. */
+export class PageTimeout extends ApiError {
+  declare readonly data: PageTimeoutData;
+  constructor(data: PageTimeoutData, options: Cause = {}) {
+    super(1015, { name: "PageTimeout", message: pageTimeoutMessage(data), data, ...options });
   }
 }

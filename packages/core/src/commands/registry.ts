@@ -1,5 +1,5 @@
 // The command registry of 03-api §3: every descriptor in the order of the tables, with the lookups the surfaces use.
-import { bridgeCall } from "./bridge.js";
+import { bridgeCall, bridgeEvents } from "./bridge.js";
 import {
   cellAdd,
   cellBindings,
@@ -130,6 +130,7 @@ export const commands: readonly AnyCommand[] = [
   notebookExport,
   notebookDiagnostics,
   notebookBridge,
+  bridgeEvents,
   cellAdd,
   cellGet,
   cellUpdate,

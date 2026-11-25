@@ -49,11 +49,13 @@ Start errors (each a `JsnbError` with typed `data`):
 | → kernel | `route` | `{ id, method, path, search, headers, rawBody }`: `path` below `/n/<name>` in route form (§8); `search` as the daemon's URL parser keeps it (`""` or `?a=1&a=2`, order and repeats kept); `rawBody` base64 |
 | → kernel | `cancel` | `{ ids }`: requests whose signal aborted; the kernel records the last 1 000 on arrival and drops them unanswered when reached; one already started runs on, its late result ignored. Sent at once, never held behind an interrupt |
 | → kernel | `dispose` | `{ id, cell }`: the cell was deleted or is no longer a server cell; its disposers run under its last run's store (§7); a throwing cleanup is a log notice |
+| → kernel | `page` | `{ listening }`: whether a page holds the client realm, sent when the kernel is ready and on every attach and detach; without one `emit` counts and drops at once (05-bridge §6) |
 | → kernel | `shutdown` | |
 | kernel → | `ready` | `{ pid, inspectorUrl? }` |
 | kernel → | `output` | `{ execution, output: Output, full? }` (`full`: uncapped form of a truncated value, §5.2) |
 | kernel → | `status` | `{ execution, status, error?, durationMs }`: `running` (`durationMs: 0`) right before the cell function is called, then one terminal `ok` or `error`; `interrupted` when the interrupt hook took the execution before its cell was called (§6) |
 | kernel → | `result` | `{ id, value?, error?, redacted?, refused? }` answering `call`, `snapshot`, `bindings`, `route`, `dispose`. `redacted: true` when redaction changed a call result (§10). `refused` on a call refused before running: `missing` (no current export of that name) or `value` (the export is not a function). A route's `value` is a `RouteResponse` with base64 `body` |
+| kernel → | `events` | `{ events: { name, data, at, cell? }[], dropped: { name \| null, count, why: "overflow" \| "noPage", at, cell? }[] }`: the `emit` calls since the last flush (at most 1 000 and 16 MB between flushes, the oldest dropped) and the drops by name, the 1 000 most recent names a flush, older ones counted under null (05-bridge §6) |
 | kernel → | `exports` | `{ names: { name, cell }[] }` after each run |
 | kernel → | `routes` | `{ routes: Route[] }`: the whole table on every change (registration, replacement, disposal, hit), for `kernel.routes` and `routes.changed` (03-api §4.4, §6) |
 
@@ -263,7 +265,7 @@ Every cell has a disposer list, run in reverse order before the cell re-runs and
 - `route()` and `on()` return disposers and register on the calling cell (via ALS).
 - Server: `setTimeout`, `setInterval`, `setImmediate` on the built-ins layer are wrapped (packages keep the originals). A wrapped callback starts in a promise job under its registration's store (interruptible, §6); the real handle is returned, so `clearTimeout`/`clearImmediate` work. `queueMicrotask` is wrapped the same way (a throw is reported on the cell), with no disposer.
 - `dispose(fn)` registers a cleanup (`dispose(() => server.close())`). `dispose(x)` with a non-function throws `InvalidDisposer` ("dispose() takes a function, not a number. Register a cleanup such as dispose(() => server.close()).") in both realms.
-- Client: the container is emptied before re-run, after the disposers ran. A Vue app mounted on or inside it (`app.mount(display.div())`) is unmounted first (its `onUnmounted` hooks run); one a disposer already unmounted is left alone. A full reset does the same for every container. Wrapped: `setTimeout`, `setInterval`, `requestAnimationFrame`, `addEventListener`, `removeEventListener` as free calls (on `window`) and through the run's `window` (also `self`, `globalThis`) and `document` views. Each callback's throw or rejection becomes an `error` output on the run; the real handle is returned; the matching clear or `removeEventListener` is the disposer. After a run's disposers ran it starts no timer or listener and a later `dispose(fn)` runs at once.
+- Client: the container is emptied before re-run, after the disposers ran. A deleted client cell's disposers run in the attached page (`realm.dispose`, once its run ended) and its container goes. A Vue app mounted on or inside it (`app.mount(display.div())`) is unmounted first (its `onUnmounted` hooks run); one a disposer already unmounted is left alone. A full reset does the same for every container. Wrapped: `setTimeout`, `setInterval`, `requestAnimationFrame`, `addEventListener`, `removeEventListener` as free calls (on `window`) and through the run's `window` (also `self`, `globalThis`) and `document` views. Each callback's throw or rejection becomes an `error` output on the run; the real handle is returned; the matching clear or `removeEventListener` is the disposer. After a run's disposers ran it starts no timer or listener and a later `dispose(fn)` runs at once.
 - The views answer for self-references (`window.self`, `window.top` in a top-level page, `document.defaultView`); objects reached through a node or event are real (`el.ownerDocument`, `event.currentTarget`). Native APIs that type-check refuse a view (`new MutationObserver(cb).observe(document, …)`): pass a node (`document.documentElement`) or the real object.
 
 ## 8. Built-ins
@@ -275,7 +277,7 @@ Every cell has a disposer list, run in reverse order before the cell re-runs and
 | `display` | both | §5.5 |
 | `route(spec, handler)` | server | below |
 | `routeUrl(path)` | server | `http://127.0.0.1:<port>/n/<notebook-name>/path`, name and path in route form (`My Notes/demo 1.jsnb`'s `/café` → `/n/My%20Notes/demo%201/caf%C3%A9`), a query or fragment kept as written; `Route.url` is the same URL. For `stripe listen --forward-to` |
-| `emit(name, data)` | server | not available yet: throws `NotAvailable { feature: "emit" }` (05-bridge §6) |
+| `emit(name, data)` | server | a push event to the client cells' `on(name, callback)` (05-bridge §6); plain data only (`EventNotSerializable`), a name of 1 to 200 characters (`TypeError`) |
 | `dispose(fn)` | both | §7 |
 | `require` | server | `createRequire(<workspace>/package.json)` for CJS packages |
 
@@ -300,7 +302,7 @@ Errors (a `JsnbError` with typed `data`; thrown in a run it ends the run `error`
 | `OutsideCell { builtin }` | `route()` or `dispose()` called from code no cell's run started |
 | `InvalidDisposer { type }` (core) | `dispose(x)` with a non-function (§7) |
 | `LoaderInvalid { path }` | `.jsnb/loader.mjs` exports no `load` function; the import that needed it fails (§8.1) |
-| `NotAvailable { feature }` (core) | `emit()` |
+| `EventNotSerializable { name, type, bytes?, limit? }` (core) | `emit(name, data)` with data that is not plain data or is over `bridge.maxBytesPerValue` (05-bridge §6) |
 
 The kernel also reports `ProcessHookReplaced { name }` as an `error` output, thrown by nothing (§3.3).
 

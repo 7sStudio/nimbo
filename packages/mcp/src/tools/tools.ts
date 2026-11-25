@@ -40,7 +40,7 @@ function toolOf(command: AnyCommand): Tool {
 let listed: readonly Tool[] | undefined;
 
 /**
- * Every tool, in registry order, built once, but the planned ones (cell_snapshot, debug_*, v1.x): each would cost an
+ * Every tool, in registry order, built once, but the planned ones (v1.x contracts): each would cost an
  * agent's context on every turn for a call that can only answer NotAvailable. A call to one by name still gets that
  * answer.
  */
