@@ -52,8 +52,6 @@ The rules every package follows, enforced by a tool where one exists; the rest s
 | Environment variables | `NIMBO_` prefix | `NIMBO_LOG` |
 | Packages | `@jsnb/<folder>` | `@jsnb/output-view` |
 
-Allowed abbreviations: `id`, `ms`, `px`, `rpc`, `ws`, `url`, `json`, `html`, `css`, `env`, `fn`, `ok`, `err`. `data`, `info`, `item`, `manager`, `handler` as whole names fail review.
-
 ## 4. Module boundaries
 
 The package graph is 02-architecture §2's. `.dependency-cruiser.cjs` encodes it: every package may import itself, `core` and the test tools in tests, plus:
@@ -135,7 +133,7 @@ CSS (Stylelint plus review):
 - `:focus-visible` is the focus style; `outline: none` and `outline: 0` are banned.
 - `:hover` inside `@media (hover: hover) and (pointer: fine)`; animation inside `@media (prefers-reduced-motion: no-preference)`; durations `--dur`, `--dur-fade`, easing `--ease-out`.
 - Relative units in `ui` and `output-view`: `rem`, `em`, `cap`, percentages, `fr`, `min()`/`max()`/`clamp()`; `px` only on borders, outlines and shadows (`unit-disallowed-list`). A setting in px (`outputs.maxHeightPx`) becomes CSS at the TS boundary.
-- `overflow: clip` unless it scrolls; `tabular-nums` on numbers.
+- `tabular-nums` on numbers.
 - `z-index` only through `--z-toolbar`, `--z-panel`, `--z-overlay`, `--z-toast`; `position: fixed` only for toasts and dialogs.
 - Tailwind utilities for layout, spacing and type scale, prefixed per package (`ui:` in the page, `ov:` in the viewer); colors through the `@theme inline` mapping only; no hex in arbitrary values. Each package's built sheet passes `@jsnb/style-gate` in the contract stage (`ui:contract`, `output-view:contract`), since Stylelint never sees utilities.
 
@@ -152,7 +150,6 @@ Also: **`jsnb/no-globalthis-writes`**: in `kernel-node/scope/` and `runtime-web/
 
 ## 9. Tests, in brief
 
-- `describe` names the unit, `it("does x when y")`, one idea per test.
 - Property tests (`fast-check`) for pure layers: the transform corpus, `flatten`/`search` never throw, chips ↔ JSONPath, format round trip.
 - Golden files for serializations, CLI help and MCP tool lists; a golden changes only with a reason.
 - Only the tricky scenarios get tests; coverage floor 90 % lines on `core`, `transform`, `kernel-node`, `query-json`, `query-sql` only (09-testing §1).
