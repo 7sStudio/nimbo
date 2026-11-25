@@ -27,7 +27,7 @@ export type Shot = {
   readonly cropped: boolean;
 };
 
-export type RealmStart = {
+type RealmStart = {
   readonly token: string;
   readonly notebook: string;
   readonly key: string;

@@ -31,7 +31,7 @@ export type Launched = {
 };
 
 /** How long a launch has, from the spawn to a browser that answers. */
-export const launchTimeoutMs = 15_000;
+const launchTimeoutMs = 15_000;
 /** Every protocol call to the browser; puppeteer's own default is three minutes. */
 const protocolTimeoutMs = 30_000;
 /** How long a polite close, then an exit after SIGKILL, may take. */
@@ -147,7 +147,7 @@ function pipeTransport(child: ChildProcess): ConnectionTransport {
 }
 
 /** Kills the browser's process group (its helpers with it), then waits a bounded time for it to exit. */
-export async function kill(child: ChildProcess): Promise<void> {
+async function kill(child: ChildProcess): Promise<void> {
   if (child.exitCode !== null || child.signalCode !== null) return;
   const exited = new Promise<void>((resolve) => {
     child.once("exit", () => {
