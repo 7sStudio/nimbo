@@ -24,7 +24,7 @@ How tests are written is in 08-code-standards §9; this doc says what is tested,
 |---|---|---|---|
 | Unit and component | Vitest in Node; happy-dom for `ui` and `output-view` (`*.component.test.ts`) | `src/**/*.test.ts` beside the code | unit |
 | Browser (Vitest) | Vitest browser mode, Chromium via Playwright | `runtime-web`, `query-sql`, and the `*.browser.test.ts` projects of `query-json`, `output-view`, `ui` | unit |
-| Integration | Vitest in Node against the built daemon, kernel, CLI bin or MCP entry | `*.budget.perf.test.ts`, `*.built.integration.test.ts` (projects named `<x>:integration`) | integration |
+| Integration | Vitest in Node against the built daemon, kernel, CLI bin or MCP entry | `*.built.integration.test.ts` (projects named `<x>:integration`) | integration |
 | Journeys | Playwright, Chromium | `packages/*/e2e/**/*.spec.ts`, `tools/test/**/*.e2e.ts` | browser |
 | Contract | Vitest on built output | `*.contract.test.ts` (`ui:contract`, `output-view:contract`) | contract |
 | Acceptance | Playwright project `acceptance` | `**/acceptance/**` | acceptance |
@@ -97,22 +97,11 @@ Both demos run in the Playwright `acceptance` project against a built app and a 
 3. Through MCP: `notebook_get`, `cell_add`, `cell_run`, `cell_outputs`; `meta.lastEdit.agent` equals the client name.
 4. A client cell added by the agent runs in the open tab; with no tab, `cell.run` returns `REALM_NOT_ATTACHED`.
 
-## 7. Performance budgets
+## 7. Size
 
-Each budget takes the median of three samples with a 20 % tolerance (`withTolerance`), measured alone, outside the coverage pool.
+No test asserts a duration. A test bounds time only as a hang guard (Vitest's timeout) or to show that a timeout or a cancel stops the work, with a wide margin.
 
-| Measure | Budget | Where |
-|---|---|---|
-| `transform` of a 200-line / 20-line cell | < 30 ms / < 5 ms | `pnpm --filter @jsnb/transform budget` (`src/fixtures/measure-transform.mts`) |
-| `cell.run` of `1 + 1` through the daemon | < 30 ms p50, < 80 ms p95 | `kernel-node:integration`, `server:integration` |
-| Interrupt of `while (true) {}` | < 200 ms to `interrupted` | same |
-| Kernel start to `ready` | < 400 ms | same |
-| Autosave of a 200-cell notebook | < 20 ms serialize, one write per burst | `server:integration` |
-| Output viewer: flatten 10 000 nodes / grid / search 100 000 nodes | < 20 ms / < 100 ms / < 100 ms | `output-view-model` `*.perf.test.ts` |
-| SQL: first engine load / query over 48 120 rows | < 6 s on a cached download / < 500 ms | `query-sql` `budgets.browser.test.ts` |
-| Page hydrate with 50 cells | < 300 ms to first paint of the last cell | journey |
-| Query bar: JSONPath over a 4 MB value | < 100 ms | browser |
-| `ui` first load | a 2 MB gzipped tripwire, not a target; no jq or DuckDB in it | `pnpm size` (08 §10) |
+The `ui` first load has a 2 MB gzipped tripwire, not a target, with no jq or DuckDB in it: `pnpm size` (08 §10), in the contract stage.
 
 ## 8. Fixtures and helpers
 
@@ -136,10 +125,10 @@ Each budget takes the median of three samples with a 20 % tolerance (`withTolera
 | 2 | typecheck | `pnpm typecheck` |
 | 2 | unit+component | `pnpm test:coverage`: coverage on the five floored packages, the other unit projects in a second run without instrumentation |
 | 3 | build | `pnpm build` |
-| 4 | integration | `pnpm test:integration`, alone, for its timing budgets |
-| 5 | browser | `pnpm test:browser`: Playwright `browser-mbp14`; `BROWSER_SCREENS=all` adds `browser-large` |
-| 5 | contract+size+security | `pnpm test:contract`, `pnpm size`, `pnpm test:security` |
-| 6 | acceptance | `pnpm test:acceptance` |
+| 4 | integration | `pnpm test:integration` |
+| 4 | browser | `pnpm test:browser`: Playwright `browser-mbp14`; `BROWSER_SCREENS=all` adds `browser-large` |
+| 4 | contract+size+security | `pnpm test:contract`, `pnpm size`, `pnpm test:security` |
+| 5 | acceptance | `pnpm test:acceptance` |
 
 - Each stage writes its own log; a summary table of status and seconds comes last.
 - `tools/stage.mjs` selects the Vitest projects or Playwright projects of a stage and prints `skipped: no … suites yet` when none match.

@@ -69,8 +69,7 @@ const browserCommands: Readonly<
 
 /**
  * A heavy browser project (tools/vitest-projects.ts) instantiates a WebAssembly engine per file. Under the full pool that
- * start-up went past 10 s, so its files run one at a time and 30 s is the hang guard; the 10 s budget, measured
- * alone, is unchanged. expect.poll waits up to 10 s for a worker message instead of Vitest's 1 s.
+ * start-up went past 10 s, so its files run one at a time and 30 s is the hang guard. expect.poll waits up to 10 s for a worker message instead of Vitest's 1 s.
  */
 const heavy = {
   testTimeout: 30_000,
