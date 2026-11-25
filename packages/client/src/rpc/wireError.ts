@@ -18,6 +18,7 @@ import {
   NotebookNotFound,
   NotebookOpen,
   NotPaused,
+  PageTimeout,
   RealmAttached,
   RealmNotAttached,
   Unauthorized,
@@ -87,6 +88,10 @@ const catalogue: Readonly<Record<number, Build>> = {
     (data) => new GitFailed(data),
   ),
   1014: from(z.looseObject({ command: z.string() }), (data) => new NotPaused(data)),
+  1015: from(
+    z.looseObject({ notebook: z.string(), request: z.string(), timeoutMs: z.number() }),
+    (data) => new PageTimeout(data),
+  ),
   2001: from(z.looseObject({ error: ErrorInfo }), (data) => new BridgeCallFailed(data)),
 };
 

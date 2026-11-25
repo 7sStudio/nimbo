@@ -1,6 +1,6 @@
 // A run's builtins layer (04-kernel §3.3, §7, §8): console, env, display, dispose, on, the wrapped timers and listeners,
 // and the run's views of `window` and `document`. Code reads them through its own run's scope, so attribution is lexical.
-import { InvalidDisposer, NotAvailable, typeName } from "@jsnb/core";
+import { InvalidDisposer, typeName } from "@jsnb/core";
 
 import type { Display } from "../display/display.js";
 import { createConsole } from "./console.js";
@@ -19,6 +19,8 @@ export type BuiltinParts = {
   readonly streams: Streams;
   /** A late failure of a wrapped callback: an `error` output on the run's execution (04-kernel §5.3). */
   readonly reportError: (error: unknown) => void;
+  /** `on(name, callback)`, listening for the run (05-bridge §6). */
+  readonly on: (name: unknown, callback: unknown, options?: unknown) => () => void;
 };
 
 /** `dispose(fn)` registers the cell's own cleanup (04-kernel §7); a stale run's cleanup runs at once. */
@@ -29,11 +31,6 @@ const disposeWith =
     disposers.add(() => Reflect.apply(cleanup, undefined, []));
     return undefined;
   };
-
-/** `on(name, cb)` is v1.x (05-bridge §6): the surface exists and says so. */
-const on = (): never => {
-  throw new NotAvailable({ feature: "on" });
-};
 
 /** The timers, the window listeners and the views of `window` and `document`, all belonging to this run. */
 function globals(parts: BuiltinParts): Readonly<Record<string, unknown>> {
@@ -70,7 +67,7 @@ export function createBuiltins(parts: BuiltinParts): Readonly<Record<string, unk
     env: parts.env,
     display: parts.display,
     dispose: disposeWith(parts.disposers),
-    on,
+    on: parts.on,
     ...globals(parts),
   };
 }

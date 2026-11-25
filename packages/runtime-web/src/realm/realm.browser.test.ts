@@ -95,12 +95,12 @@ describe("Realm.handle, failed runs", () => {
     expect(world.realm.containerOf(cell)).toBeUndefined();
   });
 
-  it("shows no value for undefined, on() is not available yet, and dispose(42) is InvalidDisposer", async () => {
+  it("shows no value for undefined, on() needs a name and a function, and dispose(42) is InvalidDisposer", async () => {
     expect((await world.run("undefined")).outputs).toEqual([]);
-    const on = await world.run("on('paid', () => 1)");
+    const on = await world.run("on('paid', 5)");
     expect(on.status.error).toMatchObject({
-      name: "NotAvailable",
-      message: "on is not available in this version of nimbo.",
+      name: "TypeError",
+      message: 'on() takes a callback function, not number: on("progress", (data) => …).',
     });
     const dispose = await world.run("dispose(42)");
     expect(dispose.status.error).toMatchObject({
@@ -115,14 +115,49 @@ describe("Realm.handle, failed runs", () => {
 describe("Realm.handle, realm.snapshot", () => {
   it("answers the container's html and text, and nothing for a cell without one", async () => {
     const result = await world.run("display.html('<ul><li>a@b.c</li><li>d</li></ul>')");
-    expect(await world.realm.handle("realm.snapshot", { cell: result.cell })).toEqual({
+    expect(await world.realm.handle("realm.snapshot", { cell: result.cell, html: true })).toEqual({
       html: "<ul><li>a@b.c</li><li>d</li></ul>",
       text: "a@b.c\nd",
+      rendered: true,
+      truncated: false,
     });
     expect(await world.realm.handle("realm.snapshot", { cell: nextCell() })).toEqual({
-      html: "",
       text: "",
+      rendered: false,
+      truncated: false,
     });
     expect(world.realm.containerOf(result.cell)?.innerHTML).toContain("a@b.c");
+  });
+});
+
+describe("Realm.handle, realm.event", () => {
+  const event = (name: string, data: unknown) => ({ name, data, at: "2026-11-24T10:00:00.000Z" });
+
+  it("delivers in order to each listener, keeps 500 event outputs a run, and reports a throw on the run", async () => {
+    const listening = await world.run(
+      "globalThis.got = []\non('n', (d) => got.push(['a', d]))\non('n', (d) => got.push(['b', d]))\non('bad', () => { throw new Error('no') })",
+    );
+    const events = [event("n", 1), event("other", 0), event("n", 2), event("bad", 0)];
+    expect(await world.realm.handle("realm.event", { events })).toEqual({
+      heard: [
+        { name: "n", count: 2 },
+        { name: "bad", count: 1 },
+      ],
+    });
+    expect(Reflect.get(globalThis, "got")).toEqual([
+      ["a", 1],
+      ["b", 1],
+      ["a", 2],
+      ["b", 2],
+    ]);
+    const many = Array.from({ length: 300 }, (_, i) => event("n", i));
+    await world.realm.handle("realm.event", { events: many });
+    await expect
+      .poll(() => world.transport.outputsOf(listening.execution).length)
+      .toBeGreaterThanOrEqual(501);
+    const outputs = world.transport.outputsOf(listening.execution);
+    expect(outputs.filter((output) => output.kind === "event")).toHaveLength(500);
+    expect(outputs).toContainEqual(expect.objectContaining({ kind: "error" }));
+    expect(outputs).toContainEqual(expect.objectContaining({ kind: "stream", stream: "stderr" }));
   });
 });

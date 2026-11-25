@@ -71,7 +71,7 @@ Two runtimes, no shared memory: shared scope within a kind, a **bridge** across 
 7. Outputs as data: streams, the trailing expression's value, errors with mapped stacks, a client cell's DOM snapshot. The UI renders them; the CLI and MCP return them.
 8. npm packages in both cell types, installed into the workspace's `node_modules` after confirmation.
 9. Built-in HTTP routes: `route("POST /path", handler)` for webhooks and callbacks.
-10. Reload-safe: the page can reload or redirect away and back without losing kernel state; client cells re-run on reload.
+10. Reload-safe: the page can reload or redirect away and back without losing kernel state; client cells keep their last outputs and run again when asked.
 11. Persistence: `.jsnb` JSON, autosaved after every change; secrets in `.env`, never in the file.
 12. Dependency awareness: cells whose inputs changed are marked stale.
 13. Local only, single user.
@@ -88,7 +88,7 @@ Two runtimes, no shared memory: shared scope within a kind, a **bridge** across 
 
 ### 3.2 Not built yet
 
-Server-to-client push events (`emit`/`on`), a file watcher for external `.jsnb` edits, a headless client realm for agent-only sessions, debugging client cells in the page, add-ons. Open work is in [12-roadmap.md](12-roadmap.md).
+A file watcher for external `.jsnb` edits, a headless client realm for agent-only sessions, debugging client cells in the page, add-ons. Open work is in [12-roadmap.md](12-roadmap.md).
 
 ### 3.3 Out of scope
 
@@ -106,7 +106,7 @@ Jupyter-style manual execution plus static analysis of each cell (`defines`, `us
 
 ### 4.3 File format
 
-JSON, extension `.jsnb`; `source` is an array of lines; cell ids are stable; outputs and secrets are never in the file. Schema in [07-file-format.md](07-file-format.md).
+JSON, extension `.jsnb`; `source` is an array of lines; cell ids are stable; secrets are never in the file, and outputs only when `outputs.save` keeps each cell's last run. Schema in [07-file-format.md](07-file-format.md).
 
 ### 4.4 Server kernel
 
@@ -118,7 +118,7 @@ Each cell is transformed once with the TypeScript compiler API (type stripping, 
 
 ### 4.6 Product shape
 
-A local web app launched by the CLI: `nimbo open my.jsnb` runs the workspace daemon in the terminal (Ctrl-C stops it) and opens the browser. One published package, `nimbo`, bundles the daemon, CLI, MCP server and built UI (02 §10). The daemon never stops by itself.
+A local web app launched by the CLI: `nimbo open my.jsnb` runs the workspace daemon in the terminal (Ctrl-C stops it) and opens the browser. One release, `nimbo`, a tarball with its own Node, bundles the daemon, CLI, MCP server and built UI (02 §10). The daemon never stops by itself.
 
 ### 4.7 Agent control
 
@@ -156,7 +156,7 @@ Client code runs inline in the notebook page; each cell's output is a container 
 ### 4.10 Editor, intellisense and debugging
 
 - **Editor:** CodeMirror 6, one small `EditorView` per cell.
-- **Intellisense:** the TypeScript language service runs in a worker thread of the daemon (`packages/language`) over the workspace's real `node_modules`, one virtual project per notebook and realm. Completions, hover, signature help and definition go over LSP; diagnostics and rename go through registry commands.
+- **Intellisense:** the TypeScript language service runs in a worker thread of the daemon (`packages/language`) over the workspace's real `node_modules`, one virtual project per notebook and realm. Completions, hover, signature help and definition go over LSP, carried by the internal `language.lsp` command on the page's socket; diagnostics and rename go through registry commands and events.
 - **Debugging:** level 0, streams, values and mapped stacks under each cell. Level 1, the kernel runs with `--inspect=127.0.0.1:0` and source maps, so DevTools or VS Code attach and `debugger;` works; client cells use the browser's DevTools. Level 2, the built-in debugger for server cells on js-debug: breakpoints, stepping, the call stack, variables, watches and evaluation in the page, and as the `debug.*` commands (03 §4.9); a client cell's breakpoint is a `debugger;` for the browser's DevTools.
 
 ### 4.11 Settings
@@ -211,7 +211,7 @@ The reasons behind the code live in git history; these documents describe only t
 
 | File | Content |
 |---|---|
-| [02-architecture.md](02-architecture.md) | processes, packages and their dependencies, boundary rules, data flow, the life of a run, state and survival |
+| [02-architecture.md](02-architecture.md) | processes and channels, packages and their dependencies, contracts, the main flows, the life of a run, state and survival, security, build and distribution, where each feature lives |
 | [03-api.md](03-api.md) | the command registry, types, events, transport, errors, CLI and MCP mapping |
 | [04-kernel.md](04-kernel.md) | process model, scope transform, outputs, interrupt and restart, disposers, built-ins, redaction, the `Kernel` interface, the transform corpus |
 | [05-bridge.md](05-bridge.md) | what crosses between realms, resolution, RPC, error catalogue, restart, protocol |
