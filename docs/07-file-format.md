@@ -113,8 +113,10 @@ A workspace is a folder containing `.jsnb/` (03-api §2); the daemon creates it 
     keybindings.json  workspace keybindings (§6)
     loader.mjs      written at kernel start: the ESM loader packages are imported through (04-kernel §8.1)
     cache/
-      npm/<name>@<version>/  bundles for /npm/<spec> (04-kernel §8.1): index.js or <subpath>.js, meta.json (last),
-                             <bundle>.imports.json, <bundle>.inputs.json (linked packages)
+      npm/<name>@<version>/  bundles for /npm/<spec> (04-kernel §8.1): index.js or <subpath>.js, meta.json (last);
+                             a split build's chunks/<hash>.js, group.json (entry and chunk sizes),
+                             group.imports.json, group.inputs.json (linked packages); a standalone
+                             bundle's <bundle>.imports.json, <bundle>.inputs.json (linked packages)
       npm/_/<key>/           bundles for /npm/_/<key>/..., folders reached from a bundle's imports
       npm/_index.json        { entries: { <key>: { name, version, folder, from } } }
       sql/                   the daemon SQL engine's transient load/export files and DuckDB's spill folder __nimbo_temp/ (11-query §3)
