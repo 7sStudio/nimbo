@@ -247,6 +247,33 @@ describe("an agent's edit the file undoes", () => {
   });
 });
 
+describe("an agent's new cell the file rewrites", () => {
+  it("keeps the agent's text as the code a revert brings back", async () => {
+    await withDaemon(async (daemon, ws) => {
+      await createNotebook(daemon);
+      const added = await daemon.client.cell.add({
+        notebook,
+        type: "server",
+        source: "agent's cell",
+      });
+      await daemon.client.notebook.save({ notebook });
+      await edit(ws.path(notebook), (doc) => {
+        cellOf(doc, added.cell.id).source = ["the file's text"];
+      });
+      await reconciled(daemon, (d) => d.changed.includes(added.cell.id));
+      const cell = (await daemon.client.cell.get({ notebook, cell: added.cell.id })).cell;
+      expect(cell.meta.lastEdit).toMatchObject({
+        by: "external",
+        review: { previousSource: "agent's cell" },
+      });
+      await daemon.client.cell.revert({ notebook, cell: added.cell.id });
+      expect((await daemon.client.cell.get({ notebook, cell: added.cell.id })).cell.source).toBe(
+        "agent's cell",
+      );
+    });
+  });
+});
+
 describe("a file caught mid-write", () => {
   it("is merged once complete, without saying it does not parse", async () => {
     await withDaemon(async (daemon, ws) => {
