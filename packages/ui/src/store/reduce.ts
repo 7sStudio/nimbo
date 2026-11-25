@@ -13,7 +13,6 @@ import type {
 
 import type { GraphEntry, Mirror } from "./mirror.js";
 import { mapCell, reindexed } from "./mirror.js";
-import { reduceRun } from "./reduceRun.js";
 
 type Notebook = NotebookState;
 
@@ -56,8 +55,82 @@ function withAutoRun(mirror: Mirror, change: EventOf<"cells.autoRun">["data"]): 
   return { ...mirror, autoRun: { running: change.running, pending } };
 }
 
-function reduceCell(mirror: Mirror, event: EventEnvelope): Mirror {
+/** The execution a status event belongs to: the known one, or a new one started at the event's time. */
+function runOf(mirror: Mirror, event: EventOf<"cell.status">): Execution {
+  const { cell, execution, status, count } = event.data;
+  const counted = count === undefined ? {} : { count };
+  const known = mirror.executions.get(cell);
+  if (known?.id === execution) return { ...known, status, ...counted };
+  return { id: execution, cell, status, startedAt: event.ts, outputs: [], ...counted };
+}
+
+function withStatus(mirror: Mirror, event: EventOf<"cell.status">): Mirror {
+  const run = runOf(mirror, event);
+  const executions = new Map(mirror.executions).set(run.cell, run);
+  if (mirror.notebook === null) return { ...mirror, executions };
+  const cells = mapCell(mirror.notebook.cells, run.cell, (cell) => ({
+    ...cell,
+    status: run.status,
+    // the summary follows the run it names, so its count is there before the cell's next fetch
+    lastExecution:
+      cell.lastExecution?.id === run.id && run.count !== undefined
+        ? { ...cell.lastExecution, count: run.count }
+        : cell.lastExecution,
+  }));
+  return { ...mirror, executions, notebook: { ...mirror.notebook, cells } };
+}
+
+function withOutput(mirror: Mirror, event: EventOf<"cell.output">): Mirror {
+  const { cell, execution, output } = event.data;
+  const known = mirror.executions.get(cell);
+  // An output of a run the mirror does not follow (an older one, or one before a resync) is dropped; the store's
+  // cell.outputs fetch after the run ends brings the authoritative list.
+  if (known?.id !== execution) return mirror;
+  const run = { ...known, outputs: [...known.outputs, output] };
+  return { ...mirror, executions: new Map(mirror.executions).set(cell, run) };
+}
+
+function applied(mirror: Mirror, event: EventEnvelope): Mirror {
   switch (event.type) {
+    case "notebook.closed":
+      return { ...mirror, closed: true };
+    case "notebook.opened":
+      return { ...mirror, closed: false };
+    case "routes.changed":
+      return { ...mirror, routes: event.data.routes };
+    case "bridge.activity":
+      return { ...mirror, bridgeActivity: event.data.at };
+    case "kernel.status":
+      return withNotebook(mirror, (notebook) => ({ ...notebook, kernel: event.data }));
+    case "realm.status":
+      return withNotebook(mirror, (notebook) => ({ ...notebook, realm: event.data }));
+
+    case "notebook.saved": {
+      const { savedAt } = event.data;
+      const next = withNotebook(mirror, (notebook) => ({ ...notebook, savedAt, dirty: false }));
+      return { ...next, saveState: "saved", saveError: null };
+    }
+    case "notebook.saveFailed":
+      return { ...mirror, saveState: "failed", saveError: event.data.error };
+    case "notebook.conflict":
+      return { ...mirror, saveState: "conflict" };
+    case "notebook.conflictEnded":
+      // a recovered text's conflict is over with it
+      return {
+        ...mirror,
+        recovered: null,
+        saveState: mirror.notebook?.dirty === true ? "writing" : "saved",
+      };
+    case "notebook.reconciled":
+      return { ...mirror, external: { ...event.data, seq: event.seq } };
+
+    case "debug.paused":
+      return withDebug(mirror, (debug) => ({ ...debug, state: "paused", paused: event.data }));
+    case "debug.resumed":
+      return withDebug(mirror, (debug) => ({ ...debug, state: event.data.state, paused: null }));
+    case "debug.breakpoints":
+      return withDebug(mirror, (debug) => ({ ...debug, breakpoints: event.data.breakpoints }));
+
     case "cell.added":
       return edited(mirror, (cells) => added(cells, event.data.cell));
     case "cell.updated": {
@@ -93,67 +166,12 @@ function reduceCell(mirror: Mirror, event: EventEnvelope): Mirror {
         ),
       }));
     }
+    case "cell.status":
+      return withStatus(mirror, event);
+    case "cell.output":
+      return withOutput(mirror, event);
     default:
-      return reduceRun(mirror, event);
-  }
-}
-
-/** The debugger's events: where the kernel paused, its resume, the breakpoints. */
-function reduceDebug(mirror: Mirror, event: EventEnvelope): Mirror {
-  switch (event.type) {
-    case "debug.paused":
-      return withDebug(mirror, (debug) => ({ ...debug, state: "paused", paused: event.data }));
-    case "debug.resumed":
-      return withDebug(mirror, (debug) => ({ ...debug, state: event.data.state, paused: null }));
-    case "debug.breakpoints":
-      return withDebug(mirror, (debug) => ({ ...debug, breakpoints: event.data.breakpoints }));
-    default:
-      return reduceCell(mirror, event);
-  }
-}
-
-/** The file's events: saves, failures, conflicts and edits made outside nimbo. */
-function reduceFile(mirror: Mirror, event: EventEnvelope): Mirror {
-  switch (event.type) {
-    case "notebook.saved": {
-      const { savedAt } = event.data;
-      const next = withNotebook(mirror, (notebook) => ({ ...notebook, savedAt, dirty: false }));
-      return { ...next, saveState: "saved", saveError: null };
-    }
-    case "notebook.saveFailed":
-      return { ...mirror, saveState: "failed", saveError: event.data.error };
-    case "notebook.conflict":
-      return { ...mirror, saveState: "conflict" };
-    case "notebook.conflictEnded":
-      // a recovered text's conflict is over with it
-      return {
-        ...mirror,
-        recovered: null,
-        saveState: mirror.notebook?.dirty === true ? "writing" : "saved",
-      };
-    case "notebook.reconciled":
-      return { ...mirror, external: { ...event.data, seq: event.seq } };
-    default:
-      return reduceDebug(mirror, event);
-  }
-}
-
-function reduceNotebook(mirror: Mirror, event: EventEnvelope): Mirror {
-  switch (event.type) {
-    case "notebook.closed":
-      return { ...mirror, closed: true };
-    case "notebook.opened":
-      return { ...mirror, closed: false };
-    case "routes.changed":
-      return { ...mirror, routes: event.data.routes };
-    case "bridge.activity":
-      return { ...mirror, bridgeActivity: event.data.at };
-    case "kernel.status":
-      return withNotebook(mirror, (notebook) => ({ ...notebook, kernel: event.data }));
-    case "realm.status":
-      return withNotebook(mirror, (notebook) => ({ ...notebook, realm: event.data }));
-    default:
-      return reduceFile(mirror, event);
+      return mirror;
   }
 }
 
@@ -161,7 +179,7 @@ function reduceNotebook(mirror: Mirror, event: EventEnvelope): Mirror {
 export function reduce(mirror: Mirror, event: EventEnvelope): Mirror {
   const path = mirror.notebook?.path;
   if (event.seq <= mirror.seq || path === undefined || event.notebook !== path) return mirror;
-  return { ...reduceNotebook(mirror, event), seq: event.seq };
+  return { ...applied(mirror, event), seq: event.seq };
 }
 
 /** Takes the service's lists for these cells (cell.diagnostics, or notebook.diagnostics's answer). */

@@ -14,24 +14,6 @@ type Detail = Awaited<
 
 const pageSize = 50;
 
-/** Opens a commit's files (read with `show`) or closes them. */
-function toggler(
-  open: { value: ReadonlyMap<string, Detail> },
-  show: (oid: string) => Promise<Detail | undefined>,
-) {
-  return async (oid: string): Promise<void> => {
-    const next = new Map(open.value);
-    if (next.delete(oid)) {
-      open.value = next;
-      return;
-    }
-    const detail = await show(oid);
-    if (detail === undefined) return;
-    next.set(oid, detail);
-    open.value = next;
-  };
-}
-
 export const useHistoryStore = defineStore("history", () => {
   const git = useGitStore();
   const attempt = attempter(usePageReport());
@@ -40,7 +22,6 @@ export const useHistoryStore = defineStore("history", () => {
   const more = ref(false);
   const loading = ref(false);
   const open = shallowRef<ReadonlyMap<string, Detail>>(new Map());
-  const toggle = toggler(open, (oid) => attempt(() => git.client().git.show({ commit: oid })));
 
   const read = async (skip: number): Promise<void> => {
     loading.value = true;
@@ -72,6 +53,16 @@ export const useHistoryStore = defineStore("history", () => {
       await read(0);
     },
     /** Opens or closes a commit's files. */
-    toggle,
+    toggle: async (oid: string): Promise<void> => {
+      const next = new Map(open.value);
+      if (next.delete(oid)) {
+        open.value = next;
+        return;
+      }
+      const detail = await attempt(() => git.client().git.show({ commit: oid }));
+      if (detail === undefined) return;
+      next.set(oid, detail);
+      open.value = next;
+    },
   };
 });

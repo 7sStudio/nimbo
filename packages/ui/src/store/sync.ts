@@ -50,36 +50,18 @@ const graphEvents = new Set<EventEnvelope["type"]>([
   "cells.stale",
 ]);
 
-/** notebook.diagnostics; a failure (the service is off or down) leaves the editors without lists, quietly. */
-function diagnosticsRefresher({
-  mirror,
-  client,
-  notebook,
-}: Pick<Context, "mirror" | "client" | "notebook">) {
-  return async (): Promise<void> => {
-    try {
-      const { cells } = await client().call(notebookDiagnostics, { notebook: notebook() });
-      mirror.value = withDiagnostics(mirror.value, cells);
-    } catch {
-      // the page works without them: underlines are a help, not a state
-    }
-  };
-}
+export function mirrorSync(context: Context) {
+  const { mirror, client, notebook, attempt, report, reopened } = context;
 
-/** The fetches that complete what events carry: a finished run's outputs and summary, the graph, the routes. */
-function refreshers({
-  mirror,
-  client,
-  notebook,
-  attempt,
-}: Omit<Context, "report" | "reopened" | "diagnostics">) {
+  // the fetches that complete what events carry: a finished run's outputs and summary, the graph, the routes
+
   /** Fetches, then folds the answer into the mirror as it is by then. */
   const fold = async <T>(fetch: () => Promise<T>, into: (m: Mirror, value: T) => Mirror) => {
     const value = await attempt(unlessClosed(fetch));
     if (value !== undefined) mirror.value = into(mirror.value, value);
   };
   const ref = (cell: CellId) => ({ notebook: notebook(), cell });
-  const run = (cell: CellId) =>
+  const refreshRun = (cell: CellId) =>
     Promise.all([
       fold(
         () => client().cell.outputs(ref(cell)),
@@ -90,36 +72,39 @@ function refreshers({
         (m, got) => withSummary(m, got.cell),
       ),
     ]);
-  const graph = () =>
+  const refreshGraph = () =>
     fold(
       () => client().call(notebookGraph, { notebook: notebook() }),
       (m, { cells }) => withGraph(m, cells),
     );
-  const routes = () =>
+  const refreshRoutes = () =>
     fold(
       () => client().kernel.routes({ notebook: notebook() }),
       (m, { routes: next }) => ({ ...m, routes: next }),
     );
-  const all = (cells: readonly Cell[]) =>
+  const refreshAll = (cells: readonly Cell[]) =>
     Promise.all([
-      graph(),
-      routes(),
-      ...cells.filter((cell) => cell.lastExecution !== null).map((cell) => run(cell.id)),
+      refreshGraph(),
+      refreshRoutes(),
+      ...cells.filter((cell) => cell.lastExecution !== null).map((cell) => refreshRun(cell.id)),
     ]);
-  return { run, graph, routes, all };
-}
-
-export function mirrorSync(context: Context) {
-  const { mirror, client, notebook, report, reopened } = context;
-  const refresh = { ...refreshers(context), diagnostics: diagnosticsRefresher(context) };
+  /** notebook.diagnostics; a failure (the service is off or down) leaves the editors without lists, quietly. */
+  const refreshDiagnostics = async (): Promise<void> => {
+    try {
+      const { cells } = await client().call(notebookDiagnostics, { notebook: notebook() });
+      mirror.value = withDiagnostics(mirror.value, cells);
+    } catch {
+      // the page works without them: underlines are a help, not a state
+    }
+  };
 
   function apply(event: EventEnvelope): void {
     mirror.value = reduce(mirror.value, event);
     if (event.type === "debug.resumed" && event.data.notice !== undefined)
       context.notice?.(event.data.notice);
     if (event.type === "cell.status" && isTerminal(event.data.status))
-      void refresh.run(event.data.cell);
-    if (graphEvents.has(event.type)) void refresh.graph();
+      void refreshRun(event.data.cell);
+    if (graphEvents.has(event.type)) void refreshGraph();
     if (event.type === "notebook.opened") reopened();
   }
 
@@ -128,8 +113,8 @@ export function mirrorSync(context: Context) {
       notebook: notebook(),
       onState: (state, seq) => {
         mirror.value = hydrated(mirror.value, state, seq);
-        void refresh.all(state.cells);
-        if (context.diagnostics?.() === true) void refresh.diagnostics();
+        void refreshAll(state.cells);
+        if (context.diagnostics?.() === true) void refreshDiagnostics();
       },
       onEvent: apply,
       onError: report,
@@ -138,9 +123,9 @@ export function mirrorSync(context: Context) {
   return {
     apply,
     subscribe,
-    refreshRoutes: refresh.routes,
+    refreshRoutes,
     /** editor.diagnostics turned on: the lists again; off: none kept. */
-    refreshDiagnostics: refresh.diagnostics,
+    refreshDiagnostics,
     dropDiagnostics: () => {
       mirror.value = { ...mirror.value, diagnostics: new Map() };
     },

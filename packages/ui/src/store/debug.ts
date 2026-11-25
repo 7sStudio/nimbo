@@ -47,34 +47,78 @@ function writeWatches(notebook: string, watches: readonly string[]): void {
   }
 }
 
-type Calls = {
-  readonly client: () => ReturnType<ReturnType<typeof useSessionStore>["session"]>["client"];
-  readonly notebook: () => string;
-  readonly attempt: ReturnType<typeof attempter>;
-};
+/** How long the kernel was paused in the debugger: a bridge call's timeout does not count it. */
+function pauseClockOf(paused: ComputedRef<DebugPause | null>): PauseClock {
+  let since: number | undefined;
+  let held = 0;
+  watch(paused, (now) => {
+    if (now !== null) since ??= performance.now();
+    else if (since !== undefined) {
+      held += performance.now() - since;
+      since = undefined;
+    }
+  });
+  return { paused: () => since !== undefined, heldMs: () => held };
+}
 
-/** The breakpoint commands, sent through the daemon (its debug.breakpoints event brings the new list). */
-function breakpointCalls({ client, notebook, attempt }: Calls) {
-  const set = (cell: CellId, line: number, options: BreakpointOptions = {}) =>
+export const useDebugStore = defineStore("debug", () => {
+  const session = useSessionStore();
+  const notebookStore = useNotebookStore();
+  const ui = useUiStore();
+  const client = () => session.session().client;
+  const notebook = () => session.session().notebook;
+  const attempt = attempter(usePageReport());
+  const state = computed<DebugState>(() => notebookStore.mirror.notebook?.debug ?? noDebug);
+  const paused = computed(() => state.value.paused);
+  /** A breakpoint the gutter's right click asked to edit in Run and Debug. */
+  const editRequest = shallowRef<{ readonly cell: CellId; readonly line: number } | null>(null);
+  /** The watch expressions, kept per notebook in this browser. */
+  const watches = ref<string[]>([]);
+
+  // The stack of each pause, read once; the frame the user chose (null: the innermost); Run and Debug opened on the
+  // first pause the page sees, as VS Code's opens when a session starts.
+  const frames = shallowRef<readonly DebugFrame[]>([]);
+  const chosen = ref<string | null>(null);
+  const pauses = ref(0);
+  let shown = false;
+  watch(paused, async (now) => {
+    chosen.value = null;
+    frames.value = [];
+    if (now === null) return;
+    pauses.value += 1;
+    if (!shown) ui.openPlace({ region: "side", view: "debug" });
+    shown = true;
+    const read = await attempt(() => client().debug.stack({ notebook: notebook() }));
+    if (paused.value === now) frames.value = read?.frames ?? [];
+  });
+
+  // the breakpoint commands, sent through the daemon (its debug.breakpoints event brings the new list)
+  const setBreakpoint = (cell: CellId, line: number, options: BreakpointOptions = {}) =>
     attempt(() => client().debug.setBreakpoint({ notebook: notebook(), cell, line, ...options }));
   const remove = (breakpointId: string) =>
     attempt(() => client().debug.removeBreakpoint({ notebook: notebook(), breakpointId }));
-  return {
-    setBreakpoint: set,
-    remove,
-    removeAll: () =>
-      attempt(() => client().debug.removeBreakpoint({ notebook: notebook(), all: true })),
-    toggle: (state: DebugState, cell: CellId, line: number) => {
-      const there = state.breakpoints.find((each) => each.cell === cell && each.line === line);
-      return there === undefined ? set(cell, line) : remove(there.breakpointId);
-    },
-  };
-}
 
-/** The paused kernel's reads and the controls. An evaluation's failure is its answer (`type: "error"`), never a
- * toast: a watch shows it in place. */
-function kernelCalls({ client, notebook, attempt }: Calls) {
   return {
+    state,
+    paused,
+    frames,
+    chosen,
+    pauses,
+    frame: computed<DebugFrame | undefined>(
+      () => frames.value.find((each) => each.frameId === chosen.value) ?? frames.value[0],
+    ),
+    pauseClock: pauseClockOf(paused),
+    watches,
+    loadWatches: () => {
+      watches.value = readWatches(notebook());
+    },
+    setWatches: (next: readonly string[]) => {
+      watches.value = [...next];
+      writeWatches(notebook(), next);
+    },
+
+    // the paused kernel's reads and the controls; an evaluation's failure is its answer (`type: "error"`), never a
+    // toast: a watch shows it in place
     control: (verb: Control) => attempt(() => client().debug[verb]({ notebook: notebook() })),
     scopes: async (frameId: string): Promise<readonly DebugScope[]> =>
       (await attempt(() => client().debug.scope({ notebook: notebook(), frameId })))?.scopes ?? [],
@@ -93,94 +137,24 @@ function kernelCalls({ client, notebook, attempt }: Calls) {
         };
       }
     },
-  };
-}
 
-/** The watch expressions, kept per notebook in this browser. */
-function watchList(notebook: () => string) {
-  const watches = ref<string[]>([]);
-  return {
-    watches,
-    loadWatches: () => {
-      watches.value = readWatches(notebook());
-    },
-    setWatches: (next: readonly string[]) => {
-      watches.value = [...next];
-      writeWatches(notebook(), next);
-    },
-  };
-}
-
-/** How long the kernel was paused in the debugger: a bridge call's timeout does not count it. */
-function pauseClockOf(paused: ComputedRef<DebugPause | null>): PauseClock {
-  let since: number | undefined;
-  let held = 0;
-  watch(paused, (now) => {
-    if (now !== null) since ??= performance.now();
-    else if (since !== undefined) {
-      held += performance.now() - since;
-      since = undefined;
-    }
-  });
-  return { paused: () => since !== undefined, heldMs: () => held };
-}
-
-/** The stack of each pause, read once; the frame the user chose (null: the innermost); Run and Debug opened on the
- * first pause the page sees, as VS Code's opens when a session starts. */
-function pausedStack(paused: ComputedRef<DebugPause | null>, calls: Calls) {
-  const ui = useUiStore();
-  const frames = shallowRef<readonly DebugFrame[]>([]);
-  const chosen = ref<string | null>(null);
-  const pauses = ref(0);
-  let shown = false;
-  watch(paused, async (now) => {
-    chosen.value = null;
-    frames.value = [];
-    if (now === null) return;
-    pauses.value += 1;
-    if (!shown) ui.openPlace({ region: "side", view: "debug" });
-    shown = true;
-    const read = await calls.attempt(() =>
-      calls.client().debug.stack({ notebook: calls.notebook() }),
-    );
-    if (paused.value === now) frames.value = read?.frames ?? [];
-  });
-  const frame = computed<DebugFrame | undefined>(
-    () => frames.value.find((each) => each.frameId === chosen.value) ?? frames.value[0],
-  );
-  return { frames, chosen, pauses, frame };
-}
-
-export const useDebugStore = defineStore("debug", () => {
-  const session = useSessionStore();
-  const notebook = useNotebookStore();
-  const ui = useUiStore();
-  const calls: Calls = {
-    client: () => session.session().client,
-    notebook: () => session.session().notebook,
-    attempt: attempter(usePageReport()),
-  };
-  const state = computed<DebugState>(() => notebook.mirror.notebook?.debug ?? noDebug);
-  const paused = computed(() => state.value.paused);
-  /** A breakpoint the gutter's right click asked to edit in Run and Debug. */
-  const editRequest = shallowRef<{ readonly cell: CellId; readonly line: number } | null>(null);
-  const breakpoints = breakpointCalls(calls);
-  return {
-    state,
-    paused,
-    ...pausedStack(paused, calls),
-    pauseClock: pauseClockOf(paused),
-    ...watchList(calls.notebook),
-    ...kernelCalls(calls),
-    ...breakpoints,
+    setBreakpoint,
+    remove,
+    removeAll: () =>
+      attempt(() => client().debug.removeBreakpoint({ notebook: notebook(), all: true })),
     editRequest,
-    toggle: (cell: CellId, line: number) => breakpoints.toggle(state.value, cell, line),
+    toggle: (cell: CellId, line: number) => {
+      const there = state.value.breakpoints.find(
+        (each) => each.cell === cell && each.line === line,
+      );
+      return there === undefined ? setBreakpoint(cell, line) : remove(there.breakpointId);
+    },
     /** Opens Run and Debug on the breakpoint at `cell`'s `line`, set first when there is none, to edit it. */
     requestEdit: async (cell: CellId, line: number) => {
       const there = state.value.breakpoints.some(
         (each) => each.cell === cell && each.line === line,
       );
-      if (!there) await breakpoints.setBreakpoint(cell, line);
+      if (!there) await setBreakpoint(cell, line);
       ui.openPlace({ region: "side", view: "debug" });
       editRequest.value = { cell, line };
     },
