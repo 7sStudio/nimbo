@@ -52,7 +52,13 @@ describe("a client cell using a server export, and withDependents", () => {
         select: { withDependents: price },
       });
       expect(alone.executions.map((each) => each.cell)).toEqual([price]);
-      expect(alone.skipped).toEqual([{ cell: total, code: "REALM_NOT_ATTACHED" }]);
+      expect(alone.skipped).toEqual([
+        {
+          cell: total,
+          code: "REALM_NOT_ATTACHED",
+          message: expect.stringMatching(/realm\.headless/u) as unknown,
+        },
+      ]);
     });
   });
 });

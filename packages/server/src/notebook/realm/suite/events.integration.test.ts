@@ -294,7 +294,7 @@ describe("cell.snapshot", () => {
       const { client, server, daemon, notebook, page } = world;
       const ui = await client("display.html('x')");
       expect(await daemon.client.cell.snapshot({ notebook, cell: ui })).toEqual({
-        text: "",
+        text: expect.stringMatching(/^\(nothing rendered: .* run it there first/u) as unknown,
         rendered: false,
         truncated: false,
       });

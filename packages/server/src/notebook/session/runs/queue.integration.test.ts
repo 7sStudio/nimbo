@@ -60,7 +60,13 @@ describe("notebook.run", () => {
       const b = await book.add("throw new Error('stop here')");
       const c = await book.add("a + 1");
       const stopped = await daemon.client.notebook.run({ notebook, select: "all", wait: true });
-      expect(stopped.skipped).toEqual([{ cell: client, code: "REALM_NOT_ATTACHED" }]);
+      expect(stopped.skipped).toEqual([
+        {
+          cell: client,
+          code: "REALM_NOT_ATTACHED",
+          message: expect.stringMatching(/realm\.headless/u) as unknown,
+        },
+      ]);
       expect(stopped.executions.map((e) => [e.cell, e.status])).toEqual([
         [a, "ok"],
         [b, "error"],
