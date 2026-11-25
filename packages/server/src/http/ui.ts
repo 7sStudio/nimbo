@@ -1,4 +1,4 @@
-// GET /ui/… (02-architecture §7, the page cookie of): the built UI, with the bearer header or the page
+// GET /ui/… (02-architecture §7): the built UI, with the bearer header or the page
 // cookie; the first load of `/ui/<name>?token=<token>` with the right token also sets that cookie for /ui/ and /npm/
 // (HttpOnly, SameSite=Strict, no Secure on http://127.0.0.1), so the page's later GETs of its assets and modules,
 // which carry no header, are let in. Without a build the daemon answers a page that names the missing build.

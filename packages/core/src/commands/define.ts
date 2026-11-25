@@ -9,8 +9,8 @@ export type CommandTags = {
   readonly internal: boolean;
   readonly streaming: boolean;
   readonly idempotent: boolean;
-  /** Our addition to 03-api §3: a v1.x surface registered as the contract (`debug.*`, `cell.snapshot`) that
-   * the server answers with NotAvailable until it is built. */
+  /** Our addition to 03-api §3: a v1.x surface registered as the contract (`cell.snapshot`) that the server
+   * answers with NotAvailable until it is built. */
   readonly planned: boolean;
 };
 
