@@ -155,9 +155,11 @@ describe("agentSnapshot's HTML", () => {
   it("holds nothing executable from any hostile shape and runs nothing when parsed again", async () => {
     const root = hostile();
     const shot = await read(root);
-    // the shapes' own payloads run in this page: let them finish before counting what the snapshot runs
+    // the shapes' own payloads run in this page: disarmed, so only what the snapshot runs is counted
     root.remove();
-    await new Promise((resolve) => setTimeout(resolve, 500));
+    for (const element of root.querySelectorAll("*"))
+      for (const { name } of [...element.attributes])
+        if (name.startsWith("on")) element.removeAttribute(name);
     const { ran, doc } = await reparse(shot.html ?? "");
     expect(ran).toBe(0);
     expect((await reparse('<img src="x" onerror="top.__hit()">')).ran).toBe(2);

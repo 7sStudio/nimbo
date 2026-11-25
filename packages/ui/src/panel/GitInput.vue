@@ -44,7 +44,7 @@ onMounted(() => {
         v-model="text"
         :placeholder="props.overlay.placeholder"
         :aria-label="props.overlay.placeholder"
-        class="ui:rounded-control ui:border ui:border-accent ui:bg-bg ui:px-2 ui:py-1 ui:font-inherit ui:text-ui ui:text-fg ui:outline-none"
+        class="ui:rounded-control ui:border ui:border-accent ui:bg-bg ui:px-2 ui:py-1 ui:font-inherit ui:text-ui ui:text-fg"
         @keydown.enter.prevent="submit"
       />
       <DialogDescription class="ui:m-0 ui:px-1 ui:text-small ui:text-muted">{{
