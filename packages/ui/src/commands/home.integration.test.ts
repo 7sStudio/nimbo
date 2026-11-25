@@ -9,6 +9,7 @@ import { describe, expect, it } from "vitest";
 import { agentCreates, agentRunsForever } from "../store/fixtures/homeAgent.js";
 import { whenTrue } from "../store/fixtures/page.js";
 import { useSessionStore } from "../store/socket.js";
+import { consent } from "./consent.js";
 import { listed, startHomePage } from "./fixtures/homePage.js";
 
 describe("New and Open", () => {
@@ -77,7 +78,14 @@ describe("Rename and Delete", () => {
       await dispatcher.dispatch("ui.notebook.delete", { path: "calm.jsnb" });
       expect(ui.overlay).toEqual({ kind: "confirmNotebook", action: "delete", path: "calm.jsnb" });
       ui.overlay = null;
-      await dispatcher.dispatch("ui.notebook.delete", { path: "calm.jsnb", confirmed: true });
+      // a yes a key binding could carry asks all the same: only a dialog's token says yes
+      for (const args of [{ confirmed: true }, { consent: "made-up" }, { confirm: true }]) {
+        await dispatcher.dispatch("ui.notebook.delete", { path: "calm.jsnb", ...args });
+        expect(ui.overlay).toMatchObject({ kind: "confirmNotebook", action: "delete" });
+        ui.overlay = null;
+      }
+      expect(home.notebooks.length).toBe(1);
+      await dispatcher.dispatch("ui.notebook.delete", { path: "calm.jsnb", consent: consent() });
       await whenTrue(() => home.notebooks.length === 0);
     });
   });

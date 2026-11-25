@@ -9,6 +9,7 @@ import { useUiStore } from "../store/ui.js";
 import type { Args, Command } from "./command.js";
 import { stringArg, uiCommand as ui } from "./command.js";
 import { gitWrite } from "./gitCall.js";
+import { consented } from "./consent.js";
 
 /** The `paths` argument: a list of strings, or `path` alone. */
 function pathsArg(args: Args | undefined): readonly string[] {
@@ -44,7 +45,7 @@ function showView(store: ReturnType<typeof useUiStore>): void {
   if (place !== undefined) store.openPlace(place);
 }
 
-const confirmed = (args?: Args) => args?.confirmed === true;
+const confirmed = (args?: Args) => consented(args);
 
 /** Commit: with nothing staged it asks first whether to stage everything, VS Code's smart commit. */
 function commitCommand(

@@ -10,6 +10,7 @@ import type { Overlay } from "../store/overlay.js";
 import type { useUiStore } from "../store/ui.js";
 import type { Args, Command } from "./command.js";
 import { uiCommand } from "./command.js";
+import { consent, consented } from "./consent.js";
 
 type OnReason = Partial<Record<GitReason, (error: GitFailed) => void>>;
 
@@ -36,7 +37,9 @@ export function ask(
   ui: ReturnType<typeof useUiStore>,
   words: Omit<Extract<Overlay, { kind: "gitAsk" }>, "kind">,
 ): void {
-  ui.overlay = { kind: "gitAsk", ...words };
+  const { args = {}, ...rest } = words;
+  const withoutYes = Object.fromEntries(Object.entries(args).filter(([key]) => key !== "confirm"));
+  ui.overlay = { kind: "gitAsk", ...rest, args: { ...withoutYes, consent: consent() } };
 }
 
 /** A Source Control command that writes: a view-only tab refuses it (the dispatcher's `writes`). */
@@ -49,4 +52,4 @@ export const gitWrite = (
 
 export const inRepo = (): boolean => useGitStore().repo !== null;
 
-export const yes = (args?: Args): boolean => args?.confirm === true;
+export const yes = (args?: Args): boolean => consented(args);

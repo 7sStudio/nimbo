@@ -89,15 +89,21 @@ function longRunning() {
   const onProgress = (line: string): void => {
     if (running.value !== null) progress.value = line;
   };
-  return { running, progress, long, onProgress };
+  /** The daemon's word on the write under way, whoever started it (another tab, the CLI, an agent). */
+  const onRunning = (operation: string | null): void => {
+    running.value = operation;
+    if (operation === null) progress.value = "";
+  };
+  return { running, progress, long, onProgress, onRunning };
 }
 
-/** git.changed reads the status again; git.progress is the long operation's latest line. */
+/** git.changed reads the status again; git.progress is the operation's latest line; git.running names it. */
 const eventsOf =
-  (refresh: () => Promise<void>, onProgress: (line: string) => void) =>
+  (refresh: () => Promise<void>, under: ReturnType<typeof longRunning>) =>
   (event: EventEnvelope): void => {
     if (event.type === "git.changed") void refresh();
-    if (event.type === "git.progress") onProgress(event.data.line);
+    if (event.type === "git.progress") under.onProgress(event.data.line);
+    if (event.type === "git.running") under.onRunning(event.data.operation);
   };
 
 const counted = (repo: Ref<GitRepo | null>) => {
@@ -119,9 +125,10 @@ export const useGitStore = defineStore("git", () => {
   const refresh = singleFlight(async () => {
     const answer = await attempt(() => client().git.status({}));
     if (answer !== undefined) repo.value = answer.repo;
+    if (answer !== undefined && answer.running !== null) under.onRunning(answer.running);
     loaded.value = true;
   }, refreshing);
-  const onEvent = eventsOf(refresh, under.onProgress);
+  const onEvent = eventsOf(refresh, under);
   const onFocus = (): void => {
     if (session.current !== null) void refresh();
   };

@@ -8,6 +8,7 @@ import type { Keybinding } from "@jsnb/core";
 import { bindingFor, startsChord } from "@jsnb/core";
 
 import type { Dispatcher, KeyContext } from "../commands/dispatch.js";
+import { bindingArgs } from "../commands/consent.js";
 import type { KeyMode, KeyPage } from "./keymap.js";
 import { keyPage, keyTable } from "./keymap.js";
 import type { Focus } from "./modes.js";
@@ -171,7 +172,7 @@ function before(
   const row = table.find((each) => anywhere.has(each.command) && each.key === combo);
   if (row !== undefined && focus !== "capture") {
     event.preventDefault();
-    void dispatcher.dispatch(row.command, row.args);
+    void dispatcher.dispatch(row.command, bindingArgs(row.args));
     return "ran";
   }
   return keptByFocus(combo, focus, key.overlay) ? "kept" : undefined;
@@ -208,7 +209,7 @@ export function createShortcuts(dispatcher: Dispatcher, options: Options) {
       return pending !== undefined || swallowsSave(combo, focus, context);
     }
     event.preventDefault();
-    void dispatcher.dispatch(row.command, row.args);
+    void dispatcher.dispatch(row.command, bindingArgs(row.args));
     return true;
   };
 }
