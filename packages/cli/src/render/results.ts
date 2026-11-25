@@ -8,6 +8,7 @@ import { z } from "zod";
 import type { ExitCode } from "../errors/exit.js";
 import { exitCodes } from "../errors/exit.js";
 import { outline } from "./outline.js";
+import { gitText } from "./git.js";
 import { executionText, runLineLimit } from "./outputs.js";
 import { firstLine } from "./table.js";
 
@@ -127,6 +128,8 @@ function snapshotText(output: unknown): string | undefined {
 }
 
 function readable(name: string, output: unknown): string {
+  const git = gitText(name, output);
+  if (git !== undefined) return git;
   const runs = executionsOf(output);
   if (name === "cell.outputs" && runs.length === 0) return "The cell has not run yet.\n";
   const notes = skippedNotes(output);

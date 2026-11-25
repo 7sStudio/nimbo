@@ -47,6 +47,8 @@ export const eventTypes = [
   "keybindings.changed",
   "notebooks.changed",
   "git.changed",
+  "git.progress",
+  "git.running",
 ] as const;
 export type EventType = (typeof eventTypes)[number];
 
@@ -134,6 +136,8 @@ export const eventData = {
         .readonly(),
     })
     .readonly(),
+  "git.progress": z.object({ operation: z.string(), line: z.string() }).readonly(),
+  "git.running": z.object({ operation: z.string().nullable() }).readonly(),
 } as const satisfies Record<EventType, z.ZodType>;
 
 const envelope = <T extends EventType>(type: T) =>
@@ -178,6 +182,8 @@ export const EventEnvelope = z.discriminatedUnion("type", [
   envelope("keybindings.changed"),
   envelope("notebooks.changed"),
   envelope("git.changed"),
+  envelope("git.progress"),
+  envelope("git.running"),
 ]);
 export type EventEnvelope = z.infer<typeof EventEnvelope>;
 

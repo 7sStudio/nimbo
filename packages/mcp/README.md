@@ -45,9 +45,13 @@ that stops reading ends it at once, quietly.
   the exact call that reads the same thing in parts, per family of tools (`src/tools/advice.ts`, `sliceAdvice.ts`, `gitDiffAdvice.ts`), with the real notebook,
   cell and output (`git_diff`: the changed cells, read one at a time with `cell`); a tool that changes something says
   the call was carried out.
-- Source Control: `git_status`, `git_diff` (a notebook cell by cell, hunks only),
-  `git_stage`, `git_unstage`, `git_discard` (destructive), `git_commit`; the server's instructions tell agents to read a
-  notebook's changes with `git_diff`, not by diffing its JSON.
+- Source Control: `git_status`, `git_diff` (a notebook cell by cell, hunks only; `commit` for a commit's change),
+  `git_log`, `git_show`, `git_branches`, `git_stashList` (read-only); `git_stage`, `git_unstage`, `git_commit` (with
+  `amend`), `git_fetch`, `git_pull`, `git_push`, `git_publish`, `git_sync`, `git_cancel`, `git_continue`,
+  `git_branchCreate`, `git_switch`, `git_branchRename`, `git_branchDelete`, `git_stash`, `git_stashApply`,
+  `git_stashPop`, `git_init`; `git_discard`, `git_abort` and `git_stashDrop` are destructive. Each description starts
+  with what it changes, and one that can lose work refuses without `confirm: true` (`GitFailed`, reason `confirm`).
+  The server's instructions tell agents to read a notebook's changes with `git_diff`, not by diffing its JSON.
 
 ## Resources
 

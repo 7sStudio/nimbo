@@ -1,11 +1,12 @@
 // Home's Open folder command: without a path it opens the picker; with one it makes that folder the
 // workspace (workspace.open finds or starts the folder's own daemon and this one stops) and the page moves to the
-// other daemon's Home. While notebooks of this folder are open it asks first, in the picker, unless `confirmed`; an
+// other daemon's Home. While notebooks of this folder are open it asks first, in the picker, unless a dialog consented (consent.ts); an
 // open that fails answers its words (the picker shows them) and is a toast from the palette.
 import type { useHomeStore } from "../store/home.js";
 import type { useUiStore } from "../store/ui.js";
 import type { Command } from "./command.js";
 import { stringArg, uiCommand as ui } from "./command.js";
+import { consented } from "./consent.js";
 import type { HomeHost } from "./homeHost.js";
 
 type Home = ReturnType<typeof useHomeStore>;
@@ -32,7 +33,7 @@ export const openFolder = (home: Home, store: Ui, host: HomeHost): Command => ({
       store.overlay = { kind: "folderPicker" };
       return undefined;
     }
-    if (leavingWords(home) !== null && args?.confirmed !== true) {
+    if (leavingWords(home) !== null && !consented(args)) {
       store.overlay = { kind: "folderPicker", path, confirm: true };
       return undefined;
     }

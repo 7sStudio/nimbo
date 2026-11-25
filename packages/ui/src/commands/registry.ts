@@ -8,6 +8,7 @@ import { publicCommands } from "@jsnb/core";
 
 import { useNotebookStore } from "../store/notebook.js";
 import { usePageReport } from "../store/attempt.js";
+import { consented } from "./consent.js";
 import { neighbourOf } from "../store/marked.js";
 import { useSessionStore } from "../store/socket.js";
 import { useUiStore } from "../store/ui.js";
@@ -21,7 +22,7 @@ const doneToasts: Readonly<Record<string, string>> = { "kernel.restart": "Kernel
 const has = (command: AnyCommand, key: string) => key in command.input.shape;
 
 /** The page's own argument of `kernel.restart`: the user answered the confirm, never sent. */
-const confirmed = "confirmed";
+const consentKey = "consent";
 
 /** The arguments the page supplies for `command` when the caller did not; the page's own argument left out. */
 function filled(
@@ -29,7 +30,7 @@ function filled(
   given: Args,
   page: { notebook: string; cell: string | null },
 ): Args {
-  const args = Object.fromEntries(Object.entries(given).filter(([key]) => key !== confirmed));
+  const args = Object.fromEntries(Object.entries(given).filter(([key]) => key !== consentKey));
   return {
     ...(has(command, "notebook") ? { notebook: page.notebook } : {}),
     ...(has(command, "cell") && page.cell !== null ? { cell: page.cell } : {}),
@@ -75,7 +76,7 @@ function askedToRestart(
         ?.id ?? null)
     : null;
   const running = notebook.runningCell ?? client;
-  if (running === null || args?.[confirmed] === true) return false;
+  if (running === null || consented(args)) return false;
   ui.overlay = { kind: "confirmRestart", running, all };
   return true;
 }

@@ -34,7 +34,26 @@ import type { AnyCommand } from "./define.js";
 import { eventsSubscribe } from "./events.js";
 import { examplesCopy, examplesList } from "./examples.js";
 import { feedbackList, feedbackUpdate } from "./feedback.js";
-import { gitCommit, gitDiff, gitDiscard, gitStage, gitStatus, gitUnstage } from "./git.js";
+import { gitCommit, gitDiff, gitDiscard, gitInit, gitStage, gitStatus, gitUnstage } from "./git.js";
+import {
+  gitBranchCreate,
+  gitBranchDelete,
+  gitBranchRename,
+  gitBranches,
+  gitSwitch,
+} from "./gitBranch.js";
+import { gitLog, gitShow } from "./gitHistory.js";
+import {
+  gitAbort,
+  gitCancel,
+  gitContinue,
+  gitFetch,
+  gitPublish,
+  gitPull,
+  gitPush,
+  gitSync,
+} from "./gitRemote.js";
+import { gitStash, gitStashApply, gitStashDrop, gitStashList, gitStashPop } from "./gitStash.js";
 import { cacheClear } from "./cache.js";
 import { sqlInstall, sqlStatus } from "./sql.js";
 import {
@@ -177,6 +196,27 @@ export const commands: readonly AnyCommand[] = [
   gitUnstage,
   gitDiscard,
   gitCommit,
+  gitFetch,
+  gitPull,
+  gitPush,
+  gitPublish,
+  gitSync,
+  gitCancel,
+  gitAbort,
+  gitContinue,
+  gitBranches,
+  gitBranchCreate,
+  gitSwitch,
+  gitBranchRename,
+  gitBranchDelete,
+  gitStash,
+  gitStashList,
+  gitStashApply,
+  gitStashPop,
+  gitStashDrop,
+  gitLog,
+  gitShow,
+  gitInit,
   cacheClear,
   sqlStatus,
   sqlInstall,

@@ -1,9 +1,10 @@
-<!-- HomeScm: Home's Source Control view in the side panel: its head (Source Control, Refresh, Hide) and the view the notebook page shows too. -->
+<!-- HomeScm: Home's Source Control view in the side panel: its head (Source Control, Refresh, More Actions, Hide) and the view the notebook page shows too. -->
 <script setup lang="ts">
 import { PanelLeftClose, RefreshCw } from "@lucide/vue";
 
 import IconButton from "../primitives/icon-button/IconButton.vue";
 import SourceControlView from "../panel/SourceControlView.vue";
+import ScmMenu from "../panel/ScmMenu.vue";
 
 const props = defineProps<{ mac: boolean }>();
 const emit = defineEmits<{ command: [id: string, args?: Record<string, unknown>] }>();
@@ -24,6 +25,7 @@ const icon = "ui:block-3.5 ui:inline-3.5";
     <IconButton label="Refresh" class="ui:block-6 ui:inline-6" @click="send('ui.git.refresh')">
       <RefreshCw :class="icon" aria-hidden="true" />
     </IconButton>
+    <ScmMenu :mac="props.mac" @command="send" />
     <IconButton
       label="Hide Source Control"
       data-hide="side"

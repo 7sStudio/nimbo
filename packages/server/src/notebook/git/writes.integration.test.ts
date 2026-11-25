@@ -29,7 +29,7 @@ it("stages and unstages names taken literally, discards a tracked and an untrack
     expect(cachedNames(ws.dir)).toBe("a.txt\nglob[1].txt");
     await client.git.unstage({ paths: ["glob[1].txt"] });
     expect(cachedNames(ws.dir)).toBe("a.txt");
-    await client.git.discard({ paths: ["b.txt", "new.txt"] });
+    await client.git.discard({ paths: ["b.txt", "new.txt"], confirm: true });
     expect(await readFile(ws.path("b.txt"), "utf8")).toBe("b\n");
     await expect(readFile(ws.path("new.txt"))).rejects.toMatchObject({ code: "ENOENT" });
   });
@@ -81,7 +81,7 @@ it("reloads an open notebook after a discard, and announces a commit made in a t
     const { client } = daemon;
     await client.notebook.open({ path: "n.jsnb" });
     await client.cell.update({ notebook: "n.jsnb", cell: "c_aaaaaa", source: "const a = 2;" });
-    await client.git.discard({ paths: ["n.jsnb"] });
+    await client.git.discard({ paths: ["n.jsnb"], confirm: true });
     const { cell } = await client.cell.get({ notebook: "n.jsnb", cell: "c_aaaaaa" });
     expect(cell.source).toBe("const a = 1;");
     expect(await readFile(ws.path("n.jsnb"), "utf8")).toContain("const a = 1;");

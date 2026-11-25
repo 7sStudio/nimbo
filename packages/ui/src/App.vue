@@ -83,7 +83,7 @@ const lastRun = computed(() => {
 });
 /** The changed files on the Source Control icon; null hides it (no repository, or git.enabled off). */
 const scmChanges = computed(() =>
-  git.repo === null || settings.valueOf("git.enabled") === false ? null : git.count,
+  !git.loaded || settings.valueOf("git.enabled") === false ? null : git.count,
 );
 /** The status bar's branch, `main*` while the tree is dirty, as VS Code shows it; null outside a repository. */
 const scmBranch = computed(() => {

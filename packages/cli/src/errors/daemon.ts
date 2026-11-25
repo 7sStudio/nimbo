@@ -94,3 +94,16 @@ export class DaemonForeign extends JsnbError {
     super({ name: "DaemonForeign", message: foreignMessage(data), data, ...options });
   }
 }
+
+/** The daemon answered workspace.stop but its process had not ended 15 s later (a hook still running, exit 4). */
+export class DaemonStillRunning extends JsnbError {
+  declare readonly data: { readonly pid: number };
+  constructor(data: { readonly pid: number }, options: Cause = {}) {
+    super({
+      name: "DaemonStillRunning",
+      message: `The daemon was asked to stop but its process ${String(data.pid)} still runs after 15 s. Wait, or end it with kill ${String(data.pid)}.`,
+      data,
+      ...options,
+    });
+  }
+}

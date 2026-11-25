@@ -6,6 +6,7 @@ import { withDaemon } from "@jsnb/test-daemon";
 import { describe, expect, it } from "vitest";
 
 import { startPage, whenTrue } from "../store/fixtures/page.js";
+import { consent } from "./consent.js";
 import { createDispatcher } from "./dispatch.js";
 
 const notebook = "overlays.jsnb";
@@ -107,7 +108,7 @@ describe("the restart confirm", () => {
       expect(store.runningCell).toBe(cell.id);
 
       ui.overlay = null;
-      expect(await dispatcher.dispatch("kernel.restart", { confirmed: true })).toBe(true);
+      expect(await dispatcher.dispatch("kernel.restart", { consent: consent() })).toBe(true);
       await whenTrue(() => store.byId.get(cell.id)?.status !== "running");
       await whenTrue(
         () =>

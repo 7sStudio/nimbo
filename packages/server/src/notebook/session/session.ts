@@ -47,6 +47,9 @@ export type Session = SessionRuns & {
   readonly remove: (cell: CellId) => void;
   readonly save: (force: boolean) => Promise<string>;
   readonly reload: () => Promise<NotebookState>;
+  /** Reads the file again unless the notebook holds edits not on disk (checked once the file is read, with no wait
+   * before the reconcile); false when it held some and nothing changed. */
+  readonly reloadUnlessEdited: () => Promise<boolean>;
   readonly graph: () => GraphView;
   readonly errors: () => ErrorsView;
   readonly outputQuery: (request: OutputQueryRequest) => Promise<OutputQueryAnswer>;
@@ -170,6 +173,15 @@ function debuggerOf(options: SessionOptions, context: SessionContext): DebugSess
   return debug;
 }
 
+/** notebook.reload: after the write under way. */
+const reloaded = (context: Session["context"]): Promise<boolean> =>
+  context.autosave.exclusive(() => reloadSession(context));
+
+/** notebook.reload for a git operation: skipped, with no wait between the check and the reconcile, when the notebook
+ * holds edits not on disk. */
+const reloadUnlessEdited = (context: Session["context"]): Promise<boolean> =>
+  context.autosave.exclusive(() => reloadSession(context, () => context.autosave.state().mutated));
+
 /** The session of an opened notebook; its kernel starts now, without waiting for `ready`. */
 export function createSession(options: SessionOptions): Session {
   const context = identifiedContext(options);
@@ -191,10 +203,8 @@ export function createSession(options: SessionOptions): Session {
       removeCell(context, runs, cell);
     },
     save: (force) => context.autosave.save(force),
-    reload: async () => {
-      await context.autosave.exclusive(() => reloadSession(context)); // after the write under way
-      return stateOf(context, realm.status(), debug.state());
-    },
+    reloadUnlessEdited: () => reloadUnlessEdited(context),
+    reload: () => reloaded(context).then(() => stateOf(context, realm.status(), debug.state())),
     ...readers(options, context, query),
     realm: { ...realm, restart: runs.restartRealm },
     debug,

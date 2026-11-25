@@ -1,5 +1,6 @@
 <!-- FolderPicker: Home's Open folder, a dialog on OverlayDialog. A path field to type or paste into (Enter goes there), then the folders of that path as rows (the parent first, each with how many notebooks it holds directly; Up and Down move, Enter or a double click enters), the recent folders beside them, and what opening this folder means in words: its notebooks, the workspace it belongs to, or that it is the one open here. "Open" (Cmd Enter) makes it the workspace; while notebooks are open here it first asks, in words, whether to close them. A path that is not a readable folder, or an open that fails, says why where the list was. Square, separated by tone. -->
 <script setup lang="ts">
+import { consent } from "../commands/consent";
 import { computed, onMounted, ref } from "vue";
 
 import { useDispatcher } from "../commands/dispatch";
@@ -67,7 +68,7 @@ async function open(): Promise<void> {
   opening.value = true;
   const answer = await dispatcher.request("ui.home.openFolder", {
     path: at.path,
-    confirmed: true,
+    consent: consent(),
     fromPicker: true,
   });
   opening.value = false;

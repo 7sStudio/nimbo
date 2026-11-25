@@ -69,7 +69,6 @@ const cellsOf = (context: SessionContext, type: "server" | "client"): readonly C
     .filter((record) => record.type === type)
     .map((record) => record.id);
 
-/** Re-reads the file and reconciles; NOTEBOOK_NOT_FOUND when the file is gone. */
 /** Read before the reload, run after it: a server cell the file removed or switched has its routes and timers end in
  * the kernel, a client cell its timers and listeners end in the page. */
 function leftBehind(context: SessionContext): () => void {
@@ -81,9 +80,28 @@ function leftBehind(context: SessionContext): () => void {
   };
 }
 
-export async function reloadSession(context: SessionContext): Promise<void> {
+/** The stale cells after the reconcile: what depended on a removed, changed or added cell. */
+function restaleAfter(
+  context: SessionContext,
+  before: ReturnType<SessionContext["cells"]["graph"]>,
+  done: Plan,
+): void {
+  let stale: StaleMap = context.cells.stale();
+  for (const id of done.removed) stale = afterDelete(before, stale, id);
+  for (const id of [...done.changed, ...done.added])
+    stale = afterEdit(context.cells.graph(), stale, id);
+  restale(context, stale);
+}
+
+/** Re-reads the file and reconciles; NOTEBOOK_NOT_FOUND when the file is gone. When `unless` holds once the file is
+ * read, nothing changes and it answers false: the check and the reconcile run with no wait between them. */
+export async function reloadSession(
+  context: SessionContext,
+  unless: () => boolean = () => false,
+): Promise<boolean> {
   const read = await readNotebook(context.path);
   if (read.kind === "missing") throw new NotebookNotFound({ path: context.ref });
+  if (unless()) return false;
   const loaded = loadDocument(read.text, context.ref, context.ids);
   for (const warning of loaded.warnings) context.log.warn({ notebook: context.ref }, warning);
   const before = context.cells.graph();
@@ -97,12 +115,9 @@ export async function reloadSession(context: SessionContext): Promise<void> {
   context.header = loaded.header;
   context.cells.replaceAll(done.next);
   emitChanges(context, done, kept);
-  let stale: StaleMap = context.cells.stale();
-  for (const id of done.removed) stale = afterDelete(before, stale, id);
-  for (const id of [...done.changed, ...done.added])
-    stale = afterEdit(context.cells.graph(), stale, id);
-  restale(context, stale);
+  restaleAfter(context, before, done);
   for (const id of done.changed) context.hooks.edited(id, before);
   left();
   context.autosave.reloaded(read.text, loaded.dirty);
+  return true;
 }
