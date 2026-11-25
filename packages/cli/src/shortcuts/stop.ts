@@ -1,10 +1,17 @@
 // `nimbo stop` (03-api §8): workspace.stop. With no daemon running there is nothing to stop, which is what the user
 // asked for, so it says so and exits 0 instead of 3; it starts no daemon and asks no question (its name is the intent).
+// A daemon that lives but does not answer is DaemonUnresponsive (exit 3), unless --force ends it by its pid.
+import { endSilent } from "@jsnb/client/node";
 import { productVersion, workspaceStop } from "@jsnb/core";
 
+import { silentDaemon } from "../daemon/frozen.js";
 import { readServerFile } from "../daemon/serverFile.js";
-
-import { DaemonNotRunning, DaemonStillRunning, nothingToStop } from "../errors/daemon.js";
+import {
+  DaemonNotRunning,
+  DaemonStillRunning,
+  DaemonUnresponsive,
+  nothingToStop,
+} from "../errors/daemon.js";
 import type { ExitCode } from "../errors/exit.js";
 import { exitCodes } from "../errors/exit.js";
 import { findInstallation } from "../install/installation.js";
@@ -12,14 +19,17 @@ import { lockHolder, withLock } from "../install/lock.js";
 import { sweepVersions } from "../install/local.js";
 import type { Io } from "../io/io.js";
 import { write } from "../io/io.js";
-import type { Shortcut } from "./shortcut.js";
+import type { Shortcut, ShortcutArgs } from "./shortcut.js";
 import { readShortcut, withSession } from "./shortcut.js";
 
 const help = `nimbo stop: stop the workspace's daemon (workspace.stop)
 
-Closes every notebook and stops the daemon. With no daemon running it says so and exits 0.
+Closes every notebook and stops the daemon. With no daemon running it says so and exits 0. A daemon that runs but
+does not answer (stopped or hung) is reported with exit 3; --force then ends its process (SIGTERM, then SIGKILL),
+once its pid is checked to be this workspace's daemon.
 
 Flags:
+  --force  end a daemon that does not answer by its pid
   --json   print { stopped, workspace } as JSON
 `;
 
@@ -63,8 +73,28 @@ async function sweepAfter(
     await write(io.stderr, `Removed ${version}: nothing runs from it any more.\n`);
 }
 
+/** No daemon answered: one that lives but is silent is DaemonUnresponsive, or ended with --force; else nothing to stop. */
+async function noAnswer(workspace: string, args: ShortcutArgs, io: Io): Promise<void> {
+  const silent = await silentDaemon(workspace);
+  if (silent !== undefined) {
+    if (args.values.force !== true) throw new DaemonUnresponsive({ workspace, pid: silent.pid });
+    if (!(await endSilent(silent.pid))) throw new DaemonStillRunning({ pid: silent.pid });
+    await write(
+      io.stdout,
+      args.json
+        ? `${JSON.stringify({ stopped: true, workspace, forced: true })}\n`
+        : `Ended the daemon for ${workspace} (pid ${String(silent.pid)}), which did not answer.\n`,
+    );
+    return;
+  }
+  await write(
+    io.stdout,
+    args.json ? `${JSON.stringify({ stopped: false, workspace })}\n` : nothingToStop(workspace),
+  );
+}
+
 async function run(argv: readonly string[], io: Io): Promise<ExitCode> {
-  const args = readShortcut("stop", argv, {}, { min: 0, max: 0 });
+  const args = readShortcut("stop", argv, { force: { type: "boolean" } }, { min: 0, max: 0 });
   if (args.help) {
     await write(io.stdout, help);
     return exitCodes.ok;
@@ -85,18 +115,14 @@ async function run(argv: readonly string[], io: Io): Promise<ExitCode> {
     );
   } catch (error) {
     if (!(error instanceof DaemonNotRunning)) throw error;
-    const { workspace } = error.data;
-    await write(
-      io.stdout,
-      args.json ? `${JSON.stringify({ stopped: false, workspace })}\n` : nothingToStop(workspace),
-    );
+    await noAnswer(error.data.workspace, args, io);
   }
   return exitCodes.ok;
 }
 
 export const stopShortcut: Shortcut = {
   name: "stop",
-  usage: "stop",
+  usage: "stop [--force]",
   summary: "workspace.stop: stop the daemon",
   help,
   run,

@@ -86,6 +86,7 @@ first; any other tool answers `DaemonNotRunning`. Calls go over HTTP declared `c
 | `DaemonNotRunning`     | no daemon, for a tool that does not start one                                            |
 | `DaemonForeign`        | server.json names another folder's daemon (a copied or moved workspace); nothing is sent |
 | `ServerFileUnreadable` | `.jsnb/server.json` cannot be read                                                       |
+| `DaemonUnresponsive`   | workspace_stop of a live daemon that does not answer (stopped or hung)                   |
 | `DaemonStartFailed`    | the daemon a mutating tool started ended before it listened, or stayed silent 60 s       |
 | `InvalidArguments`     | `NIMBO_DAEMON_ENTRY` is not an absolute path to a file, or `NIMBO_UI_DIR` to a folder    |
 | `WorkingFolderGone`    | the folder the server runs in was deleted or moved                                       |
