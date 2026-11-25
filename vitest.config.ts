@@ -60,7 +60,7 @@ const transformCell: BrowserCommand<[source: string, filename: string]> = async 
   }
 };
 
-/** The browser commands per project, outside perProject so its complexity stays within 08 §2's 10. */
+/** The browser commands per project. */
 const browserCommands: Readonly<
   Record<string, { readonly commands: Readonly<Record<string, typeof transformCell>> }>
 > = {
