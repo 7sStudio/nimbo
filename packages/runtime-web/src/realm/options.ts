@@ -26,6 +26,8 @@ export type RealmOptions = {
   readonly transport: RealmTransport;
   /** The `realm.attach` kind; default `"tab"`. */
   readonly kind?: "tab" | "headless";
+  /** The one-time key the daemon gave its headless page, sent with its `realm.attach`. */
+  readonly attachKey?: string;
   /** Where a new container goes; default `document.body.append`. */
   readonly mount?: Mount;
   /** What the realm cannot report: a failed `realm.report`, a disposer that throws after detach. */
@@ -42,6 +44,7 @@ export type ResolvedOptions = {
   readonly notebook: string;
   readonly transport: RealmTransport;
   readonly kind: "tab" | "headless";
+  readonly attachKey: string | undefined;
   readonly mount: Mount;
   readonly onError: (error: unknown) => void;
   readonly importUrl: (specifier: string) => string;
@@ -59,6 +62,7 @@ export function resolveOptions(options: RealmOptions): ResolvedOptions {
     notebook: options.notebook,
     transport: options.transport,
     kind: options.kind ?? "tab",
+    attachKey: options.attachKey,
     mount: options.mount ?? appendToBody,
     onError: options.onError ?? reportToPage,
     importUrl: options.importUrl ?? importUrl,

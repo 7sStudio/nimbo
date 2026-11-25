@@ -1,6 +1,6 @@
 // The headless realm's page (02-architecture §4.5, 05-bridge): runtime-web's Realm with no editor around it, loaded by
 // the daemon's headless browser when no tab holds a notebook. The daemon calls __nimboHeadless over the browser's pipe
-// with the token and the notebook, so neither is ever in a URL; the realm attaches as kind "headless" and answers the
+// with the token, the notebook and the one-time key its attach must carry, so none is ever in a URL; the realm attaches as kind "headless" and answers the
 // daemon's requests. A page that loses its socket is done: the daemon closes it and opens another when needed.
 import { commandByName, JsnbError } from "@jsnb/core";
 import { connectSocket } from "@jsnb/client";
@@ -12,7 +12,7 @@ class NotACommand extends JsnbError {
   }
 }
 
-async function start(token: string, notebook: string): Promise<string> {
+async function start(token: string, notebook: string, key: string): Promise<string> {
   Reflect.deleteProperty(globalThis, "__nimboHeadless");
   const client = connectSocket({ url: location.origin, token, client: "ui" });
   const transport = {
@@ -22,7 +22,7 @@ async function start(token: string, notebook: string): Promise<string> {
       return client.call(command, command.input.parse(params));
     },
   };
-  const realm = new Realm({ notebook, transport, kind: "headless" });
+  const realm = new Realm({ notebook, transport, kind: "headless", attachKey: key });
   for (const method of realmRequestMethods)
     client.handle(method, (params) => realm.handle(method, params));
   client.onStatus((status) => {
