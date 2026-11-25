@@ -42,6 +42,25 @@ describe("autosave", () => {
 const mergeOff = (daemon: Daemon) =>
   daemon.client.settings.set({ key: "files.mergeExternalChanges", value: false });
 
+describe("a load or a reload", () => {
+  it("writes nothing the user did not change, though the file is not in the saved form", async () => {
+    await withDaemon(async (daemon, ws) => {
+      const loose = (source: string) =>
+        `{"version":1,"cells":[{"id":"c_aaaaaa","type":"server","source":[${JSON.stringify(source)}]}]}\n`;
+      await writeFile(ws.path("a.jsnb"), loose("1"));
+      await daemon.client.notebook.open({ path: "a.jsnb" });
+      await daemon.client.cell.update({ notebook: "a.jsnb", cell: "c_aaaaaa", source: "2" });
+      await daemon.client.notebook.save({ notebook: "a.jsnb" }); // the edit's autosave timer still runs
+      await writeFile(ws.path("a.jsnb"), loose("3"));
+      await daemon.client.notebook.reload({ notebook: "a.jsnb" });
+      await new Promise((resolve) => setTimeout(resolve, 1500)); // past files.autoSaveDelay
+      expect(await readFile(ws.path("a.jsnb"), "utf8")).toBe(loose("3"));
+      const state = await daemon.client.notebook.get({ notebook: "a.jsnb" });
+      expect(state.notebook.cells[0]?.source).toBe("3");
+    });
+  });
+});
+
 describe("a conflict", () => {
   it("suspends autosave when the file changed on disk, until a forced save", async () => {
     await withDaemon(async (daemon, ws) => {

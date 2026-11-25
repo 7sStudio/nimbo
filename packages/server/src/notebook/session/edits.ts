@@ -11,6 +11,7 @@ import type { Editor } from "./provenance.js";
 import { reviewed, stamped } from "./provenance.js";
 import type { CellRecord } from "./records.js";
 import { disposeUnclient, disposeUnserved } from "./runs/disposeDeleted.js";
+import { keepDeleted, restoreDeleted } from "./undone.js";
 
 /** As cell.add's parsed input carries it (an absent key may be undefined). */
 export type AddCell = {
@@ -61,8 +62,12 @@ export function addCell(context: SessionContext, input: AddCell, editor: Editor)
     last: undefined,
   };
   context.cells.insert(record, input.after);
+  const stale =
+    input.id === undefined
+      ? context.cells.stale()
+      : restoreDeleted(context, record, context.cells.stale());
   context.emit("cell.added", { cell: context.cells.api(record) });
-  restale(context, afterEdit(context.cells.graph(), context.cells.stale(), record.id));
+  restale(context, afterEdit(context.cells.graph(), stale, record.id));
   context.autosave.touched();
   return record;
 }
@@ -145,6 +150,7 @@ export function moveCell(
 
 export function deleteCell(context: SessionContext, cell: CellId): void {
   const before = context.cells.graph();
+  keepDeleted(context, before, context.cells.require(cell));
   context.hooks.deleting(cell);
   context.cells.remove(cell);
   context.emit("cell.deleted", { cell });

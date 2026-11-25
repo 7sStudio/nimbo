@@ -68,6 +68,7 @@ function folderWatch(options: WatchOptions, soon: () => void) {
 
 export function watchFile(options: WatchOptions): FileWatch {
   let signature: string | undefined;
+  let asked: string | undefined;
   const job = debounced(async () => {
     try {
       signature = await signatureOf(options.path());
@@ -86,7 +87,10 @@ export function watchFile(options: WatchOptions): FileWatch {
       ? setInterval(() => {
           if (!folder.armed()) folder.arm();
           void signatureOf(options.path()).then((now) => {
-            if (signature !== undefined && now !== signature) job.ask();
+            // asked once per change: a poll faster than the debounce would else put the check off for ever
+            if (signature === undefined || now === signature || now === asked) return;
+            asked = now;
+            job.ask();
           });
         }, options.everyMs)
       : undefined;

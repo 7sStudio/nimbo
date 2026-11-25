@@ -10,7 +10,7 @@ import {
   realmAttach,
 } from "@jsnb/core";
 
-import { agentSnapshot } from "../display/agentSnapshot.js";
+import type * as SnapshotCode from "../display/agentSnapshot.js";
 import { execute, retire } from "./execute.js";
 import { listenForStrayErrors } from "./fallback.js";
 import { interrupt } from "./interrupt.js";
@@ -26,6 +26,19 @@ import { createState } from "./state.js";
 const notRendered = { text: "", rendered: false, truncated: false } as const;
 /** realm.snapshot's cut when the daemon sends none. */
 const defaultMaxBytes = 16_384;
+
+let snapshotModule: Promise<typeof SnapshotCode> | undefined;
+
+/** The snapshot code, out of the page's first load; a failed load is retried on the next request. */
+function loadSnapshot(): Promise<typeof SnapshotCode> {
+  snapshotModule ??= import("../display/agentSnapshot.js").catch((error: unknown) => {
+    snapshotModule = undefined;
+    throw new Error(
+      `the page could not load its snapshot code: ${error instanceof Error ? error.message : String(error)}`,
+    );
+  });
+  return snapshotModule;
+}
 
 /** The page's realm: runs client cells, owns their containers, and answers the daemon's requests. */
 export class Realm {
@@ -101,6 +114,7 @@ export class Realm {
   async #snapshot({ cell, maxBytes, html }: RealmSnapshot): Promise<RealmSnapshotAnswer> {
     const container = this.#state.containers.get(cell);
     if (container === undefined) return notRendered;
+    const { agentSnapshot } = await loadSnapshot();
     const shot = await agentSnapshot(container, {
       maxBytes: maxBytes ?? defaultMaxBytes,
       html: html === true,

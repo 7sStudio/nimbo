@@ -3,7 +3,7 @@
 // name, interrupt and restart while paused (the breakpoints bound again on the new kernel), the kernel's NODE_OPTIONS
 // untouched, secrets redacted in what the debugger shows, a breakpoint that stays on its cell when another cell gets
 // one, conditions and logpoints that read other cells' names and report their errors once, and an auto-run cascade
-// that waits while a dependent is paused.
+// that waits while a dependent is paused; an interrupt asked while the debugger still attaches ends the run unexecuted.
 import type { Execution } from "@jsnb/core";
 import { describe, expect, it } from "vitest";
 
@@ -131,6 +131,24 @@ describe("the debugger", () => {
       expect((await again.ended).execution.status).toBe("ok");
       const { execution } = await daemon.client.cell.outputs({ notebook, cell });
       expect(valueOf(execution)).toBe("unset");
+    });
+  });
+});
+
+describe("an interrupt while the debugger attaches", () => {
+  it("ends the run before it executes, though the kernel is up", async () => {
+    await withDaemon(async (daemon) => {
+      await daemon.client.notebook.create({ path: notebook });
+      const other = await server(daemon, ["const b = 1;"]);
+      await daemon.client.debug.setBreakpoint({ notebook, cell: other, line: 1 });
+      const cell = await server(daemon, ["globalThis.ran = true;", "1"]);
+      const run = daemon.client.cell.run({ notebook, cell }); // waits for the debugger before it executes
+      await daemon.client.kernel.interrupt({ notebook });
+      expect((await run).execution.status).toBe("interrupted");
+      const probe = await daemon.client.cell.add({
+        ...{ notebook, type: "server", source: "globalThis.ran ?? false", run: true },
+      });
+      expect(valueOf(probe.execution)).toBe(false);
     });
   });
 });

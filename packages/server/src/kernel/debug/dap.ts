@@ -1,4 +1,4 @@
-// A Debug Adapter Protocol connection to js-debug over TCP: Content-Length framed JSON, requests answered by seq with a
+// A Debug Adapter Protocol connection to js-debug over a Unix socket: Content-Length framed JSON, requests answered by seq with a
 // timeout and their bodies validated (protocol.ts), events fanned out, reverse requests (startDebugging) answered by
 // the owner, pending requests rejected when the socket closes. The daemon's long-lived handle on one DAP session.
 import { connect } from "node:net";

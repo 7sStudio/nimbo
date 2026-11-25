@@ -155,3 +155,43 @@ describe("a server cell retyped while it runs", () => {
     });
   });
 });
+
+describe("a deleted cell added back under its id", () => {
+  it("gets its runs back, stale as the graph says since its last run", async () => {
+    await withDaemon(async (daemon) => {
+      const book = await createNotebook(daemon);
+      const { notebook } = book;
+      const a = await book.add("const x = 1;");
+      const b = await book.add("x + 1");
+      await daemon.client.cell.run({ notebook, cell: a });
+      const { execution } = await daemon.client.cell.run({ notebook, cell: b });
+      const restore = async () => {
+        await daemon.client.cell.delete({ notebook, cell: b });
+        await daemon.client.cell.add({
+          notebook,
+          id: b,
+          type: "server",
+          source: "x + 1",
+          after: a,
+        });
+        return (await daemon.client.cell.get({ notebook, cell: b })).cell;
+      };
+      const back = { status: "ok", stale: false, lastExecution: { id: execution.id } };
+      expect(await restore()).toMatchObject(back);
+
+      await daemon.client.cell.update({ notebook, cell: a, source: "const x = 2;" });
+      expect(await restore()).toMatchObject({ stale: true, lastExecution: { id: execution.id } });
+
+      await daemon.client.cell.run({ notebook, cell: b });
+      await daemon.client.cell.delete({ notebook, cell: b });
+      await daemon.client.cell.run({ notebook, cell: a }); // what b read changed while it was gone
+      await daemon.client.cell.add({ notebook, id: b, type: "server", source: "x + 1", after: a });
+      expect((await daemon.client.cell.get({ notebook, cell: b })).cell.stale).toBe(true);
+
+      await daemon.client.cell.delete({ notebook, cell: b });
+      await daemon.client.cell.add({ notebook, id: b, type: "server", source: "x + 2", after: a });
+      const fresh = (await daemon.client.cell.get({ notebook, cell: b })).cell;
+      expect(fresh).toMatchObject({ status: "idle", stale: false, lastExecution: null });
+    });
+  });
+});

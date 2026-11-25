@@ -6,6 +6,7 @@ import { homedir } from "node:os";
 import { join, win32 } from "node:path";
 
 import {
+  productConfigDir,
   settingsFileName,
   settingsGet,
   settingsSchemaCommand,
@@ -46,16 +47,9 @@ Flags:
 
 /** The user settings file of 07-file-format §6, as the environment places it. */
 function userSettingsPath(io: Io): string {
-  if (io.platform === "win32")
-    return win32.join(
-      io.env.APPDATA ?? win32.join(homedir(), "AppData", "Roaming"),
-      "nimbo",
-      settingsFileName,
-    );
-  // An empty XDG_CONFIG_HOME counts as unset, as the server reads it (07-file-format §6).
-  const xdg = io.env.XDG_CONFIG_HOME ?? "";
-  const base = xdg === "" ? join(io.env.HOME ?? homedir(), ".config") : xdg;
-  return join(withLegacyConfigMoved(join(base, "nimbo")), settingsFileName);
+  const folder = productConfigDir(io.env, io.env.HOME ?? homedir(), io.platform);
+  if (io.platform === "win32") return win32.join(folder, settingsFileName);
+  return join(withLegacyConfigMoved(folder), settingsFileName);
 }
 
 /** The positionals' names in an issue, where a generated command names its flags. */

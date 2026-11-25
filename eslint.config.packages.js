@@ -15,10 +15,15 @@ const noNodeSpecifier = {
 /** Flat-config blocks, spread into eslint.config.js after the per-package runtime rules. */
 export const packageBlocks = [
   // 02 §2: client runs anywhere (the page, the CLI, the MCP server); its sources use the platform fetch and
-  // WebSocket, never a Node module or Node-only global. Its tests and fixtures stand up a peer on node:http and ws.
+  // WebSocket, never a Node module or Node-only global. Its tests and fixtures stand up a peer on node:http and ws, and
+  // its `./node` export (src/node/, the CLI's and the MCP server's shared daemon start) runs in Node only.
   {
     files: ["packages/client/src/**"],
-    ignores: ["packages/client/src/**/*.test.ts", "packages/client/src/fixtures/**"],
+    ignores: [
+      "packages/client/src/**/*.test.ts",
+      "packages/client/src/fixtures/**",
+      "packages/client/src/node/**",
+    ],
     rules: {
       "no-restricted-imports": ["error", noNodeSpecifier],
       "no-restricted-globals": ["error", "process", "Buffer", "window", "document"],

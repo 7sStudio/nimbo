@@ -64,7 +64,7 @@ function failed(saver: Saver, error: unknown): Outcome {
   if (saver.dirty) void options.recovery?.(true);
   saver.retry ??= later(() => {
     saver.retry = undefined;
-    if (saver.dirty) void enqueue(saver, false); // a failure again is reported again
+    if (saver.mutated) void enqueue(saver, false); // a failure again is reported again
   }, options.retryMs ?? 10_000);
   return "failed";
 }
@@ -188,6 +188,8 @@ const fallbackPolicy: AutosavePolicy = {
 function fire(saver: Saver): void {
   saver.timer = undefined;
   saver.burst = undefined;
+  // a load's normalization or migration is not a change: it waits for the next write the user causes (07 §4)
+  if (!saver.mutated) return;
   void enqueue(saver, false); // its failure is reported as notebook.saveFailed and retried
 }
 
@@ -256,6 +258,8 @@ async function flush(saver: Saver): Promise<void> {
 
 /** The state took `text` from the file; saved, as the page will say, only when the file holds the state. */
 function reloaded(saver: Saver, text: string, dirty: boolean): void {
+  clearTimeout(saver.timer); // the timer of the changes before it
+  Object.assign(saver, { timer: undefined, burst: undefined });
   saver.version += 1; // a write that took its text before the reload clears nothing
   endConflict(saver);
   Object.assign(saver, { text, hash: hashOf(text), dirty, mutated: dirty });

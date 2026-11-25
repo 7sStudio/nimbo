@@ -14,9 +14,10 @@ import {
 } from "@jsnb/core";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 
+import { silentDaemon } from "../daemon/frozen.js";
 import type { Link } from "../daemon/link.js";
 import { linkDaemon, startsDaemon } from "../daemon/link.js";
-import { DaemonNotRunning, nothingToStop } from "../errors/daemon.js";
+import { DaemonNotRunning, DaemonUnresponsive, nothingToStop } from "../errors/daemon.js";
 import { UnknownTool } from "../errors/mcp.js";
 import type { RequestContext, World } from "../io/world.js";
 import { fitted } from "./fit.js";
@@ -96,8 +97,12 @@ export async function callTool(
   try {
     return await invoke(command, args ?? {}, context);
   } catch (error) {
-    if (command === workspaceStop && error instanceof DaemonNotRunning)
-      return outputResult({}, nothingToStop(error.data.workspace));
+    if (command === workspaceStop && error instanceof DaemonNotRunning) {
+      const { workspace } = error.data;
+      const silent = await silentDaemon(workspace);
+      if (silent === undefined) return outputResult({}, nothingToStop(workspace));
+      return failureResult(new DaemonUnresponsive({ workspace, pid: silent.pid }));
+    }
     reportUnexpected(context.world, error);
     return failureResult(error);
   }

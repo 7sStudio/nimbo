@@ -95,7 +95,7 @@ Two scopes, as VS Code's; code in `core/settings/` and `server/src/files/setting
 
 | | User | Workspace |
 |---|---|---|
-| Path | `$XDG_CONFIG_HOME/nimbo/settings.json` (empty `XDG_CONFIG_HOME` counts as unset), default `~/.config/nimbo/settings.json`; `%APPDATA%\nimbo\settings.json` on Windows | `<workspace>/.jsnb/settings.json` (`workspaceSettingsFolder` + `settingsFileName` in core) |
+| Path | `$XDG_CONFIG_HOME/nimbo/settings.json` (an empty or relative `XDG_CONFIG_HOME` counts as unset, as the XDG specification says; `core`'s `xdgDir` is the one rule), default `~/.config/nimbo/settings.json`; `%APPDATA%\nimbo\settings.json` on Windows | `<workspace>/.jsnb/settings.json` (`workspaceSettingsFolder` + `settingsFileName` in core) |
 | Written by | scope `user`: `--user`, the User tab, by hand | scope `workspace` (the default), the Workspace tab, by hand |
 | In git | no | yes if the team wants (the `.jsnb/.gitignore` keeps it) |
 

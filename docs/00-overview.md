@@ -197,7 +197,7 @@ Each cell compiles to `async (__scope) => { … }` where top-level declarations 
 
 ## 7. Status
 
-The core product is built: kernel, transform, bridge, routes, graph, UI, CLI, MCP, language service, debugger for server cells, Source Control, settings scopes and feedback mode. What remains is in [12-roadmap.md](12-roadmap.md).
+The core product is built: kernel, transform, bridge, routes, graph, UI, CLI, MCP, language service, debugger for server cells, Source Control (with remotes, branches, stash and history), auto-run of stale dependents, settings scopes and feedback mode. What remains is in [12-roadmap.md](12-roadmap.md).
 
 ## 8. Open questions
 
@@ -232,7 +232,7 @@ The reasons behind the code live in git history; these documents describe only t
 | **Bridge** | What lets client cells use server exports: stubs, snapshots (05). |
 | **Stub** | The local async function a client cell gets for an exported server function. |
 | **Snapshot** | A copy of an exported server value taken when a client cell runs. |
-| **Stale** | A cell whose inputs changed since it last ran. Marked, never auto-run. |
+| **Stale** | A cell whose inputs changed since it last ran. Marked; re-run on its own only with `execution.autoRunDependents` on. |
 | **Registry** | The single list of commands from which the API, client, CLI and MCP tools derive. |
 | **Disposer** | Cleanup registered by a cell (route, timer, listener), run before the cell re-runs. |
 | **Edit marker** | Who last edited a cell, from `meta.lastEdit`. |

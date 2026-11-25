@@ -22,6 +22,19 @@ export class DaemonNotRunning extends JsnbError {
   }
 }
 
+/** server.json names a live daemon of the workspace that does not answer (stopped, or hung) (exit 3). */
+export class DaemonUnresponsive extends JsnbError {
+  declare readonly data: { readonly workspace: string; readonly pid: number };
+  constructor(data: { readonly workspace: string; readonly pid: number }, options: Cause = {}) {
+    super({
+      name: "DaemonUnresponsive",
+      message: `The nimbo daemon for ${data.workspace} (pid ${String(data.pid)}) runs but does not answer (stopped or hung). nimbo stop --force ends it; its unsaved edits are lost.`,
+      data,
+      ...options,
+    });
+  }
+}
+
 /** `.jsnb/server.json` is there but cannot be read (another user's, a folder): no daemon can be reached (exit 3). */
 export class ServerFileUnreadable extends JsnbError {
   declare readonly data: { readonly path: string; readonly code: string };

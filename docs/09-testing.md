@@ -132,7 +132,7 @@ Each budget takes the median of three samples with a 20 % tolerance (`withTolera
 | Group | Stage | Commands |
 |---|---|---|
 | 1 | install | `pnpm install --frozen-lockfile` |
-| 2 | lint | `pnpm lint`, `pnpm format:check`, `pnpm knip`, `pnpm depcruise` |
+| 2 | lint | `pnpm lint`, `pnpm format:check`, `pnpm knip`, `pnpm depcruise`, `node tools/release/public-scan.mjs` (no personal name, home path or dead relative link; the release workflow runs it before the build too) |
 | 2 | typecheck | `pnpm typecheck` |
 | 2 | unit+component | `pnpm test:coverage`: coverage on the five floored packages, the other unit projects in a second run without instrumentation |
 | 3 | build | `pnpm build` |

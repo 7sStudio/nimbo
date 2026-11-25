@@ -88,7 +88,7 @@ Inside packages, `eslint-plugin-boundaries` (`tools/boundaries.config.js`, defau
 | `kernel-node` | root → `scope/`, `outputs/`, `builtins/`, `ipc/` | Node only; never imports `server`; only `scope/` writes `__scope` |
 | `runtime-web` | root → `realm/`, `display/`, `bridge/`; `realm/` → `display/`, `bridge/` | browser only, no Node modules; nothing writes `globalThis` |
 | `server` | `http/` → `commands/` → `notebook/` → `kernel/`, `files/`; all → `events/` (leaf) | `commands/` handlers are thin: validate, call `notebook/`, emit; no logic in `http/` |
-| `client` | generated | runs anywhere: no Node modules, no `process`, `Buffer`, `window`, `document` |
+| `client` | generated | runs anywhere: no Node modules, no `process`, `Buffer`, `window`, `document`, except `src/node/` (the `./node` export the CLI and the MCP server share) |
 | `output-view` | `renderers/` → `vue/` → `model/` | `model/` imports no Vue, Reka, TanStack, CodeMirror, Lezer or Node, reads no browser global |
 | `query-json`, `query-sql` | `exports` "." is the only host entry | `query-sql` imports Node modules only under `src/node/` |
 | `ui` | views (`app/`, `cells/`, `panel/`, `overlays/`, `home/`, `feedback/`, `diff/`) → each other, `primitives/` and the leaves `commands/`, `store/`, `composables/`, `editor/`, `keyboard/`, `theme/`; `commands/` ↔ `store/`; `realm/` → `store/`; `editor/`, `keyboard/`, `theme/` → `commands/`; `primitives/` imports nothing of ours | components never import `client` (§8) |

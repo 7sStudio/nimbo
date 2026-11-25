@@ -258,4 +258,10 @@ export const casedPackages: Readonly<Record<string, string>> = {
   "node_modules/plain/package.json": json({ name: "plain", version: "1.0.0", main: "index.js" }),
   "node_modules/plain/index.js": "exports.plain = 1;\n",
   "node_modules/plain/debounce.js": "exports.debounce = 1;\n",
+  "node_modules/addons/package.json": esm("addons", "1.0.0", {
+    ".": "./index.js",
+    "./addons/*": "./examples/jsm/*",
+  }),
+  "node_modules/addons/index.js": "export const main = 1;\n",
+  "node_modules/addons/examples/jsm/controls/OrbitControls.js": "export const orbit = 1;\n",
 };

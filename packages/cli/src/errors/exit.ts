@@ -27,6 +27,7 @@ const codesByName: Readonly<Record<string, ExitCode>> = {
   WorkingFolderGone: exitCodes.usage,
   DaemonUnreachable: exitCodes.unreachable,
   DaemonNotRunning: exitCodes.unreachable,
+  DaemonUnresponsive: exitCodes.unreachable,
   DaemonStartFailed: exitCodes.unreachable,
   ServerFileUnreadable: exitCodes.unreachable,
   DaemonForeign: exitCodes.unreachable,

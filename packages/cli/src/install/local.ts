@@ -19,7 +19,7 @@ import { homedir } from "node:os";
 import { basename, dirname, join, relative, resolve, sep } from "node:path";
 import { promisify } from "node:util";
 
-import { parseServerFile } from "@jsnb/core";
+import { parseServerFile, productConfigDir } from "@jsnb/core";
 import { z } from "zod";
 
 import { InstallFailed } from "./errors.js";
@@ -289,10 +289,7 @@ const Recent = z.object({ folders: z.array(z.object({ path: z.string() })) });
 
 /** The user config folder (07-file-format §6), as the daemon places it. */
 export function userConfigDir(env: Readonly<Record<string, string | undefined>>): string {
-  const xdg = env.XDG_CONFIG_HOME ?? "";
-  return withLegacyConfigMoved(
-    join(xdg.startsWith("/") ? xdg : join(env.HOME ?? homedir(), ".config"), "nimbo"),
-  );
+  return withLegacyConfigMoved(productConfigDir(env, env.HOME ?? homedir(), process.platform));
 }
 
 export type RecentDaemon = {

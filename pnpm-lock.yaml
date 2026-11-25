@@ -395,6 +395,9 @@ importers:
       '@jsnb/server':
         specifier: workspace:*
         version: link:../server
+      '@jsnb/ui':
+        specifier: workspace:*
+        version: link:../ui
       '@modelcontextprotocol/sdk':
         specifier: 1.32.2
         version: 1.32.2(supports-color@10.2.2)(zod@4.6.5)
