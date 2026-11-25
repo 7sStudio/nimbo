@@ -54,7 +54,7 @@ const filesOf = (from: string, metafile: Metafile) =>
 const Exports = z.looseObject({ exports: z.unknown().optional() });
 
 /** The package's `exports` subpaths without a pattern (`/client`), its package.json read as a regular file only. */
-export async function exportsOf(folder: string): Promise<string[]> {
+async function exportsOf(folder: string): Promise<string[]> {
   const read = await readRegularFile(join(folder, "package.json"), 1024 * 1024);
   const exports =
     read.kind === "read" ? Exports.safeParse(parsedJson(read.text)).data?.exports : undefined;

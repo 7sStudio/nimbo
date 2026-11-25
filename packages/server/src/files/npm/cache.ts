@@ -35,7 +35,7 @@ export type NoteLog = {
 };
 
 /** The path rule's version a cached bundle passed: one cached under an earlier rule is built and checked again. */
-export const pathRule = 7; // 7: a package's entries split together (packageGroup.ts)
+const pathRule = 7; // 7: a package's entries split together (packageGroup.ts)
 
 /** A cached bundle's meta.json: the esbuild version and the rule that made it decide whether it is still good. */
 const CacheMeta = z.looseObject({ esbuild: z.string(), rule: z.number().optional() });

@@ -179,7 +179,8 @@ describe("a build no one waits for", () => {
       const limited = await modulesOf(ws, { timeoutMs: 200, concurrency: 1 });
       const timedOut = limited.get("slow");
       const late = await buildCpuUntil(Promise.all([timedOut, limited.get("many")]));
-      expect((await timedOut).ok ? "" : (await timedOut).error?.message).toBe(
+      const stopped = await timedOut;
+      expect(stopped.ok ? "" : stopped.error?.message).toBe(
         "The page cannot load slow: its build ran past the limit of 0.2 s and was stopped.",
       );
       const whole = await buildCpuUntil(modules.get("slow"));

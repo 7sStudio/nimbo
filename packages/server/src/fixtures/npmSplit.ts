@@ -29,7 +29,7 @@ export async function modulesOf(
     { root, cacheDir: join(root, ".jsnb/cache/npm") },
     {
       timeoutMs: options.timeoutMs ?? 30_000,
-      concurrency: options.concurrency,
+      ...(options.concurrency === undefined ? {} : { concurrency: options.concurrency }),
       log: { info: note, warn: note },
     },
   );
