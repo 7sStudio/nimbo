@@ -35,14 +35,14 @@ export type NoteLog = {
 };
 
 /** The path rule's version a cached bundle passed: one cached under an earlier rule is built and checked again. */
-const pathRule = 6; // 6: Vue's flags defined and its page entry (packageBundle.ts)
+export const pathRule = 7; // 7: a package's entries split together (packageGroup.ts)
 
 /** A cached bundle's meta.json: the esbuild version and the rule that made it decide whether it is still good. */
 const CacheMeta = z.looseObject({ esbuild: z.string(), rule: z.number().optional() });
 
 /** A meta.json is a line of JSON; a bundle is a package's code, which a page could not load past this anyway. */
 const maxMetaBytes = 64 * 1024;
-const maxBundleBytes = 256 * 1024 * 1024;
+export const maxBundleBytes = 256 * 1024 * 1024;
 
 /**
  * A bundle the cache is asked for: the package's name and subpath, the folder Node found, the URL the page names that
@@ -57,7 +57,7 @@ export type CachedSpec = {
   readonly dir: string;
 };
 
-type Where = {
+export type Where = {
   readonly cacheDir: string;
   readonly log: NoteLog;
   readonly resolver: Resolver;
@@ -66,7 +66,7 @@ type Where = {
 };
 
 /** Whether the meta.json of the entry folder `path` names today's esbuild and path rule. */
-async function current(path: string): Promise<boolean> {
+export async function current(path: string): Promise<boolean> {
   const meta = await readCacheFile(join(path, "meta.json"), maxMetaBytes); // none yet: no cache
   const stamp = meta === undefined ? undefined : CacheMeta.safeParse(parsedJson(meta)).data;
   return stamp?.esbuild === esbuildVersion && stamp.rule === pathRule;
@@ -93,7 +93,7 @@ async function clearIfStale(where: Where, dir: string): Promise<void> {
  * builds of a package's entries (qs's tree requires a dozen `math-intrinsics/*` at once) share one folder, and a
  * removal that ran while another build wrote there failed that request with ENOTEMPTY.
  */
-function cleared(where: Where, dir: string): Promise<void> {
+export function cleared(where: Where, dir: string): Promise<void> {
   const known = where.cleared.get(dir);
   if (known !== undefined) return known;
   const clearing = clearIfStale(where, dir);
@@ -102,7 +102,7 @@ function cleared(where: Where, dir: string): Promise<void> {
 }
 
 /** Whether every resolved key a cached bundle imports is still in the index; else it is built again, recording them. */
-async function keysRecorded(index: PackageIndex, text: string): Promise<boolean> {
+export async function keysRecorded(index: PackageIndex, text: string): Promise<boolean> {
   const keys = new Set(
     [...text.matchAll(/\/npm\/_\/([0-9a-f]{16})\//g)].map((match) => match[1] ?? ""),
   );
@@ -128,6 +128,20 @@ async function lookup(where: Where, spec: CachedSpec, name: string) {
   return { own, text: recorded ? text : undefined };
 }
 
+/** The meta.json of an entry folder: what made its bundles. */
+export const metaText = (name: string, version: string): string =>
+  `${JSON.stringify({ name, version, esbuild: esbuildVersion, rule: pathRule })}\n`;
+
+/** The name of a subpath's bundle in its entry folder (`""` or `locale/fr`, no leading slash). */
+export const bundleName = (subpath: string): string =>
+  subpath === "" ? "index.js" : `${encodeURIComponent(subpath)}.js`;
+
+/** The cached bundle of `spec` while it is still good; undefined when it is to be built. */
+export async function heldBundle(where: Where, spec: CachedSpec): Promise<string | undefined> {
+  await cleared(where, spec.dir);
+  return (await lookup(where, spec, bundleName(spec.subpath))).text;
+}
+
 /** The cached bundle when it is still good, else a fresh one written to the cache. */
 export async function cachedBundle(
   where: Where,
@@ -135,7 +149,7 @@ export async function cachedBundle(
   signal: AbortSignal,
 ): Promise<Built> {
   const { version } = spec.found;
-  const name = spec.subpath === "" ? "index.js" : `${encodeURIComponent(spec.subpath)}.js`;
+  const name = bundleName(spec.subpath);
   await cleared(where, spec.dir);
   const found = await lookup(where, spec, name);
   if (found.text !== undefined) return { ok: true, text: found.text };
@@ -147,7 +161,6 @@ export async function cachedBundle(
     signal,
   );
   if (!built.ok) return built; // refused by the rule: nothing is cached
-  const made = { name: spec.name, version, esbuild: esbuildVersion, rule: pathRule };
   const inputs = found.own ? (built.inputs ?? []) : undefined; // none taken: an empty record, built again next time
   await cache(where, {
     dir: spec.dir,
@@ -155,7 +168,7 @@ export async function cachedBundle(
     body: built.text,
     inputs,
     imports: importsText(built.imports),
-    meta: `${JSON.stringify(made)}\n`,
+    meta: metaText(spec.name, version),
   });
   return { ok: true, text: built.text };
 }

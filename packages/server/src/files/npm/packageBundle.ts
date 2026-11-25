@@ -28,7 +28,7 @@ import { packagePlugin } from "./packagePlugin.js";
 import { resolveExtensions } from "./relativeImport.js";
 import { commonJsMark, requirePrelude } from "./requires.js";
 import type { FoundPackage } from "./resolve.js";
-import { packageFileAllowed } from "./spec.js";
+import { isLinkedPackage, packageFileAllowed } from "./spec.js";
 
 /** A package's bundle with the identity of each file it read before the read and its bare imports, or its refusal. */
 export type Bundled =
@@ -54,7 +54,7 @@ const filesOf = (from: string, metafile: Metafile) =>
 const Exports = z.looseObject({ exports: z.unknown().optional() });
 
 /** The package's `exports` subpaths without a pattern (`/client`), its package.json read as a regular file only. */
-async function exportsOf(folder: string): Promise<string[]> {
+export async function exportsOf(folder: string): Promise<string[]> {
   const read = await readRegularFile(join(folder, "package.json"), 1024 * 1024);
   const exports =
     read.kind === "read" ? Exports.safeParse(parsedJson(read.text)).data?.exports : undefined;
@@ -73,7 +73,7 @@ async function exportsOf(folder: string): Promise<string[]> {
 const pageEntries: Readonly<Record<string, string>> = { vue: "/dist/vue.esm-bundler.js" };
 
 /** The specifier esbuild bundles for the subpath `subpath` of `name`, found in the real folder `folder`. */
-async function entryOf(name: string, subpath: string, folder: string): Promise<string> {
+export async function entryOf(name: string, subpath: string, folder: string): Promise<string> {
   const page = subpath === "" ? pageEntries[name] : undefined;
   if (page === undefined) return `${name}${subpath}`;
   const file = await stat(join(folder, page)).catch(() => undefined);
@@ -112,7 +112,13 @@ export async function bundlePackage(
   const { folder, lookup } = pkg.found;
   const seen: Seen = { requires: [], imports: [], identities: new Map() };
   const bundling = { ...pkg, lookup, exports: await exportsOf(folder) };
-  const plugins = [packagePlugin(resolver, bundling, seen)];
+  const plugins = [
+    packagePlugin(resolver, bundling, seen, {
+      split: false,
+      linked: isLinkedPackage(folder),
+      signal,
+    }),
+  ];
   const entryPoints = [await entryOf(pkg.name, pkg.subpath, folder)];
   const options = {
     entryPoints,
@@ -121,7 +127,26 @@ export async function bundlePackage(
     resolveExtensions: [...resolveExtensions],
   };
   const made = await buildUnder(options, signal);
-  const files = await filesOf(lookup, made.metafile);
+  const checked = await checkedInputs(folder, lookup, made.metafile, seen);
+  if (!checked.ok) return refusal;
+  const { inputs } = checked;
+  const text = await textOf(made, seen, { name: pkg.name, lookup });
+  return { ok: true, text, inputs, imports: seen.imports };
+}
+
+/**
+ * The identities of what a build read, by the rule: it rejects when a file lies outside the package's real folder,
+ * is refused when the rule keeps one from a package, and is undefined when one was not taken.
+ */
+export async function checkedInputs(
+  folder: string,
+  lookup: string,
+  metafile: Metafile,
+  seen: Seen,
+): Promise<
+  { readonly ok: true; readonly inputs: readonly Identity[] | undefined } | typeof refusal
+> {
+  const files = await filesOf(lookup, metafile);
   const escaped = files.filter(({ path }) => !path.startsWith(`${folder}${sep}`));
   if (escaped.length > 0) {
     throw new Error(
@@ -129,8 +154,7 @@ export async function bundlePackage(
     );
   }
   if (!files.every(({ path }) => packageFileAllowed(folder, path))) return refusal;
-  const text = await textOf(made, seen, { name: pkg.name, lookup });
   const identities = files.map(({ path }) => seen.identities.get(path));
-  const inputs = identities.every((identity) => identity !== undefined) ? identities : undefined;
-  return { ok: true, text, inputs, imports: seen.imports };
+  const taken = identities.every((identity) => identity !== undefined);
+  return { ok: true, inputs: taken ? identities : undefined };
 }

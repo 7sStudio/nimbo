@@ -34,18 +34,59 @@ const isFolder = (path: string): Promise<boolean> =>
     () => false, // nothing there, or nothing that leads anywhere: not here
   );
 
+/** What one candidate folder holds: nothing, a package (its real folder and version), or a broken install. */
+type Probe =
+  | { readonly kind: "none" }
+  | { readonly kind: "broken" }
+  | { readonly kind: "found"; readonly folder: string; readonly version: string };
+
+/**
+ * The probes of one pass over many imports (a cached bundle's check), shared: their parent folders are the same, and a
+ * folder with no node_modules is passed over without a probe of each name.
+ */
+export type Lookups = {
+  readonly probes: Map<string, Promise<Probe>>;
+  readonly modules: Map<string, Promise<boolean>>;
+};
+
+/** A pass with nothing looked at yet. */
+export const createLookups = (): Lookups => ({ probes: new Map(), modules: new Map() });
+
+/** Whether `lookup` holds a node_modules folder, asked once per pass. */
+const holdsModules = (lookup: string, lookups: Lookups): Promise<boolean> => {
+  const key = join(lookup, "node_modules");
+  const held = lookups.modules.get(key) ?? isFolder(key);
+  lookups.modules.set(key, held);
+  return held;
+};
+
+async function probe(candidate: string): Promise<Probe> {
+  if (!(await isFolder(candidate))) return { kind: "none" };
+  const version = await versionAt(candidate);
+  if (version === undefined) return { kind: "broken" };
+  return { kind: "found", folder: await realpath(candidate), version };
+}
+
 /**
  * The package `name` as Node finds it from the folder `from`: the first `node_modules/<name>` folder on the way up.
  * Undefined when none is there, or when that folder holds no readable version (a broken install, which Node stops at
- * too).
+ * too). `lookups` shares what the folders held with the other calls of one pass.
  */
-export async function findPackage(name: string, from: string): Promise<FoundPackage | undefined> {
+export async function findPackage(
+  name: string,
+  from: string,
+  lookups?: Lookups,
+): Promise<FoundPackage | undefined> {
   for (const lookup of lookupsFrom(from)) {
+    if (lookups !== undefined && !(await holdsModules(lookup, lookups))) continue;
     const candidate = join(lookup, "node_modules", ...name.split("/"));
-    if (!(await isFolder(candidate))) continue;
-    const version = await versionAt(candidate);
-    if (version === undefined) return undefined;
-    return { folder: await realpath(candidate), lookup, version };
+    const held = lookups?.probes.get(candidate) ?? probe(candidate);
+    lookups?.probes.set(candidate, held);
+    const found = await held;
+    if (found.kind === "none") continue;
+    return found.kind === "found"
+      ? { folder: found.folder, lookup, version: found.version }
+      : undefined;
   }
   return undefined;
 }

@@ -8,7 +8,10 @@
 // of its exports, read at each use and filled once it has run (not Node's partial exports while it runs); nothing
 // waits, so nothing hangs. A literal require that does not resolve throws at the call as Node's MODULE_NOT_FOUND does,
 // so an optional dependency in a try keeps working; a require of a name computed at run time throws RequireUnsupported,
-// naming the module and what to do. A module built from a CommonJS entry marks itself.
+// naming the module and what to do. A module built from a CommonJS entry marks itself. In a package's split bundle the
+// helper sits in one output and the requires in others, so each output imports the modules its own code requires and
+// adds them to the package's registry (a Map under a Symbol.for key of the package's URL on globalThis), which the
+// output that defines the helper reads at each call: an entry never imports what only another entry requires.
 
 /** One literal require of a bundle: the URL the bundle names it by, the name as written, and whether Node found it. */
 export type Required = { readonly url: string; readonly spec: string; readonly found: boolean };
@@ -63,4 +66,39 @@ export function requirePrelude(requires: readonly Required[], from: string, text
     .join(", ");
   const made = `const require = ${requireOf}(new Map([${found}]), new Map([${missing}]), ${JSON.stringify(from)});\n`;
   return `${imports.join("")}${made}`;
+}
+
+/** The registry of a split bundle's requires, the package's URL its key, as JavaScript that runs in the page. */
+const registryOf = (base: string): string =>
+  `(globalThis[Symbol.for(${JSON.stringify(`nimbo.require ${base}`)})] ??= new Map())`;
+
+/**
+ * The prelude of one output `text` of the split bundle of the package `from` served at `base`: an import of each
+ * module its own code requires literally, added to the package's registry, and where it defines esbuild's helper, the
+ * `require` that reads the registry; empty when it does neither.
+ */
+export function splitPrelude(
+  requires: readonly Required[],
+  pkg: { readonly name: string; readonly base: string },
+  text: string,
+): string {
+  const urls = [
+    ...new Set(
+      requires
+        .filter(({ found, url }) => found && text.includes(`__require(${JSON.stringify(url)})`))
+        .map(({ url }) => url),
+    ),
+  ];
+  const imports = urls.map(
+    (url, at) => `import * as __nimboRequired${String(at)} from ${JSON.stringify(url)};\n`,
+  );
+  const added = urls.map((url, at) => `.set(${JSON.stringify(url)}, __nimboRequired${String(at)})`);
+  const registered = added.length === 0 ? "" : `${registryOf(pkg.base)}${added.join("")};\n`;
+  if (!callsRequire(text)) return `${imports.join("")}${registered}`;
+  const missing = requires
+    .filter((required) => !required.found)
+    .map(({ url, spec }) => `[${JSON.stringify(url)}, ${JSON.stringify(spec)}]`)
+    .join(", ");
+  const made = `const require = ${requireOf}(${registryOf(pkg.base)}, new Map([${missing}]), ${JSON.stringify(pkg.name)});\n`;
+  return `${imports.join("")}${registered}${made}`;
 }

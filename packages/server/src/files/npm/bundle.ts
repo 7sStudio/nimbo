@@ -100,8 +100,12 @@ const common = {
   },
 } as const;
 
-/** What one esbuild run made: the module's text and what it read. */
-export type Made = { readonly text: string; readonly metafile: Metafile };
+/** What one esbuild run made: the first output's text, every output (a split build has several), what it read. */
+export type Made = {
+  readonly text: string;
+  readonly files: readonly { readonly path: string; readonly text: string }[];
+  readonly metafile: Metafile;
+};
 
 /** Whether the build's entry is CommonJS: its module then marks itself for the modules that require it. */
 export const fromCommonJs = (made: Made): boolean => {
@@ -119,10 +123,8 @@ export async function buildUnder(options: BuildOptions, signal: AbortSignal): Pr
     signal.throwIfAborted(); // aborted while esbuild prepared the build (its listener came after): it never starts
     const result = await builder.rebuild();
     signal.throwIfAborted();
-    return {
-      text: result.outputFiles?.[0]?.text ?? "",
-      metafile: result.metafile,
-    };
+    const files = (result.outputFiles ?? []).map(({ path, text }) => ({ path, text }));
+    return { text: files[0]?.text ?? "", files, metafile: result.metafile };
   } catch (error) {
     signal.throwIfAborted(); // a cancelled build fails with esbuild's own message; the reason is the signal's
     throw error;

@@ -60,7 +60,7 @@ async function scopesAbove(from: string, read: Map<string, Fields | undefined>) 
 }
 
 /** The target of an `imports` value under the conditions of a page's import or require, as Node picks it. */
-function targetOf(value: unknown, conditions: readonly string[]): string | undefined {
+export function targetOf(value: unknown, conditions: readonly string[]): string | undefined {
   if (typeof value === "string") return value;
   if (Array.isArray(value)) {
     for (const item of value) {
