@@ -148,10 +148,18 @@ const installing = (run: NonNullable<BannerFacts["installing"]>): BannerModel =>
   actions: [{ label: "Cancel", command: "ui.packages.cancel" }],
 });
 
-/** The banners about the connection itself, first in the stack: a start that stopped or a socket closed for good,
- * then a reconnect that is taking long. */
-function connectionBanners(facts: BannerFacts): readonly (BannerModel | null)[] {
+/** Whether the "no page attached" banner applies: a live socket, this tab's attach settled, an open notebook nobody
+ * holds the page of. */
+const pageMissing = (facts: BannerFacts): boolean =>
+  facts.connection === "live" &&
+  facts.ownAttach !== "pending" &&
+  !facts.closed &&
+  !facts.pageAttached;
+
+/** The banners `facts` call for, in order. */
+export function bannersOf(facts: BannerFacts): readonly BannerModel[] {
   return [
+    // the connection itself first: a start that stopped or a socket closed for good, then a reconnect taking long
     facts.stopped || facts.connection === "closed"
       ? notConnected(facts.failure, facts.notebook)
       : null,
@@ -161,21 +169,6 @@ function connectionBanners(facts: BannerFacts): readonly (BannerModel | null)[] 
     facts.closed && !facts.stopped
       ? notebookClosed(facts.notebook, facts.connection === "live")
       : null,
-  ];
-}
-
-/** Whether the "no page attached" banner applies: a live socket, this tab's attach settled, an open notebook nobody
- * holds the page of. */
-const pageMissing = (facts: BannerFacts): boolean =>
-  facts.connection === "live" &&
-  facts.ownAttach !== "pending" &&
-  !facts.closed &&
-  !facts.pageAttached;
-
-/** The banners `facts` call for, order. */
-export function bannersOf(facts: BannerFacts): readonly BannerModel[] {
-  return [
-    ...connectionBanners(facts),
     facts.kernelExit === null || facts.closed ? null : kernelExited(facts.kernelExit),
     facts.save === "failed" ? saveFailed(facts.saveError) : null,
     facts.save === "conflict"

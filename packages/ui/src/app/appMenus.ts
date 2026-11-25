@@ -3,7 +3,6 @@
 // the keymap, the user's own keys included.
 import type { MenuItem } from "../overlays/menus.js";
 import { item } from "./menuItem.js";
-import { syntaxMenu, themeMenu } from "./themeMenus.js";
 
 export type AppMenuSpec = { readonly label: string; readonly items: readonly MenuItem[] };
 
@@ -23,6 +22,41 @@ const help = (): AppMenuSpec => ({
     item("Feedback Mode", "ui.feedback.toggle"),
     item("Show Feedback", "ui.feedback.list"),
   ],
+});
+
+const themeNames = { system: "System", light: "Light", dark: "Dark" } as const;
+
+/** Preferences > Theme: the three choices, the current one marked; each choice writes the setting in the scope that
+ * decides it now (commands/app.ts). */
+const themeMenu = (theme: string): MenuItem => ({
+  kind: "sub",
+  label: "Theme",
+  items: Object.entries(themeNames).map(([each, label]) => ({
+    ...item(label, "ui.theme.set", { theme: each }),
+    ...(theme === each ? { current: true } : {}),
+  })),
+});
+
+/** The syntax themes' names in the menu, in editor.syntaxTheme's order. */
+const syntaxNames: Readonly<Record<string, string>> = {
+  vscode: "VS Code",
+  github: "GitHub",
+  cursor: "Cursor",
+  jetbrains: "JetBrains",
+  one: "One",
+  catppuccin: "Catppuccin",
+  "tokyo-night": "Tokyo Night",
+  nimbo: "Nimbo",
+};
+
+/** Preferences > Syntax Theme: the code colours, as VS Code's Color Theme picker, the current one marked. */
+const syntaxMenu = (syntax: string): MenuItem => ({
+  kind: "sub",
+  label: "Syntax Theme",
+  items: Object.entries(syntaxNames).map(([id, label]) => ({
+    ...item(label, "ui.syntaxTheme.set", { theme: id }),
+    ...(syntax === id ? { current: true } : {}),
+  })),
 });
 
 /** File > Preferences, as VS Code has it: Settings, Keyboard Shortcuts, the theme and the code colours. */
