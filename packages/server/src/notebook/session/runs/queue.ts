@@ -14,6 +14,8 @@ export type QueuedRun = {
   readonly done: Promise<void>;
   readonly settle: () => void;
   readonly batch?: Batch;
+  /** A cell.run's run: ending well, it may start execution.autoRunDependents (04-kernel §4.1). */
+  readonly trigger?: true;
 };
 
 export type RunQueue = {
@@ -25,26 +27,37 @@ export type RunQueue = {
 };
 
 /** A run of `execution` not queued yet, with its terminal promise. */
-export function queuedRun(execution: ExecutionRecord, batch?: Batch): QueuedRun {
+export function queuedRun(execution: ExecutionRecord, batch?: Batch, trigger?: boolean): QueuedRun {
   let settle = (): void => undefined;
   const done = new Promise<void>((resolve) => {
     settle = resolve;
   });
-  return { execution, done, settle, ...(batch === undefined ? {} : { batch }) };
+  return {
+    execution,
+    done,
+    settle,
+    ...(batch === undefined ? {} : { batch }),
+    ...(trigger === true ? { trigger: true as const } : {}),
+  };
 }
 
-/** A queue that runs each run with `execute`; what `execute` throws is a daemon bug, reported to `failed`. */
+/** A queue that runs each run with `execute`; what `execute` throws is a daemon bug, reported to `failed`. `idle` hears
+ * each time a run ended with none waiting: what it pushes then runs after everything anyone asked for. */
 export function createRunQueue(
   execute: (run: QueuedRun) => Promise<void>,
   failed: (run: QueuedRun, error: unknown) => void,
+  idle: () => void = () => undefined,
 ): RunQueue {
   const waiting: QueuedRun[] = [];
   let current: QueuedRun | undefined;
-  const next = (): void => {
+  const next = (ended: boolean): void => {
     if (current) return;
     current = waiting.shift();
     const run = current;
-    if (!run) return;
+    if (!run) {
+      if (ended) idle();
+      return;
+    }
     execute(run)
       .catch((error: unknown) => {
         failed(run, error);
@@ -52,13 +65,13 @@ export function createRunQueue(
       .finally(() => {
         run.settle();
         current = undefined;
-        next();
+        next(true);
       });
   };
   return {
     push: (run) => {
       waiting.push(run);
-      next();
+      next(false);
     },
     running: () => current,
     take: (accept = () => true) => {

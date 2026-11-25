@@ -31,8 +31,12 @@ export function createExecution(
   context: SessionContext,
   cell: CellId,
   defines: readonly string[],
-  requestedBy?: ExecutionRecord["requestedBy"],
+  by: {
+    readonly requestedBy?: ExecutionRecord["requestedBy"];
+    readonly autoRun?: ExecutionRecord["autoRun"];
+  } = {},
 ): ExecutionRecord {
+  const { requestedBy, autoRun } = by;
   const record = context.cells.require(cell);
   if (record.last) context.runs.retained.drop(record.last.id);
   if (record.last && terminalStatuses.has(record.last.status)) record.previous = record.last;
@@ -44,6 +48,7 @@ export function createExecution(
     outputs: [],
     defines,
     ...(requestedBy === undefined ? {} : { requestedBy }),
+    ...(autoRun === undefined ? {} : { autoRun }),
   };
   record.last = execution;
   record.status = "queued";

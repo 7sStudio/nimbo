@@ -45,6 +45,7 @@ export function stateOf(
     savedAt,
     dirty,
     debug,
+    autoRun: context.hooks.autoRunState(),
   };
 }
 

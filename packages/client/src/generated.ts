@@ -140,7 +140,7 @@ const notebook = (call: Caller) =>
 
 const bridge = (call: Caller) =>
   ({
-    /** The events server cells emitted with emit(name, data) since the notebook opened, by name, the most recent first: how many, how many reached a client cell's on(name) listener in the attached page, how many were dropped (no page attached, no listener, or a burst past the queue) and the last time. At most limit names, those starting with prefix; the daemon tracks the 500 most recently emitted names and counts older ones together under other. The events themselves are event outputs on the listening client cells. */
+    /** The events server cells emitted with emit(name, data) since the notebook opened, by name, the most recent first: how many, how many reached a client cell's on(name) listener in the attached page, how many were dropped (no page attached, no listener, or a burst past the queue) and the last time. At most limit names, those starting with prefix; the daemon tracks the 500 most recently emitted names and counts older ones together under other, whose folded says how many rows it took in (a name folded twice counts twice) and unnamed how many events the kernel counted without their names. The events themselves are event outputs on the listening client cells. */
     events: bind(call, bridgeEvents),
   }) as const;
 
@@ -160,7 +160,7 @@ const cell = (call: Caller) =>
     move: bind(call, cellMove),
     /** Delete a cell. Its scope bindings stay in the kernel until restart; dependents become stale. */
     delete: bind(call, cellDelete),
-    /** Run one cell. With wait, returns when the run reaches a terminal status, timeoutMs elapses, or the kernel pauses in the debugger (then `paused` says where; go on with debug.resume). */
+    /** Run one cell. With wait, returns when the run reaches a terminal status, timeoutMs elapses, or the kernel pauses in the debugger (then `paused` says where; go on with debug.resume). With execution.autoRunDependents on, `autoRun` lists the stale dependents the run started; waitAutoRun waits for them too, in the same timeoutMs. */
     run: bind(call, cellRun),
     /** The last run of a cell with all its outputs, or null if it never ran. */
     outputs: bind(call, cellOutputs),

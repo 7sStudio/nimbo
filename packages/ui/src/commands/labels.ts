@@ -182,6 +182,7 @@ export const keymapTitles: Readonly<Record<string, string>> = {
   "ui.debug.editBreakpoint": "Debug: Edit Breakpoint",
   "ui.cell.rename": "Rename Cell",
   "ui.cell.toggleValues": "Toggle Values View",
+  "ui.cell.toggleManual": "Toggle Manual Run",
   "ui.cell.toggleCollapse": "Fold Cell",
   "ui.cells.foldAll": "Fold All Cells",
   "ui.section.toggle": "Toggle Section",

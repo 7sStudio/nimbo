@@ -102,7 +102,7 @@ The app is Vue 3 with Pinia. The store mirrors the daemon's document and executi
 
 ### 4.2 Execution model
 
-Jupyter-style manual execution plus static analysis of each cell (`defines`, `uses`, `exports`, `imports`), used for stale markers, "run cell and dependents" and the bridge, never for auto-run. A name may be defined in more than one cell.
+Jupyter-style manual execution plus static analysis of each cell (`defines`, `uses`, `exports`, `imports`), used for stale markers, "run cell and dependents", the bridge and the opt-in auto-run of stale dependents (04 §4.1, off by default). A name may be defined in more than one cell.
 
 ### 4.3 File format
 

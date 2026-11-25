@@ -72,7 +72,7 @@ The stub rejects with an `Error` carrying the server's `name` and `message` and 
 ## 5. Dependency graph across the boundary
 
 Client cell X depends on server cell S when `uses(X) ∩ exports(S) ≠ ∅` (00-overview §4.2):
-- Re-running S marks X stale (stale only; auto re-run is the planned setting `execution.autoRunDependents`).
+- Re-running S marks X stale; with `execution.autoRunDependents` on, a `cell.run` of S runs X after it in the attached page, and with no page leaves X stale and names it `noPage` (04-kernel §4.1).
 - `notebook.run { withDependents: S }` runs X after S when a realm is attached, else lists X under `skipped` with `REALM_NOT_ATTACHED` (03-api §4.2).
 - A server cell that stops exporting a name (edited or deleted) marks its client dependents stale; X's next run fails `NotExported` at once (§3 step 2).
 

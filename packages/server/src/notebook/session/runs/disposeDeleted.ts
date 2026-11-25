@@ -5,8 +5,9 @@
 // one the kernel has not read yet (another cell's synchronous work, a pause in the debugger) would be cancelled, and
 // a cancelled `dispose` never runs (04-kernel §2.1), so it waits for the kernel, and only a failure is logged. A cell
 // restored meanwhile (Undo brings its id back) keeps its routes: it is no longer deleted. A server cell that stops being
-// one (switched to client or markdown, or removed or switched by notebook.reload) is disposed the same way, unless it is
-// a server cell again by then. A deleted client cell is the attached page's to clean up (realm.dispose).
+// one (switched to client or markdown, or removed or switched by notebook.reload) is disposed the same way once the
+// run it has under way ended with its old code (disposing first would drop the timer it awaits), unless it is a server
+// cell again by then. A deleted client cell is the attached page's to clean up (realm.dispose).
 import type { CellId, CellType } from "@jsnb/core";
 import { KernelDead } from "@jsnb/core";
 
@@ -32,7 +33,7 @@ export async function disposeDeleted(
 /** A server cell that is not one any more (03-api §4.2, §4.3): its kernel disposes it unless it is a server cell
  * again by the time this runs; never rejects. */
 export async function disposeUnserved(context: SessionContext, cell: CellId): Promise<void> {
-  await Promise.resolve();
+  await context.hooks.runEnded(cell);
   if (isServerCell(context, cell)) return;
   await disposeInKernel(context, cell);
 }

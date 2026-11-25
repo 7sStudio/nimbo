@@ -60,6 +60,7 @@ export * from "./format/migrate.js";
 // analysis (the graph, staleness and selection over CellAnalysis, the line diff of an edit; transform owns the analyser)
 export * from "./analysis/graph.js";
 export * from "./analysis/stale.js";
+export * from "./analysis/autoRun.js";
 export * from "./analysis/selection.js";
 export * from "./analysis/lineDiff.js";
 export * from "./analysis/cellName.js";

@@ -137,17 +137,23 @@ export type OwnedContext = SessionContext & {
 };
 
 /** The session's hooks before the parts that use them are wired. */
-const idleHooks = (): SessionHooks => ({
+/** The hooks before the session's parts wire theirs. */
+const defaultHooks = (): SessionHooks => ({
   lateOutput: () => undefined,
   exports: () => undefined,
-  events: () => undefined,
-  disposeClient: () => undefined,
-  pageAttached: () => false,
   kernelEnded: () => undefined,
   beforeServerRun: () => Promise.resolve(),
   debuggerLines: () => [],
   debugPause: () => Promise.resolve({ reason: "pause" }),
   debugResumed: () => Promise.resolve(),
+  events: () => undefined,
+  disposeClient: () => undefined,
+  pageAttached: () => false,
+  edited: () => undefined,
+  runEnded: () => Promise.resolve(),
+  deleting: () => undefined,
+  realmEnded: () => undefined,
+  autoRunState: () => ({ running: null, pending: [] }),
 });
 
 /** The context of a session over `options`: its kernel is created, not started. */
@@ -159,7 +165,8 @@ export function contextOf(options: SessionOptions, hooks: FileHooks = {}): Owned
     bus.emit(context.ref, type, data);
   };
   const place = livePlace(() => context);
-  const sessionHooks = idleHooks();
+  const sessionHooks = defaultHooks();
+
   const cells = createCellStore(options.loaded.records);
   const kernelLog = followingKernelLog(options.logsDir, options.ref, log);
   const parts = { emit, log, hooks: sessionHooks };
