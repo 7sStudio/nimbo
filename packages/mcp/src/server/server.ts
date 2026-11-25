@@ -51,7 +51,8 @@ const instructions =
   "keybindings_list, keybindings_set and keybindings_reset read and change the app's keyboard shortcuts (VS Code's " +
   "keybindings.json, user or workspace). " +
   "Read a notebook's changes with git_diff (cell by cell, with hunks), not by diffing its JSON; git_status lists " +
-  "the changed files.";
+  "the changed files, git_log and git_show the history. A git tool that can lose work refuses without confirm: " +
+  "true; pass it only when the user asked for that loss.";
 
 /** Rejects with the JSON-RPC error of 03-api §7.4 for a request that is no tool call. */
 const answering = async <T>(work: Promise<T>): Promise<T> => {

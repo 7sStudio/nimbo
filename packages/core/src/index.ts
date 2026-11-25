@@ -28,6 +28,7 @@ export * from "./model/notebookName.js";
 export * from "./model/routePath.js";
 export * from "./model/language.js";
 export * from "./model/gitDiff.js";
+export * from "./model/gitHistory.js";
 export * from "./model/keybinding.js";
 export * from "./model/debug.js";
 
@@ -97,6 +98,10 @@ export * from "./commands/debug.js";
 export * from "./commands/examples.js";
 export * from "./commands/feedback.js";
 export * from "./commands/git.js";
+export * from "./commands/gitBranch.js";
+export * from "./commands/gitHistory.js";
+export * from "./commands/gitRemote.js";
+export * from "./commands/gitStash.js";
 export * from "./commands/cache.js";
 export * from "./commands/settings.js";
 export * from "./commands/keybindings.js";

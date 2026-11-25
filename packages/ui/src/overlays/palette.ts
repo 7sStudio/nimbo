@@ -29,6 +29,8 @@ const plumbing = new Set([
   "ui.edit.previous",
   "ui.edit.next",
   "ui.kernelLog.open",
+  "ui.git.switch",
+  "ui.git.branchFromRef",
 ]);
 
 function entry(command: string, title: string, args?: Args): PaletteEntry {

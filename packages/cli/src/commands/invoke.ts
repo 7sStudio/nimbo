@@ -3,7 +3,7 @@
 // the exit code of its runs. `nimbo workspace stop` with no daemon has nothing to stop, as `nimbo stop`; a planned
 // command is NOT_AVAILABLE from the registry, before any daemon.
 import type { AnyCommand } from "@jsnb/core";
-import { NotAvailable, workspaceStop } from "@jsnb/core";
+import { GitFailed, NotAvailable, workspaceStop } from "@jsnb/core";
 
 import { openSession, startsDaemon } from "../daemon/session.js";
 import { DaemonNotRunning, nothingToStop } from "../errors/daemon.js";
@@ -12,10 +12,34 @@ import { exitCodes } from "../errors/exit.js";
 import type { Io } from "../io/io.js";
 import { write } from "../io/io.js";
 import { resultExit, resultText } from "../render/results.js";
-import { beforeSession, completeInput, confirm } from "./complete.js";
+import { beforeSession, completeInput, confirm, confirmAfter } from "./complete.js";
 import { commandHelp } from "./help.js";
 import { wordsOf } from "./names.js";
 import { parseCommandLine } from "./parse.js";
+
+/** A command whose input takes `confirm` (03-api §4.15): --yes sets it; on a terminal, a refusal that asks for it is
+ * put as a y/N question with git's own words and sent again, answered. */
+const takesConfirm = (command: AnyCommand): boolean => "confirm" in command.input.shape;
+
+async function confirmed(
+  command: AnyCommand,
+  input: Record<string, unknown>,
+  io: Io,
+  send: (input: Record<string, unknown>) => Promise<unknown>,
+): Promise<unknown> {
+  try {
+    return await send(input);
+  } catch (error) {
+    const asks = error instanceof GitFailed && error.data.reason === "confirm";
+    if (!asks || input.confirm === true) throw error;
+    if (!io.isTTY) {
+      await write(io.stderr, `Run it again with --yes to go ahead.\n`);
+      throw error;
+    }
+    await confirmAfter(io, command, error.data.message);
+    return send({ ...input, confirm: true });
+  }
+}
 
 /** The call itself: the input completed, the y/N asked, the output printed. */
 async function call(
@@ -31,7 +55,11 @@ async function call(
   try {
     const input = await completeInput(command, asked, session);
     if (command.tags.destructive && io.isTTY && !line.yes) await confirm(io, command);
-    const output = await session.call(command, input);
+    const yes = line.yes || (command.tags.destructive && io.isTTY);
+    if (takesConfirm(command) && yes) input.confirm = true;
+    const output = takesConfirm(command)
+      ? await confirmed(command, input, io, (sent) => session.call(command, sent))
+      : await session.call(command, input);
     await write(io.stdout, resultText(command.name, output, line.json));
     return resultExit(command.name, output);
   } finally {

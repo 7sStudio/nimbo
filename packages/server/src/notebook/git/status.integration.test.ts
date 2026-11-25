@@ -79,7 +79,7 @@ it("lists an open notebook's unsaved edit as modified, as git.diff sees it befor
 it("answers null outside a repository and without git on the PATH, and sees a repository made later", async () => {
   await withWorkspace(async (ws) => {
     const daemon = await startDaemon(ws);
-    expect(await daemon.client.git.status({})).toEqual({ repo: null });
+    expect(await daemon.client.git.status({})).toEqual({ repo: null, running: null });
     await expect(daemon.client.git.stage({ paths: ["x"] })).rejects.toMatchObject({
       name: "GitFailed",
     });

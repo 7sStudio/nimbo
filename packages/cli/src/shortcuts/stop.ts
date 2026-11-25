@@ -4,7 +4,7 @@ import { productVersion, workspaceStop } from "@jsnb/core";
 
 import { readServerFile } from "../daemon/serverFile.js";
 
-import { DaemonNotRunning, nothingToStop } from "../errors/daemon.js";
+import { DaemonNotRunning, DaemonStillRunning, nothingToStop } from "../errors/daemon.js";
 import type { ExitCode } from "../errors/exit.js";
 import { exitCodes } from "../errors/exit.js";
 import { findInstallation } from "../install/installation.js";
@@ -31,6 +31,13 @@ const alive = (pid: number): boolean => {
     return false;
   }
 };
+
+/** Waits for the daemon's process to end (15 s at most): "Stopped" is said only once it has. */
+async function exited(pid: number): Promise<void> {
+  for (let waited = 0; waited < 15_000 && alive(pid); waited += 100)
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  if (alive(pid)) throw new DaemonStillRunning({ pid });
+}
 
 /**
  * After a daemon of an older installed version stopped (02-architecture §10): once its process is gone (10 s at most),
@@ -66,6 +73,7 @@ async function run(argv: readonly string[], io: Io): Promise<ExitCode> {
     const workspace = await withSession(io, { start: false, command: "stop" }, async (session) => {
       const daemon = await readServerFile(session.workspace);
       await session.call(workspaceStop, {});
+      if (daemon !== undefined) await exited(daemon.pid);
       if (daemon !== undefined) await sweepAfter(daemon, io);
       return session.root; // the folder the stopped daemon served, as it names it
     });

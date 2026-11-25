@@ -61,6 +61,8 @@ const menu = computed(() => {
   ];
   if (row?.notebook === true && !row.deleted)
     items.push({ label: "Open File", id: "ui.git.openFile", args: { path } });
+  if (row?.letter !== "U")
+    items.push({ label: "Open File History", id: "ui.git.fileHistory", args: { path } });
   if (staged.value) items.push({ label: "Unstage Changes", id: "ui.git.unstage", args: { paths } });
   else {
     items.push({ label: "Stage Changes", id: "ui.git.stage", args: { paths } });

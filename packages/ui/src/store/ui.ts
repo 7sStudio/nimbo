@@ -58,10 +58,19 @@ function settingsDrafts() {
   };
 }
 
+/** What the diff page compares: a working file (staged: the index's side), a commit's change, or a commit against the
+ * working tree (base). */
+export type DiffTarget = {
+  readonly path: string;
+  readonly staged: boolean;
+  readonly commit?: string;
+  readonly base?: string;
+};
+
 /** The diff page's state. */
 const diffState = () => ({
   /** The file the diff editor shows: its path and whether it is the index's side (Staged). */
-  diff: ref<{ readonly path: string; readonly staged: boolean } | null>(null),
+  diff: ref<DiffTarget | null>(null),
   /** A step asked of the diff editor (Next or Previous Change); `at` tells a repeat apart. */
   diffStep: ref<{ readonly by: 1 | -1; readonly at: number } | null>(null),
 });

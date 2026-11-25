@@ -10184,7 +10184,7 @@
   },
   {
     "name": "git.status",
-    "description": "The git repository the workspace folder is in: the branch, the state (merging, rebasing) and the changed files under the folder as staged, changes (unstaged and untracked) and conflicts, paths relative to the workspace. repo is null when the folder is in no repository or git is not installed.",
+    "description": "The git repository the workspace folder is in: the branch, the state (merging, rebasing) and the changed files under the folder as staged, changes (unstaged and untracked) and conflicts, paths relative to the workspace. repo is null when the folder is in no repository or git is not installed. running names the git write under way (from any page, the CLI or an agent), else null.",
     "tags": {
       "mutating": false,
       "destructive": false,
@@ -10388,15 +10388,18 @@
               "type": "null"
             }
           ]
+        },
+        "running": {
+          "type": ["string", "null"]
         }
       },
-      "required": ["repo"],
+      "required": ["repo", "running"],
       "additionalProperties": false
     }
   },
   {
     "name": "git.diff",
-    "description": "One file's changes: the index against the working tree, HEAD against the index with staged, or base (a revision) against the working tree. A .jsnb file is diffed cell by cell (rows matched by cell id, each with its source hunks, a type change, meta changes and its saved run's changes; the changed cells only, stats counting the rest); another text file as line hunks. A staged rename names its old path in renamedFrom. Narrow a notebook to one cell with cell; content adds both sides' full text and every row. Read a notebook's changes with this, not by diffing its JSON.",
+    "description": "One file's changes: the index against the working tree, HEAD against the index with staged, base (a revision) against the working tree, or commit against its first parent (the file as that commit changed it). A .jsnb file is diffed cell by cell (rows matched by cell id, each with its source hunks, a type change, meta changes and its saved run's changes; the changed cells only, stats counting the rest); another text file as line hunks. A staged rename names its old path in renamedFrom. Narrow a notebook to one cell with cell; content adds both sides' full text and every row. Read a notebook's changes with this, not by diffing its JSON.",
     "tags": {
       "mutating": false,
       "destructive": false,
@@ -10418,6 +10421,10 @@
           "type": "boolean"
         },
         "base": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit": {
           "type": "string",
           "minLength": 1
         },
@@ -10450,7 +10457,20 @@
         },
         "kind": {
           "type": "string",
-          "enum": ["notebook", "text", "binary", "tooLarge"]
+          "enum": ["notebook", "text", "binary", "tooLarge", "submodule"]
+        },
+        "submodule": {
+          "type": "object",
+          "properties": {
+            "before": {
+              "type": ["string", "null"]
+            },
+            "after": {
+              "type": ["string", "null"]
+            }
+          },
+          "required": ["before", "after"],
+          "additionalProperties": false
         },
         "reason": {
           "type": "string",
@@ -11038,7 +11058,7 @@
   },
   {
     "name": "git.stage",
-    "description": "Stage whole files (git add); an open notebook's unsaved edits are saved first, so what is staged is what the page shows.",
+    "description": "Changes the index: stage whole files (git add); an open notebook's unsaved edits are saved first, so what is staged is what the page shows.",
     "tags": {
       "mutating": true,
       "destructive": false,
@@ -11072,7 +11092,7 @@
   },
   {
     "name": "git.unstage",
-    "description": "Unstage whole files (git restore --staged); the working tree keeps its changes.",
+    "description": "Changes the index: unstage whole files (git restore --staged); the working tree keeps its changes.",
     "tags": {
       "mutating": true,
       "destructive": false,
@@ -11106,7 +11126,7 @@
   },
   {
     "name": "git.discard",
-    "description": "Discard the working tree's changes to files: a tracked file goes back to the index, an untracked one is deleted. An open notebook reloads. Cannot be undone.",
+    "description": "Changes the working tree: discard the changes to files, a tracked file going back to the index, an untracked one deleted; an open notebook reloads. Cannot be undone, so it refuses without confirm: true.",
     "tags": {
       "mutating": true,
       "destructive": true,
@@ -11127,6 +11147,10 @@
             "type": "string",
             "minLength": 1
           }
+        },
+        "confirm": {
+          "default": false,
+          "type": "boolean"
         }
       },
       "required": ["paths"]
@@ -11140,7 +11164,7 @@
   },
   {
     "name": "git.commit",
-    "description": "Commit the index with a message, as git commit does (hooks, signing and identity apply); with all, stage every change under the workspace folder first. Open notebooks are saved first.",
+    "description": "Changes the repository: commit the index with a message, as git commit does (hooks, signing and identity apply); with all, stage every change under the workspace folder first. Open notebooks are saved first. amend replaces the last commit with the index (its message kept when message is left out); amending a commit the upstream already has needs confirm: true.",
     "tags": {
       "mutating": true,
       "destructive": false,
@@ -11154,15 +11178,21 @@
       "type": "object",
       "properties": {
         "message": {
-          "type": "string",
-          "minLength": 1
+          "type": "string"
         },
         "all": {
           "default": false,
           "type": "boolean"
+        },
+        "amend": {
+          "default": false,
+          "type": "boolean"
+        },
+        "confirm": {
+          "default": false,
+          "type": "boolean"
         }
-      },
-      "required": ["message"]
+      }
     },
     "outputSchema": {
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -11179,6 +11209,1061 @@
         }
       },
       "required": ["oid", "branch", "summary"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.fetch",
+    "description": "Changes remote-tracking refs: fetch from the current branch's remote (else origin), from remote, or from every remote with all; prune removes refs whose remote branch is gone. Progress arrives as git.progress events; git.cancel stops it. A credential or network failure is GitFailed with reason auth or network and git's own line.",
+    "tags": {
+      "mutating": true,
+      "destructive": false,
+      "internal": false,
+      "streaming": true,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "remote": {
+          "type": "string",
+          "minLength": 1
+        },
+        "all": {
+          "default": false,
+          "type": "boolean"
+        },
+        "prune": {
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {},
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.pull",
+    "description": "Changes the branch and the working tree: git pull from the upstream with the user's configured strategy (branch.<name>.rebase, else pull.rebase, pull.ff), or rebase: true / false to choose. Open notebooks are saved first and reloaded after. With changes in the working tree it needs confirm: true (an abort may not restore them). Answers the strategy used and the result; a pull that stops on conflicts answers result conflicts with the files (resolve and commit or git.continue, or git.abort) and is not an error. Divergent branches without a configured strategy fail with reason diverged.",
+    "tags": {
+      "mutating": true,
+      "destructive": false,
+      "internal": false,
+      "streaming": true,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "rebase": {
+          "type": "boolean"
+        },
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "strategy": {
+          "type": "string",
+          "enum": ["merge", "rebase", "fastForwardOnly"]
+        },
+        "result": {
+          "type": "string",
+          "enum": ["upToDate", "fastForward", "merged", "rebased", "conflicts"]
+        },
+        "conflicts": {
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["strategy", "result", "conflicts"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.push",
+    "description": "Changes the remote: push the current branch to its upstream (git push, the user's push.default). No upstream fails with reason noUpstream (git.publish it); a rejected push (the remote has commits this branch lacks) with reason rejected: pull first. Never forces.",
+    "tags": {
+      "mutating": true,
+      "destructive": false,
+      "internal": false,
+      "streaming": true,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "upstream": {
+          "type": "string"
+        }
+      },
+      "required": ["branch", "upstream"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.publish",
+    "description": "Changes the remote: push the current branch to remote (the only remote, else origin) and set it as the upstream (git push --set-upstream). No remote fails with reason noRemote.",
+    "tags": {
+      "mutating": true,
+      "destructive": false,
+      "internal": false,
+      "streaming": true,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "remote": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "upstream": {
+          "type": "string"
+        }
+      },
+      "required": ["branch", "upstream"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.sync",
+    "description": "Changes the branch, the working tree and the remote: git.pull, then git.push when the pull did not stop on conflicts, as VS Code's Sync Changes. Takes git.pull's rebase and confirm.",
+    "tags": {
+      "mutating": true,
+      "destructive": false,
+      "internal": false,
+      "streaming": true,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "rebase": {
+          "type": "boolean"
+        },
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "pull": {
+          "type": "object",
+          "properties": {
+            "strategy": {
+              "type": "string",
+              "enum": ["merge", "rebase", "fastForwardOnly"]
+            },
+            "result": {
+              "type": "string",
+              "enum": ["upToDate", "fastForward", "merged", "rebased", "conflicts"]
+            },
+            "conflicts": {
+              "readOnly": true,
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["strategy", "result", "conflicts"],
+          "additionalProperties": false
+        },
+        "pushed": {
+          "type": "boolean"
+        }
+      },
+      "required": ["pull", "pushed"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.cancel",
+    "description": "Stop the git write under way (a pull or push, or a commit, switch or stash whose hook is slow): its git is stopped, the locks it left removed, and the call fails GitFailed with reason cancelled, naming the state it left (merging, rebasing). Answers its name, or null when none ran.",
+    "tags": {
+      "mutating": true,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "cancelled": {
+          "type": ["string", "null"]
+        }
+      },
+      "required": ["cancelled"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.abort",
+    "description": "Changes the working tree: abort the merge, rebase, cherry-pick or revert under way, back to where it started; resolutions made are lost, so it refuses without confirm: true. Open notebooks reload.",
+    "tags": {
+      "mutating": true,
+      "destructive": true,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "aborted": {
+          "type": "string",
+          "enum": ["merge", "rebase", "cherryPick", "revert"]
+        }
+      },
+      "required": ["aborted"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.continue",
+    "description": "Changes the repository: once every conflict is resolved and staged, continue the merge, rebase, cherry-pick or revert under way (its message as git prepared it). A rebase that stops again answers result conflicts with the files.",
+    "tags": {
+      "mutating": true,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "continued": {
+          "type": "string",
+          "enum": ["merge", "rebase", "cherryPick", "revert"]
+        },
+        "result": {
+          "type": "string",
+          "enum": ["done", "conflicts"]
+        },
+        "conflicts": {
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["continued", "result", "conflicts"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.branches",
+    "description": "The local branches (the current one marked, each with its upstream, ahead and behind, last commit), the remote-tracking branches and the remotes (URLs with credentials redacted), most recent commit first.",
+    "tags": {
+      "mutating": false,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "current": {
+          "type": ["string", "null"]
+        },
+        "local": {
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "readOnly": true,
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "current": {
+                "type": "boolean"
+              },
+              "oid": {
+                "type": "string"
+              },
+              "upstream": {
+                "type": ["string", "null"]
+              },
+              "gone": {
+                "type": "boolean"
+              },
+              "ahead": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "behind": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "date": {
+                "type": "string"
+              },
+              "subject": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "current",
+              "oid",
+              "upstream",
+              "gone",
+              "ahead",
+              "behind",
+              "date",
+              "subject"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "remote": {
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "readOnly": true,
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "remote": {
+                "type": "string"
+              },
+              "oid": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string"
+              },
+              "subject": {
+                "type": "string"
+              }
+            },
+            "required": ["name", "remote", "oid", "date", "subject"],
+            "additionalProperties": false
+          }
+        },
+        "remotes": {
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "readOnly": true,
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "url": {
+                "type": "string"
+              },
+              "pushUrl": {
+                "type": "string"
+              }
+            },
+            "required": ["name", "url", "pushUrl"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["current", "local", "remote", "remotes"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.branchCreate",
+    "description": "Changes the repository: create branch name at start (a branch, a remote branch such as origin/main, which becomes its upstream, or a commit; HEAD by default) and switch to it unless switch: false. Fails with reason exists when the name is taken.",
+    "tags": {
+      "mutating": true,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "start": {
+          "type": "string",
+          "minLength": 1
+        },
+        "switch": {
+          "default": true,
+          "type": "boolean"
+        }
+      },
+      "required": ["name"]
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "branch": {
+          "type": "string"
+        }
+      },
+      "required": ["branch"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.switch",
+    "description": "Changes the working tree: switch to branch, a local branch or a remote one (origin/feature makes a local feature tracking it). Open notebooks are saved first and reloaded after. When changes in the working tree would be overwritten git refuses (reason localChanges, the files named); stash: true stashes every change first, untracked files too (git stash push -u), and leaves the stash for git.stashPop.",
+    "tags": {
+      "mutating": true,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "branch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stash": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": ["branch"]
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "stashed": {
+          "type": "boolean"
+        }
+      },
+      "required": ["branch", "stashed"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.branchRename",
+    "description": "Changes the repository: rename branch name (the current one by default) to to; its upstream is kept. Fails with reason exists when to is taken.",
+    "tags": {
+      "mutating": true,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "to": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["to"]
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "branch": {
+          "type": "string"
+        }
+      },
+      "required": ["branch"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.branchDelete",
+    "description": "Changes the repository: delete local branch name (git branch -d). A branch whose commits are on no other branch or upstream fails with reason unmerged; force: true deletes it anyway (git branch -D), which can lose those commits, so force needs confirm: true. The current branch cannot be deleted.",
+    "tags": {
+      "mutating": true,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "force": {
+          "default": false,
+          "type": "boolean"
+        },
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": ["name"]
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "oid": {
+          "type": "string"
+        }
+      },
+      "required": ["branch", "oid"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.stash",
+    "description": "Changes the working tree: stash the changes (git stash push), with message, and untracked files too with untracked. Open notebooks are saved first and reloaded after. Answers created: false when there was nothing to stash.",
+    "tags": {
+      "mutating": true,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "message": {
+          "type": "string"
+        },
+        "untracked": {
+          "default": false,
+          "type": "boolean"
+        }
+      }
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "created": {
+          "type": "boolean"
+        }
+      },
+      "required": ["created"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.stashList",
+    "description": "The stashes, newest first (index 0 is stash@{0}).",
+    "tags": {
+      "mutating": false,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "stashes": {
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "readOnly": true,
+            "type": "object",
+            "properties": {
+              "index": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              "oid": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string"
+              }
+            },
+            "required": ["index", "oid", "message", "date"],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": ["stashes"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.stashApply",
+    "description": "Changes the working tree: apply a stash and keep it. Changes it would overwrite make git refuse (reason localChanges); a conflict answers result conflicts. Open notebooks reload.",
+    "tags": {
+      "mutating": true,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "oid": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["index"]
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "result": {
+          "type": "string",
+          "enum": ["applied", "conflicts"]
+        },
+        "conflicts": {
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["result", "conflicts"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.stashPop",
+    "description": "Changes the working tree: apply a stash and drop it, unless it conflicts (result conflicts, the stash kept). Open notebooks reload.",
+    "tags": {
+      "mutating": true,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "oid": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["index"]
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "result": {
+          "type": "string",
+          "enum": ["applied", "conflicts"]
+        },
+        "conflicts": {
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": ["result", "conflicts"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.stashDrop",
+    "description": "Changes the repository: delete a stash. Cannot be undone, so it refuses without confirm: true.",
+    "tags": {
+      "mutating": true,
+      "destructive": true,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "oid": {
+          "type": "string",
+          "minLength": 1
+        },
+        "confirm": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": ["index"]
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "oid": {
+          "type": "string"
+        }
+      },
+      "required": ["oid"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.log",
+    "description": "The commits of ref (HEAD by default), newest first, each with author, date and subject; path keeps those that changed that file (following its renames). Pages with skip and limit; more says whether older ones follow. Empty before the first commit.",
+    "tags": {
+      "mutating": false,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "skip": {
+          "default": 0,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "limit": {
+          "default": 50,
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 500
+        }
+      }
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "commits": {
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "oid": {
+                "type": "string"
+              },
+              "short": {
+                "type": "string"
+              },
+              "parents": {
+                "readOnly": true,
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "author": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string"
+              },
+              "subject": {
+                "type": "string"
+              }
+            },
+            "required": ["oid", "short", "parents", "author", "email", "date", "subject"],
+            "additionalProperties": false
+          }
+        },
+        "more": {
+          "type": "boolean"
+        }
+      },
+      "required": ["commits", "more"],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.show",
+    "description": "One commit: its author, date, subject and body, and the files it changed under the workspace folder against its first parent (git.diff with commit and path gives one file's diff, a notebook's cell by cell).",
+    "tags": {
+      "mutating": false,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "commit": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": ["commit"]
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "oid": {
+          "type": "string"
+        },
+        "short": {
+          "type": "string"
+        },
+        "parents": {
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "author": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "date": {
+          "type": "string"
+        },
+        "subject": {
+          "type": "string"
+        },
+        "body": {
+          "type": "string"
+        },
+        "files": {
+          "readOnly": true,
+          "type": "array",
+          "items": {
+            "readOnly": true,
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "modified",
+                  "added",
+                  "deleted",
+                  "renamed",
+                  "copied",
+                  "untracked",
+                  "typeChanged",
+                  "conflicted"
+                ]
+              },
+              "from": {
+                "type": "string"
+              },
+              "notebook": {
+                "type": "boolean"
+              }
+            },
+            "required": ["path", "status", "notebook"],
+            "additionalProperties": false
+          }
+        },
+        "outside": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "oid",
+        "short",
+        "parents",
+        "author",
+        "email",
+        "date",
+        "subject",
+        "body",
+        "files",
+        "outside"
+      ],
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "git.init",
+    "description": "Changes the workspace: initialize a git repository in the workspace folder (git init, with the user's init.defaultBranch and templates). Refuses when the folder is already in a repository.",
+    "tags": {
+      "mutating": true,
+      "destructive": false,
+      "internal": false,
+      "streaming": false,
+      "idempotent": false,
+      "planned": false
+    },
+    "inputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {}
+    },
+    "outputSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "properties": {
+        "root": {
+          "type": "string"
+        },
+        "branch": {
+          "type": ["string", "null"]
+        }
+      },
+      "required": ["root", "branch"],
       "additionalProperties": false
     }
   },

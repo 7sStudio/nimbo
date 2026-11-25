@@ -1,7 +1,7 @@
 // The MCP tools of 03-api §9, generated from core's registry: one per command not tagged internal, named with `_` for
 // `.` (MCP tool names are `[A-Za-z0-9_-]`), its description the registry's, its inputSchema and outputSchema core's
 // JSON Schema of the command (the contract golden's, 09 §4.1), and annotations from the tags.
-import type { AnyCommand, CommandTags } from "@jsnb/core";
+import type { AnyCommand } from "@jsnb/core";
 import { commandJsonSchema, publicCommands } from "@jsnb/core";
 import type { Tool, ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
 import { ToolSchema } from "@modelcontextprotocol/sdk/types.js";
@@ -11,14 +11,16 @@ export const toolName = (command: AnyCommand): string => command.name.replace(".
 
 /**
  * The hints of 03-api §9: read-only only for a command neither mutating nor destructive (core does not tag destructive
- * commands such as cell.delete as mutating), destructive and idempotent from their tags. Each is given,
+ * commands such as cell.delete as mutating), destructive from its tag or a confirm input, idempotent from its tag. Each is given,
  * false too, since MCP's defaults (destructive and not idempotent) are no tag of ours; openWorldHint, which no tag
  * says, is left to the client.
  */
-function annotationsOf(tags: CommandTags): ToolAnnotations {
+function annotationsOf(command: AnyCommand): ToolAnnotations {
+  const { tags } = command;
   return {
     readOnlyHint: !tags.mutating && !tags.destructive,
-    destructiveHint: tags.destructive,
+    // a command that takes confirm can lose work once confirmed (a pull over local changes, a forced delete)
+    destructiveHint: tags.destructive || "confirm" in command.input.shape,
     idempotentHint: tags.idempotent,
   };
 }
@@ -31,7 +33,7 @@ function toolOf(command: AnyCommand): Tool {
     description: schema.description,
     inputSchema: ToolSchema.shape.inputSchema.parse(schema.inputSchema),
     outputSchema: ToolSchema.shape.outputSchema.unwrap().parse(schema.outputSchema),
-    annotations: annotationsOf(command.tags),
+    annotations: annotationsOf(command),
   };
 }
 

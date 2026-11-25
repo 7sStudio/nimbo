@@ -10,6 +10,7 @@ import { newPath } from "../store/homeRows.js";
 import { shownOrder } from "../store/homeView.js";
 import type { Args, Command } from "./command.js";
 import { stringArg, uiCommand as ui } from "./command.js";
+import { consented } from "./consent.js";
 import type { HomeHost } from "./homeHost.js";
 import { openExample } from "./homeExamples.js";
 import { openFolder } from "./homeFolders.js";
@@ -101,7 +102,7 @@ const closeNotebook = (home: Home, store: Ui): Command =>
     async (args) => {
       const path = pathOf(home, args);
       if (path === null) return;
-      if (isBusy(home, path) && args?.confirmed !== true) {
+      if (isBusy(home, path) && !consented(args)) {
         store.overlay = { kind: "confirmNotebook", action: "close", path };
         return;
       }
@@ -148,7 +149,7 @@ const deleteNotebook = (home: Home, store: Ui): Command =>
     async (args) => {
       const path = pathOf(home, args);
       if (path === null) return;
-      if (args?.confirmed !== true) {
+      if (!consented(args)) {
         store.overlay = { kind: "confirmNotebook", action: "delete", path };
         return;
       }
