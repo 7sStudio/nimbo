@@ -56,6 +56,7 @@
     "packages/ui": {
       "entry": [
         "index.html",
+        "headless.html",
         "e2e/**/*.ts",
         "src/primitives/*/*.vue",
         "src/primitives/*/variants.ts",

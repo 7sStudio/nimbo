@@ -13,7 +13,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && NIMBO_UI_PAGE=headless vite build",
     "preview": "vite preview",
     "test": "vitest run",
     "record:events": "NIMBO_RECORD=1 vitest run --root ../.. --project ui src/store/record.integration.test.ts"

@@ -65,6 +65,20 @@ const commit =
 /** The product's version; a release build that stamps another one passes it as NIMBO_RELEASE_VERSION. */
 const version = released("NIMBO_RELEASE_VERSION") ?? productVersion;
 
+/** NIMBO_UI_PAGE=headless builds headless.html, the daemon's headless realm (the realm alone), into the same folder after
+ * the page's build: a build of its own, so it shares no chunk with the page and nothing of it is in the first load. */
+const headlessBuild = {
+  emptyOutDir: false,
+  rolldownOptions: {
+    input: fileURLToPath(new URL("headless.html", import.meta.url)),
+    output: {
+      entryFileNames: "assets/headless-[hash].js",
+      chunkFileNames: "assets/headless-[name]-[hash].js",
+      assetFileNames: "assets/headless-[name]-[hash][extname]",
+    },
+  },
+};
+
 export default defineConfig({
   base: "/ui/",
   define: {
@@ -79,49 +93,57 @@ export default defineConfig({
   // group pulls in as their dependency), the other dependencies, and the page's own code. Lazy panels and overlays keep
   // their own chunks; without the groups Rolldown splits the modules the first load shares with them into a dozen small
   // chunks, each gzipped alone (08 §10's budget counts them all).
-  build: {
-    rolldownOptions: {
-      output: {
-        codeSplitting: {
-          groups: [
-            {
-              name: "editor",
-              tags: ["$initial"],
-              test: dependency("@codemirror", "@lezer", "crelt", "style-mod", "w3c-keyname"),
-              priority: 3,
+  build:
+    process.env.NIMBO_UI_PAGE === "headless"
+      ? headlessBuild
+      : {
+          rolldownOptions: {
+            output: {
+              codeSplitting: {
+                groups: [
+                  {
+                    name: "editor",
+                    tags: ["$initial"],
+                    test: dependency("@codemirror", "@lezer", "crelt", "style-mod", "w3c-keyname"),
+                    priority: 3,
+                  },
+                  {
+                    name: "framework",
+                    tags: ["$initial"],
+                    test: dependency(
+                      "@vue",
+                      "vue",
+                      "pinia",
+                      "@vueuse",
+                      "reka-ui",
+                      "@floating-ui",
+                      "@tanstack",
+                      "@internationalized",
+                      "@swc/helpers",
+                      "aria-hidden",
+                      "defu",
+                      "ohash",
+                    ),
+                    priority: 3,
+                  },
+                  {
+                    name: "packages",
+                    tags: ["$initial"],
+                    test: /[\\/]packages[\\/](?!ui[\\/])[^\\/]+[\\/]dist[\\/]/u,
+                    priority: 2,
+                  },
+                  {
+                    name: "vendor",
+                    tags: ["$initial"],
+                    test: /[\\/]node_modules[\\/]/u,
+                    priority: 2,
+                  },
+                  { name: "page", tags: ["$initial"], priority: 1 },
+                ],
+              },
             },
-            {
-              name: "framework",
-              tags: ["$initial"],
-              test: dependency(
-                "@vue",
-                "vue",
-                "pinia",
-                "@vueuse",
-                "reka-ui",
-                "@floating-ui",
-                "@tanstack",
-                "@internationalized",
-                "@swc/helpers",
-                "aria-hidden",
-                "defu",
-                "ohash",
-              ),
-              priority: 3,
-            },
-            {
-              name: "packages",
-              tags: ["$initial"],
-              test: /[\\/]packages[\\/](?!ui[\\/])[^\\/]+[\\/]dist[\\/]/u,
-              priority: 2,
-            },
-            { name: "vendor", tags: ["$initial"], test: /[\\/]node_modules[\\/]/u, priority: 2 },
-            { name: "page", tags: ["$initial"], priority: 1 },
-          ],
+          },
         },
-      },
-    },
-  },
   resolve: {
     alias: {
       "@": fileURLToPath(new URL("./src", import.meta.url)),
