@@ -97,7 +97,7 @@ Path rules for `path` and `to`: inside the workspace, no `..`, a `.jsnb` file. A
 ### 4.3 cell
 | Command | Input | Output | Notes |
 |---|---|---|---|
-| `cell.add` | `{ notebook, type, source? = "", after?, run? = false, id? }` | `{ cell: Cell, execution?: Execution }` | mutating. `run` runs and waits as `cell.run` (a client cell with no page: `REALM_NOT_ATTACHED`, nothing added). `id` (unused, else `CONFLICT`) lets undo restore a deleted cell. |
+| `cell.add` | `{ notebook, type, source? = "", after?, run? = false, id? }` | `{ cell: Cell, execution?: Execution }` | mutating. `run` runs and waits as `cell.run` (a client cell with no page: `REALM_NOT_ATTACHED`, nothing added). `id` (unused, else `CONFLICT`) lets undo restore a deleted cell: with the same type and source it gets its runs back, stale when it was or when what it depends on changed since. |
 | `cell.get` | `{ notebook, cell }` | `{ cell: Cell }` | |
 | `cell.update` | `{ notebook, cell, source?, type?, meta? }` | `{ cell: Cell }` | mutating, idempotent. A `source` change marks dependents stale; a running cell keeps its old code for that run; a server cell retyped away is disposed in the kernel once its run under way ended. `meta` is merged, `null` removes a key; editable: `title`, `showBindings`, `collapsed`, `headingCollapsed`, `outputsHidden`, `outputView`, `outputQuery`, `outputHeight`, `outputColumns`, `manual`. `meta.lastEdit` is server-owned (`INVALID_PARAMS` if sent), stamped only when `source` or `type` changed. |
 | `cell.revert` | `{ notebook, cell }` | `{ cell: Cell }` | mutating, idempotent. Restores the review's `previousSource`/`previousType` as the caller's edit; no review: answered as is, no event. |
