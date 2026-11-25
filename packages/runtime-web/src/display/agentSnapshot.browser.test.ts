@@ -180,3 +180,53 @@ describe("agentSnapshot's HTML", () => {
     expect(html).not.toContain("hunter2");
   });
 });
+
+describe("agentSnapshot's HTML under its budget", () => {
+  it("cuts a huge attribute or text to the budget without reading it whole", async () => {
+    const root = container("<p></p>");
+    const huge = "a".repeat(20_000_000);
+    root.firstElementChild?.setAttribute("title", huge);
+    root.append(document.createTextNode(huge));
+    const started = performance.now();
+    const shot = await read(root, 4096);
+    expect(performance.now() - started).toBeLessThan(1000);
+    expect(shot.truncated).toBe(true);
+    expect(new TextEncoder().encode(shot.html).length).toBeLessThanOrEqual(4096);
+    expect(new TextEncoder().encode(shot.text).length).toBeLessThanOrEqual(4096);
+  });
+
+  it("is well formed at every cut: markup appended after it stays outside", async () => {
+    const root = container(
+      '<div><p title="a &quot;quoted&quot; title">some <b>bold</b> text</p><textarea></textarea><ul><li>one</li></ul></div>',
+    );
+    const area = root.querySelector("textarea");
+    if (!area) throw new Error("no textarea");
+    area.value = "</textarea> typed text that runs on";
+    for (let maxBytes = 1; maxBytes <= 200; maxBytes += 1) {
+      const { html } = await read(root, maxBytes);
+      expect(new TextEncoder().encode(html).length).toBeLessThanOrEqual(maxBytes);
+      const parsed = document.createElement("template");
+      parsed.innerHTML = `${html}<i id="after">after</i>`;
+      expect(parsed.content.lastElementChild?.id).toBe("after");
+    }
+  });
+});
+
+describe("agentSnapshot's HTML and the network", () => {
+  it("drops CSS escapes and remote URLs from SVG paint, and notes a remote image as text", async () => {
+    const root = container(
+      '<svg><rect fill="u\\72 l(https://x.test/a)" stroke="url(https://x.test/b)" mask="url(#m)" clip-path="u\\rl(#m)"></rect>' +
+        '<circle fill="#0af" stroke="currentColor"></circle></svg>' +
+        '<img src="https://x.test/a.png" alt="logo"><img src="//x.test/b.png" alt="b"><img src="local.png" alt="l">' +
+        '<a href="https://x.test/page">link</a>',
+    );
+    const { html } = await read(root);
+    expect(html).not.toContain("\\");
+    expect(html).not.toMatch(/(?:src|fill|stroke)="[^"]*x\.test/u);
+    expect(html).toContain('<rect mask="url(#m)"></rect>');
+    expect(html).toContain('<circle fill="#0af" stroke="currentColor"></circle>');
+    expect(html).toContain("[image: logo][image: b]");
+    expect(html).toContain('<img src="local.png" alt="l">');
+    expect(html).toContain('<a href="https://x.test/page">link</a>');
+  });
+});

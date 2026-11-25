@@ -94,14 +94,39 @@ function safeUrl(value: string): boolean {
   return scheme === undefined || safeSchemes.has(scheme.toLowerCase());
 }
 
-/** A paint value: plain, or a reference to an element of the page (`url(#gradient)`), never another resource. */
-const safePaint = (value: string): boolean =>
-  !value.toLowerCase().includes("url(") || /^\s*url\(\s*#[\w.-]+\s*\)\s*$/u.test(value);
+/** SVG attributes that take a paint or a reference: a colour, `none`, `currentColor` or `url(#id)` only. */
+const paintAttributes = words(
+  "fill stroke stop-color mask clip-path marker-start marker-mid marker-end",
+);
+const paint =
+  /^(?:none|currentcolor|transparent|[a-z]+|#[0-9a-f]{3,8}|(?:rgba?|hsla?)\([\d\s.,%+-]+\)|url\(\s*#[\w.-]+\s*\))$/iu;
+
+/** An SVG value that loads nothing: no CSS escape and no `url(` but a paint attribute's `url(#id)`. */
+function safeSvgValue(key: string, value: string): boolean {
+  if (value.includes("\\")) return false;
+  if (paintAttributes.has(key)) return paint.test(value.trim());
+  return !value.toLowerCase().includes("url(");
+}
+
+/** A URL that would load from another origin when the HTML renders: absolute or protocol-relative. */
+function loadsRemote(value: string): boolean {
+  // eslint-disable-next-line no-control-regex -- the C0 controls are what the URL parser strips
+  const bare = value.replace(/[\u0000-\u0020\u007f]/gu, "");
+  return /^[/\\]{2}/u.test(bare) || /^[a-z][a-z\d+.-]*:/iu.test(bare);
+}
+
+/** An image whose source would load from the network, as the text an agent reads instead: `[image: alt]`. */
+export function imageNote(element: Element): string | undefined {
+  if (element.namespaceURI !== htmlNs || element.localName !== "img") return undefined;
+  const src = element.getAttribute("src");
+  if (src === null || !loadsRemote(src)) return undefined;
+  return `[image: ${(element.getAttribute("alt") ?? "").slice(0, 200)}]`;
+}
 
 export function allowedAttribute(element: Element, name: string, value: string): boolean {
   const key = name.toLowerCase();
   if (urlAttributes.has(key) && !safeUrl(value)) return false;
   if (globalAttributes.has(key) || /^(?:aria|data)-[\w.-]+$/u.test(key)) return true;
-  if (element.namespaceURI === svgNs) return svgAttributes.has(key) && safePaint(value);
+  if (element.namespaceURI === svgNs) return svgAttributes.has(key) && safeSvgValue(key, value);
   return htmlAttributes.get(element.localName)?.has(key) === true;
 }
