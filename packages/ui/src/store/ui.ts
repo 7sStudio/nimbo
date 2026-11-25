@@ -7,6 +7,7 @@ import type { Ref } from "vue";
 import { reactive, ref, watch } from "vue";
 
 import { foldState, pinState } from "./fold.js";
+import type { DiffTarget } from "./git.js";
 import type { Overlay } from "./overlay.js";
 import type { InspectorSection, LayoutState, Place, Region } from "./layout.js";
 import {
@@ -61,7 +62,7 @@ function settingsDrafts() {
 /** The diff page's state. */
 const diffState = () => ({
   /** The file the diff editor shows: its path and whether it is the index's side (Staged). */
-  diff: ref<{ readonly path: string; readonly staged: boolean } | null>(null),
+  diff: ref<DiffTarget | null>(null),
   /** A step asked of the diff editor (Next or Previous Change); `at` tells a repeat apart. */
   diffStep: ref<{ readonly by: 1 | -1; readonly at: number } | null>(null),
 });

@@ -2,10 +2,13 @@
 // commit the message box, open a changed file. Discard asks first, as VS Code does, and a commit with nothing staged
 // asks whether to stage everything (VS Code's smart commit); each is sent again, answered, from its dialog.
 import { notebookPageUrl } from "../store/address.js";
+import { placeOf } from "../store/layout.js";
 import { useGitStore } from "../store/git.js";
+import { useHistoryStore } from "../store/history.js";
 import { useUiStore } from "../store/ui.js";
 import type { Args, Command } from "./command.js";
 import { stringArg, uiCommand as ui } from "./command.js";
+import { gitWrite } from "./gitCall.js";
 
 /** The `paths` argument: a list of strings, or `path` alone. */
 function pathsArg(args: Args | undefined): readonly string[] {
@@ -35,6 +38,12 @@ function openFile(
   if (cell !== undefined) store.select(cell);
 }
 
+/** The Source Control view, where the history shows. */
+function showView(store: ReturnType<typeof useUiStore>): void {
+  const place = placeOf("sourceControl");
+  if (place !== undefined) store.openPlace(place);
+}
+
 const confirmed = (args?: Args) => args?.confirmed === true;
 
 /** Commit: with nothing staged it asks first whether to stage everything, VS Code's smart commit. */
@@ -42,7 +51,7 @@ function commitCommand(
   git: ReturnType<typeof useGitStore>,
   store: ReturnType<typeof useUiStore>,
 ): Command {
-  return ui(
+  return gitWrite(
     "ui.git.commit",
     "Commit",
     (args) => {
@@ -59,13 +68,42 @@ function commitCommand(
   );
 }
 
+/** View History and Open File History: the History section of the Source Control view. */
+function historyCommands(
+  git: ReturnType<typeof useGitStore>,
+  store: ReturnType<typeof useUiStore>,
+): readonly Command[] {
+  return [
+    ui(
+      "ui.git.history",
+      "View History",
+      () => {
+        showView(store);
+        return useHistoryStore().show(null);
+      },
+      () => git.repo !== null,
+    ),
+    ui(
+      "ui.git.fileHistory",
+      "Open File History",
+      (args) => {
+        const path = stringArg(args, "path");
+        if (path === undefined) return undefined;
+        showView(store);
+        return useHistoryStore().show(path);
+      },
+      (args) => git.repo !== null && stringArg(args, "path") !== undefined,
+    ),
+  ];
+}
+
 export function gitCommands(): readonly Command[] {
   const git = useGitStore();
   const store = useUiStore();
   return [
-    ui("ui.git.stage", "Stage Changes", (args) => git.stage(pathsArg(args)), hasPaths),
-    ui("ui.git.unstage", "Unstage Changes", (args) => git.unstage(pathsArg(args)), hasPaths),
-    ui(
+    gitWrite("ui.git.stage", "Stage Changes", (args) => git.stage(pathsArg(args)), hasPaths),
+    gitWrite("ui.git.unstage", "Unstage Changes", (args) => git.unstage(pathsArg(args)), hasPaths),
+    gitWrite(
       "ui.git.discard",
       "Discard Changes",
       (args) => {
@@ -77,6 +115,7 @@ export function gitCommands(): readonly Command[] {
       hasPaths,
     ),
     commitCommand(git, store),
+    ...historyCommands(git, store),
     ui(
       "ui.git.openFile",
       "Open File",
