@@ -51,7 +51,7 @@ function failed(saver: Saver, error: unknown): Outcome {
   options.events.failed({ code: saver.failure.data.code, message: saver.failure.message });
   saver.retry ??= later(() => {
     saver.retry = undefined;
-    if (saver.dirty) void enqueue(saver, false); // a failure again is reported again
+    if (saver.mutated) void enqueue(saver, false); // a failure again is reported again
   }, options.retryMs ?? 10_000);
   return "failed";
 }
@@ -132,6 +132,8 @@ const fallbackPolicy: AutosavePolicy = {
 function fire(saver: Saver): void {
   saver.timer = undefined;
   saver.burst = undefined;
+  // a load's normalization or migration is not a change: it waits for the next write the user causes (07 §4)
+  if (!saver.mutated) return;
   void enqueue(saver, false); // its failure is reported as notebook.saveFailed and retried
 }
 
@@ -202,6 +204,16 @@ const diskSide = (saver: Saver) => ({
   },
 });
 
+/** The file was read again: what it holds is the state, and the timer of the changes before it is cancelled. */
+function reloaded(saver: Saver, text: string, dirty: boolean): void {
+  clearTimeout(saver.timer);
+  Object.assign(saver, { timer: undefined, burst: undefined });
+  saver.version += 1; // a write that took its text before the reload clears nothing
+  Object.assign(saver, { text, hash: hashOf(text), conflict: false, dirty, mutated: false });
+  saver.savedAt = saver.options.now().toISOString();
+  saver.options.events.saved(saver.savedAt);
+}
+
 /** An autosaver whose file holds `initial.text` (as read or written), dirty when the state differs already. */
 export function createAutosaver(
   options: AutosaveOptions,
@@ -224,10 +236,7 @@ export function createAutosaver(
     save: (force) => save(saver, force),
     exclusive: (work) => exclusive(saver, work),
     reloaded: (text, dirty) => {
-      saver.version += 1; // a write that took its text before the reload clears nothing
-      Object.assign(saver, { text, hash: hashOf(text), conflict: false, dirty, mutated: false });
-      saver.savedAt = options.now().toISOString();
-      options.events.saved(saver.savedAt);
+      reloaded(saver, text, dirty);
     },
     ...diskSide(saver),
     state: () => ({
