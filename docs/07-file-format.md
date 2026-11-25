@@ -115,6 +115,7 @@ A workspace is a folder containing `.jsnb/` (03-api §2); the daemon creates it 
     cache/
       npm/<name>@<version>/  bundles for /npm/<spec> (04-kernel §8.1): index.js or @<subpath>.js, meta.json (last);
                              a split build's chunks/<hash>.js, group.json (entry, chunk, previous chunk sizes),
+                             unsplit.json (a package built entry by entry),
                              group.imports.json, group.inputs.json (linked packages); a standalone
                              bundle's <bundle>.imports.json, <bundle>.inputs.json (linked packages)
       npm/_/<key>/           bundles for /npm/_/<key>/..., folders reached from a bundle's imports
