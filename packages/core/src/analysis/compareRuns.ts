@@ -92,42 +92,6 @@ const child = (path: string, key: string | number): string => {
 
 const same = (a: unknown, b: unknown): boolean => JSON.stringify(a) === JSON.stringify(b);
 
-type Push = (change: ValueChange) => void;
-type Walk = (a: unknown, b: unknown, path: string) => void;
-type Walker = { readonly push: Push; readonly walk: Walk };
-
-/** Two arrays by index: the common part walked, the rest added or removed. */
-function walkArrays(
-  a: readonly unknown[],
-  b: readonly unknown[],
-  path: string,
-  { push, walk }: Walker,
-) {
-  const length = Math.max(a.length, b.length);
-  for (let index = 0; index < length; index += 1) {
-    const where = child(path, index);
-    if (index >= b.length) push({ kind: "removed", path: where, before: a[index] });
-    else if (index >= a.length) push({ kind: "added", path: where, after: b[index] });
-    else walk(a[index], b[index], where);
-  }
-}
-
-/** Two objects by key: the keys of `a` in order (kept or removed), then the keys only `b` has. */
-function walkObjects(
-  a: Readonly<Record<string, unknown>>,
-  b: Readonly<Record<string, unknown>>,
-  path: string,
-  { push, walk }: Walker,
-) {
-  for (const key of Object.keys(a)) {
-    const where = child(path, key);
-    if (Object.hasOwn(b, key)) walk(a[key], b[key], where);
-    else push({ kind: "removed", path: where, before: a[key] });
-  }
-  for (const key of Object.keys(b))
-    if (!Object.hasOwn(a, key)) push({ kind: "added", path: child(path, key), after: b[key] });
-}
-
 /** Every change from `before` to `after`, in document order, the first `limit` kept and the rest counted. */
 export function diffValues(
   before: unknown,
@@ -136,15 +100,29 @@ export function diffValues(
 ): { readonly changes: readonly ValueChange[]; readonly more: number } {
   const changes: ValueChange[] = [];
   let count = 0;
-  const push: Push = (change) => {
+  const push = (change: ValueChange): void => {
     count += 1;
     if (changes.length < limit) changes.push(change);
   };
-  const walk: Walk = (a, b, path) => {
-    if (Array.isArray(a) && Array.isArray(b)) walkArrays(a, b, path, { push, walk });
-    else if (!isLeaf(a) && !isLeaf(b) && isPlainObject(a) && isPlainObject(b))
-      walkObjects(a, b, path, { push, walk });
-    else if (!same(a, b)) push({ kind: "changed", path, before: a, after: b });
+  const walk = (a: unknown, b: unknown, path: string): void => {
+    if (Array.isArray(a) && Array.isArray(b)) {
+      // by index: the common part walked, the rest added or removed
+      for (let index = 0; index < Math.max(a.length, b.length); index += 1) {
+        const where = child(path, index);
+        if (index >= b.length) push({ kind: "removed", path: where, before: a[index] });
+        else if (index >= a.length) push({ kind: "added", path: where, after: b[index] });
+        else walk(a[index], b[index], where);
+      }
+    } else if (!isLeaf(a) && !isLeaf(b) && isPlainObject(a) && isPlainObject(b)) {
+      // by key: the keys of `a` in order (kept or removed), then the keys only `b` has
+      for (const key of Object.keys(a)) {
+        const where = child(path, key);
+        if (Object.hasOwn(b, key)) walk(a[key], b[key], where);
+        else push({ kind: "removed", path: where, before: a[key] });
+      }
+      for (const key of Object.keys(b))
+        if (!Object.hasOwn(a, key)) push({ kind: "added", path: child(path, key), after: b[key] });
+    } else if (!same(a, b)) push({ kind: "changed", path, before: a, after: b });
   };
   walk(before, after, "$");
   return { changes, more: count - changes.length };
