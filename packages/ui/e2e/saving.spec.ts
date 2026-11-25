@@ -1,8 +1,8 @@
 // Journeys: the file on disk (07-file-format §5, the banners). A folder the daemon cannot write: the "could not
 // save" banner, the top bar's save state reading "not saved", ⌘S answered with an error toast, Retry once it can write again. A file changed behind the daemon: merged
 // in place with its toast; the same cell changed here too: the "changed on disk" banner, Compare, and Reload from disk
-// takes the file's version.
-import { cells } from "./cells.js";
+// takes the file's version. Typing while the daemon is stalled: the drafts in flight chain, so no conflict.
+import { cell, cells } from "./cells.js";
 import { chmod, readFile, writeFile } from "node:fs/promises";
 
 import type { Page } from "@playwright/test";
@@ -83,4 +83,55 @@ test("the same cell changed on disk and here is a conflict, reloaded from its ba
   await expect(banner(page, "conflict")).toHaveCount(0);
   await expect(cells(page).first()).toContainText("3");
   await shot(page, "reloaded");
+});
+
+/** Runs `work` with the daemon's process stopped (SIGSTOP), then lets it go on. */
+async function stalled(world: { path: (...parts: string[]) => string }, work: () => Promise<void>) {
+  const { pid } = JSON.parse(await readFile(world.path(".jsnb", "server.json"), "utf8")) as {
+    pid: number;
+  };
+  process.kill(pid, "SIGSTOP");
+  try {
+    await work();
+  } finally {
+    process.kill(pid, "SIGCONT");
+  }
+}
+
+test("typing while the daemon is stalled sends drafts that chain, never a conflict", async ({
+  page,
+  world,
+}) => {
+  test.setTimeout(30_000);
+  await world.open(page);
+  const added = await world.jsnb(
+    "cell",
+    "add",
+    "-n",
+    "demo.jsnb",
+    "--type",
+    "server",
+    "--source",
+    "1",
+  );
+  const id = field(added, "cell", "id");
+  await expect(page.getByTestId("save-state")).toHaveAttribute("data-save", "saved");
+  await cell(page, 1).getByRole("textbox", { name: "Cell 1 source" }).click();
+  await page.keyboard.press("ControlOrMeta+End");
+  await stalled(world, async () => {
+    // each key past the draft delay: a draft each, all in flight
+    for (let key = 0; key < 12; key += 1) {
+      await page.keyboard.type("0");
+      await page.waitForTimeout(450);
+    }
+  });
+  await expect
+    .poll(async () =>
+      field(await world.jsnb("cell", "get", "-n", "demo.jsnb", "--cell", id), "cell", "source"),
+    )
+    .toBe(`1${"0".repeat(12)}`);
+  await expect(page.getByTestId("save-state")).toHaveAttribute("data-save", "saved");
+  const state = await world.jsnb("notebook", "get", "-n", "demo.jsnb");
+  expect(JSON.stringify(state)).not.toContain('"conflict":{');
+  await expect(banner(page, "conflict")).toHaveCount(0);
 });

@@ -78,16 +78,18 @@ function onFocusLost(save: () => Promise<unknown>): () => void {
   };
 }
 
-/** cell.update with the draft and the text it was typed on; true once the daemon took it. */
+/** cell.update with the draft and the text it was typed on; true once the daemon took it. A draft sent before this
+ * one's answer is typed on this one's text, as the daemon has it by then: drafts in flight chain, however many. */
 async function sendDraft(
   store: ReturnType<typeof useNotebookStore>,
   ui: ReturnType<typeof useUiStore>,
   cell: CellId,
   text: string,
 ): Promise<boolean> {
-  const base = textHash(ui.draftBaseOf(cell) ?? store.byId.get(cell)?.source ?? "");
-  const done = (await store.update(cell, { source: text, base })) !== undefined;
-  if (done) ui.draftSent(cell, text);
+  const typedOn = ui.draftBaseOf(cell) ?? store.byId.get(cell)?.source ?? "";
+  ui.draftSent(cell, text);
+  const done = (await store.update(cell, { source: text, base: textHash(typedOn) })) !== undefined;
+  if (!done) ui.draftRefused(cell, text, typedOn);
   return done;
 }
 

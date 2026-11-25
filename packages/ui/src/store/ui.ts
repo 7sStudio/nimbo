@@ -201,10 +201,14 @@ function draftState() {
       if (!bases.has(cell) && base !== undefined) bases.set(cell, base);
     },
     draftOf: (cell: CellId): string | undefined => drafts.get(cell),
-    /** The text the cell's draft was typed on; `sent` once the daemon took the draft's text. */
+    /** The text the cell's next draft is typed on: the last one sent, as the daemon will have it once it takes it. */
     draftBaseOf: (cell: CellId): string | undefined => bases.get(cell),
     draftSent: (cell: CellId, sent: string) => {
       if (drafts.has(cell)) bases.set(cell, sent);
+    },
+    /** The daemon refused the draft `sent`: the next one is typed on `typedOn` again, unless a later one was sent. */
+    draftRefused: (cell: CellId, sent: string, typedOn: string) => {
+      if (bases.get(cell) === sent) bases.set(cell, typedOn);
     },
     /** Set by the cell list (cells/useDrafts.ts): sends every unsent draft; the dispatcher awaits it before a command
      * that writes, so a run, a save or a restart never acts on a cell's older source. */
