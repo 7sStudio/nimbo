@@ -169,7 +169,10 @@ async function moveSession(
 ): Promise<void> {
   const from = context.ref;
   await context.moveLog(to);
-  if (options.recoveryDir !== undefined) await moveRecovery(options.recoveryDir, from, to);
+  if (options.recoveryDir !== undefined)
+    await moveRecovery(options.recoveryDir, from, to).catch((error: unknown) => {
+      context.log.warn({ err: error, from, to }, "the recovery copy could not follow the notebook");
+    });
   context.emit("notebook.moved", { path: from, to });
   options.bus.moveStream(from, to);
   Object.assign(context, { ref: to, path, logPath: kernelLogPath(options.logsDir, to) });

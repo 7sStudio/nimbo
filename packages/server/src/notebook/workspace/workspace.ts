@@ -229,7 +229,7 @@ export async function openWorkspace(options: WorkspaceOptions): Promise<Workspac
     ...{ settings: settings.current, port: options.port, kernelEntry: options.kernelEntry },
     ...{ engines, sqlDirectory: jsnb.sqlCache, realm, requestTimeoutMs: requestTimeoutOf(options) },
     listChanged,
-    recoveryDir: join(jsnb.dir, "recovery"),
+    recoveryDir: jsnb.recovery,
     ...(options.moveCheckMs === undefined ? {} : { moveCheckMs: options.moveCheckMs }),
   });
   const stopListWatch = listWatchOf(options, notebooks, listChanged);

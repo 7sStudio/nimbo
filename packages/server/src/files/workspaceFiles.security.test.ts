@@ -1,6 +1,6 @@
 // What the daemon reads and writes stays inside the workspace (09-testing §5, 07-file-format §7): a `.jsnb` that is a
 // symbolic link or a file is refused with WorkspaceUnusable before anything is written through it, and so are its
-// logs/ and cache/ folders and its log files as links; a notebook whose
+// logs/, recovery/ and cache/ folders and its log files as links; a notebook whose
 // folder or file a symbolic link takes outside the workspace is refused with INVALID_PARAMS and nothing is written
 // there, while a link that stays inside works; a FIFO or a folder at a notebook path is refused at once with
 // NotebookUnreadable, the daemon answering on.
@@ -64,7 +64,13 @@ describe("the folders and the logs of .jsnb", () => {
   it("as symbolic links out of the workspace are refused WorkspaceUnusable, nothing written through them", async () => {
     await withWorkspace(async (ws) => {
       const outside = await within(ws, "outside");
-      for (const [index, folder] of ["logs", "cache", "cache/npm", "cache/sql"].entries()) {
+      for (const [index, folder] of [
+        "logs",
+        "recovery",
+        "cache",
+        "cache/npm",
+        "cache/sql",
+      ].entries()) {
         const work = await within(ws, `work-${String(index)}`);
         await mkdir(work.path(".jsnb", folder, ".."), { recursive: true });
         await symlink(outside.dir, work.path(".jsnb", folder));
