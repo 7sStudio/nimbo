@@ -44,29 +44,15 @@ function roomFor(wrapper: HTMLElement, top: number, given: number): number {
   return Math.max(0, Math.ceil(top + card.offsetHeight + endGap - inside));
 }
 
-/** Where the card is (from the wrapper's top in CSS pixels, null while it is hidden) and what the cell's code is
- * lengthened by while it shows (0 when the cell holds it). */
-type Place = { readonly top: Ref<number | null>; readonly room: Ref<number> };
-
-/** Opens the card under the last line of the run `element` is in, so the lines it is about stay in view, then makes
- * room for it in its own cell once it has its height. */
-function placeAt(wrapper: Ref<HTMLElement | null>, place: Place, element: HTMLElement): void {
-  const box = wrapper.value?.getBoundingClientRect();
-  if (box === undefined) return;
-  const at = runEnd(element).getBoundingClientRect().bottom - box.top + 4;
-  place.top.value = at;
-  void nextTick(() => {
-    const now = wrapper.value;
-    if (now !== null && place.top.value === at)
-      place.room.value = roomFor(now, at, place.room.value);
-  });
-}
-
-/** The card's place and its opening and closing, the grace before it goes included. */
-function cardState(wrapper: Ref<HTMLElement | null>) {
+export function useAgentCard(wrapper: Ref<HTMLElement | null>) {
+  /** Where the card is, from the wrapper's top in CSS pixels; null while it is hidden. */
   const top = ref<number | null>(null);
+  /** What the cell's code is lengthened by while the card shows (0 when the cell holds it). */
   const room = ref(0);
   let closing: ReturnType<typeof setTimeout> | undefined;
+  /** Escape brings the focus back to the edit's button with the card closed (its focus would open it again). */
+  let quiet = false;
+
   const keep = () => {
     clearTimeout(closing);
   };
@@ -75,68 +61,63 @@ function cardState(wrapper: Ref<HTMLElement | null>) {
     top.value = null;
     room.value = 0;
   };
+  const later = () => {
+    keep();
+    closing = setTimeout(close, graceMs);
+  };
+  /** Opens the card under the last line of the run `element` is in, so the lines it is about stay in view, then makes
+   * room for it in its own cell once it has its height. */
   const openAt = (element: HTMLElement) => {
     keep();
-    placeAt(wrapper, { top, room }, element);
+    const box = wrapper.value?.getBoundingClientRect();
+    if (box === undefined) return;
+    const at = runEnd(element).getBoundingClientRect().bottom - box.top + 4;
+    top.value = at;
+    void nextTick(() => {
+      const now = wrapper.value;
+      if (now !== null && top.value === at) room.value = roomFor(now, at, room.value);
+    });
   };
-  const first = () => wrapper.value?.querySelector<HTMLElement>(".cm-agentLine") ?? null;
+  /** The edit's button has the focus: its first violet number ringed, the card under its run. */
+  const marked = (on: boolean) => {
+    const number = wrapper.value?.querySelector<HTMLElement>(".cm-agentLine") ?? null;
+    number?.classList.toggle("cm-agentFocus", on);
+    if (on && number !== null) openAt(number);
+  };
+
   return {
     top,
     room,
-    keep,
     close,
-    openAt,
-    later: () => {
-      keep();
-      closing = setTimeout(close, graceMs);
-    },
-    /** The edit's button has the focus: its first violet number ringed, the card under its run. */
-    marked: (on: boolean) => {
-      const number = first();
-      number?.classList.toggle("cm-agentFocus", on);
-      if (on && number !== null) openAt(number);
-    },
-    mark: () => wrapper.value?.querySelector<HTMLElement>("[data-part='agent-mark']") ?? null,
-    firstAction: () =>
-      wrapper.value?.querySelector<HTMLElement>("[data-part='agent-card'] button") ?? null,
-  };
-}
-
-export function useAgentCard(wrapper: Ref<HTMLElement | null>) {
-  const card = cardState(wrapper);
-  /** Escape brings the focus back to the edit's button with the card closed (its focus would open it again). */
-  let quiet = false;
-  return {
-    top: card.top,
-    room: card.room,
-    close: card.close,
     over: (event: MouseEvent) => {
       const number = agentNumber(event.target);
-      if (number !== null) card.openAt(number);
-      else if (inCard(event.target)) card.keep();
-      else if (card.top.value !== null) card.later();
+      if (number !== null) openAt(number);
+      else if (inCard(event.target)) keep();
+      else if (top.value !== null) later();
     },
-    leave: card.later,
+    leave: later,
     focusIn: (event: FocusEvent) => {
-      if (isMark(event.target) && !quiet) card.marked(true);
-      else if (inCard(event.target)) card.keep();
+      if (isMark(event.target) && !quiet) marked(true);
+      else if (inCard(event.target)) keep();
     },
     focusOut: (event: FocusEvent) => {
-      if (isMark(event.target)) card.marked(false);
+      if (isMark(event.target)) marked(false);
       const next = event.relatedTarget;
-      if (!(next instanceof Node) || wrapper.value?.contains(next) !== true) card.close();
+      if (!(next instanceof Node) || wrapper.value?.contains(next) !== true) close();
     },
     /** The edit's button pressed (Enter, Space or a click): the card, the focus on its first action. */
     enter: () => {
-      card.marked(true);
-      requestAnimationFrame(() => card.firstAction()?.focus());
+      marked(true);
+      requestAnimationFrame(() =>
+        wrapper.value?.querySelector<HTMLElement>("[data-part='agent-card'] button")?.focus(),
+      );
     },
     /** Escape in the card closes it and gives the focus back to the edit's button. */
     key: (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || card.top.value === null) return;
-      card.close();
+      if (event.key !== "Escape" || top.value === null) return;
+      close();
       quiet = true;
-      card.mark()?.focus();
+      wrapper.value?.querySelector<HTMLElement>("[data-part='agent-mark']")?.focus();
       quiet = false;
     },
   };

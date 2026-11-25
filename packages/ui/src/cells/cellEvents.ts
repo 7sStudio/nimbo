@@ -18,9 +18,16 @@ type Deps = {
   readonly drafts: ReturnType<typeof useDrafts>;
 };
 
-/** The editor's events: its text is a draft, its focus enters edit mode, its caret goes to the status bar. */
-function editorEvents(cell: CellId, { dispatcher, ui, drafts }: Deps) {
+/** The handlers of one card's events. */
+export function cellEvents(cell: CellId, deps: Deps) {
+  const { dispatcher, ui, drafts } = deps;
+  watchPresses();
   return {
+    command: (id: string, args?: Record<string, unknown>) => {
+      ui.select(cell);
+      void dispatcher.dispatch(id, args);
+    },
+    // the editor's: its text is a draft, its focus enters edit mode, its caret goes to the status bar
     change: (text: string) => {
       drafts.change(cell, text);
     },
@@ -39,19 +46,6 @@ function editorEvents(cell: CellId, { dispatcher, ui, drafts }: Deps) {
       void drafts.flush(cell);
       void dispatcher.dispatch(edge === "previous" ? "ui.edit.previous" : "ui.edit.next");
     },
-  };
-}
-
-/** The handlers of one card's events. */
-export function cellEvents(cell: CellId, deps: Deps) {
-  const { dispatcher, ui } = deps;
-  watchPresses();
-  return {
-    command: (id: string, args?: Record<string, unknown>) => {
-      ui.select(cell);
-      void dispatcher.dispatch(id, args);
-    },
-    ...editorEvents(cell, deps),
     meta: (patch: MetaPatch) => {
       void dispatcher.dispatch("cell.update", { cell, meta: patch });
     },
