@@ -182,6 +182,7 @@ sequenceDiagram
 - `bridge.rpcTimeoutMs` applies on both sides (`RpcTimeout`); time the kernel spends paused in the debugger does not count.
 - `kernel.interrupt` stops a server function a call is running; the awaiting client cell ends `interrupted` (§5).
 - Push events: a server cell's `emit(name, data)` goes to the kernel's bounded queue, then to the daemon's, then to the page as `realm.event` batches, one at a time, where `on(name, callback)` listeners hear them; with no page attached they are counted and dropped, and `bridge.events` counts them by name (05 §6).
+- Snapshot: `cell.snapshot` asks the attached page for a client cell's rendered container, as text and, on request, as HTML passed through an allowlist (no script, style, handler or remote load), each cut to `maxBytes`; the page loads that code on the first request, and what it answers is the page's own writing, untrusted (`runtime-web/src/display/agentSnapshot.ts`, `server/src/notebook/realm/snapshot.ts`).
 
 ### 4.4 Save, autosave and conflict
 
@@ -217,7 +218,7 @@ The other direction: a watch on each open notebook's file (`session/watch.ts`) m
 1. A cell imports `nanoid`. Before the run the daemon's pre-flight checks that every bare import resolves in the workspace; if not, the run ends at once with `MissingPackage` and the UI offers Install [server].
 2. Install is a click (or an agent's `packages.add`): nothing is installed silently. The daemon picks the manager (the `packages.manager` setting, else the lockfile, else the first of pnpm, npm, yarn, bun on `PATH`, else npm), creates `package.json` if missing, and spawns it without a shell in its own process group; each output line is redacted and emitted as `packages.progress`, then `packages.done`. One install at a time, ten minutes at most.
 3. The user runs the cell again. In a server cell the import becomes `await __scope.__import("nanoid")`, loaded through `.jsnb/loader.mjs` by Node's own resolution [kernel-node].
-4. In a client cell the same rewrite maps to `/npm/nanoid` on the page [runtime-web]. The daemon bundles the package with esbuild for the browser as ESM, resolving its graph as Node does, caches it under `.jsnb/cache/npm/`, and serves it (`server/src/files/npm/`); a workspace module is served as its own source with types stripped, `vue` as its full ESM build with the template compiler (04 §8.1).
+4. In a client cell the same rewrite maps to `/npm/nanoid` on the page [runtime-web]. The daemon bundles the package with esbuild for the browser as ESM, resolving its graph as Node does, caches it under `.jsnb/cache/npm/`, and serves it (`server/src/files/npm/`): a package with several exported entries is built once as one split build, its entries sharing chunks and state, a few builds at a time (a queue), stopped when every request for it went away; entries that do not build are left out, and a package that cannot be split is built entry by entry; a workspace module is served as its own source with types stripped, `vue` as its full ESM build with the template compiler (04 §8.1).
 5. `packages.done` resets the language service, so the new types appear in the editor.
 
 ### 4.8 A debug session
