@@ -86,10 +86,14 @@ const hints: Readonly<Record<string, Hint>> = {
     (path) =>
       `Reload it with nimbo notebook reload -n ${path}, or overwrite it with nimbo notebook save -n ${path} --force.`,
   ),
-  RealmNotAttached: withPath(
-    "notebook",
-    (notebook) => `Open its page with nimbo open ${notebook}, then run the client cells again.`,
-  ),
+  RealmNotAttached: (data) => {
+    const notebook = textOf(data.notebook);
+    if (notebook === undefined) return undefined;
+    const open = `Open its page with nimbo open ${notebook}`;
+    return data.headless === undefined
+      ? `${open}, or run client cells without one: nimbo config set realm.headless true.`
+      : `${open}, then run the client cells again.`;
+  },
 };
 
 /** The CLI's own way to do what a daemon message asks with an API command. */
