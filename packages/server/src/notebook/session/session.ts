@@ -131,7 +131,7 @@ function edits(context: SessionContext, state: ExternalState) {
       const record = updateCell(context, input, editor);
       if (textHash(record.source) !== before)
         ownEdit(context, state, { cell: input.cell, before, stale }, editor);
-      if (stale) conflictOn(context, [input.cell]);
+      if (stale) conflictOn(context, [input.cell], [...state.held.keys()]);
       return api(input.source === undefined && input.type === undefined ? record : own(record));
     },
     revert: (cell: CellId, editor: Editor) => api(own(revertCell(context, cell, editor))),
@@ -142,7 +142,7 @@ function edits(context: SessionContext, state: ExternalState) {
 
 /** The session's answers to its autosave, set once the session's parts exist. */
 type FileHookSlots = {
-  run: () => Promise<"merged" | "conflict" | "off">;
+  run: () => Promise<"merged" | "conflict" | "unreadable" | "off">;
   recovery: (needed: boolean, now?: boolean) => Promise<boolean>;
 };
 
@@ -237,7 +237,7 @@ function externalParts(
   parts.hook.run = async () => {
     if (!on()) return "off";
     const outcome = await merge();
-    return outcome === "conflict" || outcome === "unreadable" ? "conflict" : "merged";
+    return outcome === "conflict" || outcome === "unreadable" ? outcome : "merged";
   };
   const watch = watchFile({
     path: () => context.path,

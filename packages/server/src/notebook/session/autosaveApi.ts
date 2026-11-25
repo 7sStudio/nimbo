@@ -39,8 +39,8 @@ export type AutosaveOptions = {
   /** Called inside a write when nothing is at `path`: it may follow the file to where it moved, changing `path`. */
   readonly missing?: () => Promise<void>;
   /** Called inside a write when the file changed since the base: merges it into the state (07 §5), `off` when merging
-   * is off (the write is a conflict then). */
-  readonly external?: () => Promise<"merged" | "conflict" | "off">;
+   * is off, `unreadable` when the file does not parse (the write is a conflict then). */
+  readonly external?: () => Promise<"merged" | "conflict" | "unreadable" | "off">;
   /** Whether the state needs its recovery copy (a conflict, a failing save, a close that could not write): kept up to
    * date while needed, removed once the file holds the state; `now` writes it before resolving (a close), and answers
    * whether it could. */

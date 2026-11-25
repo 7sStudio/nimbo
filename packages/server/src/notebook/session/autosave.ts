@@ -130,10 +130,11 @@ const holds = (
 /** How many times a write merges another program's edit and tries again before it leaves the conflict to the user. */
 const writeRounds = 3;
 
-/** The file changed since the base: merged first (07 §5), or a conflict when merging is off or the merge found one. */
+/** The file changed since the base: merged first (07 §5), or a conflict when merging is off, the merge found one, or
+ * the file does not parse (the write waits, with its recovery copy, until the file reads again: external.ts resumes). */
 async function changedOnDisk(saver: Saver): Promise<Outcome | undefined> {
   const merged = (await saver.options.external?.()) ?? "off";
-  if (merged === "off") return enterConflict(saver);
+  if (merged === "off" || merged === "unreadable") return enterConflict(saver);
   return merged === "conflict" ? "conflict" : undefined;
 }
 
@@ -149,7 +150,19 @@ async function round(saver: Saver, force: boolean, explicit: boolean): Promise<O
     caughtUp(saver, version);
     return "unchanged";
   }
-  return (await writeFile(saver, text, force)) ? saved(saver, { text, version }) : "again";
+  if (!(await writeFile(saver, text, force))) return "again";
+  return written(saver, { text, version, force });
+}
+
+/** The write is done: saved, unless it was not forced and a conflict began while it wrote (a stale edit), which
+ * stays; the file holds the text it took then, the rest is unsaved. */
+function written(
+  saver: Saver,
+  done: { readonly text: string; readonly version: number; readonly force: boolean },
+): Outcome {
+  if (done.force || !saver.conflict) return saved(saver, done);
+  Object.assign(saver, { text: done.text, hash: hashOf(done.text) });
+  return "conflict";
 }
 
 /** One write; never rejects: whatever fails (the serializer included) is the save's failure, reported and retried. */

@@ -32,12 +32,10 @@ export type ExternalState = {
   readonly held: Map<CellId, DocumentCell | null>;
   /** Both sides reordered the same cells: the base stays as it was until the conflict ends. */
   order: boolean;
-  /** Per cell, the editor whose edits made its text, the textHash of that text and of the texts its edits were made
-   * on: a later edit of its own may still name one of them (a draft sent while the previous one was under way). */
-  readonly own: Map<
-    CellId,
-    { readonly by: string; readonly last: string; readonly bases: string[] }
-  >;
+  /** Per cell whose text the page's own edits made: that text's textHash and those of the texts its edits were made
+   * on, which a draft of the page may still name (one sent before the previous one's answer, which it chains on, was
+   * refused). Agents get no such allowance: two of them may share a client name. */
+  readonly own: Map<CellId, { readonly last: string; readonly bases: string[] }>;
 };
 
 export const externalState = (): ExternalState => ({
@@ -47,9 +45,7 @@ export const externalState = (): ExternalState => ({
   own: new Map(),
 });
 
-const editorKey = (editor: Editor): string => `${editor.client}:${editor.agent ?? ""}`;
-
-/** How many of an editor's own earlier texts its edit may name as base. */
+/** How many of the page's own earlier texts its edit may name as base. */
 const ownBases = 8;
 
 export type ExternalOutcome = "same" | "resumed" | "merged" | "conflict" | "unreadable" | "missing";
@@ -300,7 +296,7 @@ function ownText(
   editor: Editor,
 ): boolean {
   const own = state.own.get(at.cell);
-  return own?.by === editorKey(editor) && own.last === at.now && own.bases.includes(at.base);
+  return editor.client === "ui" && own?.last === at.now && own.bases.includes(at.base);
 }
 
 /** The base a stale edit's cell is held against: the text before the file's change of it, when the edit was made on
@@ -316,7 +312,8 @@ function heldBase(
   return { ...documentCell(record), ...disk.before };
 }
 
-/** `editor` changed the cell's text from the text hashed `before`: its next edit may name either. */
+/** `editor` changed the cell's text from the text hashed `before`: the page's next edit may name either; another
+ * editor's edit ends what the page could name. */
 export function ownEdit(
   context: SessionContext,
   state: ExternalState,
@@ -325,18 +322,25 @@ export function ownEdit(
 ): void {
   const record = context.cells.get(edit.cell);
   if (record === undefined) return;
-  const by = editorKey(editor);
+  if (editor.client !== "ui") {
+    state.own.delete(edit.cell);
+    return;
+  }
   const previous = state.own.get(edit.cell);
-  const bases = previous?.by === by && previous.last === edit.before ? previous.bases : [];
+  const bases = previous?.last === edit.before ? previous.bases : [];
   state.own.set(edit.cell, {
-    by,
     last: textHash(record.source),
     bases: (edit.stale ? bases : [...bases, edit.before]).slice(-ownBases),
   });
 }
 
-/** The conflict on `cells`: notebook.reconciled says so, then notebook.conflict (autosave suspended). */
-export function conflictOn(context: SessionContext, cells: readonly CellId[]): void {
+/** The conflict on `cells`: notebook.reconciled says so, then notebook.conflict (autosave suspended) with every cell
+ * held, `cells` among them. */
+export function conflictOn(
+  context: SessionContext,
+  cells: readonly CellId[],
+  held: readonly CellId[] = cells,
+): void {
   context.emit("notebook.reconciled", {
     path: context.ref,
     outcome: "conflict",
@@ -344,7 +348,7 @@ export function conflictOn(context: SessionContext, cells: readonly CellId[]): v
     changed: [...cells],
     kept: true,
   });
-  context.autosave.conflicted(cells);
+  context.autosave.conflicted(held);
 }
 
 /** An edit without `base` over a source the file on disk set since the session's own last edit of the cell: its
