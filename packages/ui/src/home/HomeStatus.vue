@@ -1,4 +1,4 @@
-<!-- HomeStatus: Home's status bar, as VS Code's: the git branch inside a repository (a click opens Source Control), how many notebooks the list shows of the workspace's ("4 of 5 notebooks" while a folder or a search narrows it), how many kernels run, and the workspace folder's name (its path, the server's version and the daemon's pid in its tooltip). -->
+<!-- HomeStatus: Home's status bar, as VS Code's: the git branch and its sync item inside a repository (a click on the branch opens Checkout to…), how many notebooks the list shows of the workspace's ("4 of 5 notebooks" while a folder or a search narrows it), how many kernels run, and the workspace folder's name (its path, the server's version and the daemon's pid in its tooltip). -->
 <script setup lang="ts">
 import { Folder } from "@lucide/vue";
 import { computed } from "vue";
@@ -43,8 +43,8 @@ const title = computed(() =>
     <StatusBranch
       v-if="props.branch != null"
       :branch="props.branch"
-      command="ui.home.view.open"
-      :args="{ view: 'sourceControl' }"
+      command="ui.git.checkout"
+      :args="{}"
       @command="(id, args) => emit('command', id, args)"
     />
     <span v-if="props.loaded" data-testid="summary">{{ count }}</span>

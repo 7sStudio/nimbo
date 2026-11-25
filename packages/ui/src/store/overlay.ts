@@ -9,6 +9,19 @@ export type Anchor = { readonly x: number; readonly y: number };
 /** Where the restart menu was opened from: the top bar's restart icon or the kernel cluster. */
 export type RestartFrom = "button" | "cluster";
 
+/** A command an overlay sends once answered. */
+type Then = { readonly command: string; readonly args?: Readonly<Record<string, unknown>> };
+
+/** One row of Source Control's quick pick: a branch, a remote branch, a stash, a remote, or an action. */
+export type GitPickItem = Then & {
+  readonly label: string;
+  readonly description?: string;
+  readonly detail?: string;
+  readonly icon: "branch" | "remote" | "add" | "stash" | "repo";
+  /** The group heading it shows under. */
+  readonly group?: string;
+};
+
 export type Overlay =
   | { readonly kind: "cellMenu"; readonly cell: CellId; readonly at: Anchor | null }
   /** `toCode` (Y): the menu offers server and client, for the marked markdown cells only. */
@@ -43,4 +56,28 @@ export type Overlay =
       readonly args?: Readonly<Record<string, unknown>>;
     }
   /** A language hint (hover, parameter hints, a completion's details) in full, from its expand button. */
-  | { readonly kind: "hint"; readonly title: string; readonly html: string };
+  | { readonly kind: "hint"; readonly title: string; readonly html: string }
+  /** Source Control's confirm of an action that can lose work, VS Code's wording; the action sends `command`. */
+  | (Then & {
+      readonly kind: "gitAsk";
+      readonly title: string;
+      readonly description: string;
+      readonly button: string;
+      readonly danger?: true;
+    })
+  /** Source Control's quick pick (Checkout to, Delete Branch, Pop Stash, a remote): a row sends its command. */
+  | {
+      readonly kind: "gitPick";
+      readonly placeholder: string;
+      readonly items: readonly GitPickItem[];
+    }
+  /** Source Control's input box (a branch name, a stash message): Enter sends `command` with the text as `key`. */
+  | (Then & {
+      readonly kind: "gitInput";
+      readonly placeholder: string;
+      readonly prompt: string;
+      readonly key: string;
+      readonly value?: string;
+      /** An empty answer is sent too (a stash message). */
+      readonly optional?: true;
+    });

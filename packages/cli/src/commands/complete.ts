@@ -103,3 +103,10 @@ export async function confirm(io: Io, command: AnyCommand): Promise<void> {
   const answer = answered(await ask(io.stdin, io.stderr, question, { echo: true }), command);
   if (!/^y(es)?$/i.test(answer.trim())) throw new Cancelled({ command: command.name });
 }
+
+/** Asks before sending a command again that its refusal said needs the explicit yes (`confirm`). */
+export async function confirmAfter(io: Io, command: AnyCommand, why: string): Promise<void> {
+  const question = `nimbo ${wordsOf(command)}: ${why.split("\n")[0] ?? why}. Continue? [y/N] `;
+  const answer = answered(await ask(io.stdin, io.stderr, question, { echo: true }), command);
+  if (!/^y(es)?$/i.test(answer.trim())) throw new Cancelled({ command: command.name });
+}

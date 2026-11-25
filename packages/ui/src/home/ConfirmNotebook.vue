@@ -1,5 +1,6 @@
 <!-- ConfirmNotebook: the Home page's confirm ('s ConfirmDialog, on OverlayDialog): before a notebook is deleted ("Delete demo.jsnb?", its kernel stopped first when open), and before a busy kernel is stopped ("demo.jsnb is running"); an open notebook is renamed without closing it (07 §5). Cancel has the focus first and keeps everything; the action sends the command again, answered. -->
 <script setup lang="ts">
+import { consent } from "../commands/consent";
 import { computed } from "vue";
 
 import { useDispatcher } from "../commands/dispatch";
@@ -39,7 +40,7 @@ function confirm(): void {
   const { action, path } = props.overlay;
   ui.overlay = null;
   const id = action === "delete" ? "ui.notebook.delete" : "ui.notebook.close";
-  void dispatcher.dispatch(id, { path, confirmed: true });
+  void dispatcher.dispatch(id, { path, consent: consent() });
 }
 </script>
 

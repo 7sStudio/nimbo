@@ -1,5 +1,6 @@
 <!-- ConfirmGit: Source Control's confirms, on OverlayDialog as VS Code words them: "Discard changes in demo.jsnb?" (or "in 3 files?") before a discard, which cannot be undone, "Delete notes.txt?" when every file is untracked; "Stage all changes and commit?" when Commit finds nothing staged. Cancel has the focus first; the action sends the command again, answered. -->
 <script setup lang="ts">
+import { consent } from "../commands/consent";
 import { computed } from "vue";
 
 import { useDispatcher } from "../commands/dispatch";
@@ -49,7 +50,8 @@ const cancel = () => {
 function confirm(): void {
   const { action, paths } = props.overlay;
   ui.overlay = null;
-  if (action === "discard") void dispatcher.dispatch("ui.git.discard", { paths, confirmed: true });
+  if (action === "discard")
+    void dispatcher.dispatch("ui.git.discard", { paths, consent: consent() });
   else void dispatcher.dispatch("ui.git.commit", { all: true });
 }
 </script>

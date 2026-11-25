@@ -1,5 +1,6 @@
 <!-- ConfirmDialog: the one confirm, a restart while a cell runs: "Cell 4 is running. Restart anyway?" Cancel keeps the run (and has the focus first); Restart sends the restart again, answered. -->
 <script setup lang="ts">
+import { consent } from "../commands/consent";
 import { computed } from "vue";
 
 import { useDispatcher } from "../commands/dispatch";
@@ -29,7 +30,7 @@ const cancel = () => {
 };
 function restart(): void {
   ui.overlay = null;
-  void dispatcher.dispatch("kernel.restart", { all: props.overlay.all, confirmed: true });
+  void dispatcher.dispatch("kernel.restart", { all: props.overlay.all, consent: consent() });
 }
 </script>
 

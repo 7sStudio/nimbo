@@ -7,8 +7,10 @@ import { useGitStore } from "../store/git.js";
 import { useSettingsStore } from "../store/settings.js";
 import { useSessionStore } from "../store/socket.js";
 import { useUiStore } from "../store/ui.js";
-import type { Command } from "./command.js";
+import type { Args, Command } from "./command.js";
 import { gitCommands } from "./git.js";
+import { gitBranchCommands } from "./gitBranch.js";
+import { gitRemoteCommands } from "./gitRemote.js";
 import { stringArg, uiCommand as ui } from "./command.js";
 
 /** The theme after a toggle: the opposite of what shows now, `system` resolved through `prefersDark`. */
@@ -140,7 +142,27 @@ export function appCommands(): readonly Command[] {
     ...feedbackCommands(store),
     ...diffCommands(store),
     ...gitCommands(),
+    ...gitRemoteCommands(),
+    ...gitBranchCommands(),
   ];
+}
+
+/** The diff page of `path`: the working tree's (the index's with staged), a commit's, or a commit's against the working
+ * tree (base). */
+function openDiff(store: ReturnType<typeof useUiStore>, args: Args | undefined): void {
+  const path = stringArg(args, "path");
+  if (path === undefined) return;
+  store.closePalette();
+  store.overlay = null;
+  const commit = stringArg(args, "commit");
+  const base = stringArg(args, "base");
+  store.diff = {
+    path,
+    staged: args?.staged === true,
+    ...(commit === undefined ? {} : { commit }),
+    ...(base === undefined ? {} : { base }),
+  };
+  store.page = "diff";
 }
 
 /** The diff editor: a changed file's diff in the main area, as VS Code opens one in an
@@ -152,12 +174,7 @@ function diffCommands(store: ReturnType<typeof useUiStore>): readonly Command[] 
       "ui.diff.open",
       "Open Changes",
       (args) => {
-        const path = stringArg(args, "path");
-        if (path === undefined) return;
-        store.closePalette();
-        store.overlay = null;
-        store.diff = { path, staged: args?.staged === true };
-        store.page = "diff";
+        openDiff(store, args);
       },
       (args) => typeof args?.path === "string",
     ),

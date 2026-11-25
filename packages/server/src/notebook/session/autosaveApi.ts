@@ -54,8 +54,14 @@ export type Autosaver = {
   readonly state: () => {
     readonly savedAt: string | null;
     readonly dirty: boolean;
+    /** Changed by an edit since the load or the last save, not only by the load's normalization (07 §4). */
+    readonly mutated: boolean;
     readonly conflict: boolean;
   };
+  /** Whether the file on disk is the one the session last wrote or read (missing reads as changed). */
+  readonly inSync: () => Promise<boolean>;
+  /** The file changed under unsaved edits (a git operation rewrote it): suspends autosave, notebook.conflict. */
+  readonly conflicted: () => void;
   /** Closing: writes the changes made since the load or the last save, unless a conflict suspends autosave. */
   readonly flush: () => Promise<void>;
   readonly close: () => void;

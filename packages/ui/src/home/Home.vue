@@ -76,7 +76,7 @@ const { widthOf, resize } = useHomePanels();
 const git = useGitStore();
 /** The changed files on the Source Control icon; null hides it (no repository, or git.enabled off). */
 const scmChanges = computed(() =>
-  git.repo === null || settings.valueOf("git.enabled") === false ? null : git.count,
+  !git.loaded || settings.valueOf("git.enabled") === false ? null : git.count,
 );
 const scmBranch = computed(() => {
   if (scmChanges.value === null || git.repo === null) return null;

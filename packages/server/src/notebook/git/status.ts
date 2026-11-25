@@ -2,7 +2,7 @@
 // folder, read with `git status --porcelain=v2` over the whole repository, then split into the files under the folder
 // (paths relative to it) and the counts outside it, since a commit takes the whole index.
 import { access, realpath } from "node:fs/promises";
-import { join, relative, sep } from "node:path";
+import { join, relative, resolve, sep } from "node:path";
 
 import type { GitChange, GitChangeStatus, GitRepo, GitState } from "@jsnb/core";
 import { GitFailed } from "@jsnb/core";
@@ -17,6 +17,9 @@ export type RepoLocation = {
   readonly top: string;
   /** Its git dir, absolute (a linked worktree's own). */
   readonly gitDir: string;
+  /** The git dirs no workspace path may reach, resolved through links: its own and the common one (a linked
+   * worktree's, a separate git dir's, the one a submodule's lives under). */
+  readonly gitDirs: readonly string[];
   /** The workspace folder relative to `top`, with a trailing `/`, or `""`. */
   readonly prefix: string;
 };
@@ -26,7 +29,7 @@ export async function locate(
   root: string,
   options: GitOptions = {},
 ): Promise<RepoLocation | undefined> {
-  const args = ["rev-parse", "--show-toplevel", "--absolute-git-dir"];
+  const args = ["rev-parse", "--show-toplevel", "--absolute-git-dir", "--git-common-dir"];
   const run = await git(root, args, { ...options, read: true, allowFailure: true }).catch(
     (error: unknown) => {
       if (error instanceof GitFailed && error.data.code === null) return undefined; // no git binary
@@ -34,11 +37,14 @@ export async function locate(
     },
   );
   if (run?.code !== 0) return undefined;
-  const [top = "", gitDir = ""] = run.stdout.toString("utf8").trim().split("\n");
+  const [top = "", gitDir = "", common = ""] = run.stdout.toString("utf8").trim().split("\n");
   if (top === "") return undefined; // a bare repository, or a folder inside the git dir itself
   const [realTop, realRoot] = await Promise.all([realpath(top), realpath(root)]);
   const inside = relative(realTop, realRoot).split(sep).join("/");
-  return { top: realTop, gitDir, prefix: inside === "" ? "" : `${inside}/` };
+  const gitDirs = await Promise.all(
+    [gitDir, resolve(root, common)].map((dir) => realpath(dir).catch(() => dir)),
+  );
+  return { top: realTop, gitDir, gitDirs, prefix: inside === "" ? "" : `${inside}/` };
 }
 
 const letters: Readonly<Record<string, GitChangeStatus>> = {

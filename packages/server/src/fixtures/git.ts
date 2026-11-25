@@ -1,7 +1,8 @@
 // Real git repositories for the Source Control tests: made in the test's temp workspace with the
 // real `git`, the user's and the system's config left out and a fixed identity, so a commit is the same on any machine.
 import { execFileSync } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 
 import { afterAll, beforeAll } from "vitest";
@@ -74,4 +75,41 @@ export async function until(check: () => boolean, ms = 5000): Promise<void> {
     if (Date.now() > end) throw new Error("the condition did not hold in time");
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
+}
+
+/** A bare repository as `origin` of the repository at `dir`, its main pushed and tracked, and a second clone of it
+ * (another user's); both removed after `work`. */
+export async function withRemote(
+  dir: string,
+  work: (remote: { readonly bare: string; readonly other: string }) => Promise<void>,
+): Promise<void> {
+  const base = await mkdtemp(join(tmpdir(), "nimbo-remote-"));
+  const bare = join(base, "origin.git");
+  const other = join(base, "other");
+  try {
+    execFileSync("git", ["init", "-q", "--bare", "-b", "main", bare], {
+      env: { ...process.env, ...isolated },
+    });
+    sh(dir, "remote", "add", "origin", bare);
+    sh(dir, "push", "-q", "-u", "origin", "main");
+    execFileSync("git", ["clone", "-q", bare, other], { env: { ...process.env, ...isolated } });
+    await work({ bare, other });
+  } finally {
+    await rm(base, { recursive: true, force: true });
+  }
+}
+
+/** Commits `files` in `dir` (another clone) and pushes them. */
+export async function pushFrom(
+  dir: string,
+  files: Readonly<Record<string, string>>,
+  message = "theirs",
+): Promise<void> {
+  for (const [path, text] of Object.entries(files)) {
+    await mkdir(dirname(join(dir, path)), { recursive: true });
+    await writeFile(join(dir, path), text);
+  }
+  sh(dir, "add", "-A");
+  sh(dir, "commit", "-q", "-m", message);
+  sh(dir, "push", "-q");
 }

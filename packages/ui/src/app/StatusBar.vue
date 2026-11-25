@@ -1,4 +1,4 @@
-<!-- StatusBar: information only, as VS Code's and Jupyter's: on the left the git branch (inside a repository; a click opens Source Control), the kernel's state (a click opens the restart menu), its Node, the page's state while it is not attached, the errors and warnings, as VS Code counts them (a click opens the Problems tab, or hides it while it shows), the routes listening and, while execution.autoRunDependents runs dependents, how many are left (a click interrupts); on the right the keyboard mode, the selected cell, "Folded" while Fold All folds every cell, the caret's line and column while a cell is edited, the cell's language and, last, the panel toggle: it shows or hides the bottom panel (Cmd J, View > Panel) and is pressed while the panel shows, so a hidden panel always has a way back. The status region announces state changes only; the ticking elapsed time is hidden from it. -->
+<!-- StatusBar: information only, as VS Code's and Jupyter's: on the left the git branch and its sync item (inside a repository; a click on the branch opens Checkout to…), the kernel's state (a click opens the restart menu), its Node, the page's state while it is not attached, the errors and warnings, as VS Code counts them (a click opens the Problems tab, or hides it while it shows), the routes listening and, while execution.autoRunDependents runs dependents, how many are left (a click interrupts); on the right the keyboard mode, the selected cell, "Folded" while Fold All folds every cell, the caret's line and column while a cell is edited, the cell's language and, last, the panel toggle: it shows or hides the bottom panel (Cmd J, View > Panel) and is pressed while the panel shows, so a hidden panel always has a way back. The status region announces state changes only; the ticking elapsed time is hidden from it. -->
 <script setup lang="ts">
 import { Square } from "@lucide/vue";
 import { computed } from "vue";
@@ -67,8 +67,8 @@ const word = "ui:font-medium ui:text-fg-2";
     <StatusBranch
       v-if="props.branch != null"
       :branch="props.branch"
-      command="ui.panel.open"
-      :args="{ which: 'sourceControl' }"
+      command="ui.git.checkout"
+      :args="{}"
       @command="(id, args) => emit('command', id, args)"
     />
     <div
