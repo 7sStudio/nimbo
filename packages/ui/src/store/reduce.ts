@@ -125,7 +125,12 @@ function reduceFile(mirror: Mirror, event: EventEnvelope): Mirror {
     case "notebook.conflict":
       return { ...mirror, saveState: "conflict" };
     case "notebook.conflictEnded":
-      return { ...mirror, saveState: mirror.notebook?.dirty === true ? "writing" : "saved" };
+      // a recovered text's conflict is over with it
+      return {
+        ...mirror,
+        recovered: null,
+        saveState: mirror.notebook?.dirty === true ? "writing" : "saved",
+      };
     case "notebook.reconciled":
       return { ...mirror, external: { ...event.data, seq: event.seq } };
     default:

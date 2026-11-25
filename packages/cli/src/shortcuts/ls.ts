@@ -57,7 +57,7 @@ const rowOf = (cell: Cell) => ({
 });
 
 /** The open conflict in one line (07-file-format §5): its cells, and the recovery copy it came from. */
-export const conflictLine = (cells: readonly string[], recovered: string | undefined): string => {
+const conflictLine = (cells: readonly string[], recovered: string | undefined): string => {
   const what =
     recovered === undefined ? "Conflict with the file" : `Recovered unsaved text (${recovered})`;
   const on = cells.length === 0 ? "" : ` on ${cells.join(", ")}`;

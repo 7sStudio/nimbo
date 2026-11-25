@@ -20,7 +20,7 @@ export const Recovery = z.object({
 });
 export type Recovery = z.infer<typeof Recovery>;
 
-export const recoveryPath = (dir: string, ref: string): string =>
+const recoveryPath = (dir: string, ref: string): string =>
   join(dir, `${encodeURIComponent(ref)}.json`);
 
 export async function writeRecovery(dir: string, recovery: Recovery): Promise<void> {
