@@ -6,7 +6,8 @@ import type { AnyCommand } from "@jsnb/core";
 import { GitFailed, NotAvailable, workspaceStop } from "@jsnb/core";
 
 import { openSession, startsDaemon } from "../daemon/session.js";
-import { DaemonNotRunning, nothingToStop } from "../errors/daemon.js";
+import { silentDaemon } from "../daemon/frozen.js";
+import { DaemonNotRunning, DaemonUnresponsive, nothingToStop } from "../errors/daemon.js";
 import type { ExitCode } from "../errors/exit.js";
 import { exitCodes } from "../errors/exit.js";
 import type { Io } from "../io/io.js";
@@ -84,7 +85,10 @@ export async function runGenerated(
     return await call(command, line, io);
   } catch (error) {
     if (command !== workspaceStop || !(error instanceof DaemonNotRunning)) throw error;
-    await write(io.stderr, nothingToStop(error.data.workspace));
+    const { workspace } = error.data;
+    const silent = await silentDaemon(workspace);
+    if (silent !== undefined) throw new DaemonUnresponsive({ workspace, pid: silent.pid });
+    await write(io.stderr, nothingToStop(workspace));
     return exitCodes.ok;
   }
 }

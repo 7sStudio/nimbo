@@ -3,7 +3,7 @@
 // (@jsnb/server/main, no NIMBO_DAEMON_ENTRY) and `nimbo stop` stopping it. This is what proves src/main.ts's wiring.
 import { execFile } from "node:child_process";
 import { existsSync } from "node:fs";
-import { realpath } from "node:fs/promises";
+import { readFile, realpath } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 
 import { withDaemon } from "@jsnb/test-daemon";
@@ -86,6 +86,33 @@ describe("dist/main.js", () => {
       await expect
         .poll(() => existsSync(ws.path(".jsnb/server.json")), { timeout: 10_000, interval: 20 })
         .toBe(false);
+    });
+  });
+});
+
+describe("nimbo stop of a daemon that does not answer", () => {
+  it("is DaemonUnresponsive, exit 3, and --force ends its process", async () => {
+    await withWorkspace(async (ws) => {
+      expect((await jsnbBin(ws, ["config", "set", "editor.fontSize", "15"])).code).toBe(0);
+      const { pid } = JSON.parse(await readFile(ws.path(".jsnb/server.json"), "utf8")) as {
+        pid: number;
+      };
+      process.kill(pid, "SIGSTOP");
+      try {
+        const refused = await jsnbBin(ws, ["stop"]);
+        expect([refused.code, refused.err]).toEqual([
+          3,
+          expect.stringContaining("DaemonUnresponsive"),
+        ]);
+        expect((await jsnbBin(ws, ["stop", "--force"])).code).toBe(0);
+        expect(() => process.kill(pid, 0)).toThrow();
+      } finally {
+        try {
+          process.kill(pid, "SIGKILL");
+        } catch {
+          // ended by the test
+        }
+      }
     });
   });
 });

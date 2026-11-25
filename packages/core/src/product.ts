@@ -17,15 +17,33 @@ export const productVersion = stamped.version;
 /** The release's short commit, "" when this is not a release build. */
 export const productCommit = stamped.commit;
 
+type Env = Readonly<Record<string, string | undefined>>;
+
+const xdgDefaults = { XDG_CONFIG_HOME: ".config", XDG_DATA_HOME: ".local/share" } as const;
+
+/**
+ * An XDG base folder, the one rule for every XDG variable the product reads: its value when it is an absolute path,
+ * else `<home>/<default>` (the XDG specification: an unset, empty or relative value is ignored).
+ */
+export function xdgDir(env: Env, variable: keyof typeof xdgDefaults, home: string): string {
+  const value = env[variable] ?? "";
+  return value.startsWith("/") ? value : `${home}/${xdgDefaults[variable]}`;
+}
+
+/** The user config folder (07-file-format §6): `%APPDATA%\nimbo` on Windows, else `$XDG_CONFIG_HOME/nimbo`. */
+export function productConfigDir(env: Env, home: string, platform: string): string {
+  if (platform === "win32") {
+    const appData =
+      env.APPDATA === undefined || env.APPDATA === "" ? `${home}\\AppData\\Roaming` : env.APPDATA;
+    return `${appData}\\${productName}`;
+  }
+  return `${xdgDir(env, "XDG_CONFIG_HOME", home)}/${productName}`;
+}
+
 /**
  * The product's data folder on macOS and Linux: `$XDG_DATA_HOME/nimbo`, else `~/.local/share/nimbo`. The installed
  * versions and the on-demand DuckDB binding live there, outside any one version, so an upgrade keeps them.
  */
-export function productDataDir(
-  env: Readonly<Record<string, string | undefined>>,
-  home: string,
-): string {
-  const xdg = env.XDG_DATA_HOME ?? "";
-  // The XDG rule: a relative path is ignored, as if unset.
-  return `${xdg.startsWith("/") ? xdg : `${home}/.local/share`}/${productName}`;
+export function productDataDir(env: Env, home: string): string {
+  return `${xdgDir(env, "XDG_DATA_HOME", home)}/${productName}`;
 }

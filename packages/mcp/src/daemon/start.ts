@@ -1,8 +1,8 @@
 // Starting the daemon for a mutating tool (03-api §8 and §9, 02-architecture §7), as the CLI starts it: `<node> <entry>
-// --workspace <ws>` detached, its stdout read until the `{"event":"listening"}` line, then let go; its stderr goes to a
-// file of its own (then `.jsnb/logs/stderr.log`, startFolder.ts), so no later write of the daemon meets a pipe the MCP
-// server closed, and none is lost. An entry that exits first reports the JSON line it wrote there, and `DaemonRunning`
-// (another starter won the race) means a daemon is there to use.
+// --workspace <ws> [--ui <dir>]` detached, its stdout read until the `{"event":"listening"}` line, then let go; its
+// stderr goes to a file of its own (then `.jsnb/logs/stderr.log`, startFolder.ts), so no later write of the daemon
+// meets a pipe the MCP server closed, and none is lost. An entry that exits first reports the JSON line it wrote there,
+// and `DaemonRunning` (another starter won the race) means a daemon is there to use.
 import type { ChildProcess } from "node:child_process";
 import { createInterface } from "node:readline";
 
@@ -12,6 +12,7 @@ import { DaemonStartFailed, silentStart } from "../errors/daemon.js";
 import type { World } from "../io/world.js";
 import { daemonEntry } from "./entry.js";
 import { stderrFile } from "./startFolder.js";
+import { uiArguments } from "./ui.js";
 
 /** How long a start may stay silent before the MCP server stops it (a hang guard; a start takes well under 2 s). */
 const startTimeoutMs = 60_000;
@@ -78,8 +79,9 @@ function failure(outcome: Ended, workspace: string, stderr: string) {
 /** Starts the workspace's daemon and resolves once one listens (this one, or the one that won a race to start). */
 export async function startDaemon(world: World, workspace: string, command: string): Promise<void> {
   const entry = await daemonEntry(world.env, command);
+  const ui = await uiArguments(world.env, command);
   const stderr = await stderrFile(workspace);
-  const child = world.spawn(world.execPath, [entry, "--workspace", workspace], {
+  const child = world.spawn(world.execPath, [entry, "--workspace", workspace, ...ui], {
     cwd: workspace,
     env: { ...world.env },
     detached: true,

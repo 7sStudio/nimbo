@@ -7,7 +7,7 @@ import { existsSync, statSync } from "node:fs";
 import { mkdir, open, readFile, readlink, rename, rm, stat, writeFile } from "node:fs/promises";
 import { basename, delimiter, dirname, join, resolve } from "node:path";
 
-import { productName } from "@jsnb/core";
+import { productName, xdgDir } from "@jsnb/core";
 import type { FormattingOptions, ParseError } from "jsonc-parser";
 import { applyEdits, modify, parse } from "jsonc-parser";
 import { z } from "zod";
@@ -27,10 +27,7 @@ export const onPath = (name: string, path: string): string | undefined =>
     .find((file) => existsSync(file) && statSync(file).isFile());
 
 const home = (env: Env): string => env.HOME ?? "";
-const configHome = (env: Env): string =>
-  env.XDG_CONFIG_HOME === undefined || env.XDG_CONFIG_HOME === ""
-    ? join(home(env), ".config")
-    : env.XDG_CONFIG_HOME;
+const configHome = (env: Env): string => xdgDir(env, "XDG_CONFIG_HOME", home(env));
 const appSupport = (env: Env, platform: NodeJS.Platform, name: string): string =>
   platform === "darwin"
     ? join(home(env), "Library", "Application Support", name)

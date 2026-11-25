@@ -55,7 +55,7 @@ export function bind<I extends z.ZodObject, O extends z.ZodObject>(
   };
 }
 
-/** A v1.x command registered as the contract (`debug.*`, `cell.snapshot`): NOT_AVAILABLE naming it. */
+/** A v1.x command registered as the contract: NOT_AVAILABLE naming it. */
 export function planned(command: AnyCommand): Bound {
   return {
     command,

@@ -97,3 +97,15 @@ export class DaemonForeign extends JsnbError {
     super({ name: "DaemonForeign", message: foreignMessage(data), data, ...options });
   }
 }
+
+/** server.json names a live daemon of the workspace that does not answer (stopped or hung): workspace_stop leaves it. */
+export class DaemonUnresponsive extends JsnbError {
+  declare readonly data: { readonly workspace: string; readonly pid: number };
+  constructor(data: { readonly workspace: string; readonly pid: number }) {
+    super({
+      name: "DaemonUnresponsive",
+      message: `The nimbo daemon for ${data.workspace} (pid ${String(data.pid)}) runs but does not answer (stopped or hung). Run nimbo stop --force there to end it; its unsaved edits are lost.`,
+      data,
+    });
+  }
+}

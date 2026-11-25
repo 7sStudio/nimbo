@@ -69,6 +69,12 @@ export type ClientInterrupts = {
   readonly interrupt: (execution: ExecutionRecord) => Promise<boolean>;
 };
 
+/** A server run not sent to the kernel yet (its kernel still starts, or it waits for the debugger to attach) holds no
+ * execution the kernel's hook could end: it ends before it executes. */
+function endUnsent(context: SessionContext, running: ExecutionRecord): void {
+  if (running.cell !== context.kernel.status().executing) cancel(context, running);
+}
+
 /**
  * kernel.interrupt: the queue cleared, the kernel's running user code stopped (a cell's run, a bridge call, or a
  * callback a cell left behind) and a client run the page runs ended by `client`, whatever its cell became since (deleted,
@@ -83,13 +89,14 @@ export async function interruptRuns(
   clearQueue(context, queue);
   const running = queue.running()?.execution;
   const page = running && client.runs(running.id) ? client.interrupt(running) : undefined;
+  if (running && page === undefined) endUnsent(context, running);
   const kernel = context.kernel.live();
   let ended = true;
   try {
     if (kernel) {
       await interruptWithin(context, kernel);
       await context.hooks.debugResumed();
-    } else if (running && page === undefined) cancel(context, running); // its kernel still starts: it ends unexecuted
+    }
   } finally {
     if (page) ended = await page;
   }
