@@ -2,7 +2,8 @@
 // credentials, so a commit or a push from the app is the one the terminal makes. Every run here is the one place for
 // the defaults: no pager, no colour, no terminal prompt and no askpass (a credential git cannot get fails at once),
 // its own session so ssh has no terminal to ask on, stdin closed, and URLs' credentials redacted from what it says.
-// A read takes no optional lock (VS Code's rule), runs no fsmonitor, hook or external driver, and times out.
+// A read takes no optional lock (VS Code's rule), runs no fsmonitor, hook, pager, external diff or textconv, and times
+// out; `git status` still runs the repository's clean and process filters (git-lfs needs them), as the terminal does.
 import type { ChildProcess } from "node:child_process";
 import { spawn } from "node:child_process";
 
@@ -30,7 +31,9 @@ export type GitOptions = {
   readonly onProgress?: (line: string) => void;
 };
 
-const readTimeoutMs = 10_000;
+const readTimeoutMs = 30_000;
+/** How long a cancelled git has to clean up its lock files after SIGTERM before SIGKILL. */
+const graceMs = 3000;
 const stderrKept = 16_384;
 
 /** Global options of every run, before the subcommand. */
@@ -43,7 +46,7 @@ export class GitOutputTooLarge extends Error {}
 
 /** `https://user:token@host/` → `https://***@host/`, in anything git says. */
 export const redact = (text: string): string =>
-  text.replace(/\b([a-z][a-z0-9+.-]*:\/\/)[^\s/@]+@/giu, "$1***@");
+  text.replace(/\b([a-z][a-z0-9+.-]*:\/\/)[^\s/]*@/giu, "$1***@");
 
 /** git's own lines about what went wrong: from its first fatal or error line on (the files it names with it), hints
  * left out; a hook's whole output when git said neither. */
@@ -98,6 +101,27 @@ export function failureOf(command: string, code: number | null, text: string): G
   });
 }
 
+/** The daemon's own environment must not point git at another repository or inject config: the user's config files
+ * (GIT_CONFIG_GLOBAL, GIT_CONFIG_SYSTEM, GIT_CONFIG_NOSYSTEM) are kept, as their terminal would use them. */
+const dropped = new Set([
+  "GIT_DIR",
+  "GIT_WORK_TREE",
+  "GIT_INDEX_FILE",
+  "GIT_OBJECT_DIRECTORY",
+  "GIT_ALTERNATE_OBJECT_DIRECTORIES",
+  "GIT_COMMON_DIR",
+  "GIT_NAMESPACE",
+  "GIT_PREFIX",
+  "GIT_CONFIG",
+  "GIT_CONFIG_PARAMETERS",
+  "GIT_CONFIG_COUNT",
+  "GIT_EXTERNAL_DIFF",
+  "GIT_PAGER",
+  "GIT_TRACE",
+  "GIT_CURL_VERBOSE",
+]);
+const inherited = /^GIT_CONFIG_(KEY|VALUE)_\d+$/u;
+
 function envOf(options: GitOptions): NodeJS.ProcessEnv {
   const env: NodeJS.ProcessEnv = {
     ...process.env,
@@ -113,8 +137,8 @@ function envOf(options: GitOptions): NodeJS.ProcessEnv {
     LC_ALL: "C",
     ...(options.read === true ? { GIT_OPTIONAL_LOCKS: "0" } : {}),
   };
-  for (const key of ["GIT_EXTERNAL_DIFF", "GIT_PAGER", "GIT_TRACE", "GIT_CURL_VERBOSE"])
-    Reflect.deleteProperty(env, key);
+  for (const key of Object.keys(env))
+    if (inherited.test(key) || dropped.has(key)) Reflect.deleteProperty(env, key);
   return env;
 }
 
@@ -154,14 +178,26 @@ function collect(child: ChildProcess, options: GitOptions, kill: () => void) {
   return state;
 }
 
-/** Kills git and what it started (a credential helper, ssh, a hook): its own process group. */
+const signalGroup = (child: ChildProcess, signal: NodeJS.Signals): void => {
+  try {
+    if (child.pid !== undefined) process.kill(-child.pid, signal);
+  } catch {
+    child.kill(signal);
+  }
+};
+
+/** Stops git and what it started (a credential helper, ssh, a hook), its own process group: SIGTERM first, so git
+ * removes its lock and temporary files, SIGKILL after a grace period. */
 function killerOf(child: ChildProcess): () => void {
   return () => {
-    try {
-      if (child.pid !== undefined) process.kill(-child.pid, "SIGKILL");
-    } catch {
-      child.kill("SIGKILL");
-    }
+    signalGroup(child, "SIGTERM");
+    const hard = setTimeout(() => {
+      signalGroup(child, "SIGKILL");
+    }, graceMs);
+    hard.unref();
+    child.once("close", () => {
+      clearTimeout(hard);
+    });
   };
 }
 
@@ -190,7 +226,13 @@ function settle(
   const run = { code: code ?? -1, stdout: Buffer.concat(state.out), stderr: state.err };
   if (options.signal?.aborted === true) reject(cancelled(command));
   else if (signal !== null && code === null)
-    reject(new GitFailed({ command, code: null, message: "git did not answer within 10 s" }));
+    reject(
+      new GitFailed({
+        command,
+        code: null,
+        message: `git ${command} did not answer within ${String(readTimeoutMs / 1000)} s: a slow clean or process filter (git-lfs) or a very large repository; try it in a terminal`,
+      }),
+    );
   else if (run.code !== 0 && options.allowFailure !== true)
     reject(failureOf(command, run.code, state.err || run.stdout.toString("utf8")));
   else resolve(run);

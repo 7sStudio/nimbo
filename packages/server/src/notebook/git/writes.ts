@@ -159,6 +159,17 @@ export async function init(context: GitContext): Promise<{ root: string; branch:
       "exists",
       `the workspace folder is already in a repository at ${found.top}`,
     );
+  const inside = await context.run(
+    context.root,
+    ["rev-parse", "--is-inside-git-dir", "--is-bare-repository"],
+    { read: true, allowFailure: true },
+  );
+  if (inside.code === 0 && inside.stdout.toString("utf8").includes("true"))
+    throw refusal(
+      "init",
+      "exists",
+      "the workspace folder is inside a bare repository or a .git folder: open a folder outside it",
+    );
   await context.run(context.root, ["init", "--quiet"]);
   const made = await required(context);
   const name = await context.run(made.top, ["symbolic-ref", "--short", "-q", "HEAD"], {

@@ -2,7 +2,7 @@
 // every name checked and placed after --end-of-options. A switch runs under treeChange: open notebooks saved first,
 // so git refuses an overwrite instead of losing an edit, and read again after.
 import type { GitLocalBranch, GitRemote, GitRemoteBranch } from "@jsnb/core";
-import { InvalidParams } from "@jsnb/core";
+import { GitFailed, InvalidParams } from "@jsnb/core";
 
 import type { GitContext } from "./context.js";
 import { required } from "./context.js";
@@ -161,15 +161,49 @@ export async function switchBranch(
   await checkBranchName(context.root, input.branch, "branch");
   const { args, name } = await switchArgs(context, found, input.branch);
   return treeChange(context, "switch", async () => {
-    let stashed = false;
-    if (input.stash) {
-      const message = `--message=nimbo: before switching to ${name}`;
-      const run = await context.run(found.top, ["stash", "push", "--include-untracked", message]);
-      stashed = !(run.stdout.toString("utf8") + run.stderr).includes("No local changes to save");
+    const stashed = input.stash ? await stashFor(context, found, name) : null;
+    try {
+      await context.run(found.top, args);
+    } catch (error) {
+      if (stashed === null || !(error instanceof GitFailed)) throw error;
+      throw await putBack(context, found, stashed, error);
     }
-    await context.run(found.top, args);
-    return { branch: name, stashed };
+    return { branch: name, stashed: stashed !== null };
   });
+}
+
+/** Stashes every change, untracked files too, before a switch: the stash's oid, or null when nothing was stashed. */
+async function stashFor(context: GitContext, found: RepoLocation, name: string) {
+  const message = `--message=nimbo: before switching to ${name}`;
+  const run = await context.run(found.top, ["stash", "push", "--include-untracked", message]);
+  if ((run.stdout.toString("utf8") + run.stderr).includes("No local changes to save")) return null;
+  const oid = await context.run(found.top, ["rev-parse", "--verify", "--quiet", "refs/stash"], {
+    read: true,
+  });
+  return oid.stdout.toString("utf8").trim();
+}
+
+/** A switch that failed after its stash: the changes popped back, or, when that conflicts, kept in the stash and said
+ * where; the failure's message says which. */
+async function putBack(
+  context: GitContext,
+  found: RepoLocation,
+  oid: string,
+  failure: GitFailed,
+): Promise<GitFailed> {
+  const top = await context.run(found.top, ["rev-parse", "--verify", "--quiet", "stash@{0}"], {
+    read: true,
+    allowFailure: true,
+  });
+  const ours = top.stdout.toString("utf8").trim() === oid;
+  const popped = ours
+    ? await context.run(found.top, ["stash", "pop", "stash@{0}"], { allowFailure: true })
+    : undefined;
+  const where =
+    popped?.code === 0
+      ? "Your changes were put back."
+      : `Your changes are kept in the stash ${oid.slice(0, 7)} (${ours ? "stash@{0}" : "git stash list"}): Pop Stash restores them.`;
+  return new GitFailed({ ...failure.data, message: `${failure.data.message}\n${where}` });
 }
 
 export async function renameBranch(

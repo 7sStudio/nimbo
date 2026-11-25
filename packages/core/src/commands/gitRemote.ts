@@ -1,7 +1,7 @@
 // The remote side of Source Control (03-api §4.15): fetch, pull, push, publish and sync through the user's own git and
 // credentials, run without a terminal so a prompt fails at once; progress as git.progress events, one cancel; and
-// what to do when a pull stops (abort, continue). One git operation runs at a time per repository: a second one
-// while a long one runs fails GitFailed with reason busy.
+// what to do when a pull stops (abort, continue). One git write runs at a time per repository: another one while it
+// runs fails GitFailed with reason busy, naming it.
 import { z } from "zod";
 
 import { GitPullOutcome } from "../model/gitHistory.js";
@@ -58,7 +58,7 @@ export const gitSync = defineCommand({
 export const gitCancel = defineCommand({
   name: "git.cancel",
   description:
-    "Stop the long git operation under way (fetch, pull, push, publish, sync): its git is killed and the call fails GitFailed with reason cancelled. Answers its name, or null when none ran.",
+    "Stop the git write under way (a pull or push, or a commit, switch or stash whose hook is slow): its git is stopped, the locks it left removed, and the call fails GitFailed with reason cancelled, naming the state it left (merging, rebasing). Answers its name, or null when none ran.",
   input: z.object({}),
   output: z.object({ cancelled: z.string().nullable() }),
   tags: { mutating: true },

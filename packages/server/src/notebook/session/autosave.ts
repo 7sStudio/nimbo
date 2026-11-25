@@ -194,6 +194,14 @@ async function flush(saver: Saver): Promise<void> {
   );
 }
 
+/** What a git operation that rewrote the file asks of the saver: is the file still its own, and the conflict. */
+const diskSide = (saver: Saver) => ({
+  inSync: async () => (await hashOnDisk(saver.options.path)) === saver.hash,
+  conflicted: () => {
+    enterConflict(saver);
+  },
+});
+
 /** An autosaver whose file holds `initial.text` (as read or written), dirty when the state differs already. */
 export function createAutosaver(
   options: AutosaveOptions,
@@ -221,6 +229,7 @@ export function createAutosaver(
       saver.savedAt = options.now().toISOString();
       options.events.saved(saver.savedAt);
     },
+    ...diskSide(saver),
     state: () => ({
       savedAt: saver.savedAt,
       dirty: saver.dirty,

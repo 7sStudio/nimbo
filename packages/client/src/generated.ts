@@ -300,7 +300,7 @@ const feedback = (call: Caller) =>
 
 const git = (call: Caller) =>
   ({
-    /** The git repository the workspace folder is in: the branch, the state (merging, rebasing) and the changed files under the folder as staged, changes (unstaged and untracked) and conflicts, paths relative to the workspace. repo is null when the folder is in no repository or git is not installed. */
+    /** The git repository the workspace folder is in: the branch, the state (merging, rebasing) and the changed files under the folder as staged, changes (unstaged and untracked) and conflicts, paths relative to the workspace. repo is null when the folder is in no repository or git is not installed. running names the git write under way (from any page, the CLI or an agent), else null. */
     status: bindOptional(call, gitStatus, {}),
     /** One file's changes: the index against the working tree, HEAD against the index with staged, base (a revision) against the working tree, or commit against its first parent (the file as that commit changed it). A .jsnb file is diffed cell by cell (rows matched by cell id, each with its source hunks, a type change, meta changes and its saved run's changes; the changed cells only, stats counting the rest); another text file as line hunks. A staged rename names its old path in renamedFrom. Narrow a notebook to one cell with cell; content adds both sides' full text and every row. Read a notebook's changes with this, not by diffing its JSON. */
     diff: bind(call, gitDiff),
@@ -322,7 +322,7 @@ const git = (call: Caller) =>
     publish: bindOptional(call, gitPublish, {}),
     /** Changes the branch, the working tree and the remote: git.pull, then git.push when the pull did not stop on conflicts, as VS Code's Sync Changes. Takes git.pull's rebase and confirm. */
     sync: bindOptional(call, gitSync, {}),
-    /** Stop the long git operation under way (fetch, pull, push, publish, sync): its git is killed and the call fails GitFailed with reason cancelled. Answers its name, or null when none ran. */
+    /** Stop the git write under way (a pull or push, or a commit, switch or stash whose hook is slow): its git is stopped, the locks it left removed, and the call fails GitFailed with reason cancelled, naming the state it left (merging, rebasing). Answers its name, or null when none ran. */
     cancel: bindOptional(call, gitCancel, {}),
     /** Changes the working tree: abort the merge, rebase, cherry-pick or revert under way, back to where it started; resolutions made are lost, so it refuses without confirm: true. Open notebooks reload. */
     abort: bindOptional(call, gitAbort, {}),

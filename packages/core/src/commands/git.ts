@@ -15,9 +15,9 @@ export const gitConfirm = z.boolean().default(false);
 export const gitStatus = defineCommand({
   name: "git.status",
   description:
-    "The git repository the workspace folder is in: the branch, the state (merging, rebasing) and the changed files under the folder as staged, changes (unstaged and untracked) and conflicts, paths relative to the workspace. repo is null when the folder is in no repository or git is not installed.",
+    "The git repository the workspace folder is in: the branch, the state (merging, rebasing) and the changed files under the folder as staged, changes (unstaged and untracked) and conflicts, paths relative to the workspace. repo is null when the folder is in no repository or git is not installed. running names the git write under way (from any page, the CLI or an agent), else null.",
   input: z.object({}),
-  output: z.object({ repo: GitRepo.nullable() }),
+  output: z.object({ repo: GitRepo.nullable(), running: z.string().nullable() }),
 });
 
 export const gitDiff = defineCommand({

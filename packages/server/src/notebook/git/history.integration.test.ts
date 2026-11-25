@@ -69,6 +69,9 @@ it("shows a commit's files and a notebook's diff at a commit against its parent"
     const diff = await client.git.diff({ path: "n.jsnb", commit: set3 });
     expect(diff).toMatchObject({ kind: "notebook", from: `${set3.slice(0, 7)}^` });
     expect(diff.notebook?.stats.modified).toBe(1);
+    const moved = await client.git.diff({ path: "m.jsnb", commit: "HEAD" });
+    expect(moved).toMatchObject({ kind: "notebook", renamedFrom: "n.jsnb" });
+    expect(moved.notebook?.stats).toMatchObject({ added: 0, modified: 0, unchanged: 1 });
     const first = await client.git.diff({ path: "n.jsnb", commit: commits[2]?.oid ?? "" });
     expect(first.from).toBe("none");
     await expect(

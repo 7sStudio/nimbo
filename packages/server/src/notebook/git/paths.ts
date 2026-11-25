@@ -1,7 +1,7 @@
 // The path and revision rules of the Source Control commands: a path is relative to the
 // workspace folder, inside it (no `..`, no absolute path, no leading `-`), and no symbolic link on its folders leads out
 // of it; a revision is a plain name git resolves to a commit. Every path reaches git after `--`.
-import { realpath } from "node:fs/promises";
+import { lstat, realpath } from "node:fs/promises";
 import { dirname, join, relative, sep } from "node:path";
 
 import { InvalidParams } from "@jsnb/core";
@@ -25,22 +25,65 @@ async function existingFolder(dir: string): Promise<string> {
   }
 }
 
-/** Checks one workspace path; answers it in git's form (`/` separators). */
+// Code points HFS+ and APFS ignore in names (git's is_hfs_dotgit), so `.g\u200cit` is `.git` on a Mac.
+const ignorable = /[\u200b-\u200f\u202a-\u202e\u206a-\u206f\ufeff]/gu;
+
+/** Whether a path segment names a git directory on some file system: `.git` in any case, with ignorable code points,
+ * trailing dots or spaces (NTFS), or its 8.3 short name `git~1`. */
+export function isGitDir(segment: string): boolean {
+  const plain = segment
+    .normalize("NFC")
+    .replace(ignorable, "")
+    .toLowerCase()
+    .replace(/[. ]+$/u, "");
+  return plain === ".git" || plain === "git~1";
+}
+
+const intoGitDir = (root: string, path: string): boolean =>
+  relative(root, path)
+    .split(sep)
+    .some((part) => isGitDir(part));
+
+/** The file itself when it is a symbolic link: where it points, resolved. */
+async function linkTarget(file: string): Promise<string | undefined> {
+  const stats = await lstat(file).catch(() => undefined);
+  if (stats?.isSymbolicLink() !== true) return undefined;
+  return realpath(file).catch(() => undefined);
+}
+
+/** Checks one workspace path; answers it in git's form (`/` separators). A name starting with `-` is a file's: git
+ * gets every path after `--`. */
 export async function checkPath(root: string, path: string, field = "path"): Promise<string> {
   if (path.includes("\0")) throw refused(field, path, "a path cannot hold a NUL byte");
   const posix = path.split("\\").join("/");
   if (posix.startsWith("/") || /^[A-Za-z]:/u.test(posix))
     throw refused(field, path, "use a path relative to the workspace folder");
-  if (posix.startsWith("-")) throw refused(field, path, "a path cannot start with -");
   const parts = posix.split("/");
   if (parts.some((part) => part === ".."))
     throw refused(field, path, "a path cannot leave the workspace folder");
   const clean = parts.filter((part) => part !== "" && part !== ".").join("/");
   if (clean === "") throw refused(field, path, "name a file");
-  const folder = await existingFolder(dirname(join(root, ...clean.split("/"))));
-  if (!isInside(await realpath(root), folder))
-    throw refused(field, path, "a symbolic link takes it outside the workspace folder");
+  if (clean.split("/").some((part) => isGitDir(part)))
+    throw refused(field, path, "a path cannot be inside the .git folder");
+  await checkLinks(root, clean, (why) => refused(field, path, why));
   return clean;
+}
+
+/** No symbolic link on the path's folders leads out of the workspace or into a .git folder, nor the file itself
+ * into one. */
+async function checkLinks(
+  root: string,
+  clean: string,
+  refuse: (why: string) => InvalidParams,
+): Promise<void> {
+  const realRoot = await realpath(root);
+  const file = join(root, ...clean.split("/"));
+  const folder = await existingFolder(dirname(file));
+  if (!isInside(realRoot, folder) || intoGitDir(realRoot, folder))
+    throw refuse("a symbolic link takes it outside the workspace folder");
+  const target = await linkTarget(file);
+  if (target !== undefined && intoGitDir(realRoot, target))
+    throw refuse("a symbolic link takes it into the .git folder");
 }
 
 const revisionPattern = /^[A-Za-z0-9][A-Za-z0-9._/@~^-]*$/u;
@@ -71,6 +114,7 @@ const controls = /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/u;
 /** A branch name git accepts (`git check-ref-format --branch`), never an option, with no control character. */
 export async function checkBranchName(root: string, name: string, field = "name"): Promise<string> {
   if (name.startsWith("-")) throw refused(field, name, "a branch name cannot start with -");
+  if (name.includes("@{")) throw refused(field, name, "a branch name cannot hold @{");
   if (controls.test(name) || /\s/u.test(name))
     throw refused(field, name, "a branch name cannot hold spaces or control characters");
   const run = await git(root, ["check-ref-format", "--branch", name], {

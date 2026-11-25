@@ -25,6 +25,23 @@ type Sides = {
   readonly after: Side;
 };
 
+/** The path `at` had in `parent` when `oid` renamed it there (diff-tree -M), else undefined. */
+async function renamedAt(
+  context: GitContext,
+  found: RepoLocation,
+  commits: { readonly parent: string; readonly oid: string },
+  at: string,
+): Promise<string | undefined> {
+  const { parent, oid } = commits;
+  const args = ["diff-tree", "-r", "-z", "-M", "--name-status", "--no-ext-diff", "--no-textconv"];
+  const run = await context.run(found.top, [...args, parent, oid], { read: true });
+  const fields = run.stdout.toString("utf8").split("\0");
+  for (let index = 0; index < fields.length; index += 1)
+    if (fields[index]?.startsWith("R") === true && fields[index + 2] === at)
+      return fields[index + 1];
+  return undefined;
+}
+
 /** A commit's side of a file against its first parent's (none for a root commit). */
 async function commitSides(
   context: GitContext,
@@ -43,11 +60,17 @@ async function commitSides(
   });
   const short = oid.slice(0, 7);
   const parentOid = parent.code === 0 ? parent.stdout.toString("utf8").trim() : null;
+  const after = await blob(found.top, `${oid}:${at}`);
+  if (parentOid === null) return { from: "none", before: { kind: "none" }, to: short, after };
+  const old = await renamedAt(context, found, { parent: parentOid, oid }, at);
+  const renamed =
+    old?.startsWith(found.prefix) !== true ? {} : { renamedFrom: old.slice(found.prefix.length) };
   return {
-    from: parentOid === null ? "none" : `${short}^`,
-    before: parentOid === null ? { kind: "none" } : await blob(found.top, `${parentOid}:${at}`),
+    ...renamed,
+    from: `${short}^`,
+    before: await blob(found.top, `${parentOid}:${old ?? at}`),
     to: short,
-    after: await blob(found.top, `${oid}:${at}`),
+    after,
   };
 }
 
