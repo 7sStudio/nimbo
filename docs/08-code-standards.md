@@ -28,7 +28,6 @@ The rules every package follows, enforced by a tool where one exists; the rest s
 - A directory is a feature or a layer, never a kind of thing (`cells/`, `format/`, `model/`; never `utils/`, `helpers/`, `types/`). Shared types sit next to their owner, in a `types.ts` only when several files of one directory share them.
 - `index.ts` only at a package root and for a declared subpath export (`@jsnb/output-view/model`). No barrels inside packages.
 - Tests beside the file (`reduce.ts`, `reduce.test.ts`); fixtures in `fixtures/` beside them; golden files checked in.
-- Every file starts with a one-line comment saying what it owns.
 - Committed generated code: only the typed client (`packages/client/src/generated.ts`) and the token sheets (`packages/tokens/src/page.css`, `viewer.css`); a test regenerates each and compares byte for byte.
 - dependency-cruiser's `no-orphans`: every file is reached from an index, a `main.ts` or a test.
 
