@@ -25,6 +25,7 @@ export const eventTypes = [
   "notebook.saveFailed",
   "notebook.conflict",
   "notebook.reconciled",
+  "notebook.conflictEnded",
   "cell.added",
   "cell.updated",
   "cell.moved",
@@ -74,6 +75,8 @@ export const eventData = {
   /** An external edit of the file was merged into the session (07 §5): `merged` with the cells it changed, added or
    * removed and whether the session's unsaved edits stay on top (`kept`, a save follows); `conflict` when the same
    * cells changed on both sides (notebook.conflict follows); `unreadable` when the file did not parse (`error`). */
+  /** The conflict is over: resolved by the user, or ended by itself when the file stopped differing (07 §5). */
+  "notebook.conflictEnded": path,
   "notebook.reconciled": z
     .object({
       path: z.string(),
@@ -172,6 +175,7 @@ export const EventEnvelope = z.discriminatedUnion("type", [
   envelope("notebook.saveFailed"),
   envelope("notebook.conflict"),
   envelope("notebook.reconciled"),
+  envelope("notebook.conflictEnded"),
   envelope("cell.added"),
   envelope("cell.updated"),
   envelope("cell.moved"),

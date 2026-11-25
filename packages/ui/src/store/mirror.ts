@@ -72,7 +72,7 @@ export function hydrated(mirror: Mirror, state: NotebookState, seq: number): Mir
     graph: keep(mirror.graph),
     diagnostics: keep(mirror.diagnostics),
     seq,
-    saveState: state.dirty ? "writing" : "saved",
+    saveState: state.conflict ? "conflict" : state.dirty ? "writing" : "saved",
     saveError: null,
     closed: false,
     autoRun: state.autoRun ?? { running: null, pending: [] },

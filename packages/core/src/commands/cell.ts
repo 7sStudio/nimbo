@@ -30,9 +30,10 @@ export const cellAdd = defineCommand({
 
 export const cellGet = defineCommand({
   name: "cell.get",
-  description: "One cell by id, with its status and last execution summary.",
+  description:
+    "One cell by id, with its status and last execution summary; textHash names its source as the base of a later cell.update.",
   input: z.object(ref),
-  output: z.object({ cell: Cell }),
+  output: z.object({ cell: Cell, textHash: z.string() }),
 });
 
 /** `meta.lastEdit` is server-owned: a client that sends it gets INVALID_PARAMS. Every other key may be `null`, which
@@ -53,7 +54,7 @@ const editableMeta = z.strictObject({
 export const cellUpdate = defineCommand({
   name: "cell.update",
   description:
-    "Change the source, the type or the meta (merged; a null key removes it; meta.title names the cell). Dependents become stale when the source changes. base, the textHash of the source the edit was made on, makes a source that changed on disk since then a conflict instead of a silent overwrite.",
+    "Change the source, the type or the meta (merged; a null key removes it; meta.title names the cell). Dependents become stale when the source changes. Pass base, the textHash cell.get gave for the source the edit was made on: a source the file on disk changed since then makes the cell a conflict instead of a silent overwrite. Without base, notice says when the cell's source had come from the file on disk: read it again.",
   input: z.object({
     ...ref,
     source: z.string().optional(),
@@ -61,7 +62,7 @@ export const cellUpdate = defineCommand({
     type: CellType.optional(),
     meta: editableMeta.optional(),
   }),
-  output: z.object({ cell: Cell }),
+  output: z.object({ cell: Cell, notice: z.string().optional() }),
   tags: { mutating: true, idempotent: true },
 });
 
@@ -113,7 +114,12 @@ export const cellRun = defineCommand({
     timeoutMs: z.number().int().positive().default(30_000),
     waitAutoRun: z.boolean().default(true),
   }),
-  output: z.object({ execution: Execution, autoRun: AutoRunReport.optional() }),
+  output: z.object({
+    execution: Execution,
+    autoRun: AutoRunReport.optional(),
+    /** As cell.update's, for `source` sent without `base`. */
+    notice: z.string().optional(),
+  }),
   tags: { mutating: true },
 });
 

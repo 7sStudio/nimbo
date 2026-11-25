@@ -47,6 +47,8 @@ export type SessionOptions = {
   readonly missing?: () => Promise<void>;
   /** How often the file is stat'ed for an external edit the folder's events missed (watch.ts); 2 s by default. */
   readonly fileCheckMs?: number;
+  /** Where the notebooks' recovery copies live (`.jsnb/recovery/`, 07 §7); none kept without it. */
+  readonly recoveryDir?: string;
   /** The quiet time after a file event before the check; 100 ms by default. */
   readonly watchDebounceMs?: number;
 };

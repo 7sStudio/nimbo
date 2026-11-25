@@ -41,7 +41,7 @@ export const externalState = (): ExternalState => ({
 
 export type ExternalOutcome = "same" | "resumed" | "merged" | "conflict" | "unreadable" | "missing";
 
-const documentCell = ({ id, type, source, meta, extra }: CellRecord): DocumentCell => ({
+export const documentCell = ({ id, type, source, meta, extra }: CellRecord): DocumentCell => ({
   id,
   type,
   source,
@@ -287,4 +287,26 @@ export function conflictOn(context: SessionContext, cells: readonly CellId[]): v
     kept: true,
   });
   context.autosave.conflicted(cells);
+}
+
+/** An edit without `base` over a source the file on disk set since the session's own last edit of the cell: its
+ * caller may not have read that source (an agent working from its own copy), so the answer says so. */
+export function diskNotice(
+  context: SessionContext,
+  state: ExternalState,
+  edit: {
+    readonly cell: CellId;
+    readonly source?: string | undefined;
+    readonly base?: string | undefined;
+  },
+): string | undefined {
+  const record = context.cells.get(edit.cell);
+  if (record === undefined || edit.base !== undefined || edit.source === undefined)
+    return undefined;
+  if (
+    edit.source === record.source ||
+    state.fromDisk.get(edit.cell)?.hash !== textHash(record.source)
+  )
+    return undefined;
+  return `${edit.cell} had changed on disk since; its source from the file was replaced. Read it again (cell.get) and pass its textHash as base.`;
 }

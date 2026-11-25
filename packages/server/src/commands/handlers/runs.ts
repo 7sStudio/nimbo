@@ -47,8 +47,10 @@ export function runHandlers({ workspace }: Services): readonly Bound[] {
   return [
     bind(cellRun, async ({ notebook, cell, source, base, ...waiting }, { declaration }) => {
       const open = await session(notebook);
+      const notice = source === undefined ? undefined : open.diskNotice({ cell, source, base });
       if (source !== undefined) open.update({ cell, source, base }, declaration);
-      return open.runWithDependents(cell, { ...waiting, by: declaration });
+      const ran = await open.runWithDependents(cell, { ...waiting, by: declaration });
+      return notice === undefined ? ran : { ...ran, notice };
     }),
     bind(cellOutputs, async ({ notebook, cell }) => ({
       execution: (await session(notebook)).outputs(cell),

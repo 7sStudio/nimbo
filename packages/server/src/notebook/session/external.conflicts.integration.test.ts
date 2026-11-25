@@ -99,6 +99,43 @@ describe("a page edit made on the file's text", () => {
   });
 });
 
+describe("an agent's edit over a change made on disk", () => {
+  it("is a conflict with the base cell.get gave, and answers a notice without one", async () => {
+    await withDaemon(async (daemon, ws) => {
+      const { ids } = await threeSaved(daemon);
+      const [, second, third] = ids;
+      const read = await daemon.client.cell.get({ notebook, cell: third });
+      expect(read.textHash).toBe(textHash("a + b"));
+      await edit(ws.path(notebook), (doc) => {
+        cellOf(doc, second).source = ["export const b = 5"];
+        cellOf(doc, third).source = ["a - b"];
+      });
+      await reconciled(daemon, (d) => d.changed.length === 2);
+      const blind = await daemon.client.cell.update({
+        notebook,
+        cell: second,
+        source: "export const b = 6",
+      });
+      expect(blind.notice).toContain("changed on disk");
+      const again = await daemon.client.cell.update({
+        notebook,
+        cell: second,
+        source: "export const b = 7",
+      });
+      expect(again.notice).toBeUndefined(); // the agent's own text now
+      const based = await daemon.client.cell.update({
+        notebook,
+        cell: third,
+        source: "a * b",
+        base: read.textHash,
+      });
+      expect(based.notice).toBeUndefined();
+      const conflict = await daemon.events.until("notebook.conflict");
+      expect(conflict.data.cells).toEqual([third]);
+    });
+  });
+});
+
 describe("an open conflict", () => {
   it("outlives a later edit of other cells, and ends only when the file stops differing", async () => {
     await withDaemon(async (daemon, ws) => {

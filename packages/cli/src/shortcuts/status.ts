@@ -1,12 +1,13 @@
 // `nimbo status` (03-api §8): workspace.info, and kernel.status and realm.status of every open notebook.
 import type { KernelStatus, RealmStatus } from "@jsnb/core";
-import { kernelStatus, realmStatus, workspaceInfo } from "@jsnb/core";
+import { notebookGet, workspaceInfo } from "@jsnb/core";
 
 import type { ExitCode } from "../errors/exit.js";
 import { exitCodes } from "../errors/exit.js";
 import type { Io } from "../io/io.js";
 import { write } from "../io/io.js";
 import { table } from "../render/table.js";
+import type { Session } from "../daemon/session.js";
 import type { Shortcut } from "./shortcut.js";
 import { readShortcut, withSession } from "./shortcut.js";
 
@@ -15,7 +16,8 @@ const help = `nimbo status: the daemon, and the kernel and page of every open no
 A read-only command: with no daemon running it says so and exits 3.
 
 Flags:
-  --json   print { workspace, notebooks: [{ path, open, kernel?, realm? }] } as JSON (workspace is workspace.info)
+  --json   print { workspace, notebooks: [{ path, open, kernel?, realm?, conflict?, recovered? }] } as JSON (workspace
+           is workspace.info)
 `;
 
 type NotebookStatus = {
@@ -23,6 +25,13 @@ type NotebookStatus = {
   readonly open: boolean;
   readonly kernel?: KernelStatus;
   readonly realm?: RealmStatus;
+  readonly conflict?: { readonly cells: readonly string[] };
+  readonly recovered?: string;
+};
+
+const conflictText = (n: NotebookStatus): string => {
+  if (n.conflict === undefined) return "";
+  return n.recovered === undefined ? "conflict" : `recovered text (${n.recovered})`;
 };
 
 const kernelText = (kernel: KernelStatus | undefined): string =>
@@ -35,25 +44,32 @@ const realmText = (realm: RealmStatus | undefined): string => {
   return realm.attached ? `page attached (${realm.kind ?? "tab"})` : "no page";
 };
 
+/** workspace.info, and each open notebook's kernel, page and conflict (notebook.get). */
+async function reportOf(session: Session) {
+  const info = await session.call(workspaceInfo, {});
+  const notebooks: NotebookStatus[] = [];
+  for (const { path, open } of info.notebooks) {
+    if (!open) notebooks.push({ path, open });
+    else {
+      const { notebook } = await session.call(notebookGet, { notebook: path });
+      const { kernel, realm, conflict, recovered } = notebook;
+      notebooks.push({
+        ...{ path, open, kernel, realm },
+        ...(conflict ? { conflict } : {}),
+        ...(recovered ? { recovered } : {}),
+      });
+    }
+  }
+  return { info, notebooks };
+}
+
 async function run(argv: readonly string[], io: Io): Promise<ExitCode> {
   const args = readShortcut("status", argv, {}, { min: 0, max: 0 });
   if (args.help) {
     await write(io.stdout, help);
     return exitCodes.ok;
   }
-  const report = await withSession(io, { start: false, command: "status" }, async (session) => {
-    const info = await session.call(workspaceInfo, {});
-    const notebooks: NotebookStatus[] = [];
-    for (const { path, open } of info.notebooks) {
-      if (!open) notebooks.push({ path, open });
-      else {
-        const kernel = await session.call(kernelStatus, { notebook: path });
-        const realm = await session.call(realmStatus, { notebook: path });
-        notebooks.push({ path, open, kernel, realm });
-      }
-    }
-    return { info, notebooks };
-  });
+  const report = await withSession(io, { start: false, command: "status" }, reportOf);
   if (args.json) {
     await write(
       io.stdout,
@@ -68,6 +84,7 @@ async function run(argv: readonly string[], io: Io): Promise<ExitCode> {
     n.open ? "open" : "closed",
     kernelText(n.kernel),
     realmText(n.realm),
+    conflictText(n),
   ]);
   await write(
     io.stdout,

@@ -69,6 +69,10 @@ const attachFacts = (own: Notebook["attach"]) => ({
 });
 
 /** What the banners read: the kernel's exit, the save state, the connection, the realm, an install. */
+/** When the recovery copy the notebook's conflict came from was written, or null. */
+const recoveredOf = (state: { readonly recovered?: string } | null): string | null =>
+  state?.recovered ?? null;
+
 function bannerFacts(notebook: Notebook, workspace: Workspace, reconnectingLong: boolean) {
   const failure = notebook.startFailure;
   const state = notebook.mirror.notebook;
@@ -84,6 +88,7 @@ function bannerFacts(notebook: Notebook, workspace: Workspace, reconnectingLong:
     kernelExit: state?.kernel.state === "dead" ? (exitOf(state.kernel) ?? "") : null,
     save: notebook.mirror.saveState,
     saveError: notebook.mirror.saveError?.message ?? null,
+    recovered: recoveredOf(notebook.mirror.notebook),
     connection: notebook.connection,
     pageAttached: state?.realm.attached ?? true,
     installing:

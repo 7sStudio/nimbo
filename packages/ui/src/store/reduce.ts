@@ -112,7 +112,8 @@ function reduceDebug(mirror: Mirror, event: EventEnvelope): Mirror {
   }
 }
 
-function reduceNotebook(mirror: Mirror, event: EventEnvelope): Mirror {
+/** The file's events: saves, failures, conflicts and edits made outside nimbo. */
+function reduceFile(mirror: Mirror, event: EventEnvelope): Mirror {
   switch (event.type) {
     case "notebook.saved": {
       const { savedAt } = event.data;
@@ -123,8 +124,17 @@ function reduceNotebook(mirror: Mirror, event: EventEnvelope): Mirror {
       return { ...mirror, saveState: "failed", saveError: event.data.error };
     case "notebook.conflict":
       return { ...mirror, saveState: "conflict" };
+    case "notebook.conflictEnded":
+      return { ...mirror, saveState: mirror.notebook?.dirty === true ? "writing" : "saved" };
     case "notebook.reconciled":
       return { ...mirror, external: { ...event.data, seq: event.seq } };
+    default:
+      return reduceDebug(mirror, event);
+  }
+}
+
+function reduceNotebook(mirror: Mirror, event: EventEnvelope): Mirror {
+  switch (event.type) {
     case "notebook.closed":
       return { ...mirror, closed: true };
     case "notebook.opened":
@@ -136,7 +146,7 @@ function reduceNotebook(mirror: Mirror, event: EventEnvelope): Mirror {
     case "realm.status":
       return withNotebook(mirror, (notebook) => ({ ...notebook, realm: event.data }));
     default:
-      return reduceDebug(mirror, event);
+      return reduceFile(mirror, event);
   }
 }
 

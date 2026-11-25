@@ -22,7 +22,9 @@ Set a title: nimbo cell update --cell <id> --meta '{"title":"Get a user"}' (null
 
 Flags:
 ${notebookFlagHelp}
-  --json                  print { notebook, cells: [{ id, type, status, stale, editedBy, agent, title, firstLine }] }
+  --json                  print { notebook, cells: [{ id, type, status, stale, editedBy, agent, title, firstLine }],
+                          conflict?: { cells }, recovered? }
+An open conflict with the file on disk, or unsaved text recovered from a session that ended, is named last.
 `;
 
 type EditedBy = {
@@ -54,6 +56,14 @@ const rowOf = (cell: Cell) => ({
   firstLine: firstLine(cell.source, 72),
 });
 
+/** The open conflict in one line (07-file-format §5): its cells, and the recovery copy it came from. */
+export const conflictLine = (cells: readonly string[], recovered: string | undefined): string => {
+  const what =
+    recovered === undefined ? "Conflict with the file" : `Recovered unsaved text (${recovered})`;
+  const on = cells.length === 0 ? "" : ` on ${cells.join(", ")}`;
+  return `${what}${on}: nimbo notebook compare-disk shows it; reload or save --force.\n`;
+};
+
 async function run(argv: readonly string[], io: Io): Promise<ExitCode> {
   const args = readShortcut("ls", argv, notebookOption, { min: 0, max: 0 });
   if (args.help) {
@@ -64,8 +74,13 @@ async function run(argv: readonly string[], io: Io): Promise<ExitCode> {
     session.call(notebookGet, { notebook }),
   );
   const rows = state.notebook.cells.map(rowOf);
+  const { conflict, recovered } = state.notebook;
   if (args.json) {
-    await write(io.stdout, `${JSON.stringify({ notebook: state.notebook.path, cells: rows })}\n`);
+    const extra = { ...(conflict ? { conflict } : {}), ...(recovered ? { recovered } : {}) };
+    await write(
+      io.stdout,
+      `${JSON.stringify({ notebook: state.notebook.path, cells: rows, ...extra })}\n`,
+    );
     return exitCodes.ok;
   }
   const lines = rows.map((row) => [
@@ -81,6 +96,7 @@ async function run(argv: readonly string[], io: Io): Promise<ExitCode> {
     io.stdout,
     lines.length === 0 ? `${state.notebook.path} has no cells yet.\n` : table(lines),
   );
+  if (conflict) await write(io.stdout, conflictLine(conflict.cells, recovered));
   return exitCodes.ok;
 }
 

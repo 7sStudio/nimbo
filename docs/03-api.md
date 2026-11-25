@@ -11,7 +11,8 @@ The source of truth is `packages/core/src/commands/*.ts` (Zod schemas); this doc
 5. **Internal commands** (page-to-server plumbing: realm attach, bridge calls, the LSP tunnel) live in the same registry, tagged `internal`, and are neither CLI subcommands nor MCP tools.
 6. **Mutating commands are tagged**, so MCP advertises hints and the CLI confirms destructive ones on a TTY.
 7. **Versioned.** `workspace.info` returns `apiVersion`; additive changes keep it, renames and removals bump it.
-8. **The file is an interface too.** An agent (or an editor, or git) may write an open notebook's `.jsnb` file directly: the daemon merges the edit into the session by cell id (07-file-format §5), stamps the cells it changed `lastEdit { by: "external", client: "file" }` and emits `notebook.reconciled`; `notebook.get`, `nimbo ls`, `nimbo diff` and `git.status` read the merged state at once. The commands remain the better path: they keep outputs and run cells, and never conflict with the page.
+8. **The file is an interface too.** An agent (or an editor, or git) may write an open notebook's `.jsnb` file directly: the daemon merges the edit into the session by cell id (07-file-format §5), stamps the cells it changed `lastEdit { by: "external", client: "file" }` and emits `notebook.reconciled`; `notebook.get`, `nimbo ls`, `nimbo diff` and `git.status` read the merged state at once. The commands remain the better path: they keep outputs and run cells, and never conflict with the page. An agent passes `base` (the `textHash` that `cell.get` and `nimbo cat --json` return) to `cell.update` and `cell.run`, so its edit over a source the file changed since is a conflict like the page's.
+   Without `base`, an edit over a source the file set answers with `notice` saying so, and the agent reads the cell again.
 
 Domains: `workspace`, `notebook`, `cell`, `kernel`, `realm`, `packages`, `secrets`, `events`, `debug`, `settings`, `examples`, `feedback`, `language`, `bridge`. The API always requires `notebook`; defaulting it is a CLI concern (§8).
 
@@ -370,7 +371,7 @@ type Output =
 
 type ErrorInfo = { name: string; message: string; frames: Frame[]; raw: string; data?: Record<string, unknown> };
 type Frame = { cell?: CellId; line: number; col: number; fn?: string; file?: string };
-type NotebookState = { path: string; cells: Cell[]; kernel: KernelStatus; realm: RealmStatus; savedAt: string | null; dirty: boolean; debug?: DebugState;   // §4.9
+type NotebookState = { path: string; cells: Cell[]; kernel: KernelStatus; realm: RealmStatus; savedAt: string | null; dirty: boolean; conflict?: { cells: CellId[] }; recovered?: string; debug?: DebugState;   // §4.9
   autoRun?: { running: CellId | null; pending: CellId[] } };   // the cascade under way, waiting cells in run order (04-kernel §4.1)
 type Binding = { name: string; kind: "const" | "let" | "var" | "function" | "class" | "import"; preview: string; definedBy: CellId; exported: boolean };
 type BindingValue = Binding & { json: unknown; repr: string; truncated: boolean };
@@ -391,6 +392,7 @@ Envelope: `{ notebook, seq, ts, type, data }`; workspace-level events carry `not
 | `notebook.moved` | `{ path, to }` | an open notebook's file moved (`notebook.rename`, or a move outside nimbo the daemon followed, 07-file-format §5); last event under `path`: each subscriber of `path` now receives `to`, whose `seq` never steps back below `path`'s |
 | `notebook.saveFailed` | `{ path, error: { code, message } }` | a write failed; state kept, retried (07-file-format §5) |
 | `notebook.conflict` | `{ path, cells? }` | the file changed on disk and the session too: autosave suspended until reload or forced save; `cells` both sides changed, when an external edit's merge found them (07-file-format §5) |
+| `notebook.conflictEnded` | `{ path }` | the conflict is over: resolved (reload, forced save) or ended by itself once the file stopped differing from the held cells; `notebook.get`'s `conflict` goes with it |
 | `notebook.reconciled` | `{ path, outcome, changed, added, removed, kept, error? }` | an edit of the open notebook's file made outside nimbo: `merged` into the session (the cells it changed, added, removed; `kept`: unsaved edits stay on top and a save follows), `conflict` (its cells in `changed`; `notebook.conflict` too), or `unreadable` (the file does not parse, `error`; the session keeps its cells) |
 | `cell.added` / `cell.updated` | `{ cell: Cell }` | `updated`: source, type, meta or review changed |
 | `cell.moved` | `{ order: CellId[] }` | |

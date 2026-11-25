@@ -36,7 +36,7 @@ export function stateOf(
   realm: RealmStatus,
   debug: DebugState,
 ): NotebookState {
-  const { savedAt, dirty } = context.autosave.state();
+  const { savedAt, dirty, conflict, conflictCells } = context.autosave.state();
   return {
     path: context.ref,
     cells: context.cells.list().map(context.cells.api),
@@ -44,6 +44,8 @@ export function stateOf(
     realm,
     savedAt,
     dirty,
+    ...(conflict ? { conflict: { cells: [...conflictCells] } } : {}),
+    ...(context.recovered === undefined ? {} : { recovered: context.recovered }),
     debug,
     autoRun: context.hooks.autoRunState(),
   };

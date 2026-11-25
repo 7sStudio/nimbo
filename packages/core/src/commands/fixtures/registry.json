@@ -613,6 +613,25 @@
             "dirty": {
               "type": "boolean"
             },
+            "conflict": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "cells": {
+                  "readOnly": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^c_[0-9a-z]{6}$"
+                  }
+                }
+              },
+              "required": ["cells"],
+              "additionalProperties": false
+            },
+            "recovered": {
+              "type": "string"
+            },
             "debug": {
               "readOnly": true,
               "type": "object",
@@ -1066,6 +1085,25 @@
             "dirty": {
               "type": "boolean"
             },
+            "conflict": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "cells": {
+                  "readOnly": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^c_[0-9a-z]{6}$"
+                  }
+                }
+              },
+              "required": ["cells"],
+              "additionalProperties": false
+            },
+            "recovered": {
+              "type": "string"
+            },
             "debug": {
               "readOnly": true,
               "type": "object",
@@ -1518,6 +1556,25 @@
             },
             "dirty": {
               "type": "boolean"
+            },
+            "conflict": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "cells": {
+                  "readOnly": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^c_[0-9a-z]{6}$"
+                  }
+                }
+              },
+              "required": ["cells"],
+              "additionalProperties": false
+            },
+            "recovered": {
+              "type": "string"
             },
             "debug": {
               "readOnly": true,
@@ -2009,6 +2066,25 @@
             },
             "dirty": {
               "type": "boolean"
+            },
+            "conflict": {
+              "readOnly": true,
+              "type": "object",
+              "properties": {
+                "cells": {
+                  "readOnly": true,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "pattern": "^c_[0-9a-z]{6}$"
+                  }
+                }
+              },
+              "required": ["cells"],
+              "additionalProperties": false
+            },
+            "recovered": {
+              "type": "string"
             },
             "debug": {
               "readOnly": true,
@@ -4585,7 +4661,7 @@
   },
   {
     "name": "cell.get",
-    "description": "One cell by id, with its status and last execution summary.",
+    "description": "One cell by id, with its status and last execution summary; textHash names its source as the base of a later cell.update.",
     "tags": {
       "mutating": false,
       "destructive": false,
@@ -4819,15 +4895,18 @@
           },
           "required": ["id", "type", "source", "index", "meta", "status", "stale", "lastExecution"],
           "additionalProperties": false
+        },
+        "textHash": {
+          "type": "string"
         }
       },
-      "required": ["cell"],
+      "required": ["cell", "textHash"],
       "additionalProperties": false
     }
   },
   {
     "name": "cell.update",
-    "description": "Change the source, the type or the meta (merged; a null key removes it; meta.title names the cell). Dependents become stale when the source changes. base, the textHash of the source the edit was made on, makes a source that changed on disk since then a conflict instead of a silent overwrite.",
+    "description": "Change the source, the type or the meta (merged; a null key removes it; meta.title names the cell). Dependents become stale when the source changes. Pass base, the textHash cell.get gave for the source the edit was made on: a source the file on disk changed since then makes the cell a conflict instead of a silent overwrite. Without base, notice says when the cell's source had come from the file on disk: read it again.",
     "tags": {
       "mutating": true,
       "destructive": false,
@@ -5177,6 +5256,9 @@
           },
           "required": ["id", "type", "source", "index", "meta", "status", "stale", "lastExecution"],
           "additionalProperties": false
+        },
+        "notice": {
+          "type": "string"
         }
       },
       "required": ["cell"],
@@ -6499,6 +6581,9 @@
           },
           "required": ["executions", "pending", "skipped"],
           "additionalProperties": false
+        },
+        "notice": {
+          "type": "string"
         }
       },
       "required": ["execution"],

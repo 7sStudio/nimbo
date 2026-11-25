@@ -7,6 +7,7 @@ type AutosaveEvents = {
   readonly saved: (savedAt: string) => void;
   readonly failed: (error: { readonly code: string; readonly message: string }) => void;
   readonly conflict: (cells?: readonly string[]) => void;
+  readonly conflictEnded?: () => void;
 };
 
 /** VS Code's files.autoSave: after a pause in the changes (capped by a max wait while they go on), at a fixed interval,
@@ -40,6 +41,9 @@ export type AutosaveOptions = {
   /** Called inside a write when the file changed since the base: merges it into the state (07 §5), `off` when merging
    * is off (the write is a conflict then). */
   readonly external?: () => Promise<"merged" | "conflict" | "off">;
+  /** Whether the state needs its recovery copy (a conflict, a failing save, a close that could not write): kept up to
+   * date while needed, removed once the file holds the state; `now` writes it before resolving (a close). */
+  readonly recovery?: (needed: boolean, now?: boolean) => Promise<void>;
 };
 
 export type Autosaver = {
@@ -66,6 +70,8 @@ export type Autosaver = {
     readonly savedAt: string | null;
     readonly dirty: boolean;
     readonly conflict: boolean;
+    /** The cells of the open conflict (none for one a save found). */
+    readonly conflictCells: readonly string[];
   };
   /** Closing: writes the changes made since the load or the last save, unless a conflict suspends autosave. */
   readonly flush: () => Promise<void>;
