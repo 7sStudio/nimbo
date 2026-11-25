@@ -1,9 +1,9 @@
 // The output sink of 04-kernel §5: every output leaves as an `output` message on its store's execution. Stream text
 // is coalesced per execution and flushed after 16 ms, before any other output of that execution and before its
 // terminal status; at flush it is redacted, its cell positions are rewritten (a printed stack shows the cells' own
-// lines), then it is capped at maxStreamBytes with a final "[output truncated]". An
-// interrupt can stop user code inside a write (console.log), so the flush timer is scheduled before the execution is
-// marked pending: a mark never stands without the timer that clears it (04-kernel §6).
+// lines), then it is capped at maxStreamBytes with a final "[output truncated]". An interrupt can stop user code
+// inside a write (console.log), so the flush timer is scheduled before the execution is marked pending: a mark never
+// stands without the timer that clears it (04-kernel §6).
 import { Buffer } from "node:buffer";
 
 import type { CellId, ExecutionId, FullValue, Output } from "@jsnb/core";

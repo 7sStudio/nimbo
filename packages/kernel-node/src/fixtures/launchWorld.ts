@@ -68,14 +68,20 @@ export async function withLaunch(
     const { onLog, logged } = logBook();
     let forked: Forked | undefined;
     const resolved = resolveOptions({
-      ...{ workspace: ws.dir, notebook: "test.jsnb", port: 4321, entry: kernelEntry },
+      workspace: ws.dir,
+      notebook: "test.jsnb",
+      port: 4321,
+      entry: kernelEntry,
       ...given.options?.(ws),
     });
     onTestFinished(() => {
       forked?.child.kill("SIGKILL");
     });
     const session = launch(resolved, {
-      ...{ onLog, onChunk: () => undefined, onMessage: () => undefined, onPause: () => undefined },
+      onLog,
+      onChunk: () => undefined,
+      onMessage: () => undefined,
+      onPause: () => undefined,
       onFork: (fork) => (forked = fork),
       ended: () => given.ended?.(forked) ?? false,
     });

@@ -81,7 +81,10 @@ export function withKernel<T>(
   return withWorkspace(async (ws) => {
     const { seen, until, callbacks, forget } = recorder();
     const kernel = createNodeKernel({
-      ...{ workspace: ws.dir, notebook: "test.jsnb", port: 4321, entry: kernelEntry },
+      workspace: ws.dir,
+      notebook: "test.jsnb",
+      port: 4321,
+      entry: kernelEntry,
       ...callbacks,
       ...(typeof options.kernel === "function" ? options.kernel(ws) : options.kernel),
     });

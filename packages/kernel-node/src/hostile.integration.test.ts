@@ -57,7 +57,10 @@ describe("hostile values through the real kernel", () => {
       const text = "[the value could not be read: Error: getter boom]";
       expect(await kernel.bindings({ names: ["getterBomb", "ok"], full: true })).toMatchObject([
         {
-          ...{ name: "getterBomb", preview: text, repr: text, truncated: true },
+          name: "getterBomb",
+          preview: text,
+          repr: text,
+          truncated: true,
           json: { $type: "error", name: "Error", message: "getter boom" },
         },
         { name: "ok", kind: "const", truncated: false },

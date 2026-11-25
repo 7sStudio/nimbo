@@ -34,13 +34,11 @@ function makeRealm(env?: string, hooked: HookedProcess = process) {
       routeBase: "http://127.0.0.1:1/n/test",
       limits: defaultLimits(),
     },
-    ...{
-      workspace,
-      processEnv: {},
-      interrupted: () => false,
-      load: (url) => import(url),
-      clock: () => "2026-10-12T00:00:00.000Z",
-    },
+    workspace,
+    processEnv: {},
+    interrupted: () => false,
+    load: (url) => import(url),
+    clock: () => "2026-10-12T00:00:00.000Z",
     send: (message) => messages.push(message),
     log: (_stream, text) => logs.push(text),
     schedule: (flush) => {

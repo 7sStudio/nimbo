@@ -75,7 +75,9 @@ function start(failOn?: KernelMessage["type"]) {
       routeBase: "http://127.0.0.1:1/n/test",
       limits: defaultLimits(),
     },
-    ...{ workspace: prepareWorkspace(), processEnv: {}, clock: () => "2026-10-12T00:00:00.000Z" },
+    workspace: prepareWorkspace(),
+    processEnv: {},
+    clock: () => "2026-10-12T00:00:00.000Z",
     interrupted: () => false,
     load: (url) => import(url),
     send: (message) => {
@@ -100,7 +102,10 @@ function start(failOn?: KernelMessage["type"]) {
     },
   });
   return {
-    ...{ runtime, messages: sent.items, logs: logged.items, until: sent.until },
+    runtime,
+    messages: sent.items,
+    logs: logged.items,
+    until: sent.until,
     untilLogged: () => logged.until(() => true),
     /** Resolves with the exit code of the first end. */
     untilEnd: () => ends.until(() => true),

@@ -118,14 +118,19 @@ describe("toErrorInfo of a thrown value that fights back", () => {
   it("describes a value whose custom inspect throws, and an Error whose name, message and stack throw", () => {
     const inspectBomb = { [Symbol.for("nodejs.util.inspect.custom")]: throwing("inspect") };
     expect(toErrorInfo(inspectBomb, context)).toEqual({
-      ...{ name: "Error", message: undescribed, frames: [], raw: undescribed },
+      name: "Error",
+      message: undescribed,
+      frames: [],
+      raw: undescribed,
     });
     const error = new Error("x");
     for (const key of ["name", "message", "stack"]) {
       Object.defineProperty(error, key, { get: throwing(key) });
     }
     expect(toErrorInfo(error, context)).toEqual({
-      ...{ name: "Error", message: undescribed, frames: [] },
+      name: "Error",
+      message: undescribed,
+      frames: [],
       raw: `Error: ${undescribed}`,
     });
   });
@@ -141,7 +146,10 @@ describe("toErrorInfo of a thrown value that fights back", () => {
     const trap = throwing("trap");
     const hostile = new Proxy({}, { get: trap, getPrototypeOf: trap, ownKeys: trap, has: trap });
     expect(toErrorInfo(hostile, context)).toEqual({
-      ...{ name: "Error", message: "Proxy({})", frames: [], raw: "Proxy({})" },
+      name: "Error",
+      message: "Proxy({})",
+      frames: [],
+      raw: "Proxy({})",
     });
   });
 });

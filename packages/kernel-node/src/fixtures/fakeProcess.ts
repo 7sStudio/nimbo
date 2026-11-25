@@ -97,14 +97,15 @@ export function fakeProcess(options: FakeOptions = {}) {
     return true;
   };
   const proc: KernelProcess = {
-    ...{ argv: ["node", "main.js", ...(argv2 === null ? [] : [argv2])], env: {}, pid: 4242 },
-    ...{
-      cwd: () => workspace,
-      stdout: recordingStream(record.out),
-      stderr: recordingStream(record.err),
-    },
+    argv: ["node", "main.js", ...(argv2 === null ? [] : [argv2])],
+    env: {},
+    pid: 4242,
+    cwd: () => workspace,
+    stdout: recordingStream(record.out),
+    stderr: recordingStream(record.err),
     ...(withIpc ? { send } : {}),
-    ...{ platform, kill: recordingKill(kills, groupless) },
+    platform,
+    kill: recordingKill(kills, groupless),
     on: (event, listener) => events.on(event, listener),
     prependListener: (event, listener) => events.prependListener(event, listener),
     removeListener: (event, listener) => events.removeListener(event, listener),

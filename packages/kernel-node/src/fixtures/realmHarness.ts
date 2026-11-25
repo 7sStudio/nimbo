@@ -87,8 +87,12 @@ export function createHarness(options: HarnessOptions = {}): Harness {
       routeBase: "http://127.0.0.1:4321/n/test",
       limits: { ...defaultLimits(), ...options.limits },
     },
-    ...{ workspace, processEnv: {}, send, clock: () => "2026-10-12T00:00:00.000Z" },
-    ...{ hooks: captureProcessHooks(process), exit: unexpectedExit },
+    workspace,
+    processEnv: {},
+    send,
+    clock: () => "2026-10-12T00:00:00.000Z",
+    hooks: captureProcessHooks(process),
+    exit: unexpectedExit,
     interrupted: options.interrupted ?? (() => false),
     log: (_stream, text) => logs.push(text),
     load: options.load ?? ((url) => import(url)),
@@ -97,7 +101,11 @@ export function createHarness(options: HarnessOptions = {}): Harness {
     },
   });
   return {
-    ...{ realm, workspace, messages, logs, until },
+    realm,
+    workspace,
+    messages,
+    logs,
+    until,
     writeEnv: (text) => {
       writeFileSync(join(workspace, ".env"), text);
     },

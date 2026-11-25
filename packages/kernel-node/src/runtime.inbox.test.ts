@@ -27,7 +27,10 @@ function byHand() {
   let refuse = false;
   const runtime = createRuntime({
     config: { notebook: "t.jsnb", routeBase: "http://127.0.0.1:1/n/t", limits: defaultLimits() },
-    ...{ workspace, processEnv: {}, interrupted: () => false, clock: () => "" },
+    workspace,
+    processEnv: {},
+    interrupted: () => false,
+    clock: () => "",
     load: (url) => import(url),
     send: (message) => sent.push(message),
     log: () => undefined,
