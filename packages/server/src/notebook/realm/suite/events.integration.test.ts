@@ -30,7 +30,10 @@ async function eventOutputs(world: BridgeWorld, cell: string, count: number) {
 }
 
 async function statOf(world: BridgeWorld, name: string) {
-  const { events } = await world.daemon.client.bridge.events({ notebook: world.notebook });
+  const { events } = await world.daemon.client.bridge.events({
+    notebook: world.notebook,
+    prefix: name,
+  });
   return events.find((each) => each.name === name);
 }
 
@@ -173,6 +176,46 @@ describe("emit and on across the bridge", () => {
         expect(outputs).toContainEqual(
           expect.objectContaining({ kind: "stream", stream: "stderr" }),
         );
+    });
+  });
+});
+
+describe("emit and on across the bridge", () => {
+  it("counts prototype names as names on the page, the daemon and every surface", async () => {
+    await withBridge(async (world) => {
+      const { client, server, run, daemon, notebook } = world;
+      await run(await client('on("__proto__", () => 1)\non("ok", () => 1)'));
+      await server(
+        'emit("ok", 1)\nemit("__proto__", 1)\nfor (const n of ["constructor", "toString", "hasOwnProperty", "valueOf"]) emit(n, 1)',
+      );
+      await until(world, "valueOf", (stat) => stat.dropped === 1);
+      expect(await statOf(world, "ok")).toMatchObject({ delivered: 1, dropped: 0 });
+      expect(await statOf(world, "__proto__")).toMatchObject({ delivered: 1, dropped: 0 });
+      expect(await statOf(world, "constructor")).toMatchObject({
+        delivered: 0,
+        dropped: 1,
+        lastDrop: "noListener",
+      });
+      expect((await daemon.client.bridge.events({ notebook })).total).toBe(6);
+    });
+  });
+});
+
+describe("emit and on across the bridge", () => {
+  it("tracks the 500 most recent names, folds the rest into other, and answers a bounded list", async () => {
+    await withBridge(async (world) => {
+      const { server, page, daemon, notebook } = world;
+      await page.detach();
+      await server('for (let i = 0; i < 600; i++) emit("order:" + i, i)');
+      await until(world, "order:599", (stat) => stat.dropped === 1);
+      const all = await daemon.client.bridge.events({ notebook, limit: 10 });
+      expect(all.total).toBe(500);
+      expect(all.events.map((each) => each.name)).toEqual(
+        Array.from({ length: 10 }, (_, i) => `order:${String(599 - i)}`),
+      );
+      expect(all.other).toEqual({ names: 100, emitted: 100, delivered: 0, dropped: 100 });
+      const some = await daemon.client.bridge.events({ notebook, prefix: "order:59" });
+      expect(some.total).toBe(10);
     });
   });
 });

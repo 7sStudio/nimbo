@@ -1,14 +1,18 @@
 // The server `emit(name, data)` built-in (05-bridge §6): plain data, in strict wire form and redacted, queued and sent to
-// the daemon in one `events` message per flush. The queue holds at most `maxQueued` events: a burst past it keeps the
-// latest and counts the ones it dropped, by name, so a loop that emits faster than the page reads never grows a buffer.
+// the daemon in one `events` message per flush. The queue holds at most `maxQueued` events and `maxQueuedBytes` of
+// data: a burst past either keeps the latest and counts the ones it dropped. While no page listens (the daemon says
+// so), an event is counted and dropped at once, its data never queued. The counts carry at most `maxNames` names a
+// flush; the rest are counted under null, so a loop of distinct names never grows a table.
 import type { BridgeEvent, CellId } from "@jsnb/core";
 import { encodeStrict, EventNotSerializable } from "@jsnb/core";
+
+import type { DroppedEvents } from "../ipc/messages.js";
 
 /** The kernel's `events` message (04-kernel §2.1). */
 export type EventsMessage = {
   readonly type: "events";
   readonly events: readonly BridgeEvent[];
-  readonly dropped: Readonly<Record<string, number>>;
+  readonly dropped: readonly DroppedEvents[];
 };
 
 export type EmitDeps = {
@@ -20,13 +24,25 @@ export type EmitDeps = {
   readonly send: (message: EventsMessage) => void;
   readonly schedule: (flush: () => void) => void;
   readonly clock: () => string;
-  readonly maxQueued?: number;
+  readonly limits?: Partial<QueueLimits>;
 };
 
-/** Events held between two flushes; past it the oldest go. */
-const maxQueuedEvents = 1000;
-/** An event name is a label, not a payload. */
+type QueueLimits = {
+  readonly maxQueued: number;
+  readonly maxQueuedBytes: number;
+  readonly maxNames: number;
+};
+
+const defaults: QueueLimits = { maxQueued: 1000, maxQueuedBytes: 16 * 1024 * 1024, maxNames: 1000 };
+
+/** An event name is a label, not a payload; `on` takes the same. */
 const maxNameLength = 200;
+
+export type Emit = {
+  readonly emit: (name: unknown, data?: unknown) => undefined;
+  /** Whether a page holds the client realm. */
+  readonly listening: (listening: boolean) => void;
+};
 
 function checkedName(name: unknown): string {
   if (typeof name === "string" && name.length > 0 && name.length <= maxNameLength) return name;
@@ -37,8 +53,10 @@ function checkedName(name: unknown): string {
   );
 }
 
-/** The event's data in strict wire form, redacted; EventNotSerializable for anything that is not plain data. */
-function wireData(deps: EmitDeps, name: string, data: unknown): unknown {
+type Wire = { readonly json: unknown; readonly bytes: number };
+
+/** The event's data in strict wire form, redacted, with its JSON size; EventNotSerializable for anything else. */
+function wireData(deps: EmitDeps, name: string, data: unknown): Wire {
   const encoded = encodeStrict(data, { maxBytesPerValue: deps.maxBytes, redact: deps.redact });
   if (!encoded.ok) {
     const { type, bytes } = encoded.error;
@@ -51,35 +69,101 @@ function wireData(deps: EmitDeps, name: string, data: unknown): unknown {
     const type = Array.isArray(data) ? "array" : typeof data === "object" ? "object" : typeof data;
     throw new EventNotSerializable({ name, type, bytes, limit: deps.maxBytes });
   }
-  return encoded.json;
+  return { json: encoded.json, bytes };
 }
 
-/** `emit` as cells call it. */
-export function createEmit(deps: EmitDeps): (name: unknown, data?: unknown) => undefined {
-  const limit = deps.maxQueued ?? maxQueuedEvents;
-  const queue: BridgeEvent[] = [];
-  const dropped = new Map<string, number>();
+type Tally = { count: number; at: string; cell: CellId | undefined };
+type Queued = { readonly event: BridgeEvent; readonly bytes: number };
+
+type Why = DroppedEvents["why"];
+
+const bump = (tally: Tally | undefined, at: string, cell: CellId | undefined): Tally => ({
+  count: (tally?.count ?? 0) + 1,
+  at,
+  cell,
+});
+
+const entry = (name: string | null, why: Why, { count, at, cell }: Tally): DroppedEvents =>
+  cell === undefined ? { name, count, why, at } : { name, count, why, at, cell };
+
+/** The drops of one flush window, by reason and name; past `maxNames` names a reason, under null. */
+function createTallies(maxNames: number) {
+  const named = new Map<Why, Map<string, Tally>>([
+    ["overflow", new Map()],
+    ["noPage", new Map()],
+  ]);
+  const other = new Map<Why, Tally>();
+  return {
+    add: (name: string, why: Why, at: string, cell: CellId | undefined): void => {
+      const byName = named.get(why) ?? new Map<string, Tally>();
+      const tally = byName.get(name);
+      if (tally === undefined && byName.size >= maxNames)
+        other.set(why, bump(other.get(why), at, cell));
+      else byName.set(name, bump(tally, at, cell));
+    },
+    take: (): DroppedEvents[] => {
+      const list: DroppedEvents[] = [];
+      for (const [why, byName] of named) {
+        for (const [name, tally] of byName) list.push(entry(name, why, tally));
+        byName.clear();
+      }
+      for (const [why, tally] of other) list.push(entry(null, why, tally));
+      other.clear();
+      return list;
+    },
+  };
+}
+
+/** `emit` as cells call it, and the daemon's word on whether a page listens. */
+export function createEmit(deps: EmitDeps): Emit {
+  const limits = { ...defaults, ...deps.limits };
+  const queue: Queued[] = [];
+  let queuedBytes = 0;
+  const tallies = createTallies(limits.maxNames);
+  let listening = true;
   let scheduled = false;
   const flush = (): void => {
     scheduled = false;
-    const events = queue.splice(0);
-    deps.send({ type: "events", events, dropped: Object.fromEntries(dropped) });
-    dropped.clear();
+    const events = queue.splice(0).map((each) => each.event);
+    queuedBytes = 0;
+    deps.send({ type: "events", events, dropped: tallies.take() });
   };
-  return (name, data) => {
-    const checked = checkedName(name);
-    const json = wireData(deps, checked, data);
-    const cell = deps.currentCell();
-    const event = { name: deps.redact(checked), data: json, at: deps.clock() };
-    queue.push(cell === undefined ? event : { ...event, cell });
-    if (queue.length > limit) {
+  const later = (): void => {
+    if (scheduled) return;
+    scheduled = true;
+    deps.schedule(flush);
+  };
+  const trim = (): void => {
+    while (
+      queue.length > limits.maxQueued ||
+      (queuedBytes > limits.maxQueuedBytes && queue.length > 1)
+    ) {
       const oldest = queue.shift();
-      if (oldest) dropped.set(oldest.name, (dropped.get(oldest.name) ?? 0) + 1);
+      if (!oldest) return;
+      queuedBytes -= oldest.bytes;
+      tallies.add(oldest.event.name, "overflow", oldest.event.at, oldest.event.cell);
     }
-    if (!scheduled) {
-      scheduled = true;
-      deps.schedule(flush);
+  };
+  const emit = (name: unknown, data?: unknown): undefined => {
+    const checked = checkedName(name);
+    const wire = wireData(deps, checked, data);
+    const cell = deps.currentCell();
+    const at = deps.clock();
+    const redacted = deps.redact(checked);
+    if (!listening) tallies.add(redacted, "noPage", at, cell);
+    else {
+      const event = { name: redacted, data: wire.json, at };
+      queue.push({ event: cell === undefined ? event : { ...event, cell }, bytes: wire.bytes });
+      queuedBytes += wire.bytes;
+      trim();
     }
+    later();
     return undefined;
+  };
+  return {
+    emit,
+    listening: (value) => {
+      listening = value;
+    },
   };
 }

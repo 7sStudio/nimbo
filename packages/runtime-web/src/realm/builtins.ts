@@ -20,7 +20,7 @@ export type BuiltinParts = {
   /** A late failure of a wrapped callback: an `error` output on the run's execution (04-kernel §5.3). */
   readonly reportError: (error: unknown) => void;
   /** `on(name, callback)`, listening for the run (05-bridge §6). */
-  readonly on: (name: unknown, callback: unknown) => () => void;
+  readonly on: (name: unknown, callback: unknown, options?: unknown) => () => void;
 };
 
 /** `dispose(fn)` registers the cell's own cleanup (04-kernel §7); a stale run's cleanup runs at once. */

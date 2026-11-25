@@ -127,7 +127,10 @@ export function createRun(
   const defines = new Set<string>();
   const display = createDisplay(containerOf(context, cell, flags));
   const { env, listeners } = context;
-  const on = context.events.on({ disposers, streams, report, reportError });
+  const on = context.events.on({
+    ...{ disposers, streams, report, reportError },
+    maxValueBytes: limits.maxValueBytes,
+  });
   const builtins = createBuiltins({ env, display, disposers, listeners, streams, reportError, on });
   const onDefine = (name: string): void => {
     if (flags.inProgress) defines.add(name);

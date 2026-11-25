@@ -140,7 +140,10 @@ describe("Realm.handle, realm.event", () => {
     );
     const events = [event("n", 1), event("other", 0), event("n", 2), event("bad", 0)];
     expect(await world.realm.handle("realm.event", { events })).toEqual({
-      heard: { n: 2, other: 0, bad: 1 },
+      heard: [
+        { name: "n", count: 2 },
+        { name: "bad", count: 1 },
+      ],
     });
     expect(Reflect.get(globalThis, "got")).toEqual([
       ["a", 1],

@@ -70,7 +70,7 @@ function keep(realm: Realm, type: string, flow: () => Promise<void> | void): voi
   }
 }
 
-type Request = Exclude<DaemonMessage, { type: "shutdown" | "cancel" }>;
+type Request = Exclude<DaemonMessage, { type: "shutdown" | "cancel" | "page" }>;
 
 /** How many abandoned requests are remembered, as for interrupted executions (04-kernel §6). */
 const abandonedKept = 1000;
@@ -163,6 +163,10 @@ function createInbox(realm: Realm, deps: RuntimeDeps): (raw: unknown) => void {
     if (message === undefined) return;
     if (message.type === "cancel") {
       for (const id of message.ids) abandoned.add(id);
+      return;
+    }
+    if (message.type === "page") {
+      realm.builtins.listening(message.listening);
       return;
     }
     inbox.push(message);

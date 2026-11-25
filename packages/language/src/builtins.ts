@@ -90,8 +90,13 @@ export function clientBuiltins(env: readonly string[]): string {
   /** Registers a cleanup that runs before the cell runs again, and when it is deleted. */
   export function dispose(cleanup: () => unknown): void;
   /** Calls \`callback\` with the data of each server \`emit(name, data)\`; returns a function that stops listening. The
-   * listener ends when the cell runs again. \`on<T>\` types the data. */
-  export function on<T = any>(name: string, callback: (data: T) => void): () => void;
+   * listener ends when the cell runs again. \`on<T>\` types the data; with \`latest\` it gets only the newest event
+   * of a burst. */
+  export function on<T = any>(
+    name: string,
+    callback: (data: T) => void,
+    options?: { readonly latest?: boolean },
+  ): () => void;
 }
 declare module "nimbo:bridge" {
   /** A server export as a client cell receives it: a function answers through a promise, data crosses as it is. */

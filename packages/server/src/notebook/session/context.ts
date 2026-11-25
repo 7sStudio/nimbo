@@ -28,6 +28,8 @@ export type SessionHooks = {
   exports: (names: readonly ExportEntry[]) => void;
   /** A flush of the kernel's `emit` calls (05-bridge §6). */
   events: (batch: EventBatch) => void;
+  /** Whether a page holds the client realm, told to a kernel when it is ready (05-bridge §6). */
+  pageAttached: () => boolean;
   /** A deleted client cell: the attached page runs its cleanups (its timers, listeners and `on` end). */
   disposeClient: (cell: CellId) => void;
   /** The kernel died or a restart killed it: the exports it had are gone. */

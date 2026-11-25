@@ -140,7 +140,7 @@ const notebook = (call: Caller) =>
 
 const bridge = (call: Caller) =>
   ({
-    /** The events server cells emitted with emit(name, data) since the notebook opened, by name: how many, how many reached a client cell's on(name) listener in the attached page, how many were dropped (no page attached, no listener, or a burst past the queue) and the last time. The events themselves are event outputs on the listening client cells. */
+    /** The events server cells emitted with emit(name, data) since the notebook opened, by name, the most recent first: how many, how many reached a client cell's on(name) listener in the attached page, how many were dropped (no page attached, no listener, or a burst past the queue) and the last time. At most limit names, those starting with prefix; the daemon tracks the 500 most recently emitted names and counts older ones together under other. The events themselves are event outputs on the listening client cells. */
     events: bind(call, bridgeEvents),
   }) as const;
 

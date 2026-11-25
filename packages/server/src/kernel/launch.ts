@@ -36,6 +36,8 @@ export type SupervisorOptions = {
   readonly now: () => Date;
   readonly sink: KernelSink;
   readonly log: Log;
+  /** Whether a page holds the client realm, read when a kernel is ready. */
+  readonly pageListening?: () => boolean;
 };
 
 /** What the supervisor hears from the kernel it launches. */
@@ -63,6 +65,7 @@ export function launchKernel(options: SupervisorOptions, hooks: LaunchHooks): No
     onExports: whileCurrent(sink.exports),
     onRoutes: whileCurrent(sink.routes),
     onEvents: whileCurrent(sink.events),
+    ...(options.pageListening === undefined ? {} : { pageListening: options.pageListening }),
     onPause: whileCurrent(hooks.paused),
     onExit: hooks.exit,
     onLog: sink.log,

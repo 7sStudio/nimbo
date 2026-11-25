@@ -17,7 +17,7 @@ import type { RealmPart } from "../session/runApi.js";
 import { attach, detach } from "./attach.js";
 import type { CallAnswer } from "./bridgeCall.js";
 import { bridgeCall } from "./bridgeCall.js";
-import type { EventChannel, EventStat } from "./events.js";
+import type { EventChannel } from "./events.js";
 import { createEventChannel } from "./events.js";
 import { snapshotCell } from "./snapshot.js";
 import { runClientCell } from "./clientRun.js";
@@ -35,7 +35,7 @@ export type SessionRealm = RealmPart & {
   readonly report: (report: RealmReport) => void;
   readonly bridgeCall: (fn: string, args: readonly unknown[]) => Promise<CallAnswer>;
   /** bridge.events: each event name's counts. */
-  readonly events: () => readonly EventStat[];
+  readonly events: EventChannel["stats"];
   /** cell.snapshot: the client cell's container as the attached page renders it. */
   readonly snapshot: (cell: CellId, maxBytes: number) => Promise<RealmSnapshotAnswer>;
   /** The notebook closes: the page is detached. */
@@ -98,6 +98,7 @@ function attachOwing(
 function hookEvents(context: SessionContext, state: RealmState): EventChannel {
   const events = createEventChannel(context, state);
   context.hooks.events = events.take;
+  context.hooks.pageAttached = () => state.attachment !== undefined;
   context.hooks.disposeClient = (cell) => {
     state.attachment?.page.request("realm.dispose", { cell }).catch((error: unknown) => {
       context.log.debug({ err: error, cell }, "the page did not take realm.dispose");

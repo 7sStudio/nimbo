@@ -20,11 +20,18 @@ const count = z.number().int().nonnegative();
 export const bridgeEvents = defineCommand({
   name: "bridge.events",
   description:
-    "The events server cells emitted with emit(name, data) since the notebook opened, by name: how many, how many reached a client cell's on(name) listener in the attached page, how many were dropped (no page attached, no listener, or a burst past the queue) and the last time. The events themselves are event outputs on the listening client cells.",
-  input: z.object({ notebook: NotebookRef }),
+    "The events server cells emitted with emit(name, data) since the notebook opened, by name, the most recent first: how many, how many reached a client cell's on(name) listener in the attached page, how many were dropped (no page attached, no listener, or a burst past the queue) and the last time. At most limit names, those starting with prefix; the daemon tracks the 500 most recently emitted names and counts older ones together under other. The events themselves are event outputs on the listening client cells.",
+  input: z.object({
+    notebook: NotebookRef,
+    /** Only the names that start with it. */
+    prefix: z.string().optional(),
+    limit: z.number().int().positive().max(500).default(50),
+  }),
   output: z.object({
     /** A page holds the client realm now: events emitted now reach it. */
     attached: z.boolean(),
+    /** The names tracked that match `prefix`; `events` holds the first `limit`. */
+    total: count,
     events: z.array(
       z.object({
         name: z.string(),
@@ -38,5 +45,7 @@ export const bridgeEvents = defineCommand({
         cell: CellId.nullable(),
       }),
     ),
+    /** The names no longer tracked, counted together; null while every name is tracked. */
+    other: z.object({ names: count, emitted: count, delivered: count, dropped: count }).nullable(),
   }),
 });

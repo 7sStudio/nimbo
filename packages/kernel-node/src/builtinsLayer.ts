@@ -45,6 +45,8 @@ export type Builtins = {
   readonly layer: Readonly<Record<string, unknown>>;
   /** Takes text written to stdout or stderr when a store is current (the sink's), else returns false. */
   readonly write: (stream: StreamName, text: string) => boolean;
+  /** The daemon's word on whether a page listens to `emit`. */
+  readonly listening: (listening: boolean) => void;
 };
 
 /** The wrapped timers and queueMicrotask over the realm's own (04-kernel §7), wired to the current store. */
@@ -73,6 +75,11 @@ export function createBuiltins(deps: BuiltinsDeps): Builtins {
     if (store) sink.emit(store, output);
   };
   const timers = wrappedTimers(deps);
+  const events = createEmit({
+    ...deps.events,
+    currentCell: () => stores.current()?.cell,
+    redact: deps.environment.redact,
+  });
   const layer = {
     console: createConsole((stream, text) => {
       if (!write(stream, text)) deps.log(stream, text);
@@ -85,14 +92,10 @@ export function createBuiltins(deps: BuiltinsDeps): Builtins {
     }),
     route: deps.routes.route,
     routeUrl: deps.routes.routeUrl,
-    emit: createEmit({
-      ...deps.events,
-      currentCell: () => stores.current()?.cell,
-      redact: deps.environment.redact,
-    }),
+    emit: events.emit,
     dispose: createDispose(() => stores.current()?.cell, deps.disposers),
     require: createWorkspaceRequire(deps.workspace),
     ...timers,
   };
-  return { layer, write };
+  return { layer, write, listening: events.listening };
 }

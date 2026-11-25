@@ -106,6 +106,7 @@ function kernelOf(
       entry: options.kernelEntry,
     },
     ...{ now: options.now, log: parts.log, config },
+    pageListening: () => parts.hooks.pageAttached(),
     sink: sinkOf(parts, writeLog),
   });
 }
@@ -149,6 +150,7 @@ export function contextOf(options: SessionOptions, hooks: FileHooks = {}): Owned
     exports: () => undefined,
     events: () => undefined,
     disposeClient: () => undefined,
+    pageAttached: () => false,
     kernelEnded: () => undefined,
     beforeServerRun: () => Promise.resolve(),
     debuggerLines: () => [],

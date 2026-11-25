@@ -110,10 +110,14 @@ export type BridgeEvent = z.infer<typeof BridgeEvent>;
 export const RealmEvent = z.object({ events: z.array(BridgeEvent).readonly() }).readonly();
 export type RealmEvent = z.infer<typeof RealmEvent>;
 
-/** The page's answer: per name, how many of the events had at least one listener (the rest found none). */
-export const RealmEventAnswer = z
-  .object({ heard: z.record(z.string(), z.number().int().nonnegative()) })
+/** A count by event name. A list, never a record: an event name is the user's and may be `__proto__`. */
+export const EventCounts = z
+  .array(z.object({ name: z.string(), count: z.number().int().nonnegative() }).readonly())
   .readonly();
+export type EventCounts = z.infer<typeof EventCounts>;
+
+/** The page's answer: per name, how many of the events had at least one listener (the rest found none). */
+export const RealmEventAnswer = z.object({ heard: EventCounts }).readonly();
 export type RealmEventAnswer = z.infer<typeof RealmEventAnswer>;
 
 /** The shape behind RealmReport; `realm.report` takes it as its input object. */

@@ -1,28 +1,36 @@
 // Tests emit (05-bridge §6): events in order, one message per flush, the cell that emitted, strict plain data, the size
-// limit, redaction, and a burst past the queue keeping the latest with a count of the dropped by name.
+// limit, redaction; a burst past the queue's count or bytes keeps the latest and counts the dropped by name; with no
+// page listening nothing is queued; prototype names are names; the names counted a flush are bounded.
 import { EventNotSerializable } from "@jsnb/core";
 import { describe, expect, it } from "vitest";
 
-import type { EventsMessage } from "./emit.js";
+import type { EmitDeps, EventsMessage } from "./emit.js";
 import { createEmit } from "./emit.js";
 
-function harness(options: { readonly maxQueued?: number; readonly maxBytes?: number } = {}) {
+const at = "2026-11-24T10:00:00.000Z";
+
+function harness(
+  options: { readonly maxBytes?: number; readonly limits?: EmitDeps["limits"] } = {},
+) {
   const sent: EventsMessage[] = [];
   const flushes: (() => void)[] = [];
   let cell: string | undefined = "c_aaaaaa";
-  const emit = createEmit({
+  const { emit, listening } = createEmit({
     currentCell: () => cell,
     redact: (text) => text.replaceAll("sk_live_secret", "***"),
     maxBytes: options.maxBytes ?? 1024,
     send: (message) => sent.push(message),
     schedule: (flush) => flushes.push(flush),
-    clock: () => "2026-11-24T10:00:00.000Z",
-    ...(options.maxQueued === undefined ? {} : { maxQueued: options.maxQueued }),
+    clock: () => at,
+    ...(options.limits === undefined ? {} : { limits: options.limits }),
   });
   const flush = () => {
     for (const each of flushes.splice(0)) each();
   };
-  return { emit, sent, flush, outside: () => (cell = undefined), flushes };
+  const outside = () => {
+    cell = undefined;
+  };
+  return { emit, listening, sent, flush, outside, flushes };
 }
 
 describe("emit", () => {
@@ -39,29 +47,65 @@ describe("emit", () => {
       {
         type: "events",
         events: [
-          { name: "progress", data: { done: 1 }, at: "2026-11-24T10:00:00.000Z", cell: "c_aaaaaa" },
-          { name: "progress", data: { done: 2 }, at: "2026-11-24T10:00:00.000Z", cell: "c_aaaaaa" },
-          { name: "done", data: null, at: "2026-11-24T10:00:00.000Z" },
+          { name: "progress", data: { done: 1 }, at, cell: "c_aaaaaa" },
+          { name: "progress", data: { done: 2 }, at, cell: "c_aaaaaa" },
+          { name: "done", data: null, at },
         ],
-        dropped: {},
+        dropped: [],
       },
     ]);
     emit("again");
     flush();
-    expect(sent).toHaveLength(2);
     expect(sent[1]?.events.map((event) => event.name)).toEqual(["again"]);
   });
 
-  it("keeps the latest events of a burst past the queue and counts the dropped by name", () => {
-    const { emit, sent, flush } = harness({ maxQueued: 3 });
+  it("keeps the latest of a burst past the count or the bytes and counts the dropped by name", () => {
+    const { emit, sent, flush } = harness({ limits: { maxQueued: 3 } });
     emit("start", 0);
     for (let i = 1; i <= 5; i++) emit("tick", i);
     flush();
     expect(sent[0]?.events.map((event) => event.data)).toEqual([3, 4, 5]);
-    expect(sent[0]?.dropped).toEqual({ start: 1, tick: 2 });
-    emit("tick", 6);
+    expect(sent[0]?.dropped).toEqual([
+      { name: "start", count: 1, why: "overflow", at, cell: "c_aaaaaa" },
+      { name: "tick", count: 2, why: "overflow", at, cell: "c_aaaaaa" },
+    ]);
+    const bytes = harness({ limits: { maxQueuedBytes: 250 } });
+    for (let i = 0; i < 5; i++) bytes.emit("big", "x".repeat(100));
+    bytes.flush();
+    expect(bytes.sent[0]?.events).toHaveLength(2);
+    expect(bytes.sent[0]?.dropped).toMatchObject([{ name: "big", count: 3, why: "overflow" }]);
+  });
+
+  it("queues nothing while no page listens, counting the drops as noPage", () => {
+    const { emit, listening, sent, flush } = harness();
+    listening(false);
+    emit("tick", "a".repeat(500));
+    emit("tick", 2);
     flush();
-    expect(sent[1]?.dropped).toEqual({});
+    expect(sent).toEqual([
+      {
+        type: "events",
+        events: [],
+        dropped: [{ name: "tick", count: 2, why: "noPage", at, cell: "c_aaaaaa" }],
+      },
+    ]);
+    listening(true);
+    emit("tick", 3);
+    flush();
+    expect(sent[1]?.events.map((event) => event.data)).toEqual([3]);
+  });
+
+  it("counts prototype names as names, and past the name budget under null", () => {
+    const { emit, listening, sent, flush } = harness({ limits: { maxNames: 2 } });
+    listening(false);
+    for (const name of ["__proto__", "constructor", "toString", "hasOwnProperty"]) emit(name, 1);
+    emit("__proto__", 1);
+    flush();
+    expect(sent[0]?.dropped.map(({ name, count }) => [name, count])).toEqual([
+      ["__proto__", 2],
+      ["constructor", 1],
+      [null, 2],
+    ]);
   });
 });
 
@@ -90,9 +134,7 @@ describe("emit's refusals", () => {
     expect(flushes).toEqual([]);
     expect(sent).toEqual([]);
   });
-});
 
-describe("emit's data and names", () => {
   it("takes Dates, Maps and cycles as the bridge does, redacting every string", () => {
     const { emit, sent, flush } = harness();
     const loop: Record<string, unknown> = { key: "sk_live_secret" };

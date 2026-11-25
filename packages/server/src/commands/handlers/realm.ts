@@ -61,9 +61,12 @@ type Open = Awaited<ReturnType<Services["workspace"]["notebooks"]["require"]>>;
 /** bridge.events and cell.snapshot: what the attached page holds. */
 function pageReadHandlers(session: (notebook: string) => Promise<Open>): readonly Bound[] {
   return [
-    bind(bridgeEvents, async ({ notebook }) => {
-      const { realm } = await session(notebook);
-      return { attached: realm.status().attached, events: [...realm.events()] };
+    bind(bridgeEvents, async ({ notebook, prefix, limit }) => {
+      const { attached, total, events, other } = (await session(notebook)).realm.events({
+        prefix,
+        limit,
+      });
+      return { attached, total, events: [...events], other };
     }),
     bind(cellSnapshot, async ({ notebook, cell, maxBytes, image, html }) => {
       const open = await session(notebook);
