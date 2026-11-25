@@ -67,41 +67,6 @@ export type Run = {
   readonly abandon: () => void;
 };
 
-type Reporting = Pick<Run, "report" | "reportError" | "streams">;
-
-function reporting(
-  context: RunContext,
-  execution: string,
-  flags: RunFlags,
-  limits: RealmLimits,
-): Reporting {
-  const report = (output: Output): void => {
-    if (!flags.stale) void context.reports.output(execution, output); // ordered by the queue; failures reach onError
-  };
-  const reportError = (error: unknown): void => {
-    if (!flags.stale) report({ kind: "error", error: context.errorInfo(error) });
-  };
-  return { report, reportError, streams: createStreams(limits.maxStreamBytes, report) };
-}
-
-/** Stubs report `redacted a secret in the result of fn` on this run's stderr (04-kernel §10). */
-function installer(
-  context: RunContext,
-  run: Pick<Run, "bridge" | "streams" | "limits">,
-): Run["install"] {
-  const { bridge, streams, limits } = run;
-  const stubs = {
-    ...context,
-    ...limits,
-    onRedacted: (fn: string) => {
-      streams.write("stderr", `redacted a secret in the result of ${fn}\n`);
-    },
-  };
-  return (bindings) => {
-    install(bridge, bindings, stubs);
-  };
-}
-
 /**
  * The cell's live container, marked used by the run; a stale run gets a detached one of its own instead, so it never
  * creates, mounts or writes the live container (a run that resumes after its cell ran again, or after a reset).
@@ -121,14 +86,23 @@ export function createRun(
 ): Run {
   const { cell, execution, limits } = run;
   const flags: RunFlags = { inProgress: true, stale: false, usedContainer: false, startedAt: 0 };
-  const { report, reportError, streams } = reporting(context, execution, flags, limits);
+  const report = (output: Output): void => {
+    if (!flags.stale) void context.reports.output(execution, output); // ordered by the queue; failures reach onError
+  };
+  const reportError = (error: unknown): void => {
+    if (!flags.stale) report({ kind: "error", error: context.errorInfo(error) });
+  };
+  const streams = createStreams(limits.maxStreamBytes, report);
   const disposers = createDisposers();
   const bridge = createLayer();
   const defines = new Set<string>();
   const display = createDisplay(containerOf(context, cell, flags));
   const { env, listeners } = context;
   const on = context.events.on({
-    ...{ disposers, streams, report, reportError },
+    disposers,
+    streams,
+    report,
+    reportError,
     maxValueBytes: limits.maxValueBytes,
   });
   const builtins = createBuiltins({ env, display, disposers, listeners, streams, reportError, on });
@@ -136,17 +110,33 @@ export function createRun(
     if (flags.inProgress) defines.add(name);
   };
   const view = createView({ ...context, bridge: bridge.values, builtins, onDefine });
+  // Stubs report `redacted a secret in the result of fn` on this run's stderr (04-kernel §10).
+  const stubs = {
+    ...context,
+    ...limits,
+    onRedacted: (fn: string) => {
+      streams.write("stderr", `redacted a secret in the result of ${fn}\n`);
+    },
+  };
   const { promise: abandoned, resolve } = Promise.withResolvers<undefined>();
   return {
-    ...{ cell, execution, limits, view, bridge, defines, disposers, streams, flags },
-    ...{
-      report,
-      reportError,
-      abandoned,
-      abandon: () => {
-        resolve(undefined);
-      },
+    cell,
+    execution,
+    limits,
+    view,
+    bridge,
+    defines,
+    disposers,
+    streams,
+    flags,
+    report,
+    reportError,
+    abandoned,
+    abandon: () => {
+      resolve(undefined);
     },
-    install: installer(context, { bridge, streams, limits }),
+    install: (bindings) => {
+      install(bridge, bindings, stubs);
+    },
   };
 }
