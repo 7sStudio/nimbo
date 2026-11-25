@@ -94,7 +94,10 @@ describe("bindingsFlow attribution and values", () => {
     const text = "[the value could not be read: Error: inspect ***]";
     expect(await bindings(["list", "secret"], true)).toMatchObject([
       {
-        ...{ name: "list", preview: text, repr: text, truncated: true },
+        name: "list",
+        preview: text,
+        repr: text,
+        truncated: true,
         json: { $type: "error", name: "Error", message: "inspect ***" },
       },
       { name: "secret", preview: "'***'" },

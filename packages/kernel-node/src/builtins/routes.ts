@@ -85,8 +85,6 @@ function parseSpec(spec: unknown): {
   return { method: upper, path, key: `${upper} ${form}` };
 }
 
-type Context = { readonly options: RouteOptions; readonly table: Map<string, RouteEntry> };
-
 /** The public URL of `path`: the route base, then the path in route form; a query or fragment it carries is kept. */
 function routeUrl(options: RouteOptions, path: unknown): string {
   const text = String(path);
@@ -96,68 +94,62 @@ function routeUrl(options: RouteOptions, path: unknown): string {
   return `${options.routeBase}${formOf(head) ?? head}${rest}`;
 }
 
-/** `route(spec, handler)`: registers on the current cell, replacing the spec's registration, returns a disposer. */
-function register({ options, table }: Context, spec: unknown, handler: unknown): () => void {
-  const { method, path, key } = parseSpec(spec);
-  const written = `${method} ${path}`;
-  if (!isHandler(handler))
-    throw new InvalidRouteHandler({ spec: written, type: typeName(handler) });
-  const store = options.currentStore();
-  if (!store) throw new OutsideCell({ builtin: "route" });
-  if (options.retired(store.cell)) return () => undefined;
-  const registeredAt = options.now();
-  const entry: RouteEntry = {
-    spec: written,
-    method,
-    path,
-    ...store,
-    registeredAt,
-    handler,
-    hits: 0,
-  };
-  table.set(key, entry);
-  // Disposing a replaced registration must not remove the one that replaced it.
-  const dispose = () => {
-    if (table.get(key) !== entry) return;
-    table.delete(key);
-    options.onChange();
-  };
-  options.addDisposer(store.cell, dispose);
-  options.onChange();
-  return dispose;
-}
-
-function list({ options, table }: Context): readonly Route[] {
-  return [...table.values()].map(({ spec, method, path, cell, registeredAt, hits }) => {
-    const url = routeUrl(options, path);
-    return { spec, method, path, url, cell, registeredAt, hits };
-  });
-}
-
-/** The route `method` and `path` reach: the same method, else for HEAD the GET route; paths compared in route form. */
-function match(
-  table: ReadonlyMap<string, RouteEntry>,
-  method: string,
-  path: string,
-): RouteEntry | undefined {
-  const form = formOf(path);
-  if (form === undefined) return undefined;
-  const upper = method.toUpperCase();
-  const exact = table.get(`${upper} ${form}`);
-  return exact ?? (upper === "HEAD" ? table.get(`GET ${form}`) : undefined);
-}
-
 /** An empty route table. */
 export function createRoutes(options: RouteOptions): RouteTable {
-  const context: Context = { options, table: new Map() };
+  const table = new Map<string, RouteEntry>();
+
+  /** `route(spec, handler)`: registers on the current cell, replacing the spec's registration, returns a disposer. */
+  const register = (spec: unknown, handler: unknown): (() => void) => {
+    const { method, path, key } = parseSpec(spec);
+    const written = `${method} ${path}`;
+    if (!isHandler(handler))
+      throw new InvalidRouteHandler({ spec: written, type: typeName(handler) });
+    const store = options.currentStore();
+    if (!store) throw new OutsideCell({ builtin: "route" });
+    if (options.retired(store.cell)) return () => undefined;
+    const registeredAt = options.now();
+    const entry: RouteEntry = {
+      spec: written,
+      method,
+      path,
+      ...store,
+      registeredAt,
+      handler,
+      hits: 0,
+    };
+    table.set(key, entry);
+    // Disposing a replaced registration must not remove the one that replaced it.
+    const dispose = () => {
+      if (table.get(key) !== entry) return;
+      table.delete(key);
+      options.onChange();
+    };
+    options.addDisposer(store.cell, dispose);
+    options.onChange();
+    return dispose;
+  };
+
+  /** The route `method` and `path` reach: the same method, else for HEAD the GET route; paths compared in route form. */
+  const match = (method: string, path: string): RouteEntry | undefined => {
+    const form = formOf(path);
+    if (form === undefined) return undefined;
+    const upper = method.toUpperCase();
+    const exact = table.get(`${upper} ${form}`);
+    return exact ?? (upper === "HEAD" ? table.get(`GET ${form}`) : undefined);
+  };
+
   return {
-    route: (spec, handler) => register(context, spec, handler),
+    route: register,
     routeUrl: (path) => routeUrl(options, path),
-    match: (method, path) => match(context.table, method, path),
+    match,
     hit: (entry) => {
       entry.hits += 1;
       options.onChange();
     },
-    list: () => list(context),
+    list: () =>
+      [...table.values()].map(({ spec, method, path, cell, registeredAt, hits }) => {
+        const url = routeUrl(options, path);
+        return { spec, method, path, url, cell, registeredAt, hits };
+      }),
   };
 }

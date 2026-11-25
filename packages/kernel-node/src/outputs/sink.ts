@@ -1,9 +1,9 @@
 // The output sink of 04-kernel §5: every output leaves as an `output` message on its store's execution. Stream text
 // is coalesced per execution and flushed after 16 ms, before any other output of that execution and before its
 // terminal status; at flush it is redacted, its cell positions are rewritten (a printed stack shows the cells' own
-// lines), then it is capped at maxStreamBytes with a final "[output truncated]". An
-// interrupt can stop user code inside a write (console.log), so the flush timer is scheduled before the execution is
-// marked pending: a mark never stands without the timer that clears it (04-kernel §6).
+// lines), then it is capped at maxStreamBytes with a final "[output truncated]". An interrupt can stop user code
+// inside a write (console.log), so the flush timer is scheduled before the execution is marked pending: a mark never
+// stands without the timer that clears it (04-kernel §6).
 import { Buffer } from "node:buffer";
 
 import type { CellId, ExecutionId, FullValue, Output } from "@jsnb/core";
@@ -45,11 +45,6 @@ type State = {
   /** A flush timer is scheduled for this execution's segments. */
   pending: boolean;
 };
-type Context = {
-  readonly options: SinkOptions;
-  readonly states: Map<ExecutionId, State>;
-  readonly latest: Map<CellId, ExecutionId>;
-};
 
 const truncatedNotice = "[output truncated]";
 
@@ -71,97 +66,84 @@ function fitBytes(text: string, budget: number): string {
   return text.slice(0, index);
 }
 
-function sendSegment(
-  context: Context,
-  execution: ExecutionId,
-  state: State,
-  segment: Segment,
-): void {
-  const { send, redact, rewrite, maxStreamBytes } = context.options;
-  const text = rewrite(redact(segment.text));
-  const size = Buffer.byteLength(text, "utf8");
-  if (state.bytes + size <= maxStreamBytes) {
-    state.bytes += size;
-    send(execution, { kind: "stream", stream: segment.stream, text });
-    return;
-  }
-  const head = fitBytes(text, maxStreamBytes - state.bytes);
-  if (head !== "") send(execution, { kind: "stream", stream: segment.stream, text: head });
-  send(execution, { kind: "stream", stream: segment.stream, text: truncatedNotice });
-  state.bytes = maxStreamBytes;
-  state.truncated = true;
-}
-
-function flushState(context: Context, execution: ExecutionId, state: State): void {
-  state.pending = false;
-  for (const segment of state.segments.splice(0)) {
-    if (state.truncated) break;
-    sendSegment(context, execution, state, segment);
-  }
-  // An execution that is no longer its cell's latest keeps no state once its late text is out.
-  const latest = context.latest.get(state.cell);
-  if (latest !== undefined && latest !== execution) context.states.delete(execution);
-}
-
-function flush(context: Context, execution: ExecutionId): void {
-  const state = context.states.get(execution);
-  if (state) flushState(context, execution, state);
-}
-
-function stateOf(context: Context, store: SinkStore): State {
-  const known = context.states.get(store.execution);
-  if (known) return known;
-  const fresh: State = {
-    cell: store.cell,
-    segments: [],
-    bytes: 0,
-    truncated: false,
-    pending: false,
-  };
-  context.states.set(store.execution, fresh);
-  return fresh;
-}
-
-function write(context: Context, store: SinkStore, stream: StreamName, text: string): void {
-  const state = stateOf(context, store);
-  if (text === "" || state.truncated) return;
-  const last = state.segments.at(-1);
-  if (last?.stream === stream) last.text += text;
-  else state.segments.push({ stream, text });
-  if (state.pending) return;
-  // Scheduled, then marked: stopped in between, the timer still flushes and the next write schedules again. The flush
-  // is idempotent, so a timer that finds its text already sent sends nothing.
-  context.options.schedule(() => {
-    flushState(context, store.execution, state);
-  });
-  state.pending = true;
-}
-
-function begin(context: Context, store: SinkStore): void {
-  const previous = context.latest.get(store.cell);
-  context.latest.set(store.cell, store.execution);
-  if (previous !== undefined && previous !== store.execution) flush(context, previous);
-}
-
 /** A sink over `options.send`. */
 export function createSink(options: SinkOptions): Sink {
-  const context: Context = { options, states: new Map(), latest: new Map() };
+  const states = new Map<ExecutionId, State>();
+  const latest = new Map<CellId, ExecutionId>();
+
+  const sendSegment = (execution: ExecutionId, state: State, segment: Segment): void => {
+    const { send, redact, rewrite, maxStreamBytes } = options;
+    const text = rewrite(redact(segment.text));
+    const size = Buffer.byteLength(text, "utf8");
+    if (state.bytes + size <= maxStreamBytes) {
+      state.bytes += size;
+      send(execution, { kind: "stream", stream: segment.stream, text });
+      return;
+    }
+    const head = fitBytes(text, maxStreamBytes - state.bytes);
+    if (head !== "") send(execution, { kind: "stream", stream: segment.stream, text: head });
+    send(execution, { kind: "stream", stream: segment.stream, text: truncatedNotice });
+    state.bytes = maxStreamBytes;
+    state.truncated = true;
+  };
+
+  const flushState = (execution: ExecutionId, state: State): void => {
+    state.pending = false;
+    for (const segment of state.segments.splice(0)) {
+      if (state.truncated) break;
+      sendSegment(execution, state, segment);
+    }
+    // An execution that is no longer its cell's latest keeps no state once its late text is out.
+    const current = latest.get(state.cell);
+    if (current !== undefined && current !== execution) states.delete(execution);
+  };
+
+  const flush = (execution: ExecutionId): void => {
+    const state = states.get(execution);
+    if (state) flushState(execution, state);
+  };
+
+  const stateOf = (store: SinkStore): State => {
+    const known = states.get(store.execution);
+    if (known) return known;
+    const fresh: State = {
+      cell: store.cell,
+      segments: [],
+      bytes: 0,
+      truncated: false,
+      pending: false,
+    };
+    states.set(store.execution, fresh);
+    return fresh;
+  };
+
   return {
     write: (store, stream, text) => {
-      write(context, store, stream, text);
+      const state = stateOf(store);
+      if (text === "" || state.truncated) return;
+      const last = state.segments.at(-1);
+      if (last?.stream === stream) last.text += text;
+      else state.segments.push({ stream, text });
+      if (state.pending) return;
+      // Scheduled, then marked: stopped in between, the timer still flushes and the next write schedules again. The
+      // flush is idempotent, so a timer that finds its text already sent sends nothing.
+      options.schedule(() => {
+        flushState(store.execution, state);
+      });
+      state.pending = true;
     },
     emit: (store, output, full) => {
-      flush(context, store.execution);
+      flush(store.execution);
       options.send(store.execution, output, full);
     },
-    flush: (execution) => {
-      flush(context, execution);
-    },
+    flush,
     flushAll: () => {
-      for (const [execution, state] of context.states) flushState(context, execution, state);
+      for (const [execution, state] of states) flushState(execution, state);
     },
     begin: (store) => {
-      begin(context, store);
+      const previous = latest.get(store.cell);
+      latest.set(store.cell, store.execution);
+      if (previous !== undefined && previous !== store.execution) flush(previous);
     },
   };
 }

@@ -40,14 +40,6 @@ type Pending = {
   readonly resolve: (value: unknown) => void;
   readonly reject: (error: Error) => void;
 };
-type Session = {
-  readonly options: CdpOptions;
-  readonly pending: Map<number, Pending>;
-  readonly close: () => void;
-  paused: boolean;
-  closed: boolean;
-};
-
 const closedError = (method: string): InspectorFailed =>
   new InspectorFailed({ method, reason: "the connection closed" });
 
@@ -60,63 +52,61 @@ const parseFrame = (text: string): unknown => {
   }
 };
 
-function onEvent(session: Session, method: string, params: unknown): void {
-  if (method === "Debugger.paused" || method === "Debugger.resumed") {
-    session.paused = method === "Debugger.paused";
-    session.options.onPause(session.paused);
-  }
-  session.options.onEvent?.(method, params);
-  // A process with a connected client does not exit until the client leaves (NodeRuntime.notifyWhenWaitingForDisconnect).
-  if (method === "NodeRuntime.waitingForDisconnect") session.close();
-}
-
-function onFrame(session: Session, text: string): void {
-  const frame = parseFrame(text);
-  const answer = Answer.safeParse(frame);
-  if (answer.success) {
-    const entry = session.pending.get(answer.data.id);
-    session.pending.delete(answer.data.id);
-    const { error } = answer.data;
-    if (error) entry?.reject(new InspectorFailed({ method: entry.method, reason: error.message }));
-    else entry?.resolve(answer.data.result);
-    return;
-  }
-  const event = Event.safeParse(frame);
-  if (event.success) onEvent(session, event.data.method, event.data.params);
-  else session.options.onInvalid(text);
-}
-
-function onClose(session: Session): void {
-  session.closed = true;
-  for (const entry of session.pending.values()) entry.reject(closedError(entry.method));
-  session.pending.clear();
-}
-
 /** A session over `socket`, open or still opening: calls sent before it opens are the caller's to avoid. */
 export function sessionOver(socket: CdpSocket, options: CdpOptions): Cdp {
+  const pending = new Map<number, Pending>();
+  let paused = false;
+  let closed = false;
+  let lastId = 0;
   const close = (): void => {
     socket.close();
   };
-  const session: Session = { options, pending: new Map(), close, paused: false, closed: false };
+
+  const onEvent = (method: string, params: unknown): void => {
+    if (method === "Debugger.paused" || method === "Debugger.resumed") {
+      paused = method === "Debugger.paused";
+      options.onPause(paused);
+    }
+    options.onEvent?.(method, params);
+    // A process with a connected client does not exit until the client leaves
+    // (NodeRuntime.notifyWhenWaitingForDisconnect).
+    if (method === "NodeRuntime.waitingForDisconnect") close();
+  };
+
   socket.addEventListener("message", (message) => {
-    onFrame(session, String(message.data));
+    const text = String(message.data);
+    const frame = parseFrame(text);
+    const answer = Answer.safeParse(frame);
+    if (answer.success) {
+      const entry = pending.get(answer.data.id);
+      pending.delete(answer.data.id);
+      const { error } = answer.data;
+      if (error)
+        entry?.reject(new InspectorFailed({ method: entry.method, reason: error.message }));
+      else entry?.resolve(answer.data.result);
+      return;
+    }
+    const event = Event.safeParse(frame);
+    if (event.success) onEvent(event.data.method, event.data.params);
+    else options.onInvalid(text);
   });
   socket.addEventListener("close", () => {
-    onClose(session);
+    closed = true;
+    for (const entry of pending.values()) entry.reject(closedError(entry.method));
+    pending.clear();
   });
-  let lastId = 0;
   return {
     send: (method, params = {}) =>
       new Promise((resolve, reject) => {
-        if (session.closed) {
+        if (closed) {
           reject(closedError(method));
           return;
         }
         lastId += 1;
-        session.pending.set(lastId, { method, resolve, reject });
+        pending.set(lastId, { method, resolve, reject });
         socket.send(JSON.stringify({ id: lastId, method, params }));
       }),
-    paused: () => session.paused,
+    paused: () => paused,
     close,
   };
 }

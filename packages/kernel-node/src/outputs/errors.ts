@@ -1,7 +1,7 @@
 // The ErrorInfo of 04-kernel §5.3 for any thrown value: name, message, mapped frames, the raw stack without the
-// kernel's own frames and with cell positions rewritten, and data (a JsnbError's data, own enumerable properties, the cause chain); all redacted. It
-// never throws: a value that fights back (a getter, a Proxy trap, a custom inspect that throws) is described as far
-// as it lets itself be, so the run or request that threw it still ends.
+// kernel's own frames and with cell positions rewritten, and data (a JsnbError's data, own enumerable properties, the
+// cause chain); all redacted. It never throws: a value that fights back (a getter, a Proxy trap, a custom inspect that
+// throws) is described as far as it lets itself be, so the run or request that threw it still ends.
 import { inspect } from "node:util";
 
 import type { ErrorInfo, Frame } from "@jsnb/core";

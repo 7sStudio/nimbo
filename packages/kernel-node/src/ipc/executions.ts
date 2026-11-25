@@ -38,12 +38,6 @@ const terminal = new Set(["ok", "error", "interrupted"]);
  */
 const rememberedInterrupts = 1000;
 
-type Context = {
-  readonly now: () => number;
-  readonly live: Map<ExecutionId, Live>;
-  readonly interrupted: Set<ExecutionId>;
-};
-
 function push(entry: Live, event: KernelEvent): void {
   entry.events.push(event);
   entry.wake?.();
@@ -77,74 +71,65 @@ async function* iterate(entry: Live, forget: () => void): AsyncGenerator<KernelE
   }
 }
 
-function output(
-  context: Context,
-  { execution, output, full }: OutputMessage,
-): "live" | "late" | "dropped" {
-  if (context.interrupted.has(execution)) return "dropped";
-  const entry = context.live.get(execution);
-  if (!entry) return "late";
-  push(
-    entry,
-    full ? { kind: "output", execution, output, full } : { kind: "output", execution, output },
-  );
-  return "live";
-}
-
-function status(context: Context, { execution, status, error, durationMs }: StatusMessage): void {
-  if (context.interrupted.has(execution)) return;
-  const entry = context.live.get(execution);
-  if (!entry) return;
-  if (status === "running") entry.runningAt = context.now();
-  const event = { kind: "status", execution, status, durationMs } as const;
-  push(entry, error ? { ...event, error } : event);
-  // Over once its terminal status is queued: what it reports later is late (onOutput), not lost in a finished queue.
-  if (terminal.has(status)) context.live.delete(execution);
-}
-
-/** Remembers `execution` as interrupted, forgetting the oldest one beyond the limit. */
-function remember(context: Context, execution: ExecutionId): void {
-  context.interrupted.add(execution);
-  if (context.interrupted.size <= rememberedInterrupts) return;
-  const oldest = context.interrupted.values().next();
-  if (!oldest.done) context.interrupted.delete(oldest.value);
-}
-
-function interrupt(context: Context): readonly ExecutionId[] {
-  const ended: ExecutionId[] = [];
-  for (const [execution, entry] of context.live) {
-    remember(context, execution);
-    const durationMs = entry.runningAt === undefined ? 0 : context.now() - entry.runningAt;
-    push(entry, { kind: "status", execution, status: "interrupted", durationMs });
-    context.live.delete(execution);
-    ended.push(execution);
-  }
-  return ended;
-}
-
 /** No live executions yet; `now` measures the duration of an interrupted one from its `running`. */
 export function createExecutions(now: () => number): Executions {
-  const context: Context = { now, live: new Map(), interrupted: new Set() };
+  const live = new Map<ExecutionId, Live>();
+  const interrupted = new Set<ExecutionId>();
+
+  /** Remembers `execution` as interrupted, forgetting the oldest one beyond the limit. */
+  const remember = (execution: ExecutionId): void => {
+    interrupted.add(execution);
+    if (interrupted.size <= rememberedInterrupts) return;
+    const oldest = interrupted.values().next();
+    if (!oldest.done) interrupted.delete(oldest.value);
+  };
+
   return {
     open: (execution) => {
       const entry: Live = { events: [], runningAt: undefined, failure: undefined, wake: undefined };
-      context.live.set(execution, entry);
-      return iterate(entry, () => context.live.delete(execution));
+      live.set(execution, entry);
+      return iterate(entry, () => live.delete(execution));
     },
-    output: (message) => output(context, message),
-    status: (message) => {
-      status(context, message);
+    output: ({ execution, output, full }) => {
+      if (interrupted.has(execution)) return "dropped";
+      const entry = live.get(execution);
+      if (!entry) return "late";
+      push(
+        entry,
+        full ? { kind: "output", execution, output, full } : { kind: "output", execution, output },
+      );
+      return "live";
     },
-    interrupt: () => interrupt(context),
+    status: ({ execution, status, error, durationMs }) => {
+      if (interrupted.has(execution)) return;
+      const entry = live.get(execution);
+      if (!entry) return;
+      if (status === "running") entry.runningAt = now();
+      const event = { kind: "status", execution, status, durationMs } as const;
+      push(entry, error ? { ...event, error } : event);
+      // Over once its terminal status is queued: what it reports later is late (onOutput), not lost in a finished queue.
+      if (terminal.has(status)) live.delete(execution);
+    },
+    interrupt: () => {
+      const ended: ExecutionId[] = [];
+      for (const [execution, entry] of live) {
+        remember(execution);
+        const durationMs = entry.runningAt === undefined ? 0 : now() - entry.runningAt;
+        push(entry, { kind: "status", execution, status: "interrupted", durationMs });
+        live.delete(execution);
+        ended.push(execution);
+      }
+      return ended;
+    },
     failOne: (execution, error) => {
-      const entry = context.live.get(execution);
-      context.live.delete(execution);
+      const entry = live.get(execution);
+      live.delete(execution);
       if (!entry) return;
       entry.failure = error;
       entry.wake?.();
     },
     fail: (error) => {
-      for (const entry of context.live.values()) {
+      for (const entry of live.values()) {
         entry.failure = error;
         entry.wake?.();
       }

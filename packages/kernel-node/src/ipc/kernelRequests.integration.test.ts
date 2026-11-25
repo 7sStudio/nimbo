@@ -66,7 +66,10 @@ describe("bridge and scope requests through a real kernel", () => {
       });
       const bindings = await kernel.bindings();
       expect(bindings.map(({ name, kind }) => `${kind} ${name}`).sort()).toEqual([
-        ...["const data", "const slow", "function add", "function fails"],
+        "const data",
+        "const slow",
+        "function add",
+        "function fails",
       ]);
       const [data] = await kernel.bindings({ names: ["data"], full: true });
       expect(data).toMatchObject({

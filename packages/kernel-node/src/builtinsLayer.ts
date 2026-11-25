@@ -49,19 +49,6 @@ export type Builtins = {
   readonly listening: (listening: boolean) => void;
 };
 
-/** The wrapped timers and queueMicrotask over the realm's own (04-kernel §7), wired to the current store. */
-function wrappedTimers(deps: BuiltinsDeps) {
-  const real = { setTimeout, setInterval, clear: clearTimeout, setImmediate, clearImmediate };
-  return createTimers({
-    currentStore: deps.stores.current,
-    runIn: deps.stores.run,
-    addDisposer: deps.disposers.add,
-    onError: deps.reportError,
-    afterCall: deps.afterCallback,
-    real: { ...real, queueMicrotask },
-  });
-}
-
 /** The built-ins of the server realm. */
 export function createBuiltins(deps: BuiltinsDeps): Builtins {
   const { stores, sink } = deps;
@@ -74,7 +61,22 @@ export function createBuiltins(deps: BuiltinsDeps): Builtins {
     const store = stores.current();
     if (store) sink.emit(store, output);
   };
-  const timers = wrappedTimers(deps);
+  // The wrapped timers and queueMicrotask over the realm's own (04-kernel §7), wired to the current store.
+  const timers = createTimers({
+    currentStore: stores.current,
+    runIn: stores.run,
+    addDisposer: deps.disposers.add,
+    onError: deps.reportError,
+    afterCall: deps.afterCallback,
+    real: {
+      setTimeout,
+      setInterval,
+      clear: clearTimeout,
+      setImmediate,
+      clearImmediate,
+      queueMicrotask,
+    },
+  });
   const events = createEmit({
     ...deps.events,
     currentCell: () => stores.current()?.cell,

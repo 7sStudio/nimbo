@@ -80,9 +80,15 @@ export function createContext(
   logFilter: LogFilter,
 ): Context {
   const state: State = {
-    ...{ forked: undefined, session: undefined, death: undefined },
-    ...{ ended: false, exports: [], routes: [] },
-    ...{ held: undefined, interrupting: false, queued: undefined },
+    forked: undefined,
+    session: undefined,
+    death: undefined,
+    ended: false,
+    exports: [],
+    routes: [],
+    held: undefined,
+    interrupting: false,
+    queued: undefined,
   };
   const log = (line: string): void => options.onLog?.(logFilter.line(line));
   const logged = (line: string | undefined): void => {
@@ -140,35 +146,16 @@ export function fire(context: Context, cdp: Cdp, method: string): void {
   }); // nothing waits on it: a failure is only worth the log
 }
 
-type OutputMessage = Extract<KernelMessage, { type: "output" }>;
-
-function onOutput(context: Context, message: OutputMessage): void {
-  if (context.executions.output(message) !== "late") return;
-  const { execution, output, full } = message;
-  context.options.onOutput?.(full ? { execution, output, full } : { execution, output });
-}
-
-/** The kernel's tables, kept for later readers and passed on. */
-function onTables(
-  context: Context,
-  message: Extract<KernelMessage, { type: "exports" | "routes" | "events" }>,
-): void {
-  const { options, state } = context;
-  if (message.type === "exports") {
-    state.exports = message.names;
-    options.onExports?.(message.names);
-  } else if (message.type === "routes") {
-    state.routes = message.routes;
-    options.onRoutes?.(message.routes);
-  } else options.onEvents?.({ events: message.events, dropped: message.dropped });
-}
-
-/** Routes one validated kernel message. */
+/** Routes one validated kernel message; the export and route tables are kept for later readers and passed on. */
 export function receive(context: Context, message: KernelMessage): void {
+  const { options, state } = context;
   switch (message.type) {
-    case "output":
-      onOutput(context, message);
+    case "output": {
+      if (context.executions.output(message) !== "late") return;
+      const { execution, output, full } = message;
+      options.onOutput?.(full ? { execution, output, full } : { execution, output });
       return;
+    }
     case "status":
       context.executions.status(message);
       return;
@@ -176,9 +163,15 @@ export function receive(context: Context, message: KernelMessage): void {
       context.requests.settle(message);
       return;
     case "exports":
+      state.exports = message.names;
+      options.onExports?.(message.names);
+      return;
     case "routes":
+      state.routes = message.routes;
+      options.onRoutes?.(message.routes);
+      return;
     case "events":
-      onTables(context, message);
+      options.onEvents?.({ events: message.events, dropped: message.dropped });
       return;
     case "ready":
       context.log(notice("a second ready message was ignored", { pid: message.pid }));

@@ -87,15 +87,6 @@ function expressionRule(node: ts.Node, tools: Tools): ts.Node | undefined {
   return undefined;
 }
 
-type Loop = ts.ForStatement | ts.ForInStatement | ts.ForOfStatement;
-
-/** The `var` list a loop declares in the cell's function scope, if any. */
-function topLevelVarOf(loop: Loop): ts.VariableDeclarationList | undefined {
-  const list = loop.initializer;
-  if (!list || !ts.isVariableDeclarationList(list) || !isTopLevelVarList(list)) return undefined;
-  return list;
-}
-
 /** Rule 5: a `var` below the top level but in the cell's function scope is assigned on `__scope`. */
 function variableRule(node: ts.Node, { variables }: Tools): ts.Node | undefined {
   if (ts.isVariableStatement(node)) {
@@ -104,8 +95,8 @@ function variableRule(node: ts.Node, { variables }: Tools): ts.Node | undefined 
   if (!ts.isForStatement(node) && !ts.isForInStatement(node) && !ts.isForOfStatement(node)) {
     return undefined;
   }
-  const list = topLevelVarOf(node);
-  if (!list) return undefined;
+  const list = node.initializer;
+  if (!list || !ts.isVariableDeclarationList(list) || !isTopLevelVarList(list)) return undefined;
   return ts.isForStatement(node) ? variables.forLoop(node, list) : variables.forInOrOf(node, list);
 }
 

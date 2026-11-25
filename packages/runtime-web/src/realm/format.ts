@@ -1,6 +1,6 @@
 // util.format for the captured console (04-kernel §5.1): `%s %d %i %f %j %o %O %c %%`, the rest appended; never throws.
 import { consoleInspect, inspect } from "./inspect.js";
-import { safe } from "./inspect-text.js";
+import { safe } from "./inspect.js";
 
 const deep = { ...consoleInspect, depth: 4 };
 const shallow = { ...consoleInspect, depth: 0 };

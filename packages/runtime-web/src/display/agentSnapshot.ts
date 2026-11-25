@@ -295,8 +295,10 @@ function htmlVisitor(maxBytes: number) {
       }
       const close = isVoid(element) ? "" : `</${element.localName}>`;
       const tag = tagOf(writer, element, close);
-      if (tag === undefined) writer.state.full = true;
-      if (tag === undefined) return "skip";
+      if (tag === undefined) {
+        writer.state.full = true;
+        return "skip";
+      }
       writer.push(tag);
       if (close === "") return "skip";
       if (element instanceof HTMLTextAreaElement) {

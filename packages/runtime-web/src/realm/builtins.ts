@@ -32,42 +32,41 @@ const disposeWith =
     return undefined;
   };
 
-/** The timers, the window listeners and the views of `window` and `document`, all belonging to this run. */
-function globals(parts: BuiltinParts): Readonly<Record<string, unknown>> {
-  const timers = createTimers(parts.disposers, parts.reportError);
-  const onWindow = parts.listeners.on(window, parts.disposers, parts.reportError);
-  const onDocument = parts.listeners.on(document, parts.disposers, parts.reportError);
+/** Every name a run's builtins layer holds (createBuiltins's keys; a browser test keeps the two equal). */
+export const builtinNames: readonly string[] = [
+  "console",
+  "env",
+  "display",
+  "dispose",
+  "on",
+  "setTimeout",
+  "setInterval",
+  "requestAnimationFrame",
+  "addEventListener",
+  "removeEventListener",
+  "window",
+  "self",
+  "globalThis",
+  "document",
+];
+
+export function createBuiltins(parts: BuiltinParts): Readonly<Record<string, unknown>> {
+  const { disposers, reportError } = parts;
+  const timers = createTimers(disposers, reportError);
+  const onWindow = parts.listeners.on(window, disposers, reportError);
+  const onDocument = parts.listeners.on(document, disposers, reportError);
   const views = createGlobalViews({ window: { ...timers, ...onWindow }, document: onDocument });
   return {
+    console: createConsole({ write: parts.streams.write, now: () => performance.now() }),
+    env: parts.env,
+    display: parts.display,
+    dispose: disposeWith(disposers),
+    on: parts.on,
     ...timers,
     ...onWindow,
     window: views.window,
     self: views.window,
     globalThis: views.window,
     document: views.document,
-  };
-}
-
-/** Every name a run's builtins layer holds (createBuiltins's keys; a browser test keeps the two equal). */
-export const builtinNames: readonly string[] = [
-  ...["console", "env", "display", "dispose", "on"],
-  ...[
-    "setTimeout",
-    "setInterval",
-    "requestAnimationFrame",
-    "addEventListener",
-    "removeEventListener",
-  ],
-  ...["window", "self", "globalThis", "document"],
-];
-
-export function createBuiltins(parts: BuiltinParts): Readonly<Record<string, unknown>> {
-  return {
-    console: createConsole({ write: parts.streams.write, now: () => performance.now() }),
-    env: parts.env,
-    display: parts.display,
-    dispose: disposeWith(parts.disposers),
-    on: parts.on,
-    ...globals(parts),
   };
 }

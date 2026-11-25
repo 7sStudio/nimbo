@@ -79,7 +79,12 @@ function printers(print: Print): Readonly<Record<string, Method>> {
   const titled = (title: string, args: readonly unknown[]): string =>
     args.length > 0 ? `${title}: ${formatArgs(args)}` : title;
   return {
-    ...{ log: out, info: out, debug: out, table: out, warn: err, error: err },
+    log: out,
+    info: out,
+    debug: out,
+    table: out,
+    warn: err,
+    error: err,
     dir: (value) => {
       print("stdout", inspect(value, consoleInspect));
     },

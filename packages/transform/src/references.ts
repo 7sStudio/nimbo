@@ -81,23 +81,16 @@ function isPatternPart(node: ts.Node): boolean {
   );
 }
 
-/** `x = e` is a write, `x += e` both; `undefined` when the parent is not an assignment or update. */
-function operatorAccess(id: ts.Identifier, parent: ts.Node): Access | undefined {
+/** Whether a referenced identifier is written (`x = e`, `[x] = e`, `for (x of …)`), read, or both (`x++`, `x += e`). */
+export function accessOf(id: ts.Identifier): Access {
+  const parent: ts.Node = id.parent;
   if (ts.isBinaryExpression(parent) && parent.left === id) {
     if (parent.operatorToken.kind === ts.SyntaxKind.EqualsToken) return "write";
     if (isAssignmentOperator(parent.operatorToken.kind)) return "readwrite";
   }
   if (ts.isPrefixUnaryExpression(parent) || ts.isPostfixUnaryExpression(parent)) {
-    return isIncrement(parent.operator) ? "readwrite" : undefined;
+    if (isIncrement(parent.operator)) return "readwrite";
   }
-  return undefined;
-}
-
-/** Whether a referenced identifier is written (`x = e`, `[x] = e`, `for (x of …)`), read, or both (`x++`, `x += e`). */
-export function accessOf(id: ts.Identifier): Access {
-  const parent: ts.Node = id.parent;
-  const byOperator = operatorAccess(id, parent);
-  if (byOperator) return byOperator;
   if (ts.isForOfStatement(parent) || ts.isForInStatement(parent)) {
     if (parent.initializer === id) return "write";
   }

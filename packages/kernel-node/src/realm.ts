@@ -80,13 +80,20 @@ export type Realm = RealmDeps & {
   readonly recheckHooks: CheckHooks;
 };
 
-type Outputs = Pick<
-  Realm,
-  "environment" | "sink" | "compiler" | "errorInfo" | "logErrorInfo" | "reportError"
->;
+/** The kernel log notice of a deleted cell's cleanup that threw: no cell can show it any more. */
+export function logCleanupFailure(
+  deps: Pick<RealmDeps, "config" | "log">,
+  cell: CellId,
+  error: ErrorInfo,
+): void {
+  const detail = { level: "error", notebook: deps.config.notebook, cell, error };
+  deps.log("stderr", `${notice("a cleanup of a deleted cell failed", detail)}\n`);
+}
 
-function createOutputs(deps: RealmDeps): Outputs {
-  const environment = createEnvironment(deps.workspace, deps.processEnv);
+/** Builds the realm and reads `.env` once. */
+export function createRealm(deps: RealmDeps): Realm {
+  const { config, workspace, log } = deps;
+  const environment = createEnvironment(workspace, deps.processEnv);
   const { redact } = environment;
   const compiler = createCompiler();
   const sink = createSink({
@@ -97,11 +104,13 @@ function createOutputs(deps: RealmDeps): Outputs {
     },
     redact,
     rewrite: (text) => rewritePositions(text, compiler),
-    maxStreamBytes: deps.config.limits.maxStreamBytes,
+    maxStreamBytes: config.limits.maxStreamBytes,
     schedule: deps.schedule,
   });
   const frames = {
-    ...{ mapFor: compiler.mapFor, cellOf: compiler.cellOf, cellUrls: compiler.cellUrls },
+    mapFor: compiler.mapFor,
+    cellOf: compiler.cellOf,
+    cellUrls: compiler.cellUrls,
     internal: kernelDirectories,
   };
   const errorInfo = (error: unknown): ErrorInfo => toErrorInfo(error, { ...frames, redact });
@@ -114,33 +123,18 @@ function createOutputs(deps: RealmDeps): Outputs {
     }
     const line = notice("an error outside any cell", {
       level: "error",
-      notebook: deps.config.notebook,
+      notebook: config.notebook,
       error: logErrorInfo(error),
     });
-    deps.log("stderr", `${line}\n`);
+    log("stderr", `${line}\n`);
   };
-  return { environment, sink, compiler, errorInfo, logErrorInfo, reportError };
-}
 
-/** The kernel log notice of a deleted cell's cleanup that threw: no cell can show it any more. */
-export function logCleanupFailure(
-  deps: Pick<RealmDeps, "config" | "log">,
-  cell: CellId,
-  error: ErrorInfo,
-): void {
-  const detail = { level: "error", notebook: deps.config.notebook, cell, error };
-  deps.log("stderr", `${notice("a cleanup of a deleted cell failed", detail)}\n`);
-}
-
-type Tables = Pick<Realm, "stores" | "names" | "exports" | "disposers" | "routes">;
-
-function createTables(deps: RealmDeps, outputs: Outputs): Tables {
   const stores = createStores();
   const disposers = createDisposers((cell, error) => {
-    logCleanupFailure(deps, cell, outputs.logErrorInfo(error));
+    logCleanupFailure(deps, cell, logErrorInfo(error));
   });
   const routes = createRoutes({
-    routeBase: deps.config.routeBase,
+    routeBase: config.routeBase,
     currentStore: stores.current,
     addDisposer: disposers.add,
     retired: disposers.retired,
@@ -149,45 +143,42 @@ function createTables(deps: RealmDeps, outputs: Outputs): Tables {
       deps.send({ type: "routes", routes: routes.list() });
     },
   });
-  return { stores, names: createNames(), exports: createExports(), disposers, routes };
-}
+  const names = createNames();
+  const exports = createExports();
 
-type Checks = Pick<Realm, "checkHooks" | "recheckHooks">;
-
-/** The process-hook checks of 04-kernel §3.3, reporting on the realm's sink and log (hookReports.ts). */
-function createChecks(deps: RealmDeps, outputs: Outputs, tables: Tables): Checks {
-  const { hooks, log, exit } = deps;
-  const { check, recheck } = createHookChecks({
-    ...{ hooks, notebook: deps.config.notebook, log, exit, stores: tables.stores },
-    ...{ sink: outputs.sink, errorInfo: outputs.errorInfo },
+  const { check: checkHooks, recheck: recheckHooks } = createHookChecks({
+    hooks: deps.hooks,
+    notebook: config.notebook,
+    log,
+    exit: deps.exit,
+    stores,
+    sink,
+    errorInfo,
   });
-  return { checkHooks: check, recheckHooks: recheck };
-}
-
-/** Builds the realm and reads `.env` once. */
-export function createRealm(deps: RealmDeps): Realm {
-  const outputs = createOutputs(deps);
-  const tables = createTables(deps, outputs);
-  const { stores, names, exports } = tables;
-  const checks = createChecks(deps, outputs, tables);
-  const { environment } = outputs;
   const builtins = createBuiltins({
-    ...tables,
-    ...outputs,
+    workspace,
+    stores,
+    sink,
+    environment,
+    routes,
+    disposers,
+    log,
+    reportError,
     afterCallback: (store) => {
-      void checks.checkHooks(store);
+      void checkHooks(store);
     },
-    workspace: deps.workspace,
-    log: deps.log,
-    events: { ...deps, maxBytes: deps.config.limits.maxBytesPerValue },
-    encode: (value) =>
-      encode(value, { maxBytes: deps.config.limits.maxValueBytes, redact: environment.redact })
-        .json,
+    encode: (value) => encode(value, { maxBytes: config.limits.maxValueBytes, redact }).json,
+    events: {
+      send: deps.send,
+      schedule: deps.schedule,
+      clock: deps.clock,
+      maxBytes: config.limits.maxBytesPerValue,
+    },
   });
   const scope = createScope({
     builtins: builtins.layer,
     plumbing: {
-      __import: createImport({ workspace: deps.workspace, load: deps.load }),
+      __import: createImport({ workspace, load: deps.load }),
       __export: (name, from = name) => {
         const store = stores.current();
         if (store) exports.register(name, from, store.cell);
@@ -199,5 +190,23 @@ export function createRealm(deps: RealmDeps): Realm {
     },
   });
   exposeScope(scope.record);
-  return { ...deps, ...outputs, ...tables, scope, builtins, ...checks, lastExecution: new Map() };
+  return {
+    ...deps,
+    environment,
+    sink,
+    compiler,
+    errorInfo,
+    logErrorInfo,
+    reportError,
+    stores,
+    names,
+    exports,
+    disposers,
+    routes,
+    scope,
+    builtins,
+    checkHooks,
+    recheckHooks,
+    lastExecution: new Map(),
+  };
 }

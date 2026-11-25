@@ -34,27 +34,6 @@ const abortError = (signal: AbortSignal): Error => {
   return reason instanceof Error ? reason : new DOMException(String(reason), "AbortError");
 };
 
-function openRequest(
-  waiting: Map<number, Waiting>,
-  id: number,
-  signal?: AbortSignal,
-  abandoned?: (id: number) => void,
-): Promise<ResultMessage> {
-  return new Promise<ResultMessage>((resolve, reject) => {
-    if (signal?.aborted) {
-      reject(abortError(signal));
-      return;
-    }
-    const abort = (): void => {
-      waiting.delete(id);
-      if (signal) reject(abortError(signal));
-      abandoned?.(id);
-    };
-    signal?.addEventListener("abort", abort, { once: true });
-    waiting.set(id, { resolve, reject, detach: () => signal?.removeEventListener("abort", abort) });
-  });
-}
-
 /** No pending requests yet. */
 export function createRequests(): Requests {
   const waiting = new Map<number, Waiting>();
@@ -62,7 +41,25 @@ export function createRequests(): Requests {
   return {
     open: (signal, abandoned) => {
       lastId += 1;
-      return { id: lastId, result: openRequest(waiting, lastId, signal, abandoned) };
+      const id = lastId;
+      const result = new Promise<ResultMessage>((resolve, reject) => {
+        if (signal?.aborted) {
+          reject(abortError(signal));
+          return;
+        }
+        const abort = (): void => {
+          waiting.delete(id);
+          if (signal) reject(abortError(signal));
+          abandoned?.(id);
+        };
+        signal?.addEventListener("abort", abort, { once: true });
+        waiting.set(id, {
+          resolve,
+          reject,
+          detach: () => signal?.removeEventListener("abort", abort),
+        });
+      });
+      return { id, result };
     },
     settle: (result) => {
       const entry = waiting.get(result.id);

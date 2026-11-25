@@ -36,7 +36,9 @@ export function realCell(source: string, options: Options = {}): RealCell {
   const result = compiler.compile(cell, compiled.code, compiled.map);
   if (!result.ok) throw new Error(`the cell did not compile: ${String(result.error)}`);
   const context: FrameContext = {
-    ...{ cellOf: compiler.cellOf, cellUrls: compiler.cellUrls, mapFor: compiler.mapFor },
+    cellOf: compiler.cellOf,
+    cellUrls: compiler.cellUrls,
+    mapFor: compiler.mapFor,
     internal: options.internal ?? [],
   };
   const plumbing = {

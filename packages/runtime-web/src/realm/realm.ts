@@ -53,7 +53,8 @@ export class Realm {
   async attach(takeover = false): Promise<string> {
     const { notebook, kind, transport, attachKey } = this.#state.options;
     const params = {
-      ...{ notebook, kind },
+      notebook,
+      kind,
       ...(takeover ? { takeover } : {}),
       ...(attachKey === undefined ? {} : { key: attachKey }),
     };

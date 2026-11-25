@@ -59,80 +59,87 @@ function invoke(listener: Listener, self: unknown, event: unknown): unknown {
     : listener.handleEvent(event);
 }
 
-type Request = { readonly type: string; readonly listener: Listener; readonly options: unknown };
-
-function find(book: readonly Entry[], target: EventTarget, request: Request): Entry | undefined {
-  const { type, listener, options } = request;
-  const capture = captureOf(options);
-  return book.find(
-    (e) =>
-      e.target === target && e.type === type && e.listener === listener && e.capture === capture,
-  );
-}
-
-/** The entry leaves the registry and its run's disposers; the DOM already let go of it (once, signal) or is told. */
-function release(book: Entry[], entry: Entry): void {
-  const index = book.indexOf(entry);
-  if (index < 0) return;
-  book.splice(index, 1);
-  entry.undispose();
-}
-
-function drop(book: Entry[], entry: Entry): void {
-  release(book, entry);
-  entry.target.removeEventListener(entry.type, entry.wrapped, { capture: entry.capture });
-}
-
-function register(book: Entry[], run: Run, request: Request): void {
-  const { type, listener, options } = request;
-  const once = Boolean(field(options, "once"));
-  const fire = function (this: unknown, event: unknown): unknown {
-    if (once) release(book, entry); // the DOM removes a once listener before it calls it
-    return invoke(listener, this, event);
-  };
-  const capture = captureOf(options);
-  const wrapped = guard(fire, run.onError);
-  // The run's list is open (methods() checked), so this cleanup runs later, once `entry` exists.
-  const undispose = run.disposers.add(() => {
-    drop(book, entry);
-  });
-  const entry: Entry = { target: run.target, type, listener, capture, wrapped, undispose };
-  book.push(entry);
-  Reflect.apply(run.target.addEventListener.bind(run.target), undefined, [type, wrapped, options]);
-  const onAbort = (): void => {
-    release(book, entry);
-  };
-  signalOf(options)?.addEventListener("abort", onAbort, { once: true });
-}
-
-/**
- * A stale run adds nothing (its disposers already ran) and an aborted signal adds nothing, as in the DOM; removal by
- * type, listener and capture works from any run, since the registry is the realm's.
- */
-function methods(book: Entry[], run: Run): ListenerMethods {
-  const addEventListener = (type: unknown, listener: unknown, options?: unknown): void => {
-    if (!isListener(listener) || run.disposers.closed() || signalOf(options)?.aborted === true)
-      return;
-    const request = { type: String(type), listener, options };
-    if (find(book, run.target, request) === undefined) register(book, run, request);
-  };
-  const removeEventListener = (type: unknown, listener: unknown, options?: unknown): void => {
-    const entry = isListener(listener)
-      ? find(book, run.target, { type: String(type), listener, options })
-      : undefined;
-    if (entry) drop(book, entry);
-    else
-      Reflect.apply(run.target.removeEventListener.bind(run.target), undefined, [
-        type,
-        listener,
-        options,
-      ]);
-  };
-  return { addEventListener, removeEventListener };
-}
-
 /** One registry per realm: the DOM's (target, type, listener, capture) identity, whichever run added the listener. */
 export function createListenerRegistry(): ListenerRegistry {
   const book: Entry[] = [];
-  return { on: (target, disposers, onError) => methods(book, { target, disposers, onError }) };
+
+  const find = (
+    target: EventTarget,
+    type: string,
+    listener: Listener,
+    options: unknown,
+  ): Entry | undefined => {
+    const capture = captureOf(options);
+    return book.find(
+      (e) =>
+        e.target === target && e.type === type && e.listener === listener && e.capture === capture,
+    );
+  };
+
+  /** The entry leaves the registry and its run's disposers; the DOM already let go of it (once, signal) or is told. */
+  const release = (entry: Entry): void => {
+    const index = book.indexOf(entry);
+    if (index < 0) return;
+    book.splice(index, 1);
+    entry.undispose();
+  };
+
+  const drop = (entry: Entry): void => {
+    release(entry);
+    entry.target.removeEventListener(entry.type, entry.wrapped, { capture: entry.capture });
+  };
+
+  const register = (run: Run, type: string, listener: Listener, options: unknown): void => {
+    const once = Boolean(field(options, "once"));
+    const fire = function (this: unknown, event: unknown): unknown {
+      if (once) release(entry); // the DOM removes a once listener before it calls it
+      return invoke(listener, this, event);
+    };
+    const capture = captureOf(options);
+    const wrapped = guard(fire, run.onError);
+    // The run's list is open (addEventListener checked), so this cleanup runs later, once `entry` exists.
+    const undispose = run.disposers.add(() => {
+      drop(entry);
+    });
+    const entry: Entry = { target: run.target, type, listener, capture, wrapped, undispose };
+    book.push(entry);
+    Reflect.apply(run.target.addEventListener.bind(run.target), undefined, [
+      type,
+      wrapped,
+      options,
+    ]);
+    const onAbort = (): void => {
+      release(entry);
+    };
+    signalOf(options)?.addEventListener("abort", onAbort, { once: true });
+  };
+
+  /**
+   * A stale run adds nothing (its disposers already ran) and an aborted signal adds nothing, as in the DOM; removal by
+   * type, listener and capture works from any run, since the registry is the realm's.
+   */
+  const methods = (run: Run): ListenerMethods => {
+    const addEventListener = (type: unknown, listener: unknown, options?: unknown): void => {
+      if (!isListener(listener) || run.disposers.closed() || signalOf(options)?.aborted === true)
+        return;
+      const name = String(type);
+      if (find(run.target, name, listener, options) === undefined)
+        register(run, name, listener, options);
+    };
+    const removeEventListener = (type: unknown, listener: unknown, options?: unknown): void => {
+      const entry = isListener(listener)
+        ? find(run.target, String(type), listener, options)
+        : undefined;
+      if (entry) drop(entry);
+      else
+        Reflect.apply(run.target.removeEventListener.bind(run.target), undefined, [
+          type,
+          listener,
+          options,
+        ]);
+    };
+    return { addEventListener, removeEventListener };
+  };
+
+  return { on: (target, disposers, onError) => methods({ target, disposers, onError }) };
 }

@@ -61,7 +61,11 @@ function optionsFor(dir: string) {
   const logs = watched<string>();
   const messages = watched<KernelMessage>();
   const options: ForkOptions = {
-    ...{ workspace: dir, execPath: process.execPath, entry: kernelEntry, config, timeoutMs: 5000 },
+    workspace: dir,
+    execPath: process.execPath,
+    entry: kernelEntry,
+    config,
+    timeoutMs: 5000,
     onLog: logs.push,
     onChunk: () => undefined,
     onMessage: messages.push,

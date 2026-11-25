@@ -6,7 +6,7 @@ import { toErrorInfo } from "@jsnb/core";
 
 import { serverErrorOf } from "../bridge/rebuild.js";
 import { inspect, reprInspect } from "./inspect.js";
-import { safe } from "./inspect-text.js";
+import { safe } from "./inspect.js";
 
 /** The stack of a thrown value, when it is an Error whose stack can be read. */
 export const stackOf = (error: unknown): string =>
