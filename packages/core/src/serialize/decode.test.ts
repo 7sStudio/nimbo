@@ -54,6 +54,8 @@ describe("decode with refs", () => {
       message: "m",
     });
     expect(decode({ $type: "mystery", x: 1 })).toEqual({ $type: "mystery", x: 1 });
+    expect(decode({ $type: "toString", x: 1 })).toEqual({ $type: "toString", x: 1 });
+    expect(decode({ $type: "constructor" })).toEqual({ $type: "constructor" });
     expect(decode({ $class: "Price", amount: 1 })).toEqual({ $class: "Price", amount: 1 });
   });
 

@@ -58,7 +58,7 @@ const markers: Readonly<Record<string, (node: Json, state: State) => unknown>> =
 };
 
 function marker(node: Json, type: string, state: State): unknown {
-  const rebuild = markers[type];
+  const rebuild = Object.hasOwn(markers, type) ? markers[type] : undefined;
   return rebuild ? rebuild(node, state) : plain(node, state);
 }
 
