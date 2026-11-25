@@ -131,7 +131,7 @@ function textVisitor(maxBytes: number, out: string[]): Visitor {
       if (isBlock(element)) push("\n");
       const control = controlText(element);
       const label = element.getAttribute("aria-label");
-      const room = maxBytes - length + 1;
+      const room = maxBytes + 1;
       if (control !== undefined) push(` ${control.slice(0, room)} `);
       else if (label !== null && element.firstChild === null) push(` ${label.slice(0, room)} `);
       else return "children";
@@ -142,7 +142,8 @@ function textVisitor(maxBytes: number, out: string[]): Visitor {
       if (isBlock(element)) push("\n");
     },
     text: (node) => {
-      push(node.data.slice(0, maxBytes - length + 1).replace(/\s+/gu, " "));
+      // no further than the whole budget: blank runs collapse later, so the room left would cut too early
+      push(node.data.slice(0, maxBytes + 1).replace(/\s+/gu, " "));
     },
     full: () => length > maxBytes,
   };

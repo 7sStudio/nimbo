@@ -101,16 +101,16 @@ describe("emit", () => {
 });
 
 describe("emit", () => {
-  it("counts prototype names as names, and past the name budget under null", () => {
+  it("counts prototype names as names, and keeps the most recent names past the budget", () => {
     const { emit, listening, sent, flush } = harness({ limits: { maxNames: 2 } });
     listening(false);
     for (const name of ["__proto__", "constructor", "toString", "hasOwnProperty"]) emit(name, 1);
     emit("__proto__", 1);
     flush();
     expect(sent[0]?.dropped.map(({ name, count }) => [name, count])).toEqual([
-      ["__proto__", 2],
-      ["constructor", 1],
-      [null, 2],
+      ["hasOwnProperty", 1],
+      ["__proto__", 1],
+      [null, 3],
     ]);
   });
 });

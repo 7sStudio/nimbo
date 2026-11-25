@@ -209,15 +209,26 @@ describe("emit and on across the bridge", () => {
     await withBridge(async (world) => {
       const { server, page, daemon, notebook } = world;
       await page.detach();
-      await server('for (let i = 0; i < 600; i++) emit("order:" + i, i)');
-      await until(world, "order:599", (stat) => stat.dropped === 1);
-      const all = await daemon.client.bridge.events({ notebook, limit: 10 });
+      // one flush of 2 500 names: the kernel keeps the 1 000 most recent, the daemon tracks the 500 most recent
+      await server('for (let i = 0; i < 2500; i++) emit("order:" + i, i)');
+      await until(world, "order:2499", (stat) => stat.dropped === 1);
+      const all = await daemon.client.bridge.events({ notebook, limit: 500 });
       expect(all.total).toBe(500);
-      expect(all.events.map((each) => each.name)).toEqual(
-        Array.from({ length: 10 }, (_, i) => `order:${String(599 - i)}`),
-      );
-      expect(all.other).toEqual({ names: 100, emitted: 100, delivered: 0, dropped: 100 });
-      const some = await daemon.client.bridge.events({ notebook, prefix: "order:59" });
+      expect(all.events.slice(0, 3).map((each) => each.name)).toEqual([
+        "order:2499",
+        "order:2498",
+        "order:2497",
+      ]);
+      expect(all.other).toEqual({
+        folded: 500,
+        unnamed: 1500,
+        emitted: 2000,
+        delivered: 0,
+        dropped: 2000,
+      });
+      const rows = all.events.reduce((sum, each) => sum + each.emitted, 0);
+      expect(rows + (all.other?.emitted ?? 0)).toBe(2500);
+      const some = await daemon.client.bridge.events({ notebook, prefix: "order:249" });
       expect(some.total).toBe(10);
     });
   });

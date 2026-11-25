@@ -23,7 +23,13 @@ type EventStat = {
   cell: CellId | null;
 };
 
-type OtherNames = { names: number; emitted: number; delivered: number; dropped: number };
+type OtherNames = {
+  folded: number;
+  unnamed: number;
+  emitted: number;
+  delivered: number;
+  dropped: number;
+};
 
 type EventStats = {
   readonly attached: boolean;
@@ -76,7 +82,7 @@ function signal(channel: Channel): void {
 }
 
 const otherOf = (channel: Channel): OtherNames =>
-  (channel.other ??= { names: 0, emitted: 0, delivered: 0, dropped: 0 });
+  (channel.other ??= { folded: 0, unnamed: 0, emitted: 0, delivered: 0, dropped: 0 });
 
 /** `name`'s row, made the most recent; the least recent goes to `other` past `maxNames`. */
 function emitted(channel: Channel, name: string, at: string): EventStat {
@@ -96,7 +102,7 @@ function emitted(channel: Channel, name: string, at: string): EventStat {
     if (channel.stats.size <= limits.maxNames) break;
     channel.stats.delete(oldest);
     const other = otherOf(channel);
-    other.names += 1;
+    other.folded += 1;
     other.emitted += row.emitted;
     other.delivered += row.delivered;
     other.dropped += row.dropped;
@@ -205,6 +211,7 @@ function takeDropped(channel: Channel, dropped: EventBatch["dropped"]): void {
       const other = otherOf(channel);
       other.emitted += n;
       other.dropped += n;
+      other.unnamed += n;
       continue;
     }
     const stat = emitted(channel, name, at);

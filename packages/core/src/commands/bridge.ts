@@ -20,7 +20,7 @@ const count = z.number().int().nonnegative();
 export const bridgeEvents = defineCommand({
   name: "bridge.events",
   description:
-    "The events server cells emitted with emit(name, data) since the notebook opened, by name, the most recent first: how many, how many reached a client cell's on(name) listener in the attached page, how many were dropped (no page attached, no listener, or a burst past the queue) and the last time. At most limit names, those starting with prefix; the daemon tracks the 500 most recently emitted names and counts older ones together under other. The events themselves are event outputs on the listening client cells.",
+    "The events server cells emitted with emit(name, data) since the notebook opened, by name, the most recent first: how many, how many reached a client cell's on(name) listener in the attached page, how many were dropped (no page attached, no listener, or a burst past the queue) and the last time. At most limit names, those starting with prefix; the daemon tracks the 500 most recently emitted names and counts older ones together under other, whose folded says how many rows it took in (a name folded twice counts twice) and unnamed how many events the kernel counted without their names. The events themselves are event outputs on the listening client cells.",
   input: z.object({
     notebook: NotebookRef,
     /** Only the names that start with it. */
@@ -45,7 +45,16 @@ export const bridgeEvents = defineCommand({
         cell: CellId.nullable(),
       }),
     ),
-    /** The names no longer tracked, counted together; null while every name is tracked. */
-    other: z.object({ names: count, emitted: count, delivered: count, dropped: count }).nullable(),
+    /** The names no longer tracked, counted together; null while every name is tracked. `folded`: the rows it took
+     * in; `unnamed`: the events among them the kernel counted without their names. */
+    other: z
+      .object({
+        folded: count,
+        unnamed: count,
+        emitted: count,
+        delivered: count,
+        dropped: count,
+      })
+      .nullable(),
   }),
 });

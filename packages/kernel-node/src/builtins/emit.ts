@@ -93,7 +93,8 @@ const bump = (tally: Tally | undefined, at: string, cell: CellId | undefined): T
 const entry = (name: string | null, why: Why, { count, at, cell }: Tally): DroppedEvents =>
   cell === undefined ? { name, count, why, at } : { name, count, why, at, cell };
 
-/** The drops of one flush window, by reason and name; past `maxNames` names a reason, under null. */
+/** The drops of one flush window, by reason and name: the `maxNames` most recent names a reason, the counts of older
+ * ones under null. */
 function createTallies(maxNames: number) {
   const named = new Map<Why, Map<string, Tally>>([
     ["overflow", new Map()],
@@ -104,9 +105,14 @@ function createTallies(maxNames: number) {
     add: (name: string, why: Why, at: string, cell: CellId | undefined): void => {
       const byName = named.get(why) ?? new Map<string, Tally>();
       const tally = byName.get(name);
-      if (tally === undefined && byName.size >= maxNames)
-        other.set(why, bump(other.get(why), at, cell));
-      else byName.set(name, bump(tally, at, cell));
+      byName.delete(name);
+      byName.set(name, bump(tally, at, cell));
+      for (const [oldest, folded] of byName) {
+        if (byName.size <= maxNames) break;
+        byName.delete(oldest);
+        const sum = other.get(why);
+        other.set(why, { ...folded, count: folded.count + (sum?.count ?? 0) });
+      }
     },
     take: (): DroppedEvents[] => {
       const list: DroppedEvents[] = [];
