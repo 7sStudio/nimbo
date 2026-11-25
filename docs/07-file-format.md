@@ -113,8 +113,8 @@ A workspace is a folder containing `.jsnb/` (03-api §2); the daemon creates it 
     keybindings.json  workspace keybindings (§6)
     loader.mjs      written at kernel start: the ESM loader packages are imported through (04-kernel §8.1)
     cache/
-      npm/<name>@<version>/  bundles for /npm/<spec> (04-kernel §8.1): index.js or <subpath>.js, meta.json (last);
-                             a split build's chunks/<hash>.js, group.json (entry and chunk sizes),
+      npm/<name>@<version>/  bundles for /npm/<spec> (04-kernel §8.1): index.js or @<subpath>.js, meta.json (last);
+                             a split build's chunks/<hash>.js, group.json (entry, chunk, previous chunk sizes),
                              group.imports.json, group.inputs.json (linked packages); a standalone
                              bundle's <bundle>.imports.json, <bundle>.inputs.json (linked packages)
       npm/_/<key>/           bundles for /npm/_/<key>/..., folders reached from a bundle's imports

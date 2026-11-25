@@ -17,6 +17,7 @@ Constraint on every UI item: the page's first load stays within its 500 KB budge
 - **`cell.snapshot`** (S, M with images): a client cell's rendered DOM as data for agents, and as an image.
 - **File watcher** (M): external edits of an open `.jsnb` file are noticed and offered as a reload or a merge instead of a conflict at the next save.
 - **Auto re-run of dependents** (M): `execution.autoRunDependents` re-runs the stale cells below a cell that ran, in order, stopping at the first failure.
+- **Named exports of opaque CommonJS packages** (S): a page's `import { chunk } from "lodash"` finds no `chunk`, as in Node: the names come from `cjs-module-lexer` at build time, and lodash assigns its exports inside an IIFE the lexer cannot read; finding them would mean running the package in the daemon. A per-package list of known names, or the default's keys exported at load through a generated facade, would cover the common ones.
 - **Assets and WASM in client packages** (M): files a package loads relative to `import.meta.url` (WASM, workers, fonts, images) are not served by `/npm/`, so pglite, sql.js's WASM build and onnxruntime-web work only in server cells; serve a package's non-module files under its URL with the same path rule.
 - **Vue single-file components** (M or L): today client cells use Vue's full build with template strings or `h()`; `.vue` imports compiled on the daemon, and JSX later.
 
