@@ -42,8 +42,9 @@ export type AutosaveOptions = {
    * is off (the write is a conflict then). */
   readonly external?: () => Promise<"merged" | "conflict" | "off">;
   /** Whether the state needs its recovery copy (a conflict, a failing save, a close that could not write): kept up to
-   * date while needed, removed once the file holds the state; `now` writes it before resolving (a close). */
-  readonly recovery?: (needed: boolean, now?: boolean) => Promise<void>;
+   * date while needed, removed once the file holds the state; `now` writes it before resolving (a close), and answers
+   * whether it could. */
+  readonly recovery?: (needed: boolean, now?: boolean) => Promise<boolean>;
 };
 
 export type Autosaver = {

@@ -48,16 +48,20 @@ async function syncCopy(
 /** The autosave's recovery hook: the copy written (debounced, or at once) while needed, removed when not. */
 export function recoveryKeeper(dir: string, context: SessionContext, text: () => string) {
   const keeper: Keeper = { timer: undefined, wanted: false, present: false };
-  let chain: Promise<void> = Promise.resolve();
-  const sync = (): Promise<void> => {
+  let chain: Promise<boolean> = Promise.resolve(true);
+  const sync = (): Promise<boolean> => {
     chain = chain
       .then(() => syncCopy(dir, context, keeper, text))
-      .catch((error: unknown) => {
-        context.log.warn(
-          { err: error, notebook: context.ref },
-          "the recovery copy could not be kept",
-        );
-      });
+      .then(
+        () => true,
+        (error: unknown) => {
+          context.log.warn(
+            { err: error, notebook: context.ref },
+            "the recovery copy could not be kept",
+          );
+          return false;
+        },
+      );
     return chain;
   };
   return {
@@ -65,14 +69,15 @@ export function recoveryKeeper(dir: string, context: SessionContext, text: () =>
     found: () => {
       keeper.present = true;
     },
-    keep: (needed: boolean, now = false): Promise<void> => {
+    /** Answers whether the copy is as asked once it settles (a debounced write: true at once). */
+    keep: (needed: boolean, now = false): Promise<boolean> => {
       keeper.wanted = needed;
       if (!needed) context.recovered = undefined;
       clearTimeout(keeper.timer);
       if (!needed || now) return sync();
       keeper.timer = setTimeout(() => void sync(), quietMs);
       keeper.timer.unref();
-      return Promise.resolve();
+      return Promise.resolve(true);
     },
   };
 }

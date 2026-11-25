@@ -155,6 +155,8 @@ describe("a recovery folder replaced by a symbolic link after the start", () => 
         const log = ws.path(".jsnb", "logs", "daemon.log");
         await logged(log, "the recovery copy could not be kept");
         await daemon.client.notebook.close({ notebook });
+        await logged(log, "its recovery copy could not be written: they are lost");
+        expect(await readFile(log, "utf8")).not.toContain("they are kept in its recovery copy");
         expect(await readdir(outside)).toEqual([]);
       });
     });

@@ -143,12 +143,12 @@ function edits(context: SessionContext, state: ExternalState) {
 /** The session's answers to its autosave, set once the session's parts exist. */
 type FileHookSlots = {
   run: () => Promise<"merged" | "conflict" | "off">;
-  recovery: (needed: boolean, now?: boolean) => Promise<void>;
+  recovery: (needed: boolean, now?: boolean) => Promise<boolean>;
 };
 
 const fileHookSlots = (): FileHookSlots => ({
   run: () => Promise.resolve("off"),
-  recovery: () => Promise.resolve(),
+  recovery: () => Promise.resolve(false),
 });
 
 /** The context of a session that knows its file (07 §5): by its identity at open, then by each save's and each

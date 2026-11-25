@@ -245,10 +245,12 @@ async function flush(saver: Saver): Promise<void> {
     if (outcome === "conflict" || outcome === "failed") break;
   }
   const reason = outcome === "conflict" || outcome === "failed" ? outcome : "still changing";
-  await saver.options.recovery?.(true, true);
+  const kept = (await saver.options.recovery?.(true, true)) === true;
   saver.options.log.warn(
-    { notebook: saver.options.ref, reason },
-    "the notebook closed with changes that are not on disk; they are kept in its recovery copy",
+    { notebook: saver.options.ref, reason, recoveryCopy: kept },
+    kept
+      ? "the notebook closed with changes that are not on disk; they are kept in its recovery copy"
+      : "the notebook closed with changes that are not on disk, and its recovery copy could not be written: they are lost",
   );
 }
 
