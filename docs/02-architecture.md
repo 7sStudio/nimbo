@@ -137,7 +137,7 @@ Mutating command → session marks the document dirty → 100 ms coalesce → se
 | Notebook document (cells, meta) | daemon memory, autosaved to the `.jsnb` file | kept | kept | kept (from the file) | kept |
 | Executions and outputs, retained full values (`outputs.retainFullValue`; held by the daemon, never the kernel) | daemon memory (64 MB per notebook) | kept, re-fetched | kept until the cells re-run | lost (cells show idle) | lost |
 | Server scope (bindings, live objects, timers, routes) | the kernel process | kept | lost (by design) | lost | lost |
-| Client scope and DOM | the page | lost; client cells re-run on reload | kept (bridge layer cleared) | kept until the socket reconnects | lost |
+| Client scope and DOM | the page | lost; client cells stay as they were saved (outputs shown) until run again | kept (bridge layer cleared) | kept until the socket reconnects | lost |
 | Dependency graph, stale flags | daemon, derived from sources and run history | kept | stale flags reset | recomputed; stale flags lost | recomputed |
 | Edit markers (`meta.lastEdit`) | the file | kept | kept | kept | kept |
 | Settings | the two files, cached in the daemon | kept | kept | kept | kept |

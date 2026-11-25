@@ -272,7 +272,7 @@ Where next: run `nimbo` with no arguments to open Home, then open one of the [ex
   cell, live, for progress bars and dashboards fed by a loop or a timer.
 - **HTTP routes** with standard `Request` and `Response`, served at `/n/<notebook>/<path>`; every request is logged
   under its cell and in the Activity log.
-- Reload or leave the page and come back: the kernel keeps its state and client cells run again. Notebooks autosave.
+- Reload or leave the page and come back: the kernel keeps its state and the outputs stay; run client cells again to rebuild what they drew. Notebooks autosave.
 
 <img alt="Two cells: a server cell exports totalsByRegion, and a client cell awaits it and draws four bars with their totals; the Inspector's Bridge section shows the function's TypeScript signature, its caller cell 4 and the last call." src="docs/assets/readme/bridge-server-and-client-cells.png">
 

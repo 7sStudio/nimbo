@@ -14,6 +14,8 @@ Constraint on every UI item: the page's first load stays within its 500 KB budge
 
 - **Headless client realm** (L): client cells run without a tab, in the system's Chrome driven through `puppeteer-core`, opt-in by a setting; a human's tab always takes the realm over.
 - **`cell.snapshot` images** (M): a client cell's container as an image, with the headless client realm.
+- **Re-run client cells after a reload** (S): a reloaded or reconnected page runs again, in order, the client cells it had run, so their DOM and `on` listeners come back without a click.
+- **`cell.snapshot` HTML in other browsers** (S): the allowlist serialiser and its hostile-shape tests run in Chromium only; run them in Firefox and WebKit too.
 - **File watcher** (M): external edits of an open `.jsnb` file are noticed and offered as a reload or a merge instead of a conflict at the next save.
 - **Auto re-run of dependents** (M): `execution.autoRunDependents` re-runs the stale cells below a cell that ran, in order, stopping at the first failure.
 - **`/npm/` bundler on large packages** (M): a client cell importing a package with hundreds of subpath modules (`date-fns`) times out while every subpath is bundled; bundle on demand or pre-bundle the package once.
