@@ -1,4 +1,4 @@
-// Tests reading a generated subcommand's arguments (03-api §8): flags into input, the global flags, source from
+// Tests reading a generated subcommand's arguments: flags into input, the global flags, source from
 // --source, stdin or --file, and the schema's check before any daemon, its issues named by flag (exit 2).
 import { writeFile } from "node:fs/promises";
 

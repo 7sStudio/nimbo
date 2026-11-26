@@ -1,4 +1,4 @@
-// One generated subcommand end to end (03-api §8): its flags read and checked, its help, the daemon found (or started,
+// One generated subcommand end to end: its flags read and checked, its help, the daemon found (or started,
 // for a mutating command), the y/N of a destructive command on a terminal, the call over HTTP, its output printed and
 // the exit code of its runs. `nimbo workspace stop` with no daemon has nothing to stop, as `nimbo stop`; a planned
 // command is NOT_AVAILABLE from the registry, before any daemon.
@@ -18,7 +18,7 @@ import { commandHelp } from "./help.js";
 import { wordsOf } from "./names.js";
 import { parseCommandLine } from "./parse.js";
 
-/** A command whose input takes `confirm` (03-api §4.15): --yes sets it; on a terminal, a refusal that asks for it is
+/** A command whose input takes `confirm`: --yes sets it; on a terminal, a refusal that asks for it is
  * put as a y/N question with git's own words and sent again, answered. */
 const takesConfirm = (command: AnyCommand): boolean => "confirm" in command.input.shape;
 

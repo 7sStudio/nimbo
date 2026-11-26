@@ -1,4 +1,4 @@
-// `nimbo serve` (03-api §8, 02-architecture §7): the daemon in the foreground with its log on the terminal and no
+// `nimbo serve`: the daemon in the foreground with its log on the terminal and no
 // browser (daemon/foreground.ts); Ctrl-C stops it.
 import { runForeground } from "../daemon/foreground.js";
 import { findWorkspace } from "../daemon/workspace.js";

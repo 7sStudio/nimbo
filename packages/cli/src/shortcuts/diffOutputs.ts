@@ -1,4 +1,4 @@
-// `nimbo diff`'s lines for a cell whose saved run changed (the file's `outputs`, 07-file-format §2): the status when it
+// `nimbo diff`'s lines for a cell whose saved run changed (the file's `outputs`): the status when it
 // changed, the value's changed paths (the first ten) and what the run printed, as `nimbo` prints cell.compare.
 import type { OutputsChange, ValueChange } from "@jsnb/core";
 

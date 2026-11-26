@@ -1,4 +1,4 @@
-// The agents `mcp install` registers the MCP server with (03-api §8): Claude Code and VS Code through their own
+// The agents `mcp install` registers the MCP server with: Claude Code and VS Code through their own
 // commands, Cursor and Claude Desktop by their JSON config files. What it registered is recorded in `<data>/mcp.json`
 // for an installer install, so `uninstall` can take exactly those entries out again. The config files are edited in
 // place, never rewritten from a parse: through a symbolic link, with their mode, comments and layout kept.

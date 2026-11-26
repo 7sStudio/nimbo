@@ -1,4 +1,4 @@
-// `nimbo export` (07-file-format §9): notebook.export's HTML page, written to a file named from the working folder or
+// `nimbo export`: notebook.export's HTML page, written to a file named from the working folder or
 // printed; outputs included unless --no-outputs, redacted by the daemon.
 import { rename, rm, writeFile } from "node:fs/promises";
 import { basename, dirname, join, resolve } from "node:path";

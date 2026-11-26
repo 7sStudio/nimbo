@@ -1,4 +1,4 @@
-// `nimbo diff` (03-api §8): git.diff of every changed file, or of one, a notebook cell by cell with
+// `nimbo diff`: git.diff of every changed file, or of one, a notebook cell by cell with
 // its hunks, coloured on a terminal; --stat prints one line per file. The daemon is started when none runs, as git diff
 // needs no running app.
 import type { DiffRow, GitRepo, NotebookDiff, TextDiff } from "@jsnb/core";

@@ -1,4 +1,4 @@
-// `nimbo add <pkg...>` (03-api §8, §4.6): packages.add over the command's WebSocket, the package manager's progress
+// `nimbo add <pkg...>`: packages.add over the command's WebSocket, the package manager's progress
 // (packages.progress) on stderr as it comes, until packages.done; then each package added, `+ name@version`.
 import type { EventEnvelope } from "@jsnb/core";
 import { InvalidParams, packagesAdd } from "@jsnb/core";

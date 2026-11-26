@@ -1,4 +1,4 @@
-// `nimbo stop` (03-api §8): workspace.stop. With no daemon running there is nothing to stop, which is what the user
+// `nimbo stop`: workspace.stop. With no daemon running there is nothing to stop, which is what the user
 // asked for, so it says so and exits 0 instead of 3; it starts no daemon and asks no question (its name is the intent).
 // A daemon that lives but does not answer is DaemonUnresponsive (exit 3), unless --force ends it by its pid.
 import { endSilent } from "@jsnb/client/node";
@@ -50,7 +50,7 @@ async function exited(pid: number): Promise<void> {
 }
 
 /**
- * After a daemon of an older installed version stopped (02-architecture §10): once its process is gone (10 s at most),
+ * After a daemon of an older installed version stopped: once its process is gone (10 s at most),
  * the versions nothing runs from any more are removed, as an upgrade leaves them for then.
  */
 async function sweepAfter(

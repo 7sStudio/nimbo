@@ -1,4 +1,4 @@
-// The flags of `nimbo outputs` (03-api §8): the four query flags, the query bar's modes (11-query), one at a time;
+// The flags of `nimbo outputs`: the four query flags, the query bar's modes, one at a time;
 // --at for Filter's node; --limit, the most results a query gives; --format; --full, alone; --index to pick a value
 // output other than the last.
 import { InvalidArguments } from "../errors/cli.js";

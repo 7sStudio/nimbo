@@ -1,4 +1,4 @@
-// The Node the CLI runs on (02-architecture §10): 26 or later. An installed release brings its own; a checkout runs on
+// The Node the CLI runs on: 26 or later. An installed release brings its own; a checkout runs on
 // whatever `node` is first on PATH. Kept free of imports, since it runs before anything else loads.
 
 const minimumMajor = 26;

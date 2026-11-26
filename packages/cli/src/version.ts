@@ -1,5 +1,5 @@
-// `--version`: the product's version, the commit it was built from, how it was installed and the API version it speaks
-// (03-api §1). A release build stamps the version and commit into core; a checkout reads its commit from git.
+// `--version`: the product's version, the commit it was built from, how it was installed and the API version it speaks.
+// A release build stamps the version and commit into core; a checkout reads its commit from git.
 import { execFile } from "node:child_process";
 import { promisify } from "node:util";
 

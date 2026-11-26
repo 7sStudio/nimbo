@@ -1,4 +1,4 @@
-// `nimbo mcp` (03-api §8, §9): the MCP server on the CLI's own stdio, for an agent's configuration
+// `nimbo mcp`: the MCP server on the CLI's own stdio, for an agent's configuration
 // (`claude mcp add nimbo -- nimbo mcp`). Its process entry is `@jsnb/mcp/main` resolved at run time, never imported (as
 // the daemon's is), run with the CLI's stdin, stdout and stderr and in its working folder, from which it
 // finds the workspace; SIGINT, SIGTERM and SIGHUP are passed on, and the CLI exits with its code.

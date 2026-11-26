@@ -1,4 +1,4 @@
-// `doctor` (03-api §8): what this install is and whether its parts work. The CLI's side: the Node it runs on, the
+// `doctor`: what this install is and whether its parts work. The CLI's side: the Node it runs on, the
 // install's method, place, version and commit, the launcher and PATH, the UI build, and the daemons of the recent
 // workspaces with their versions; the daemon's side (esbuild, TypeScript, DuckDB, js-debug, the package manager) from
 // `@jsnb/server/doctor`, run with the same Node. Exit 1 when something is broken; a warning alone is exit 0.

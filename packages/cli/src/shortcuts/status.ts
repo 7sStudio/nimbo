@@ -1,4 +1,4 @@
-// `nimbo status` (03-api §8): workspace.info, and kernel.status and realm.status of every open notebook.
+// `nimbo status`: workspace.info, and kernel.status and realm.status of every open notebook.
 import type { KernelStatus, RealmStatus } from "@jsnb/core";
 import { notebookGet, workspaceInfo } from "@jsnb/core";
 

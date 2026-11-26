@@ -1,4 +1,4 @@
-// A release's manifest.json and the artefacts it names (02-architecture §10): fetched from the releases base (an
+// A release's manifest.json and the artefacts it names: fetched from the releases base (an
 // http(s) URL, a file:// URL or an absolute folder, so a release can be tried from disk), each tarball checked against
 // the manifest's size and SHA-256 before anything is unpacked.
 import { createHash } from "node:crypto";

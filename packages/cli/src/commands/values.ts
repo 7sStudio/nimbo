@@ -1,4 +1,4 @@
-// How a flag's text becomes an input value (03-api §8): numbers parsed, lists item by item, and a JSON key's text taken
+// How a flag's text becomes an input value: numbers parsed, lists item by item, and a JSON key's text taken
 // as JSON when it is JSON other than a string and fits the key's schema, else as the text itself; the command's
 // schema has the last word.
 import type { AnyCommand } from "@jsnb/core";

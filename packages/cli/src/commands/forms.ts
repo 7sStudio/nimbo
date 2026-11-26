@@ -1,4 +1,4 @@
-// The forms a JSON flag takes, read from its JSON Schema for the help (03-api §8): alternatives joined by `|`,
+// The forms a JSON flag takes, read from its JSON Schema for the help: alternatives joined by `|`,
 // literals, records with their keys (`key?` when optional), lists, the id patterns as <cell> and <execution>, enums,
 // null.
 type Schema = Readonly<Record<string, unknown>>;
@@ -9,7 +9,7 @@ const isSchema = (value: unknown): value is Schema =>
 const literal = (value: unknown): string =>
   typeof value === "string" ? value : JSON.stringify(value);
 
-/** The id patterns of 03-api §2 by what they name. */
+/** The id patterns by what they name. */
 const idNames: readonly (readonly [string, string])[] = [
   ["c_", "<cell>"],
   ["x_", "<execution>"],

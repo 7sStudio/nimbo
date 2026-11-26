@@ -1,4 +1,4 @@
-// `--notebook / -n` (03-api §8): a path from the workspace root, an absolute one inside it too, whatever the working
+// `--notebook / -n`: a path from the workspace root, an absolute one inside it too, whatever the working
 // folder, as nimbo open's; outside the workspace it is exit 2 naming the flag or variable. When it is left out, in
 // order: NIMBO_NOTEBOOK (read the same way); the only open notebook; the only `.jsnb` of the workspace (both from
 // workspace.info); otherwise NotebookNotChosen listing the candidates.
@@ -83,7 +83,7 @@ export async function defaultNotebook(session: Session): Promise<string> {
 
 /**
  * `ref`, opened first when this command started the daemon: a fresh daemon has nothing open, and every command but
- * notebook.open and notebook.create addresses an open notebook (03-api §4.2), so it would fail on the notebook it was
+ * notebook.open and notebook.create addresses an open notebook, so it would fail on the notebook it was
  * just given. notebook.open is idempotent.
  */
 export async function openedByStart(session: Session, ref: string): Promise<string> {

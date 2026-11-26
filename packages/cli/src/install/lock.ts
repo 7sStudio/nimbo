@@ -1,4 +1,4 @@
-// The data folder's lock (02-architecture §10): one install, upgrade, uninstall or DuckDB install at a time, across the
+// The data folder's lock: one install, upgrade, uninstall or DuckDB install at a time, across the
 // installer script, the CLI and the daemon. It is the folder `<data>/.lock` holding `pid`, `started` (the process's
 // start time as `ps -o lstart=` prints it, so a reused pid is told apart) and `command`; mkdir is atomic, so two takers
 // never both win. A stale lock is taken over under `<data>/.lock.takeover`, re-judged there and renamed aside before
