@@ -55,7 +55,7 @@ async function waited(
     const heard = async (): Promise<void> => {
       const realm = context.kernel.pauses.paused() ? "server" : "client";
       const pause = await context.hooks.debugPause(realm);
-      if (pauses.paused()) resolve({ late: true, paused: pause });
+      if (pause !== undefined && pauses.paused()) resolve({ late: true, paused: pause });
     };
     stopListening = pauses.onPause(() => void heard());
     if (pauses.paused()) void heard();
