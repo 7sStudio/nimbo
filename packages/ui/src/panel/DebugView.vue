@@ -255,7 +255,8 @@ function choose(frameId: string): void {
       <template v-else>
         <p v-if="debug.paused.description" class="ui:m-0 ui:px-1 ui:text-tiny ui:text-warn-text">
           {{ debug.paused.description
-          }}<template v-if="debug.paused.text">: {{ debug.paused.text }}</template>
+          }}<template v-if="debug.paused.text">: {{ debug.paused.text }}</template
+          ><template v-if="debug.paused.realm === 'client'"> · headless page</template>
         </p>
         <ul class="ui:m-0 ui:list-none ui:p-0" aria-label="Call Stack">
           <li v-for="frame in debug.frames" :key="frame.frameId">

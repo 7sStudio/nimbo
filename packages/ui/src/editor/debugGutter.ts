@@ -10,6 +10,8 @@ export type GutterBreakpoint = {
   readonly line: number;
   readonly verified: boolean;
   readonly kind: "plain" | "condition" | "log";
+  /** Why it cannot bind now, shown on hover. */
+  readonly note?: string;
 };
 
 /** The line the kernel is paused on in this cell (`top`), or a frame of the stack the user chose (`frame`). */
@@ -25,6 +27,7 @@ class Dot extends GutterMarker {
     readonly kind: GutterBreakpoint["kind"],
     readonly verified: boolean,
     readonly paused: boolean,
+    readonly note: string | undefined,
   ) {
     super();
   }
@@ -33,12 +36,14 @@ class Dot extends GutterMarker {
       other instanceof Dot &&
       other.kind === this.kind &&
       other.verified === this.verified &&
-      other.paused === this.paused
+      other.paused === this.paused &&
+      other.note === this.note
     );
   }
   override toDOM(): Node {
     const dot = document.createElement("span");
     dot.className = `cm-bp cm-bp-${this.kind}${this.verified ? "" : " cm-bp-unbound"}${this.paused ? " cm-bp-at" : ""}`;
+    if (this.note !== undefined) dot.title = this.note;
     return dot;
   }
 }
@@ -78,7 +83,8 @@ const markersOf = (doc: EditorView["state"]["doc"], shown: Shown): RangeSet<Gutt
   for (const each of shown.breakpoints) {
     const at = lineStart(doc, each.line);
     const paused = shown.paused?.line === each.line;
-    if (at !== undefined) ranges.push(new Dot(each.kind, each.verified, paused).range(at));
+    if (at !== undefined)
+      ranges.push(new Dot(each.kind, each.verified, paused, each.note).range(at));
   }
   const pausedAt = shown.paused === null ? undefined : lineStart(doc, shown.paused.line);
   if (
@@ -182,7 +188,7 @@ export function debugGutter(
       markers: (view) => view.state.field(markers),
       lineMarker: (_view, _line, others) => (others.length > 0 ? null : spot),
       lineMarkerChange: () => false,
-      initialSpacer: () => new Dot("plain", true, false),
+      initialSpacer: () => new Dot("plain", true, false, undefined),
       domEventHandlers: {
         mousedown: (view, block, event) => {
           if (event instanceof MouseEvent && event.button !== 0) return false;

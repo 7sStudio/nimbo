@@ -26,14 +26,19 @@ const kindOf = (each: Debug["state"]["breakpoints"][number]): GutterBreakpoint["
   return each.condition === undefined && each.hitCondition === undefined ? "plain" : "condition";
 };
 
-/** The cell's breakpoints as the gutter draws them: filled once bound, or while no debugger is attached. */
+/** The cell's breakpoints as the gutter draws them: filled once bound, or while no debugger is attached and nothing
+ * keeps it from binding; the reason it cannot bind as its tooltip. */
 const breakpointsOf = (debug: Debug, cell: CellId): GutterBreakpoint[] =>
   debug.state.breakpoints
     .filter((each) => each.cell === cell)
     .map((each) => ({
       line: each.line,
-      verified: (each.verified || debug.state.state === "off") && each.message === undefined,
+      verified:
+        (each.verified || debug.state.state === "off") &&
+        each.message === undefined &&
+        each.reason === undefined,
       kind: kindOf(each),
+      ...(each.reason === undefined ? {} : { note: each.reason }),
     }));
 
 /** The cell's line the kernel is paused on, or the chosen frame's when it is a frame of this cell. */

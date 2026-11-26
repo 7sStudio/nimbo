@@ -10,6 +10,7 @@ import type {
   Execution,
   NotebookState,
 } from "@jsnb/core";
+import { debugAfter } from "@jsnb/core";
 
 import type { GraphEntry, Mirror } from "./mirror.js";
 import { mapCell, reindexed } from "./mirror.js";
@@ -20,7 +21,13 @@ const withNotebook = (mirror: Mirror, next: (notebook: Notebook) => Notebook): M
   mirror.notebook === null ? mirror : { ...mirror, notebook: next(mirror.notebook) };
 
 /** The debugger's state before the daemon said anything of it: off, no breakpoint. */
-export const noDebug: DebugState = { state: "off", paused: null, breakpoints: [] };
+export const noDebug: DebugState = {
+  state: "off",
+  paused: null,
+  pauses: [],
+  realms: { server: "off", client: "off" },
+  breakpoints: [],
+};
 
 const withDebug = (mirror: Mirror, next: (debug: DebugState) => DebugState): Mirror =>
   withNotebook(mirror, (notebook) => ({ ...notebook, debug: next(notebook.debug ?? noDebug) }));
@@ -125,11 +132,9 @@ function applied(mirror: Mirror, event: EventEnvelope): Mirror {
       return { ...mirror, external: { ...event.data, seq: event.seq } };
 
     case "debug.paused":
-      return withDebug(mirror, (debug) => ({ ...debug, state: "paused", paused: event.data }));
     case "debug.resumed":
-      return withDebug(mirror, (debug) => ({ ...debug, state: event.data.state, paused: null }));
     case "debug.breakpoints":
-      return withDebug(mirror, (debug) => ({ ...debug, breakpoints: event.data.breakpoints }));
+      return withDebug(mirror, (debug) => debugAfter(debug, event));
 
     case "cell.added":
       return edited(mirror, (cells) => added(cells, event.data.cell));
