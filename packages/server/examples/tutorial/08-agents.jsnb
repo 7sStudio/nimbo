@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "cells": [
+    {
+      "id": "c_t80001",
+      "type": "markdown",
+      "source": [
+        "# Working with agents",
+        "",
+        "Drive this notebook from a terminal with the `nimbo` command, review the edits an agent makes, and let client cells run without a tab.",
+        "",
+        "Everything the page does is also a `nimbo` command and a tool of nimbo's MCP server, so a coding agent works in the same notebook as you, through the same commands. You will read and run cells from a terminal, add and change a cell as an agent would, review those edits, and run a client cell headless. About 10 minutes.",
+        "",
+        "Click **Run All**, then open a terminal in your workspace folder, the folder where you ran `nimbo open`. Keep this page beside it."
+      ]
+    },
+    {
+      "id": "c_t80002",
+      "type": "server",
+      "source": [
+        "export const visits = [",
+        "  { page: \"/\", seconds: 12, country: \"FR\" },",
+        "  { page: \"/pricing\", seconds: 95, country: \"DE\" },",
+        "  { page: \"/docs\", seconds: 240, country: \"FR\" },",
+        "  { page: \"/\", seconds: 8, country: \"JP\" },",
+        "  { page: \"/docs\", seconds: 61, country: \"BR\" },",
+        "];",
+        "visits"
+      ]
+    },
+    {
+      "id": "c_t80003",
+      "type": "client",
+      "source": [
+        "const box = display.div();",
+        "box.innerHTML = `<h3 style=\"margin: 0; font-family: sans-serif\">${visits.length} visits</h3>`;",
+        "box.textContent"
+      ]
+    },
+    {
+      "id": "c_t80004",
+      "type": "markdown",
+      "source": [
+        "## 1. Read and run from the terminal",
+        "",
+        "Tell the CLI which notebook you mean once, for this terminal:",
+        "",
+        "```sh",
+        "export NIMBO_NOTEBOOK=tutorial/08-agents.jsnb",
+        "```",
+        "",
+        "(Each command also takes `-n <notebook>`.) Then:",
+        "",
+        "```sh",
+        "nimbo ls",
+        "nimbo cat <id>",
+        "nimbo run <id>",
+        "nimbo outputs <id> --jq 'map(.page) | unique'",
+        "```",
+        "",
+        "`nimbo ls` lists the cells: id, type, status, whether stale, who edited it last, and its first line. Use the id of the `visits` cell for the other three: `cat` prints its code, `run` runs it and prints its result, and `outputs` reads its last result, here through a jq query. `--json` on any command prints JSON for scripts and agents.",
+        "",
+        "Watch the page while you run: the run shows here as it happens, as if you had pressed Shift+Enter."
+      ]
+    },
+    {
+      "id": "c_t80005",
+      "type": "markdown",
+      "source": [
+        "## 2. Edit as an agent would",
+        "",
+        "Add a cell from the terminal:",
+        "",
+        "```sh",
+        "nimbo cell add --type server --source 'visits.filter((visit) => visit.seconds > 60).length' --run",
+        "```",
+        "",
+        "It appears at the end of the notebook and runs. Its line has a purple bar on the left: an edit made through the CLI or MCP counts as an **agent's edit**, and it waits for your review.",
+        "",
+        "Now change an existing cell. Use the id of the `visits` cell:",
+        "",
+        "```sh",
+        "nimbo cell update --cell <id> --source 'const visits = [{ page: \"/\", seconds: 30, country: \"NL\" }];",
+        "visits'",
+        "```"
+      ]
+    },
+    {
+      "id": "c_t80006",
+      "type": "markdown",
+      "source": [
+        "## 3. Review the edits",
+        "",
+        "The cell you changed has a purple bar beside the changed line. Its result is still the old one: the agent changed the code but did not run it.",
+        "",
+        "Click the purple bar: a card shows the edit, line by line, who made it and when, with three buttons:",
+        "",
+        "- **Revert** puts back the code the agent replaced.",
+        "- **Mark reviewed** keeps the change and removes the mark.",
+        "- **Open full diff** shows the whole cell before and after.",
+        "",
+        "The **Agent** view (the robot icon on the left, with a count) lists every edit waiting for review, in every cell; hover one for the same buttons. Revert the change to `visits` from its card, then mark the new cell reviewed from the Agent view."
+      ]
+    },
+    {
+      "id": "c_t80007",
+      "type": "markdown",
+      "source": [
+        "## 4. Connect your coding agent",
+        "",
+        "An agent that can run shell commands can use `nimbo` directly. For agents that speak MCP (Claude Code, Claude Desktop, Cursor, VS Code and others), register nimbo's MCP server once:",
+        "",
+        "```sh",
+        "nimbo mcp install",
+        "```",
+        "",
+        "It adds nimbo to Claude Code and VS Code when it finds them, and prints the entry to paste into the others. The MCP server works on the workspace of the folder the agent runs in. Then ask your agent, in this folder, something like: *\"In tutorial/08-agents.jsnb, add a server cell that counts the visits per country, run it and tell me the result.\"* Its cells appear here as it works, marked for your review.",
+        "",
+        "This step changes your agents' settings, so it is yours to decide; the rest of the lesson does not need it."
+      ]
+    },
+    {
+      "id": "c_t80008",
+      "type": "markdown",
+      "source": [
+        "## 5. Client cells without a tab",
+        "",
+        "Client cells run in a browser page. When an agent works alone and no tab holds the notebook, nimbo can run them in a headless Chrome, Chromium or Edge of your own, started on demand with a fresh profile. That is the setting `realm.headless`:",
+        "",
+        "```sh",
+        "nimbo config set realm.headless true",
+        "```",
+        "",
+        "This writes the setting to the workspace's `.jsnb/settings.json`. Close this tab, then:",
+        "",
+        "```sh",
+        "nimbo ls",
+        "nimbo run <id of the client cell>",
+        "nimbo cell snapshot --cell <id of the client cell>",
+        "```",
+        "",
+        "The client cell runs in the headless page, and `cell snapshot` answers the text it drew, between two lines that mark it as the page's content (`--image` gives a PNG of it). Open the notebook again: your tab takes the client cells back from the headless page.",
+        "",
+        "To turn it off again: `nimbo config unset realm.headless`. Without a Chrome, Chromium or Edge on the machine, the run says so."
+      ]
+    },
+    {
+      "id": "c_t80009",
+      "type": "markdown",
+      "source": [
+        "## Try it",
+        "",
+        "1. Ask for the cells that failed in a notebook: `nimbo errors`. Make one fail first.",
+        "2. With `--json`, pipe `nimbo outputs <id> --json` into `jq` or a script of your own.",
+        "3. `nimbo --help` lists every command; `nimbo <command> --help` gives its flags.",
+        "",
+        "Next: `09-files-and-git`, what the `.jsnb` file holds, and notebooks in git."
+      ]
+    }
+  ]
+}
