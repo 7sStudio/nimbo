@@ -81,8 +81,10 @@ export class JsDebugLink {
   /** A step sent and not stopped yet; once its run ended, the stop it still owes is not the user's. */
   #stepping = false;
   #staleStep = false;
-  /** Settles a debug.pause under way: undefined once it paused in the cells' code, else why it went on. */
-  #pauseRequest: ((dropped: string | undefined) => void) | undefined;
+  /** Settles a debug.pause under way once it paused. */
+  #pauseRequest: (() => void) | undefined;
+  /** A pause asked for landed in the realm's own code: it steps on until a cell's code runs. */
+  #seeking = false;
 
   constructor(context: SessionContext, deps: LinkDeps) {
     this.#context = context;
@@ -149,24 +151,19 @@ export class JsDebugLink {
     if (this.#stops === sent) this.#resumed();
   }
 
-  /** Asks the realm to pause at its next statement; NotAvailable when that statement was none of the cells' code (the
-   * realm idle, or awaiting the other one), as the pause then went on at once. Answers once it paused, went on, or a
-   * second passed with no code run (the pause stays asked for). */
+  /** Asks the realm to pause at the next statement of the cells' code it runs: a pause that lands in the realm's own
+   * code (idle, or awaiting the other realm) steps on to it. Answers once it paused, or a second and a half later with
+   * the pause still asked for. */
   async pause(child: DapConnection): Promise<void> {
     if (this.#paused) return;
     const { threads } = await dap.threads(child, {});
-    const settled = new Promise<string | undefined>((resolve) => {
+    const settled = new Promise<void>((resolve) => {
       this.#pauseRequest = resolve;
-      setTimeout(resolve, pauseAnswerMs, undefined).unref();
+      setTimeout(resolve, pauseAnswerMs).unref();
     });
     await dap.pause(child, { threadId: threads[0]?.id ?? 0 });
-    const dropped = await settled;
+    await settled;
     this.#pauseRequest = undefined;
-    if (dropped !== undefined)
-      throw new NotAvailable({
-        feature: "debug.pause",
-        reason: `${this.#target.name} ${dropped} when it paused (it is idle, or awaiting the other realm), so it went on. Pause while a cell's code runs, or set a breakpoint.`,
-      });
   }
 
   /** js-debug attached to the realm's current target, attaching once whoever asks. */
@@ -340,14 +337,16 @@ export class JsDebugLink {
     );
     if (stop !== this.#stops) return; // resumed, or paused again, meanwhile
     const top = framesOf(frames, (path) => this.cellOf(path))[0];
-    // a pause asked for that landed in the realm's own code (idle, or awaiting the other realm): it goes on
-    if (body.reason === "pause" && top === undefined) {
-      this.#pauseRequest?.("ran none of the cells' code");
-      await dap.continue(child, { threadId }).catch(() => undefined);
+    // a pause asked for that landed in the realm's own code (idle, or awaiting the other realm) steps on to the cells'
+    if (top === undefined && (body.reason === "pause" || this.#seeking)) {
+      this.#seeking = true;
+      await dap.stepIn(child, { threadId }).catch(() => undefined);
       return;
     }
-    this.#pauseRequest?.(undefined);
-    const pause = pauseOf(this.realm, body, top, this.#deps.follows);
+    const sought = this.#seeking ? { reason: "pause", description: "Paused" } : {};
+    this.#seeking = false;
+    this.#pauseRequest?.();
+    const pause = pauseOf(this.realm, { ...body, ...sought }, top, this.#deps.follows);
     this.#setPaused({ threadId, pause, frames, order: this.#deps.nextPause() });
     this.notebookRefs.clear();
     this.#context.emit("debug.paused", cleanPause(this.#deps.redact, pause));

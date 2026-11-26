@@ -252,7 +252,7 @@ const debug = (call: Caller) =>
     setBreakpoint: bind(call, debugSetBreakpoint),
     /** Remove a breakpoint by its id, the one on a cell's line, every one of a cell (cell without line), or all of them (all). */
     removeBreakpoint: bind(call, debugRemoveBreakpoint),
-    /** Pause a realm at its next statement of the cells' code: the server kernel by default, the headless page with realm client. NOT_AVAILABLE when the realm paused in none of the cells' code (idle, or awaiting the other realm): it then goes on at once. */
+    /** Pause a realm at the next statement of the cells' code it runs: the server kernel by default, the headless page with realm client. While it runs none (idle, or awaiting the other realm), it pauses where a cell's code next runs; the answer comes once it paused, or after a second and a half with the pause still asked for. */
     pause: bind(call, debugPause),
     /** Resume the paused realm (the latest to pause, or the one realm names). */
     resume: bind(call, debugResume),

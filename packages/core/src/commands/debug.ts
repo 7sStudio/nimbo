@@ -71,7 +71,7 @@ const control = (verb: string, description: string) =>
 
 export const debugPause = control(
   "pause",
-  "Pause a realm at its next statement of the cells' code: the server kernel by default, the headless page with realm client. NOT_AVAILABLE when the realm paused in none of the cells' code (idle, or awaiting the other realm): it then goes on at once.",
+  "Pause a realm at the next statement of the cells' code it runs: the server kernel by default, the headless page with realm client. While it runs none (idle, or awaiting the other realm), it pauses where a cell's code next runs; the answer comes once it paused, or after a second and a half with the pause still asked for.",
 );
 export const debugResume = control(
   "resume",
