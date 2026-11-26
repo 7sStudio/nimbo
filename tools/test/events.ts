@@ -1,4 +1,4 @@
-// until (09-testing §1 "no sleeps"): the first value of an async iterable that satisfies a predicate, or a timeout error.
+// until: the first value of an async iterable that satisfies a predicate, or a timeout error.
 
 export type UntilOptions = {
   /** How long to wait for a match before rejecting. */

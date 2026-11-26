@@ -1,4 +1,4 @@
-// Tests the no-globalthis-writes rule of 08 §8 with ESLint's RuleTester.
+// Tests the no-globalthis-writes rule with ESLint's RuleTester.
 import { RuleTester } from "eslint";
 import { describe, it } from "vitest";
 

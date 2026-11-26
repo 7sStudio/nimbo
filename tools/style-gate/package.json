@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "08-code-standards §7 on a compiled stylesheet: Stylelint with the repository's rules and three of its own; and the PostCSS plugin that keeps Tailwind's internals in a package's scope.",
+  "description": "The style rules on a compiled stylesheet: Stylelint with the repository's rules and three of its own; and the PostCSS plugin that keeps Tailwind's internals in a package's scope.",
   "sideEffects": false,
   "files": [
     "dist"

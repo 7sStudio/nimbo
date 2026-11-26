@@ -20,7 +20,7 @@ export const isRootTokens = (rule: Rule): boolean =>
       (node.type === "decl" && (node.prop.startsWith("--") || node.prop === "color-scheme")),
   );
 
-/** The at-rules of 08 §7's list and, for a page, the two it adds. */
+/** The allowed at-rules and, for a page, the two it adds. */
 export const pageAtRules = ["font-face", "keyframes"] as const;
 
 /** The family an @font-face declares, its quotes removed. */

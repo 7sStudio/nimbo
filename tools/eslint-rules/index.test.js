@@ -1,4 +1,4 @@
-// Checks the plugin exposes the three rules of 08 §8 under the names eslint.config.js uses.
+// Checks the plugin exposes the three rules under the names eslint.config.js uses.
 import { describe, expect, it } from "vitest";
 
 import plugin from "./index.js";

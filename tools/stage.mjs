@@ -1,4 +1,4 @@
-// Runs one CI stage's test runner (09-testing §9): `vitest <stage>` selects the Vitest projects of that stage,
+// Runs one CI stage's test runner: `vitest <stage>` selects the Vitest projects of that stage,
 // `playwright <stage>` every Playwright project named after it (browser-mbp14 …); both print "skipped: no suites yet" and exit 0 when nothing matches.
 // For the integration, contract and security stages it first says how many files of that suffix the unit stage runs
 // under coverage, so an empty or small stage does not read as missing suites.

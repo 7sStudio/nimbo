@@ -1,5 +1,5 @@
-// The no-globalthis-writes rule of 08-code-standards §8: in kernel-node/src/scope/ and runtime-web/src/realm/, no assignment
-// to a property of globalThis, window or self; the scope object is the only writable namespace (04-kernel §3.3).
+// The no-globalthis-writes rule: in kernel-node/src/scope/ and runtime-web/src/realm/, no assignment
+// to a property of globalThis, window or self; the scope object is the only writable namespace.
 import { isUnder } from "./paths.js";
 
 const scopeDirs = ["packages/kernel-node/src/scope", "packages/runtime-web/src/realm"];
@@ -19,13 +19,12 @@ export const noGlobalthisWrites = {
   meta: {
     type: "problem",
     docs: {
-      description:
-        "no assignment to globalThis, window or self properties in the realm scope code (08 §8)",
+      description: "no assignment to globalThis, window or self properties in the realm scope code",
     },
     schema: [],
     messages: {
       write:
-        "Writing to {{name}} is not allowed here; the scope object is the only writable namespace (04-kernel §3.3).",
+        "Writing to {{name}} is not allowed here; the scope object is the only writable namespace.",
     },
   },
   create(context) {

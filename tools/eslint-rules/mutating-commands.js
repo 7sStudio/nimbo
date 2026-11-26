@@ -1,4 +1,4 @@
-// The registry commands tagged mutating or destructive (03-api §3), for jsnb/mutations-through-commands. ESLint loads
+// The registry commands tagged mutating or destructive, for jsnb/mutations-through-commands. ESLint loads
 // plain JavaScript and core is TypeScript, so the list is kept here; mutating-commands.test.js holds it equal to core's
 // registry, so a new mutating command fails the tests until it is added.
 export const mutatingCommands = [

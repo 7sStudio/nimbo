@@ -1,4 +1,4 @@
-// The client realm's test page (05-bridge §11; the server's daemon-side realm tests): runtime-web's Realm over
+// The client realm's test page (the server's daemon-side realm tests): runtime-web's Realm over
 // @jsnb/client's socket, mounted as the ui mounts it (one socket, the daemon's requests answered by the realm,
 // its calls sent as the registry's commands), attached to the notebook the URL names (`/ui/<notebook>?token=…`).
 // `window.jsnbRealm` gives the test the attach's outcome, a detach, an attach again with the page's runs kept, a

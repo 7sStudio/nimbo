@@ -1,4 +1,4 @@
-// Rule 1 of 08-code-standards §8: components under app/, cells/, panel/, overlays/, primitives/ never import @jsnb/client
+// jsnb/no-client-in-components: components under app/, cells/, panel/, overlays/, primitives/ never import @jsnb/client
 // or the store's transport modules (store/client, store/transport, store/socket); only store/ and commands/ may.
 import { isUnder } from "./paths.js";
 
@@ -15,12 +15,12 @@ export const noClientInComponents = {
     type: "problem",
     docs: {
       description:
-        "components never import @jsnb/client or the store's transport; they dispatch commands (08 §8 rule 1)",
+        "components never import @jsnb/client or the store's transport; they dispatch commands",
     },
     schema: [],
     messages: {
       forbidden:
-        "'{{source}}' is the client transport; components dispatch commands or call store actions instead (08-code-standards §8 rule 1).",
+        "'{{source}}' is the client transport; components dispatch commands or call store actions instead.",
     },
   },
   create(context) {

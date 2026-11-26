@@ -1,5 +1,5 @@
 // A PostCSS plugin for a package's compiled Tailwind (output-view's and ui's vite.config.ts, and their test projects in
-// the root vitest.config.ts): it keeps Tailwind's --tw-* internals inside `scope` (08 §7: nothing of ours styles
+// the root vitest.config.ts): it keeps Tailwind's --tw-* internals inside `scope` (nothing of ours styles
 // anything outside .jsnb-ov or .jsnb-ui). Tailwind v4 registers them with @property, which holds for the whole page
 // (a prefix renames the classes and the theme's variables, not these), and sets them on every element (*, ::before,:
 // :after, ::backdrop) in a fallback for browsers without @property. The plugin drops both and declares the
