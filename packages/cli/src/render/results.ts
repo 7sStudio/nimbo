@@ -163,6 +163,15 @@ function readable(name: string, output: unknown): string {
   return text === "" ? "Done.\n" : text; // notebook.run of a selection with no cell in it
 }
 
+/** The debug commands whose answer reads the paused realm. */
+const pageReads = new Set([
+  "debug.state",
+  "debug.stack",
+  "debug.scope",
+  "debug.variables",
+  "debug.evaluate",
+]);
+
 const pageRealm = z
   .object({
     realm: z.string().optional(),
@@ -172,7 +181,7 @@ const pageRealm = z
 
 /** Whether a debug command's answer holds what the page's code wrote: its realm is the client one, or a pause is. */
 function fromPage(name: string, output: unknown): boolean {
-  if (!name.startsWith("debug.")) return false;
+  if (!pageReads.has(name)) return false;
   const read = pageRealm.safeParse(output);
   if (!read.success) return false;
   return (
