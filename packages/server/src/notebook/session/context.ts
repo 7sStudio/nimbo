@@ -50,8 +50,9 @@ export type SessionHooks = {
   beforeClientRun: (cell: CellId) => Promise<void>;
   /** A client cell's breakpoint lines, compiled as `debugger;` statements (for a tab's DevTools). */
   debuggerLines: (cell: CellId) => readonly number[];
-  /** Where and why a realm is paused in the debugger, once one is (a run's wait answers with it). */
-  debugPause: (realm: DebugRealm) => Promise<DebugPause>;
+  /** Where and why a realm is paused in the debugger, once one is (a run's wait answers with it); undefined when the
+   * pause ended first. */
+  debugPause: (realm: DebugRealm) => Promise<DebugPause | undefined>;
   /** The headless page as the debugger holds it. */
   pageDebug: PageDebug;
   /** Settles once the debugger saw the kernel resume (a second at most): an interrupt resumes a paused kernel itself. */

@@ -10,7 +10,12 @@ import { join } from "node:path";
 
 import type { Execution } from "@jsnb/core";
 import type { RealmPages } from "@jsnb/test-tools/realm";
-import { buildHeadlessPage, buildRealmPage, startRealmPages } from "@jsnb/test-tools/realm";
+import {
+  buildHeadlessPage,
+  buildRealmPage,
+  startRealmPages,
+  teardownMs,
+} from "@jsnb/test-tools/realm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import type { Daemon } from "../../fixtures/daemon.js";
@@ -94,7 +99,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await pages.close();
   await rm(uiDir, { recursive: true, force: true });
-});
+}, teardownMs);
 
 const counting = [
   "const start: number = 20;",

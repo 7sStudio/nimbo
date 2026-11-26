@@ -32,12 +32,12 @@ it("makes the write an unreadable file held once the file is the base again", as
       )
       .toBe(1);
     await writeFile(path, original);
-    await daemon.events.until("notebook.conflictEnded");
-    await expect
-      .poll(async () => cellOf(docOf(await readFile(path, "utf8")), ids[1]).source.join("\n"), {
-        timeout: 10_000,
-      })
-      .toBe("export const b = 7");
+    const ended = await daemon.events.until("notebook.conflictEnded");
+    // the file holds the write a moment before the session counts it saved
+    await daemon.events.until("notebook.saved", (e) => e.seq > ended.seq);
+    expect(cellOf(docOf(await readFile(path, "utf8")), ids[1]).source.join("\n")).toBe(
+      "export const b = 7",
+    );
     const state = (await daemon.client.notebook.get({ notebook })).notebook;
     expect(state.conflict).toBeUndefined();
     expect(state.dirty).toBe(false);

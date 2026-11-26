@@ -108,10 +108,12 @@ describe("notebook.run's wait", () => {
       await daemon.client.kernel.interrupt({ notebook });
       const select = { cells: [hang, after] };
       const late = await daemon.client.notebook.run({ notebook, select, timeoutMs: 50 });
-      expect(late.executions.map((e) => [e.cell, e.status, e.timedOut])).toEqual([
-        [hang, "running", true],
-        [after, "queued", true],
-      ]);
+      const [first, second] = late.executions;
+      // the first run started within the 50 ms, or not yet on a loaded machine
+      expect([first?.cell, first?.timedOut]).toEqual([hang, true]);
+      expect(["queued", "running"]).toContain(first?.status);
+      expect([second?.cell, second?.status, second?.timedOut]).toEqual([after, "queued", true]);
+      await book.reaches(first?.id ?? "", "running");
       await daemon.client.kernel.interrupt({ notebook });
     });
   });

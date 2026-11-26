@@ -53,7 +53,10 @@ describe("cell.run with wait", () => {
       expect(done.execution.timedOut).toBeUndefined();
       const hang = await book.add("await new Promise(() => {})");
       const late = await daemon.client.cell.run({ notebook, cell: hang, timeoutMs: 50 });
-      expect(late.execution).toMatchObject({ status: "running", timedOut: true });
+      // the run started within the 50 ms, or not yet on a loaded machine: either way it goes on
+      expect(late.execution.timedOut).toBe(true);
+      expect(["queued", "running"]).toContain(late.execution.status);
+      await book.reaches(late.execution.id, "running");
       const { execution } = await daemon.client.cell.outputs({ notebook, cell: hang });
       expect(execution?.status).toBe("running");
       await daemon.client.kernel.interrupt({ notebook });

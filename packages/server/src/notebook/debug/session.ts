@@ -71,8 +71,11 @@ export type Removal = {
 
 /** How long a run waits for js-debug to attach before it goes on without it. */
 const attachWaitMs = 10_000;
-/** How long a run's answer waits for the debugger to say where it paused. */
+/** How long a run's answer waits for the debugger to say where it paused: with no js-debug attached, a second (the
+ * kernel's own report is all there may be); with it attached, while the kernel stays paused, since a pause it reports no
+ * stop for is one of its own (binding breakpoints in a script about to run) that it ends itself, however slowly. */
 const pauseWaitMs = 1_000;
+const attachedPauseWaitMs = 30_000;
 const pausePollMs = 25;
 /** How long setBreakpoint waits for the bind in code the realm already has. */
 const bindWaitMs = 1_500;
@@ -320,12 +323,16 @@ export class DebugSession {
     });
   }
 
-  /** Where and why `realm` is paused: its debugger's stop once it read the stack (a second at most), else what the
-   * realm's own pause report said (a kernel's `debugger;` statement with no debugger attached). */
-  async pauseDetails(realm: DebugRealm): Promise<DebugPause> {
-    for (let waited = 0; waited < pauseWaitMs; waited += pausePollMs) {
-      const paused = this.#links[realm].paused;
+  /** Where and why `realm` is paused: its debugger's stop once it read the stack, else what the realm's own pause
+   * report said (a kernel's `debugger;` statement with no debugger attached); undefined when the pause ended first. */
+  async pauseDetails(realm: DebugRealm): Promise<DebugPause | undefined> {
+    const link = this.#links[realm];
+    const limit = link.attached ? attachedPauseWaitMs : pauseWaitMs;
+    const still = () => realm === "client" || this.#context.kernel.pauses.paused();
+    for (let waited = 0; waited < limit; waited += pausePollMs) {
+      const paused = link.paused;
       if (paused) return cleanPause(this.#redact, paused.pause);
+      if (!still()) return undefined;
       await wait(pausePollMs);
     }
     return { realm, reason: "pause", description: "Paused" };

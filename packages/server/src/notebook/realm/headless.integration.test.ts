@@ -10,7 +10,12 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 import type { RealmPages } from "@jsnb/test-tools/realm";
-import { buildHeadlessPage, buildRealmPage, startRealmPages } from "@jsnb/test-tools/realm";
+import {
+  buildHeadlessPage,
+  buildRealmPage,
+  startRealmPages,
+  teardownMs,
+} from "@jsnb/test-tools/realm";
 import { realmAttach } from "@jsnb/core";
 import { withWorkspace } from "@jsnb/test-tools/workspace";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -73,7 +78,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await pages.close();
   await rm(uiDir, { recursive: true, force: true });
-});
+}, teardownMs);
 
 suite(`the headless realm off${skipped}`, () => {
   it("leaves a client run REALM_NOT_ATTACHED naming the setting, and starts no browser", async () => {

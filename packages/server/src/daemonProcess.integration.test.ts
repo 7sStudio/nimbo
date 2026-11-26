@@ -58,6 +58,16 @@ describe("runDaemon", () => {
     });
   });
 
+  it("stops cleanly on a signal that came while it was starting", async () => {
+    await withWorkspace(async (ws) => {
+      const host = standIn(ws.dir);
+      const exit = runDaemon(["--user-config", ws.path(".user")], host);
+      host.emit("SIGTERM");
+      expect(await exit).toBe(0);
+      expect(existsSync(ws.path(".jsnb/server.json"))).toBe(false);
+    });
+  });
+
   it("exits 2 for arguments it cannot use and 1 with one JSON line when the start fails", async () => {
     await withWorkspace(async (ws) => {
       const bad = standIn(ws.dir);

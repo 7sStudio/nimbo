@@ -7,7 +7,7 @@ import { join } from "node:path";
 
 import { withDaemon } from "../../fixtures/daemon.js";
 import type { RealmPages } from "@jsnb/test-tools/realm";
-import { buildRealmPage, startRealmPages } from "@jsnb/test-tools/realm";
+import { buildRealmPage, startRealmPages, teardownMs } from "@jsnb/test-tools/realm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createNotebook, valueOf } from "../../fixtures/notebook.js";
@@ -22,7 +22,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await pages.close();
   await rm(uiDir, { recursive: true, force: true });
-});
+}, teardownMs);
 
 describe("a client cell on the attached page", () => {
   it("runs there with the server's exports: a function as a stub, plain data as a copy", async () => {
