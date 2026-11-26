@@ -17,6 +17,9 @@ export type CellBreakpoints = {
   /** What js-debug should hold for the cell: none for a cell of the other realm. */
   readonly breakpoints: readonly BreakpointRecord[];
   readonly dialect: Dialect;
+  /** js-debug's bound line is the cell's code: false after an edit until the cell runs again, when js-debug still
+   * holds the code from before the edit and binds the new lines in it. */
+  readonly follows: boolean;
 };
 
 /** What setBreakpoints sends for `each`; a condition that does not parse leaves its message on the breakpoint. */
@@ -49,19 +52,15 @@ type Bound = {
 };
 
 /** js-debug's answer taken in, entry by entry; true when a breakpoint moved onto another's line and went. */
-function taken(
-  store: Breakpoints,
-  sent: readonly BreakpointRecord[],
-  answer: readonly Bound[],
-): boolean {
+function taken(store: Breakpoints, sent: CellBreakpoints, answer: readonly Bound[]): boolean {
   let merged = false;
   for (const [index, bound] of answer.entries()) {
-    const each = sent[index];
+    const each = sent.breakpoints[index];
     if (!each) continue;
     each.verified = bound.verified;
     if (bound.id === undefined) delete each.dapId;
     else each.dapId = bound.id;
-    if (bound.verified && bound.line !== undefined)
+    if (sent.follows && bound.verified && bound.line !== undefined)
       merged = store.bound(each, bound.line) || merged;
   }
   return merged;
@@ -84,6 +83,6 @@ export async function sendBreakpoints(
     each.verified = false;
     delete each.dapId;
   }
-  if (taken(store, sent.breakpoints, answer.breakpoints))
+  if (taken(store, sent, answer.breakpoints))
     await sendBreakpoints(child, store, { ...sent, breakpoints: store.ofCell(sent.cell) }, held);
 }

@@ -45,6 +45,8 @@ export type LinkDeps = {
   readonly changed: () => void;
   /** The next number of the session's pauses, both realms counted. */
   readonly nextPause: () => number;
+  /** Whether js-debug's bound lines in `cell` are its code's (none since an edit the cell has not run since). */
+  readonly follows: (cell: CellId) => boolean;
   /** Hears each time this realm pauses or stops being paused. */
   readonly onPaused?: (paused: boolean) => void;
 };
@@ -214,7 +216,14 @@ export class JsDebugLink {
     const breakpoints: readonly BreakpointRecord[] = owns
       ? this.#deps.breakpoints.ofCell(cell)
       : [];
-    const sent = { path: this.pathOf(cell), cell, owns, breakpoints, dialect: this.dialect };
+    const sent = {
+      path: this.pathOf(cell),
+      cell,
+      owns,
+      breakpoints,
+      dialect: this.dialect,
+      follows: this.#deps.follows(cell),
+    };
     return sendBreakpoints(child, this.#deps.breakpoints, sent, this.held);
   }
 
@@ -320,7 +329,8 @@ export class JsDebugLink {
     if (!record) return;
     record.verified = breakpoint.verified;
     const line = breakpoint.verified ? breakpoint.line : undefined;
-    if (line !== undefined && store.bound(record, line)) void this.sendCell(record.cell);
+    if (line !== undefined && this.#deps.follows(cell) && store.bound(record, line))
+      void this.sendCell(record.cell);
     this.#deps.changed();
   }
 

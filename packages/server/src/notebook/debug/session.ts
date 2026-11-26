@@ -132,6 +132,8 @@ export class DebugSession {
   #wanted = false;
   #closed = false;
   #pauses = 0;
+  /** Cells edited since their last run: js-debug still holds their code from before. */
+  readonly #edited = new Set<CellId>();
 
   constructor(context: SessionContext, deps: DebugDeps) {
     this.#context = context;
@@ -146,6 +148,7 @@ export class DebugSession {
         this.#emitBreakpoints();
       },
       nextPause: () => (this.#pauses += 1),
+      follows: (cell: CellId) => !this.#edited.has(cell),
     };
     this.#links = {
       server: new JsDebugLink(context, { ...shared, target: kernelTarget(context) }),
@@ -463,9 +466,11 @@ export class DebugSession {
       this.#kernelStatus(event.data.state, event.data.inspectorUrl);
     else if (event.type === "realm.status") this.#realmStatus();
     else if (event.type === "cell.updated")
-      this.#edited(event.data.cell.id, event.data.cell.source);
+      this.#editedCell(event.data.cell.id, event.data.cell.source);
     else if (event.type === "cell.deleted") this.#deleted(event.data.cell);
     else if (event.type === "notebook.moved") this.#moved();
+    else if (event.type === "cell.status" && event.data.status === "running")
+      this.#edited.delete(event.data.cell);
     else if (event.type === "cell.status" && ended.has(event.data.status)) {
       const type = this.#context.cells.get(event.data.cell)?.type;
       const link = this.#links[type === "client" ? "client" : "server"];
@@ -492,10 +497,11 @@ export class DebugSession {
     this.#emitBreakpoints();
   }
 
-  #edited(cell: CellId, source: string): void {
+  #editedCell(cell: CellId, source: string): void {
     const { sources } = this.#links.server;
     const before = sources.get(cell);
     if (before === undefined) return;
+    if (before !== source) this.#edited.add(cell);
     this.#breakpoints.edited(cell, before, source);
     sources.set(cell, source);
     this.#emitBreakpoints();
@@ -509,6 +515,7 @@ export class DebugSession {
     if (gone.length === 0) return;
     this.#breakpoints.remove(gone);
     this.#links.server.sources.delete(cell);
+    this.#edited.delete(cell);
     void this.#sendCell(cell);
     this.#emitBreakpoints();
   }

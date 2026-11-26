@@ -198,6 +198,36 @@ suite(`a client cell in the debugger${skipped}`, { timeout: 90_000 }, () => {
     );
   });
 
+  it("keeps a breakpoint on its line through an edit of a cell that ran, and stops there on the next run", async () => {
+    await withDaemon(
+      async (daemon) => {
+        const book = await headlessBook(daemon);
+        const { notebook } = book;
+        const body = ["let acc = 0;", "for (let i = 0; i < 4; i++) {", "  acc += i;", "}", "acc;"];
+        const cell = await book.add(body.join("\n"), "client");
+        await daemon.client.cell.run({ notebook, cell });
+        await daemon.client.debug.setBreakpoint({ notebook, cell, line: 3 });
+        await daemon.client.cell.update({
+          notebook,
+          cell,
+          source: ["// sums", ...body].join("\n"),
+        });
+        await new Promise((resolve) => setTimeout(resolve, 500)); // js-debug's answer on the code it still holds
+        expect((await daemon.client.debug.state({ notebook })).breakpoints).toMatchObject([
+          { line: 4 },
+        ]);
+        const run = await runToPause(daemon, book, cell, { line: 4 });
+        expect((await daemon.client.debug.state({ notebook })).breakpoints).toMatchObject([
+          { line: 4 },
+        ]);
+        await daemon.client.debug.removeBreakpoint({ notebook, all: true });
+        await daemon.client.debug.resume({ notebook });
+        expect((await run.ended).status).toBe("ok");
+      },
+      { uiDir },
+    );
+  });
+
   it("lets a client cell's bridge call wait past its timeout while the server function is paused", async () => {
     await withDaemon(
       async (daemon) => {
