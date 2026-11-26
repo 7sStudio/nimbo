@@ -1,4 +1,4 @@
-// The answer to a request of 04-kernel §2.1 (call, snapshot, bindings, route): one `result` message with its id.
+// The answer to a request (call, snapshot, bindings, route): one `result` message with its id.
 import type { ErrorInfo } from "@jsnb/core";
 
 import type { CallRefusal, KernelMessage } from "./ipc/messages.js";

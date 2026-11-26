@@ -1,4 +1,4 @@
-// Redaction of 04-kernel §10: the exact non-public .env values of at least 8 characters, longest first, and the
+// Redaction: the exact non-public .env values of at least 8 characters, longest first, and the
 // Stripe token prefixes; every match becomes ***, repeated until nothing matches.
 import { inspect } from "node:util";
 
@@ -11,7 +11,7 @@ const tokens = String.raw`\b(?:sk_live_|sk_test_|rk_|whsec_)\w*`;
 
 const escapeRegExp = (text: string): string => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-/** Captured when the module loads: a cell that replaces JSON.stringify cannot unmask a secret (04-kernel §3.3). */
+/** Captured when the module loads: a cell that replaces JSON.stringify cannot unmask a secret. */
 const stringify = JSON.stringify.bind(JSON);
 
 /** A secret as it appears in outputs: as is, escaped inside JSON text, escaped inside util.inspect text. */

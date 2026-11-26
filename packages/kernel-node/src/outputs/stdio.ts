@@ -1,4 +1,4 @@
-// The child's process.stdout and process.stderr, routed (04-kernel §5.1): text written under a store goes to the
+// The child's process.stdout and process.stderr, routed: text written under a store goes to the
 // sink, text written with none (startup noise) to the original stream, which is the daemon's kernel log.
 import type { StreamName } from "./sink.js";
 
@@ -23,7 +23,7 @@ const decoder = new TextDecoder();
 const asText = (chunk: string | Uint8Array): string =>
   typeof chunk === "string" ? chunk : decoder.decode(chunk);
 
-/** Starts user code later: the kernel's promise job (04-kernel §6), never queueMicrotask. */
+/** Starts user code later: the kernel's promise job, never queueMicrotask. */
 export type StartLater = (job: () => void) => void;
 
 /**

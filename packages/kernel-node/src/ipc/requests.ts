@@ -1,4 +1,4 @@
-// The requests of 04-kernel §2.1 that a `result` answers (call, snapshot, bindings, route): a fresh integer id per
+// The requests that a `result` answers (call, snapshot, bindings, route): a fresh integer id per
 // request, settled by the result with that id; an abort rejects at once, says which request was abandoned (so the
 // kernel never starts it, if it has not yet), and the late result is ignored; the kernel's death rejects them all.
 import type { KernelMessage } from "./messages.js";

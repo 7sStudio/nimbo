@@ -1,4 +1,4 @@
-// An emitter standing in for `process` in the in-process tests of the process-hook check (04-kernel §3.3), a stub
+// An emitter standing in for `process` in the in-process tests of the process-hook check, a stub
 // named as one: replacing the test process's own nextTick or emit would deafen Vitest's own IPC, so the real process
 // is tested through the real child (processHooks.integration.test.ts). Its nextTick is Node's real one, as an own
 // property, and its emit EventEmitter's, inherited, as on `process`.

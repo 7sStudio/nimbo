@@ -1,4 +1,4 @@
-// Tests the process-hook check of 04-kernel §3.3 over an emitter standing in for `process` (fixtures/hookedEmitter.ts, a
+// Tests the process-hook check over an emitter standing in for `process` (fixtures/hookedEmitter.ts, a
 // stub named as one: replacing the test process's own hooks would deafen Vitest's IPC; the real process is tested
 // through the real child in processHooks.integration.test.ts). A replacement that does not deliver is put back for Node's own at once and reported once probed, whether it queues
 // nothing, drops the arguments, throws, is no function, drops "message" or lives on a replaced prototype; a wrapper that

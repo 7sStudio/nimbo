@@ -1,4 +1,4 @@
-// The server `display` built-in of 04-kernel §5.5: display.html, display.json, display.table and display.image emit
+// The server `display` built-in: display.html, display.json, display.table and display.image emit
 // `display` outputs on the calling cell.
 import { readFileSync } from "node:fs";
 import { extname, resolve } from "node:path";
@@ -30,7 +30,7 @@ const tableMime = "application/vnd.jsnb.table+json";
 
 type DisplayOutput = Extract<Output, { readonly kind: "display" }>;
 
-/** Captured when the module loads: a cell that replaces JSON.stringify breaks its own code only (04-kernel §3.3). */
+/** Captured when the module loads: a cell that replaces JSON.stringify breaks its own code only. */
 const stringify = JSON.stringify.bind(JSON);
 
 const byExtension: Readonly<Record<string, string>> = {

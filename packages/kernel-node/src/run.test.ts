@@ -1,4 +1,4 @@
-// Tests one execute in-process (04-kernel §4): message order, values, errors with mapped frames, compile failures,
+// Tests one execute in-process: message order, values, errors with mapped frames, compile failures,
 // disposers, .env re-read per run, late outputs on the cell, the stream cap.
 import { mkdirSync, rmSync } from "node:fs";
 import { join } from "node:path";

@@ -1,4 +1,4 @@
-// Tests that what a cell starts ends with its kernel, through the real child (04-kernel §2): the kernel leads a process
+// Tests that what a cell starts ends with its kernel, through the real child: the kernel leads a process
 // group of its own, which kill() and stop() signal, and which the daemon side signals again when the kernel exits by
 // itself. A cell spawns a long `sleep` (its pid the cell's value), or runs one through execSync in a raw immediate so
 // the kernel is blocked in it (the shell says its pid on fd 1, the kernel log); after kill(), after stop() (at its

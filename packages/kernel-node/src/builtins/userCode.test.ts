@@ -1,4 +1,4 @@
-// Tests how the kernel starts and calls user code (04-kernel §6): a function called through the user-code frame gets
+// Tests how the kernel starts and calls user code: a function called through the user-code frame gets
 // its arguments and `this`, returns and throws as usual and runs below that frame, whose position is calibrated in this
 // kernel file and matches no other frame; a job starts in a promise job, after the current code, and never in the
 // AsyncResource Node wraps a queueMicrotask callback in.

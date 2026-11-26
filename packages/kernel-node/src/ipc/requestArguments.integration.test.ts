@@ -1,4 +1,4 @@
-// Tests the daemon side's check of what a caller asks a real kernel (04-kernel §11): each method validates its
+// Tests the daemon side's check of what a caller asks a real kernel: each method validates its
 // arguments with the schema the kernel reads them with and rejects InvalidParams at once, with the issue's path, where
 // the kernel would have ignored the message and the request never settled (a JavaScript caller's mistake: the server
 // is typed). And a message Node cannot serialize (a function among a call's arguments or in an execute's bindings)

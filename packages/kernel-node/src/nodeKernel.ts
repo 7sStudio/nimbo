@@ -1,4 +1,4 @@
-// The public createNodeKernel (04-kernel §11): the ipc layer's kernel handle composed with the kernel log's redaction,
+// The public createNodeKernel: the ipc layer's kernel handle composed with the kernel log's redaction,
 // which reads the workspace .env through builtins/ and outputs/ (a layer never imports another, so the root does).
 import type { NodeKernelOptions } from "./ipc/kernelOptions.js";
 import type { NodeKernel } from "./ipc/nodeKernel.js";

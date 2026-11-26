@@ -1,4 +1,4 @@
-// A `dispose` request (04-kernel §2.1, §7): the cell was deleted (03-api cell.delete), so the cleanups it registered run
+// A `dispose` request: the cell was deleted (cell.delete), so the cleanups it registered run
 // now, as they would before a re-run that will never come: its routes leave the table (a `routes` message follows),
 // its timers and listeners stop, and the cell is retired, so what its code still registers after an await (a run
 // interrupted while it awaited resumes) is disposed at once until the cell runs again. They run under the cell's last

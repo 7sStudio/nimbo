@@ -1,4 +1,4 @@
-// What the daemon passes to createNodeKernel (04-kernel §2, §11) and the settings a kernel derives from it: the
+// What the daemon passes to createNodeKernel and the settings a kernel derives from it: the
 // validated notebook ref, the route base of /n/<name>, the output limits over core's defaults, the Node and the entry.
 import { fileURLToPath } from "node:url";
 
@@ -32,7 +32,7 @@ export type EventBatch = {
 export type NodeKernelOptions = {
   /** The workspace folder, absolute: the kernel's cwd. */
   readonly workspace: string;
-  /** The notebook ref (03-api §2), validated: relative, no `..`, a .jsnb file. */
+  /** The notebook ref, validated: relative, no `..`, a .jsnb file. */
   readonly notebook: string;
   /** The daemon's port, for routeUrl() and route URLs. */
   readonly port: number;
@@ -48,9 +48,9 @@ export type NodeKernelOptions = {
   readonly onOutput?: (late: LateOutput) => void;
   readonly onExports?: (names: readonly ExportEntry[]) => void;
   readonly onRoutes?: (routes: readonly Route[]) => void;
-  /** A flush of `emit(name, data)` calls (05-bridge §6). */
+  /** A flush of `emit(name, data)` calls. */
   readonly onEvents?: (batch: EventBatch) => void;
-  /** Whether a page holds the client realm when the kernel is ready; default true (05-bridge §6). */
+  /** Whether a page holds the client realm when the kernel is ready; default true. */
   readonly pageListening?: () => boolean;
   /** Debugger.paused (true) and Debugger.resumed (false) from the kernel's inspector. */
   readonly onPause?: (paused: boolean) => void;

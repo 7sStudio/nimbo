@@ -1,5 +1,5 @@
 // Tests what a real kernel says at start when part of its start fails, each failure produced on demand by a module
-// Node preloads before the kernel's own (04-kernel §2, §6): a warm-up that fails (fetch broken) is one notice in the
+// Node preloads before the kernel's own: a warm-up that fails (fetch broken) is one notice in the
 // kernel log and `ready` is still sent; a stack the kernel cannot read (util.getCallSites answering nothing) leaves no
 // user-code frame to calibrate, which is one notice saying interrupts stop cell code only. Either way the kernel runs.
 import { compileCell } from "@jsnb/test-tools/kernel";

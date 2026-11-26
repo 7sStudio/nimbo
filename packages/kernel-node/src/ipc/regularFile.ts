@@ -1,4 +1,4 @@
-// The workspace files kernel-node opens itself, read and written without ever blocking (04-kernel §2, §8.1, §10): the
+// The workspace files kernel-node opens itself, read and written without ever blocking: the
 // kernel's and the log redactor's .env, the daemon side's .jsnb/loader.mjs. A FIFO with no writer blocks whatever
 // opens it for reading, and one with no reader whatever opens it for writing, for good; a synchronous read of one on
 // the daemon's event loop froze every kernel it served. So a file is opened non-blocking and read or written only when

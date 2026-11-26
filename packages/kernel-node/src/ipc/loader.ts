@@ -1,4 +1,4 @@
-// The workspace loader of 04-kernel §8.1 and 07-file-format §7: <workspace>/.jsnb/loader.mjs, written at kernel
+// The workspace loader: <workspace>/.jsnb/loader.mjs, written at kernel
 // start when it is missing or different, so a kernel imports packages from the workspace's node_modules. It is read
 // and written only as a regular file, off the event loop and without blocking: a FIFO in its place is refused at once.
 // Neither the loader nor its folder is followed through a symbolic link: a workspace from someone else could point one
@@ -10,7 +10,7 @@ import { LoaderWriteFailed } from "./errors.js";
 import { readRegularFile, writeRegularFile } from "./regularFile.js";
 
 /** The loader's whole text: a header and the one export the kernel calls. */
-export const loaderSource = `// Written by nimbo when a kernel starts (07-file-format §7): kernels import packages through this module, so Node
+export const loaderSource = `// Written by nimbo when a kernel starts: kernels import packages through this module, so Node
 // resolves them from this workspace's node_modules with their exports conditions. Edits are overwritten.
 export const load = (specifier) => import(specifier);
 `;

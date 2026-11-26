@@ -1,4 +1,4 @@
-// Tests the watchdog's decision (04-kernel §2) in-process: the daemon is gone once the kernel's parent pid reads
+// Tests the watchdog's decision in-process: the daemon is gone once the kernel's parent pid reads
 // anything but the pid it started under and that pid is gone itself (ESRCH), or the new parent is pid 1; a parent pid
 // that changed while the original parent lives (a ptrace attach on macOS) or a pid of another user (EPERM) is no
 // death; and the kill reaches the kernel's process group, or its pid when it leads none. The worker that applies them

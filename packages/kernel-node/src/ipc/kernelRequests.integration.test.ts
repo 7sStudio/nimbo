@@ -1,7 +1,7 @@
 // Tests the requests through a NodeKernel and a real child: bridge calls (BridgeCallFailed for a throw), snapshots,
 // bindings with and without values, a route request, concurrent requests settled by id in the order the kernel answers
 // them, aborted requests (rejected with the signal's reason, their late results ignored, never sent when aborted
-// before), and a call whose flow an interrupt terminated, which only its signal settles (04-kernel §2.1, §6).
+// before), and a call whose flow an interrupt terminated, which only its signal settles.
 import { encodeStrict } from "@jsnb/core";
 import { compileCell } from "@jsnb/test-tools/kernel";
 import { beforeAll, describe, expect, it } from "vitest";
@@ -31,7 +31,7 @@ beforeAll(() => {
   book.compile(compileCell);
 });
 
-/** The wire form of a call's argument array (05-bridge §9). */
+/** The wire form of a call's argument array. */
 function wire(args: readonly unknown[]): readonly unknown[] {
   const encoded = encodeStrict(args);
   if (!encoded.ok) throw new Error("not transferable");

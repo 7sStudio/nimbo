@@ -1,4 +1,4 @@
-// Tests what the interrupt hook reads of the stack (04-kernel §6): user code (a cell's frame or the user-code frame)
+// Tests what the interrupt hook reads of the stack: user code (a cell's frame or the user-code frame)
 // through Node's call sites and, beyond 200 frames, V8's stack trace API; the frames of code outside the cells,
 // classified by file and named, each once, the first ten; the cell of the innermost cell frame. Frames come from
 // functions compiled under script names of the test's choosing (fixtures/scripts.ts).

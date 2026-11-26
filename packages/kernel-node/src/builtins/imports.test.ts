@@ -1,4 +1,4 @@
-// Tests __import and require of 04-kernel §8.1 with Node's own import() over real workspaces: workspace paths busted
+// Tests __import and require with Node's own import() over real workspaces: workspace paths busted
 // by mtime (the module sees the busted URL), file: URLs as they are, bare specifiers through the workspace loader
 // (imported once), a loader without `load` refused, a loader that failed to import asked for again, require from the
 // workspace's package.json. One stub, named as one: a load whose continuation an interrupt cleared, which only a real

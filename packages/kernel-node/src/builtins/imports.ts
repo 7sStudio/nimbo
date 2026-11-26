@@ -1,4 +1,4 @@
-// `__import` and `require` of 04-kernel §8 and §8.1: a relative or absolute path resolves from the workspace folder
+// `__import` and `require`: a relative or absolute path resolves from the workspace folder
 // and is cache-busted by its mtime so an edited file reloads; a file: URL imports as it is; every other specifier
 // goes through the workspace loader, so packages resolve from the workspace's node_modules and load once.
 import { statSync } from "node:fs";
@@ -54,14 +54,14 @@ export function createImport(options: ImportOptions): (specifier: string) => Pro
     if (isPath(specifier)) return options.load(pathUrl(options.workspace, specifier));
     if (specifier.startsWith("file:")) return options.load(specifier);
     // Kept once loaded; until then every import asks again (Node caches the module), so a load that failed, or that an
-    // interrupt cut short and left pending, leaves nothing behind for the next import to wait on (04-kernel §6).
+    // interrupt cut short and left pending, leaves nothing behind for the next import to wait on.
     const load = loader ?? (await loadLoader());
     loader = load;
     return load(specifier);
   };
 }
 
-/** `require` for CommonJS packages, resolved from the workspace's package.json (04-kernel §8). */
+/** `require` for CommonJS packages, resolved from the workspace's package.json. */
 export function createWorkspaceRequire(workspace: string): NodeJS.Require {
   return createRequire(join(workspace, "package.json"));
 }

@@ -1,4 +1,4 @@
-// The async context the code running now is in, as the interrupt hook reads it (04-kernel §6). Node pushes some
+// The async context the code running now is in, as the interrupt hook reads it. Node pushes some
 // contexts onto its async-id stack from JavaScript (a Timeout's or an Immediate's callback, process.nextTick's
 // TickObject, an AsyncResource scope, queueMicrotask's under a store, a Promise under promise hooks or in its
 // unhandled-rejection processing) and pops them in code a termination skips, so a termination there corrupts Node's

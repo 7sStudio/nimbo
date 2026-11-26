@@ -1,4 +1,4 @@
-// Tests ErrorInfo of 04-kernel §5.3: the frames of a real cell mapped to its own lines, the raw stack's cell positions
+// Tests ErrorInfo: the frames of a real cell mapped to its own lines, the raw stack's cell positions
 // rewritten, data and the cause chain, redaction, and thrown values that fight back (getters, custom inspect, Proxy
 // traps that throw).
 import { fileURLToPath } from "node:url";

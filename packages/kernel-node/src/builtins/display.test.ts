@@ -1,4 +1,4 @@
-// Tests display (04-kernel §5.5): the outputs display makes.
+// Tests display: the outputs display makes.
 import type { Output } from "@jsnb/core";
 import { encode } from "@jsnb/core";
 import { mkdtempSync, writeFileSync } from "node:fs";

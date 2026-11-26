@@ -1,4 +1,4 @@
-// Tests requests the daemon abandoned before the kernel started them, through the real child (04-kernel §2.1, §6):
+// Tests requests the daemon abandoned before the kernel started them, through the real child:
 // a cell is busy until a flag file exists, and a bridge call, a route request and a snapshot are sent behind it, each
 // with a short signal timeout. The signal aborts while the cell runs, so the request rejects at once and the daemon
 // sends its `cancel` behind it in the pipe; the cell, untouched, ends `ok`, and the request's user code (a function, a

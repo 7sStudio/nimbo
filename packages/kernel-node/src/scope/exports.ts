@@ -1,4 +1,4 @@
-// The export table of 04-kernel §2.1 and 05-bridge §3: each exported name, its local name and the exporting cell.
+// The export table: each exported name, its local name and the exporting cell.
 import type { CellId } from "@jsnb/core";
 
 type ExportTarget = { readonly local: string; readonly cell: CellId };
@@ -6,7 +6,7 @@ type ExportTarget = { readonly local: string; readonly cell: CellId };
 export type Exports = {
   /** `__scope.__export(name, from)` run by `cell`: `name` is exported, read from the local `from`. */
   readonly register: (name: string, local: string, cell: CellId) => void;
-  /** Drops what `cell` exported, before it re-runs (04-kernel §4 step 4). */
+  /** Drops what `cell` exported, before it re-runs. */
   readonly clear: (cell: CellId) => void;
   /** The current table, in registration order, as the `exports` message carries it. */
   readonly list: () => readonly { readonly name: string; readonly cell: CellId }[];

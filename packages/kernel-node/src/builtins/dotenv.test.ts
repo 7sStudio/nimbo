@@ -1,4 +1,4 @@
-// Tests the .env parser of 07-file-format §8 and the public-name rule of 04-kernel §8.
+// Tests the .env parser and the public-name rule.
 import { describe, expect, it } from "vitest";
 
 import { isPublicEnvName, parseDotenv } from "./dotenv.js";

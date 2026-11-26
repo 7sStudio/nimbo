@@ -1,4 +1,4 @@
-// Tests a restart as the daemon does it (04-kernel §11: a stopped or dead kernel is replaced, not restarted): once a
+// Tests a restart as the daemon does it (a stopped or dead kernel is replaced, not restarted): once a
 // kernel is stopped or killed, a fresh kernel on the same workspace starts with an empty scope, no export and no route,
 // and runs the cells again.
 import { compileCell, kernelEntry } from "@jsnb/test-tools/kernel";

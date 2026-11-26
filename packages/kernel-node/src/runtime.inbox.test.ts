@@ -1,4 +1,4 @@
-// Tests the runtime's inbox (04-kernel §6) with turns the test runs by hand: one message per turn, the next turn
+// Tests the runtime's inbox with turns the test runs by hand: one message per turn, the next turn
 // scheduled before the message's microtask, the draining flag cleared only by a turn that finds the inbox empty, and
 // no flag left standing when scheduling a turn fails (a stub: a scheduling that throws once stands for a termination
 // landing between two statements, which a real termination would do to the test's own code); a `cancel` recorded as it

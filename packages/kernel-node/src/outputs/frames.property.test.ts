@@ -1,4 +1,4 @@
-// Property test (09-testing §3): the stack-frame parser and the frame and stack rewriting around it never throw, on
+// Property test: the stack-frame parser and the frame and stack rewriting around it never throw, on
 // arbitrary text and on frame-shaped lines with arbitrary function names, files and positions, a real compiled cell's
 // URL among them (its source map answers positions outside its mappings with nothing).
 import fc from "fast-check";

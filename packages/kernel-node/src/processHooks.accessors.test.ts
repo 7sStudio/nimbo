@@ -1,4 +1,4 @@
-// Tests the process-hook check of 04-kernel §3.3 against accessors and Proxies, over the emitter standing in for
+// Tests the process-hook check against accessors and Proxies, over the emitter standing in for
 // `process` (fixtures/hookedEmitter.ts, a stub named as one; the real process is tested in
 // processHookAccessors.integration.test.ts): the check and a send never run a cell's getter or trap; a hook that is an
 // accessor, or found through a Proxy, is put aside for Node's own at once, and only the probe reads it, as user code;

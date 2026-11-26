@@ -1,4 +1,4 @@
-// Runs the cell-sequence cases of the 04-kernel §12 corpus (1 to 10 and 12 to 17) through the real kernel child, each
+// Runs the cell-sequence cases corpus (1 to 10 and 12 to 17) through the real kernel child, each
 // case in its own workspace and kernel. Cases 11, 14's late route error, 17's debugger, 18 and 19 have their own files.
 import { beforeAll, describe, it } from "vitest";
 
@@ -15,7 +15,7 @@ beforeAll(() => {
   compiled = compileCases(cases);
 });
 
-describe("the 04-kernel §12 corpus through the real kernel", () => {
+describe("the corpus through the real kernel", () => {
   for (const testCase of cases) {
     it(`case ${String(testCase.id)}: ${testCase.title}`, async () => {
       const options = testCase.env ? { env: testCase.env } : {};

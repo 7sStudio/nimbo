@@ -1,6 +1,6 @@
-// The `bindings` request (03-api kernel.scope, cell.bindings; 04-kernel §5.2): each existing scope name with its
+// The `bindings` request (kernel.scope, cell.bindings): each existing scope name with its
 // kind, preview, defining cell and export flag, and with `full` its value serialized like a value output. A name whose
-// value cannot be read or described is listed all the same, saying so, and the other names still answer (§2.1).
+// value cannot be read or described is listed all the same, saying so, and the other names still answer.
 import type { Binding, BindingValue } from "@jsnb/core";
 
 import type { BindingsMessage } from "./ipc/messages.js";
@@ -54,7 +54,7 @@ function bindingOf(realm: Realm, name: string, full: boolean): Binding | Binding
 /**
  * Answers one `bindings` message: the requested names that exist (all, without `names`), metadata required. Reading
  * and describing the values can run user code (a getter, a custom inspect), so the process hooks are checked before
- * the answer leaves (04-kernel §3.3).
+ * the answer leaves.
  */
 export async function bindingsFlow(realm: Realm, message: BindingsMessage): Promise<void> {
   const names = message.names ?? realm.scope.names();

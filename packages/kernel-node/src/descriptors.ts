@@ -1,5 +1,5 @@
 // Properties a cell may have made accessors or put behind a Proxy, as the kernel reads and writes them in its own
-// checks (04-kernel §3.3, §6): through their descriptors only, with intrinsics captured when the module loads, so no
+// checks: through their descriptors only, with intrinsics captured when the module loads, so no
 // getter, setter or Proxy trap of a cell's runs inside the kernel's own code or its interrupt hook. The descriptors the
 // kernel defines have no prototype, so a cell's `Object.prototype.get` or `.value` cannot turn one into another.
 import { types } from "node:util";

@@ -1,4 +1,4 @@
-// The route table of 04-kernel §8: route("METHOD /path", handler) registers a handler on the calling cell, replaces
+// The route table: route("METHOD /path", handler) registers a handler on the calling cell, replaces
 // a registration of the same spec from any cell and returns a disposer; routeUrl(path) is the public URL. Paths are
 // compared and printed in core's route form (routePath), so every escaping of a path is one route, and a HEAD
 // request a GET route answers when no HEAD route is registered, as HTTP has a server do.
@@ -24,7 +24,7 @@ type RouteEntry = {
 };
 
 export type RouteOptions = {
-  /** `http://127.0.0.1:<port>/n/<notebook-name>` (04-kernel §8). */
+  /** `http://127.0.0.1:<port>/n/<notebook-name>`. */
   readonly routeBase: string;
   readonly currentStore: () => Store | undefined;
   readonly addDisposer: (cell: CellId, fn: () => void) => () => void;

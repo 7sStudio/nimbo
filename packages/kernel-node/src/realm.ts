@@ -1,4 +1,4 @@
-// The kernel's realm (04-kernel §3.3, §5, §7, §8): the scope and its built-ins layer, the sink, the disposers, the
+// The kernel's realm: the scope and its built-ins layer, the sink, the disposers, the
 // export and route tables and the compile cache, composed from the four layers by passing functions in.
 import type { CellId, ErrorInfo, ExecutionId } from "@jsnb/core";
 import { encode } from "@jsnb/core";
@@ -41,7 +41,7 @@ export type RealmDeps = {
   /** True for an execution the daemon ended as interrupted (the interrupt hook's set): its cell is never called. */
   readonly interrupted: (execution: ExecutionId) => boolean;
   readonly send: (message: KernelMessage) => void;
-  /** Writes to the original stdout or stderr: the daemon's kernel log (04-kernel §5.1). */
+  /** Writes to the original stdout or stderr: the daemon's kernel log. */
   readonly log: (stream: StreamName, text: string) => void;
   /** The kernel's own `import()`. */
   readonly load: (url: string) => Promise<unknown>;
@@ -49,9 +49,9 @@ export type RealmDeps = {
   readonly schedule: (flush: () => void) => void;
   /** Now as an ISO string (registeredAt, event outputs). */
   readonly clock: () => string;
-  /** Node's own process.nextTick and process.emit, captured at start, and their check after user code (04-kernel §3.3). */
+  /** Node's own process.nextTick and process.emit, captured at start, and their check after user code. */
   readonly hooks: ProcessHooks;
-  /** Ends the process at once, whatever is still being sent: a kernel that can no longer hear the daemon (04-kernel §3.3). */
+  /** Ends the process at once, whatever is still being sent: a kernel that can no longer hear the daemon. */
   readonly exit: (code: number) => void;
 };
 
@@ -70,13 +70,13 @@ export type Realm = RealmDeps & {
   readonly lastExecution: Map<CellId, ExecutionId>;
   /** The ErrorInfo of a thrown value: cell frames mapped, kernel frames dropped, everything redacted. */
   readonly errorInfo: (error: unknown) => ErrorInfo;
-  /** The same for a kernel log notice, unredacted: the daemon side redacts every log line (04-kernel §10). */
+  /** The same for a kernel log notice, unredacted: the daemon side redacts every log line. */
   readonly logErrorInfo: (error: unknown) => ErrorInfo;
   /** An error after its cell's run: an `error` output on the store's execution, or a log notice without one. */
   readonly reportError: (store: Store | undefined, error: unknown) => void;
   /** After user code that ran under a store, and on the interval: the hooks it may have replaced (hookReports.ts). */
   readonly checkHooks: CheckHooks;
-  /** The interrupt hook's check: the same, and the replacements kept earlier probed again (04-kernel §3.3). */
+  /** The interrupt hook's check: the same, and the replacements kept earlier probed again. */
   readonly recheckHooks: CheckHooks;
 };
 

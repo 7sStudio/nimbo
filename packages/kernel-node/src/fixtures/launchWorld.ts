@@ -1,4 +1,4 @@
-// launch() over a fresh workspace for the integration tests (09-testing §3): the workspace prepared and scripts
+// launch() over a fresh workspace for the integration tests: the workspace prepared and scripts
 // written first (a stub Node, for the one failure no real Node produces on demand: a version older than 26), the real
 // kernel otherwise, with Node flags of its own where a test needs them; the log recorded with waiters, and whatever
 // child the start forked killed when the test ends. A daemon-side context over the started session sends interrupts.

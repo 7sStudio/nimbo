@@ -1,4 +1,4 @@
-// The per-cell disposer lists of 04-kernel §7 and the `dispose(fn)` built-in: before a cell re-runs, its disposers
+// The per-cell disposer lists and the `dispose(fn)` built-in: before a cell re-runs, its disposers
 // run in reverse order, async ones awaited, and their failures are collected for the new run to report. Each list is
 // an insertion-ordered set, so taking one off (a timer that fired) costs the same however many a cell registered. A
 // deleted cell is retired: its disposers run, and what its code still registers afterwards (a continuation that
@@ -17,7 +17,7 @@ export type Disposers = {
   readonly add: (cell: CellId, fn: () => unknown) => () => void;
   /** Runs and forgets `cell`'s disposers, last registered first; resolves with what they threw or rejected. */
   readonly run: (cell: CellId) => Promise<readonly unknown[]>;
-  /** `run`, the cell retired first: the deleted cell's cleanups (04-kernel §7). */
+  /** `run`, the cell retired first: the deleted cell's cleanups. */
   readonly retire: (cell: CellId) => Promise<readonly unknown[]>;
   /** A run of `cell` starts: what it registers stands again. */
   readonly revive: (cell: CellId) => void;
@@ -43,7 +43,7 @@ async function runAll(list: readonly Entry[]): Promise<readonly unknown[]> {
     try {
       await fn();
     } catch (error) {
-      // Collected, not swallowed: the new run reports each one as an error output (04-kernel §7).
+      // Collected, not swallowed: the new run reports each one as an error output.
       failures.push(error);
     }
   }
@@ -100,7 +100,7 @@ export function createDispose(
     if (!isCleanup(fn)) throw new InvalidDisposer({ type: typeName(fn) });
     const cell = currentCell();
     if (cell === undefined) throw new OutsideCell({ builtin: "dispose" });
-    // Called below the user-code frame, so an interrupt stops a disposer that hangs (04-kernel §6).
+    // Called below the user-code frame, so an interrupt stops a disposer that hangs.
     disposers.add(cell, () => callUserCode(fn, undefined, []));
   };
 }

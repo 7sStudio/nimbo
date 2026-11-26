@@ -1,4 +1,4 @@
-// The interrupt of 04-kernel §6 as the daemon asks for it: one Runtime.evaluate that calls the kernel's interrupt
+// The interrupt as the daemon asks for it: one Runtime.evaluate that calls the kernel's interrupt
 // hook, defined on the child's process under Symbol.for(interruptHookName), with the executions the daemon ended.
 // The hook terminates only cell code, so the daemon never sends Runtime.terminateExecution itself; it answers with
 // what it refused to stop, when it refused.
@@ -9,7 +9,7 @@ import { z } from "zod";
 export const interruptHookName = "jsnb.kernel.interrupt";
 
 /**
- * What the hook did not stop (04-kernel §6): user code that runs in a context Node entered from JavaScript, where a
+ * What the hook did not stop: user code that runs in a context Node entered from JavaScript, where a
  * termination would corrupt Node's async state, and the cell whose code it is, when a cell's frame is on the stack.
  * InterruptRefused carries it.
  */
@@ -30,7 +30,7 @@ export function refusalOf(answer: unknown): InterruptRefusal | undefined {
 
 /**
  * The Runtime.evaluate parameters that call the hook with `executions`; `again` for the second call that follows an
- * interrupt of live executions, which may stop only their own code (04-kernel §6).
+ * interrupt of live executions, which may stop only their own code.
  */
 export function interruptCall(
   executions: readonly string[],

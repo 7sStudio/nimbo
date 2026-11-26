@@ -1,4 +1,4 @@
-// A bounded memory of ids the daemon gave up on (04-kernel §6): the executions it ended as interrupted and the requests
+// A bounded memory of ids the daemon gave up on: the executions it ended as interrupted and the requests
 // it abandoned, the last `limit` of each, the oldest forgotten first, so a later run or request with one never starts.
 
 export type Recent<T> = {

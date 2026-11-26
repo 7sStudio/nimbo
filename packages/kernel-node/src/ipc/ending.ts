@@ -1,4 +1,4 @@
-// Ending a kernel child (04-kernel §2, §6): stop() asks it to shut down and kills it when it has not exited in time,
+// Ending a kernel child: stop() asks it to shut down and kills it when it has not exited in time,
 // kill() kills it at once, each kill reaching its whole process group (childProcess.ts) and none once the kernel's exit
 // was seen; both wait for the exit and mark the kernel ended, so its exit is not reported to onExit.
 import type { Exit } from "./childProcess.js";

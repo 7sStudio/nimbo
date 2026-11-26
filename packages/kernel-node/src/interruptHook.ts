@@ -1,4 +1,4 @@
-// The kernel's interrupt hook (04-kernel §6). The daemon calls it through Runtime.evaluate with the executions it
+// The kernel's interrupt hook. The daemon calls it through Runtime.evaluate with the executions it
 // ended; the hook remembers them, so a run of one never calls its cell, and terminates the running JavaScript through a
 // same-thread inspector session only when user code is on the stack at that very interrupt point (stackReads.ts) and
 // runs in a context a termination leaves intact: in one Node entered from JavaScript (a raw timer, immediate or
@@ -21,7 +21,7 @@ import type { Store } from "./store.js";
 /** The hook's key on `process`: a symbol, so user code neither replaces it nor sees it in a key listing. */
 export const interruptKey = Symbol.for(interruptHookName);
 
-/** How many interrupted executions are remembered, as on the daemon side (04-kernel §6). */
+/** How many interrupted executions are remembered, as on the daemon side. */
 const remembered = 1000;
 
 const isExecutionId = (value: unknown): value is string => typeof value === "string";

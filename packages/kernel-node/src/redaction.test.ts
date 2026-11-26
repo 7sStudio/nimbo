@@ -1,4 +1,4 @@
-// Tests redaction at the kernel boundary (04-kernel §10, 09-testing §4 item 3): a .env secret and the four token
+// Tests redaction at the kernel boundary: a .env secret and the four token
 // prefixes pushed through every output kind, the error parts, the snapshot, the call result, bindings and the
 // full form come out as ***.
 import { compileCell } from "@jsnb/test-tools/kernel";

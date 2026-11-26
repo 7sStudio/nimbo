@@ -1,4 +1,4 @@
-// Tests a forwarded route request (04-kernel §8): raw and JSON bodies, every result shape, 404, a throwing handler,
+// Tests a forwarded route request: raw and JSON bodies, every result shape, 404, a throwing handler,
 // replacement, hits and the event output on the route's cell.
 import type { RouteResponse } from "@jsnb/core";
 import { compileCell } from "@jsnb/test-tools/kernel";

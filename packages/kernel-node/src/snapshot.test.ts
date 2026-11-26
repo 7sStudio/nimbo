@@ -1,4 +1,4 @@
-// Tests a bridge snapshot (05-bridge §3): fn for functions, an error for a class, values in strict wire form,
+// Tests a bridge snapshot: fn for functions, an error for a class, values in strict wire form,
 // NotTransferable naming the path of what cannot cross, and an unknown name failing the request.
 import { compileCell } from "@jsnb/test-tools/kernel";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";

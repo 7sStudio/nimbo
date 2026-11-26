@@ -1,4 +1,4 @@
-// Tests the sink of 04-kernel §5.1: coalescing, flush order, redaction of whole segments, a printed stack's cell
+// Tests the sink: coalescing, flush order, redaction of whole segments, a printed stack's cell
 // positions rewritten (a real compiled cell's), a write stopped before its flush is marked (a stub: a schedule that
 // throws once stands for a termination inside the write, which would end the test's own code), the stream cap,
 // retirement.

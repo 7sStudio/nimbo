@@ -1,6 +1,6 @@
-// The requests a NodeKernel sends (04-kernel §2.1): call, snapshot, bindings, route and dispose, each checked with the schema
-// the kernel reads it with (InvalidParams at once, §11), with a fresh id and answered by the `result` with that id;
-// each takes a signal last (§11): an aborted request rejects at once, leaves the pending table, and its late result is
+// The requests a NodeKernel sends: call, snapshot, bindings, route and dispose, each checked with the schema
+// the kernel reads it with (InvalidParams at once), with a fresh id and answered by the `result` with that id;
+// each takes a signal last: an aborted request rejects at once, leaves the pending table, and its late result is
 // ignored. Its abort is also a `cancel` sent at once, never held behind an interrupt: it follows the request in the
 // pipe, so a kernel that has not started the request never does.
 import type {
@@ -50,7 +50,7 @@ export type KernelRequests = {
   ) => Promise<Record<string, SnapshotBinding>>;
   readonly bindings: BindingsRequest;
   readonly handleRoute: (req: RouteRequest, options?: RequestOptions) => Promise<RouteResponse>;
-  /** Runs the disposers of a deleted cell (04-kernel §7); resolves once they settled. */
+  /** Runs the disposers of a deleted cell; resolves once they settled. */
   readonly dispose: (cell: CellId, options?: RequestOptions) => Promise<void>;
 };
 

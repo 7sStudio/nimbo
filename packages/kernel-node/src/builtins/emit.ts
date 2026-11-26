@@ -1,4 +1,4 @@
-// The server `emit(name, data)` built-in (05-bridge §6): plain data, in strict wire form and redacted, queued and sent to
+// The server `emit(name, data)` built-in: plain data, in strict wire form and redacted, queued and sent to
 // the daemon in one `events` message per flush. The queue holds at most `maxQueued` events and `maxQueuedBytes` of
 // data: a burst past either keeps the latest and counts the ones it dropped. While no page listens (the daemon says
 // so), an event is counted and dropped at once, its data never queued. The counts carry at most `maxNames` names a
@@ -15,7 +15,7 @@ type DroppedEvents = {
   readonly cell?: CellId;
 };
 
-/** The kernel's `events` message (04-kernel §2.1). */
+/** The kernel's `events` message. */
 export type EventsMessage = {
   readonly type: "events";
   readonly events: readonly BridgeEvent[];

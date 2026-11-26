@@ -1,4 +1,4 @@
-// Property test (09-testing §3): whatever text surrounds them, redaction leaves no secret of 8 or more characters in
+// Property test: whatever text surrounds them, redaction leaves no secret of 8 or more characters in
 // its output, in any of the forms outputs carry it (as is, JSON-escaped, util.inspect-escaped), nor a Stripe token.
 import { inspect } from "node:util";
 

@@ -1,4 +1,4 @@
-// Tests the Fetch side of routes (04-kernel §8): the Request a handler gets, the RouteResponse its result becomes.
+// Tests the Fetch side of routes: the Request a handler gets, the RouteResponse its result becomes.
 import type { RouteRequest } from "@jsnb/core";
 import { beforeAll, describe, expect, it } from "vitest";
 
