@@ -316,21 +316,25 @@ describe("cell.snapshot", () => {
 });
 
 describe("cell.snapshot", () => {
-  it("answers PAGE_TIMEOUT when the page is too busy to answer", { timeout: 30_000 }, async () => {
+  it("answers PAGE_TIMEOUT when the page is too busy to answer", { timeout: 60_000 }, async () => {
     await withBridge(async (world) => {
       const { client, daemon, notebook } = world;
       const ui = await client("display.html('x')");
-      await world.run(
-        await client(
-          "setTimeout(() => { const end = Date.now() + 7000; while (Date.now() < end); }, 100)",
-        ),
+      // the page's next task, before the request can come through the daemon (a loop a cell starts waits for that
+      // run's reports, which a loaded machine may hold back), and long enough for a late request
+      await world.page.page.evaluate(
+        "setTimeout(() => { const end = Date.now() + 10000; while (Date.now() < end); }, 0)",
       );
-      await new Promise((resolve) => setTimeout(resolve, 400));
-      await expect(daemon.client.cell.snapshot({ notebook, cell: ui })).rejects.toMatchObject({
+      const snapshot = () => daemon.client.cell.snapshot({ notebook, cell: ui });
+      await expect(snapshot()).rejects.toMatchObject({
         name: "PageTimeout",
         data: { request: "realm.snapshot", timeoutMs: 5000 },
       });
-      await new Promise((resolve) => setTimeout(resolve, 2500));
+      // the page answers again once the loop is over
+      for (;;) {
+        const answer = await snapshot().catch(() => undefined);
+        if (answer !== undefined) break;
+      }
     });
   });
 });
