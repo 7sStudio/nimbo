@@ -88,7 +88,8 @@ place to run code, a typed bridge between the two, and a plain-text file that di
 - **Backend and frontend in one file.** Export a function from a server cell and call it from a client cell; the call
   crosses a typed bridge and your secrets stay on the server.
 - **TypeScript that knows the whole notebook.** Completion, hover, diagnostics and rename work across cells and
-  across the bridge, against your real `node_modules`, and a built-in debugger steps through server cells.
+  across the bridge, against your real `node_modules`, and a built-in debugger steps through server cells, and through client cells
+  run headless.
 - **Look at data, then ask it questions.** Every result opens as a tree, a grid or raw JSON, and a query bar runs
   JSONPath, jq or SQL (DuckDB) on it.
 - **Serve it.** `route("POST /webhook", handler)` turns a cell into an HTTP endpoint you can `curl` or point a webhook
@@ -299,10 +300,12 @@ Where next: run `nimbo` with no arguments to open Home, then open one of the [ex
 
 - A debugger for server cells: breakpoints (F9), Ctrl+Shift+F5 to run a cell under it, conditions, hit counts and logpoints; step over, into and out; the
   call stack, variables, watch expressions and a debug console.
+- Client cells too, when they run in the headless page (`realm.headless` on, no tab holding the notebook): the same
+  breakpoints, steps, stack, variables and evaluations, from the CLI and MCP; `debug.state` says which side paused.
 - The same from the terminal and for agents: `nimbo debug set-breakpoint`, `stack`, `scope`, `evaluate`, `resume`,
   and the matching MCP tools.
-- Errors come back with stacks mapped to your cell's lines; on a client cell, a breakpoint becomes a `debugger;`
-  statement for the browser's DevTools.
+- Errors come back with stacks mapped to your cell's lines; while your tab runs the client cells, a client cell's
+  breakpoint becomes a `debugger;` statement for the browser's DevTools.
 
 <img alt="The Run and Debug view: the kernel is paused on a conditional breakpoint (item.quantity > 5) inside orderTotal; the Variables section shows item, subtotal 25 and discount 0.1, the Watch section evaluates subtotal + line to 43, and the call stack lists orderTotal and cell 4." src="docs/assets/readme/debugger-paused-at-breakpoint.png">
 
@@ -415,7 +418,7 @@ nimbo examples copy --name 01-data && nimbo open 01-data.jsnb
 | `nimbo outputs <cell> --sql '…'`                    | Query an output (`--jq`, `--query` for JSONPath, `--format csv`) |
 | `nimbo check`                                       | Type errors, without running anything                            |
 | `nimbo add <package>`                               | Install npm packages into the workspace                          |
-| `nimbo debug set-breakpoint --cell <id> --line <n>` | Debug a server cell (`stack`, `scope`, `evaluate`, `resume`, …)  |
+| `nimbo debug set-breakpoint --cell <id> --line <n>` | Debug a cell (`stack`, `scope`, `evaluate`, `resume`, …)         |
 | `nimbo diff`                                        | What git sees, notebooks cell by cell                            |
 | `nimbo git pull`                                    | Git from the CLI (`push`, `switch`, `stash`, `log`; `--yes`)     |
 | `nimbo export page.html`                            | The notebook as one HTML page                                    |
@@ -472,19 +475,18 @@ The specification lives in [docs/](docs/00-overview.md): [architecture](docs/02-
 ## Status and roadmap
 
 nimbo is early: 0.1 is its first public release. The kernel, the bridge, routes, the output viewer and its query
-engines, the CLI, the MCP server, the server-cell debugger and source control are built and tested against the real
+engines, the CLI, the MCP server, the debugger and source control are built and tested against the real
 components (the built kernel, jq, DuckDB in Node and in Chromium). Expect rough edges in the UI and changes before
 1.0.
 
 Known limits today:
 
-- Client cells need the notebook open in a browser tab; an agent alone cannot run them yet.
-- Breakpoints in client cells go to the browser's DevTools, not to nimbo's debugger.
+- nimbo's debugger stops in client cells only in the headless page; while your tab holds the notebook, client-cell
+  breakpoints go to the browser's DevTools, and you cannot watch a headless debug session in a tab yet.
 - Vue works with `template` strings or `h()`; no `.vue` files and no JSX.
 
 Planned, not yet available:
 
-- A headless browser page, so agents can run client cells and take screenshots on their own
 - A tutorial mode that walks a new user through the concepts
 - Add-ons, starting with a Stripe add-on (webhook forwarding, signature checks, a request log)
 - A desktop app

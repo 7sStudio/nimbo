@@ -61,13 +61,15 @@ function outputText(output: Output, cell: string): string {
   }
 }
 
-/** Where the kernel is paused and the verbs that go on from there, for a run whose wait answered on the pause. */
+/** Where a realm is paused and the verbs that go on from there, for a run whose wait answered on the pause. */
 function pausedNote(execution: Execution): string | undefined {
   const { paused } = execution;
   if (paused === undefined) return undefined;
   const where =
     paused.cell === undefined ? "" : ` at ${paused.cell} line ${String(paused.line ?? "?")}`;
-  return ` (the kernel is paused in the debugger${where}: ${paused.reason})\n  nimbo debug stack to see where, nimbo debug resume to go on`;
+  const what = paused.realm === "client" ? "the headless page" : "the kernel";
+  const stale = paused.stale === true ? ", in the cell's code from before its last edit" : "";
+  return ` (${what} is paused in the debugger${where}${stale}: ${paused.reason})\n  nimbo debug stack to see where, nimbo debug resume to go on`;
 }
 
 /** `x_9f8e7d6c ok 12 ms`, `… running (timed out waiting)`. */

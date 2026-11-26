@@ -46,6 +46,8 @@ async function askThePage(
   const { attachment } = run.state;
   if (!attachment) return false;
   const { execution } = run;
+  // a page paused in the debugger takes nothing: it ends what it paused in and resumes first
+  if (attachment.kind === "headless") await context.hooks.pageDebug.release();
   const signal = AbortSignal.any([AbortSignal.timeout(pageWaitMs), attachment.detached.signal]);
   try {
     const answer = RealmInterruptAnswer.parse(

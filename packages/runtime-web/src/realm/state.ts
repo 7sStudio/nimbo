@@ -6,6 +6,7 @@ import { createEnv } from "./env.js";
 import { errorInfo } from "./errors.js";
 import type { CellFiles } from "./files.js";
 import { createCellFiles } from "./files.js";
+import { exposeRecord } from "./debugScope.js";
 import { framesOf, userStackOf } from "./frames.js";
 import { createEventListeners } from "./events.js";
 import { createListenerRegistry } from "./listeners.js";
@@ -34,6 +35,7 @@ export type RealmState = {
 export function createState(options: ResolvedOptions): RealmState {
   const attachment: Attachment = { realmId: undefined, stopListening: undefined };
   const record: Record<string, unknown> = { __proto__: null };
+  exposeRecord(record);
   const containers = createContainers(options.mount);
   const files = createCellFiles();
   const env = createEnv();

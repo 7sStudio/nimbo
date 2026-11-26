@@ -178,6 +178,8 @@ export async function runClientCell(
     failWith(context, execution, unready);
     return;
   }
+  if (state.attachment?.kind === "headless") await context.hooks.beforeClientRun(execution.cell);
+  if (terminalStatuses.has(execution.status)) return;
   const attachment = state.attachment;
   if (!attachment) {
     failWith(context, execution, new RealmNotAttached({ notebook: context.ref }));

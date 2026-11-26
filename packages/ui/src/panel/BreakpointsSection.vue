@@ -123,7 +123,8 @@ watch(
                   ? 'ui:rotate-45 ui:rounded-[0.0625rem]'
                   : 'ui:rounded-[50%]',
                 (breakpoint.verified || debug.state.state === 'off') &&
-                breakpoint.message === undefined
+                breakpoint.message === undefined &&
+                breakpoint.reason === undefined
                   ? 'ui:bg-(--err)'
                   : 'ui:shadow-[inset_0_0_0_0.09375rem_var(--faint)]',
               ]"
@@ -155,6 +156,13 @@ watch(
           class="ui:m-0 ui:ps-5 ui:pe-2 ui:font-mono ui:text-tiny ui:break-words ui:text-err-text"
         >
           {{ breakpoint.message }}
+        </p>
+        <p
+          v-else-if="breakpoint.reason !== undefined"
+          data-part="breakpoint-reason"
+          class="ui:m-0 ui:ps-5 ui:pe-2 ui:text-tiny ui:break-words ui:text-muted"
+        >
+          {{ breakpoint.reason }}
         </p>
         <div
           v-if="editing?.id === breakpoint.breakpointId"

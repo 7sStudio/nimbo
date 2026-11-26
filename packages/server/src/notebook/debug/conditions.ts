@@ -1,9 +1,10 @@
 // What js-debug gets for a breakpoint's condition and a logpoint: JavaScript that reads the frame's names and, failing
-// that, the cells' names from the kernel's scope record, as a cell does; a condition or a part of a log message that
-// throws counts as false or prints its error, and leaves its message once in the kernel (errorsCode reads them), never
-// a stack on each hit. A logpoint is a condition that prints through the record's console (the cell's output) and is
-// false.
-import { InvalidSyntax } from "@jsnb/core";
+// that, the cells' names from the realm's scope (the kernel's record, the page's cell scope), as a cell does; a
+// condition or a part of a log message that throws counts as false or prints its error, and leaves its message once in
+// the realm (errorsCode reads them), never a stack on each hit. A logpoint is a condition that prints through the
+// scope's console (the cell's output) and is false.
+import type { DebugRealm } from "@jsnb/core";
+import { InvalidSyntax, pageRecordKey, pageScopeKey } from "@jsnb/core";
 import { scopeKeyName } from "@jsnb/kernel-node";
 import { conditionOf } from "@jsnb/transform";
 
@@ -13,26 +14,55 @@ import type { DapConnection } from "../../kernel/debug/dap.js";
 import { dap } from "../../kernel/debug/protocol.js";
 import type { BreakpointRecord } from "./breakpoints.js";
 
-/** The record of the cells' names, as an expression evaluated in the kernel. */
-export const scopeRecord = `globalThis.process[Symbol.for(${JSON.stringify(scopeKeyName)})]`;
+/** How a realm's code reads the cells' names, as expressions evaluated in it. */
+export type Dialect = {
+  /** What a condition or an evaluation reads a name through when the frame has none of its own. */
+  readonly scope: string;
+  /** The record of the names the cells defined: the Notebook scope. */
+  readonly record: string;
+  /** Where the conditions' errors are kept. */
+  readonly holder: string;
+};
 
-const errorsKey = JSON.stringify("jsnb.kernel.breakpointErrors");
-const errors = `(globalThis.process[Symbol.for(${errorsKey})] ??= new Map())`;
+const symbolOn = (holder: string, key: string) => `${holder}[Symbol.for(${JSON.stringify(key)})]`;
+
+/** The record of the cells' names, as an expression evaluated in the kernel. */
+const kernelRecord = symbolOn("globalThis.process", scopeKeyName);
+
+/** In the page: a frame of a cell reads its own run's scope (`__scope`, the cell function's parameter, which any
+ * function of the cell that reads a cell name closes over), else the latest run's (runtime-web's debugScope.ts). */
+const pageScope = `(typeof __scope === "object" && __scope !== null ? __scope : ${symbolOn("globalThis", pageScopeKey)})`;
+
+export const dialects: Readonly<Record<DebugRealm, Dialect>> = {
+  server: { scope: kernelRecord, record: kernelRecord, holder: "globalThis.process" },
+  client: { scope: pageScope, record: symbolOn("globalThis", pageRecordKey), holder: "globalThis" },
+};
+
+const errorsKey = "jsnb.kernel.breakpointErrors";
+const errorsOf = (dialect: Dialect) => `(${symbolOn(dialect.holder, errorsKey)} ??= new Map())`;
 
 /** Keeps the first error of breakpoint `id`, in the catch block of the code around a condition. */
-const keep = (id: string): string => {
+const keep = (dialect: Dialect, id: string): string => {
   const key = JSON.stringify(id);
+  const errors = errorsOf(dialect);
   return `${errors}.has(${key}) || ${errors}.set(${key}, String(error && error.message || error));`;
 };
 
 /** Reads and clears the kept errors, as one JSON object by breakpoint id. */
-const errorsCode = `(() => { const kept = globalThis.process[Symbol.for(${errorsKey})]; if (!kept) return "{}"; const out = JSON.stringify(Object.fromEntries(kept)); kept.clear(); return out; })()`;
+const errorsCode = (dialect: Dialect) =>
+  `(() => { const kept = ${symbolOn(dialect.holder, errorsKey)}; if (!kept) return "{}"; const out = JSON.stringify(Object.fromEntries(kept)); kept.clear(); return out; })()`;
 
 const ErrorsAnswer = z.record(z.string(), z.string());
 
-/** The first error each condition or logpoint kept in the kernel since the last read, by breakpoint id. */
-export async function keptErrors(child: DapConnection): Promise<Record<string, string>> {
-  const answer = await dap.evaluate(child, { expression: errorsCode, context: "clipboard" });
+/** The first error each condition or logpoint kept in the realm since the last read, by breakpoint id. */
+export async function keptErrors(
+  child: DapConnection,
+  dialect: Dialect,
+): Promise<Record<string, string>> {
+  const answer = await dap.evaluate(child, {
+    expression: errorsCode(dialect),
+    context: "clipboard",
+  });
   // js-debug answers a string for the clipboard as its JSON form
   const text: unknown = JSON.parse(answer.result);
   const kept = ErrorsAnswer.safeParse(typeof text === "string" ? JSON.parse(text) : text);
@@ -109,11 +139,11 @@ function partsOf(message: string) {
 
 type Translated = { readonly condition?: string; readonly message?: string };
 
-function conditionCode(id: string, condition: string): Translated {
+function conditionCode(dialect: Dialect, id: string, condition: string): Translated {
   try {
-    const js = conditionOf(condition, scopeRecord);
+    const js = conditionOf(condition, dialect.scope);
     return {
-      condition: `(() => { try { return Boolean(${js}); } catch (error) { ${keep(id)} return false; } })()`,
+      condition: `(() => { try { return Boolean(${js}); } catch (error) { ${keep(dialect, id)} return false; } })()`,
     };
   } catch (error) {
     const message = syntaxMessage(error);
@@ -122,13 +152,13 @@ function conditionCode(id: string, condition: string): Translated {
   }
 }
 
-function logpointCode(id: string, logMessage: string): Translated {
+function logpointCode(dialect: Dialect, id: string, logMessage: string): Translated {
   const { text, expressions, unclosed } = partsOf(logMessage);
   let message = unclosed ? "A { in the log message has no }." : undefined;
   const values = expressions.map((expression) => {
     try {
-      const js = conditionOf(expression, scopeRecord);
-      return `(() => { try { return ${js}; } catch (error) { ${keep(id)} return "<" + (error && error.message || error) + ">"; } })()`;
+      const js = conditionOf(expression, dialect.scope);
+      return `(() => { try { return ${js}; } catch (error) { ${keep(dialect, id)} return "<" + (error && error.message || error) + ">"; } })()`;
     } catch (error) {
       const syntax = syntaxMessage(error);
       if (syntax === undefined) throw error;
@@ -137,7 +167,7 @@ function logpointCode(id: string, logMessage: string): Translated {
     }
   });
   const format = text.map((part) => part.replaceAll("%", "%%")).join("%s");
-  const print = `${scopeRecord}.console.log(${[JSON.stringify(format), ...values].join(", ")})`;
+  const print = `${dialect.scope}.console.log(${[JSON.stringify(format), ...values].join(", ")})`;
   return {
     condition: `(() => { ${print}; return false; })()`,
     ...(message === undefined ? {} : { message }),
@@ -145,10 +175,10 @@ function logpointCode(id: string, logMessage: string): Translated {
 }
 
 /** The condition js-debug gets for `breakpoint` (none for a plain one) and the message of one that does not parse. */
-export function translated(breakpoint: BreakpointRecord): Translated {
+export function translated(breakpoint: BreakpointRecord, dialect: Dialect): Translated {
   if (breakpoint.logMessage !== undefined)
-    return logpointCode(breakpoint.breakpointId, breakpoint.logMessage);
+    return logpointCode(dialect, breakpoint.breakpointId, breakpoint.logMessage);
   if (breakpoint.condition !== undefined)
-    return conditionCode(breakpoint.breakpointId, breakpoint.condition);
+    return conditionCode(dialect, breakpoint.breakpointId, breakpoint.condition);
   return {};
 }

@@ -30,8 +30,8 @@ export function debugHandlers({ workspace }: Services): readonly Bound[] {
   const debug = async (notebook: string) => (await workspace.notebooks.require(notebook)).debug;
   const control =
     (verb: "pause" | "resume" | "stepOver" | "stepInto" | "stepOut") =>
-    async ({ notebook }: { notebook: string }) => {
-      await (await debug(notebook)).control(verb);
+    async ({ notebook, realm }: { notebook: string; realm?: "server" | "client" | undefined }) => {
+      await (await debug(notebook)).control(verb, realm);
       return {};
     };
   return [
@@ -49,15 +49,15 @@ export function debugHandlers({ workspace }: Services): readonly Bound[] {
     bind(debugStepOver, control("stepOver")),
     bind(debugStepInto, control("stepInto")),
     bind(debugStepOut, control("stepOut")),
-    bind(debugStack, async ({ notebook }) => ({ frames: (await debug(notebook)).stack() })),
-    bind(debugScope, async ({ notebook, frameId }) => ({
-      scopes: await (await debug(notebook)).scopes(frameId),
-    })),
-    bind(debugVariables, async ({ notebook, ref }) => ({
-      variables: await (await debug(notebook)).variables(ref),
-    })),
-    bind(debugEvaluate, async ({ notebook, expression, frameId }) =>
-      (await debug(notebook)).evaluate(expression, frameId),
+    bind(debugStack, async ({ notebook, realm }) => (await debug(notebook)).stack(realm)),
+    bind(debugScope, async ({ notebook, frameId, realm }) =>
+      (await debug(notebook)).scopes(frameId, realm),
+    ),
+    bind(debugVariables, async ({ notebook, ref, realm }) =>
+      (await debug(notebook)).variables(ref, realm),
+    ),
+    bind(debugEvaluate, async ({ notebook, expression, frameId, realm }) =>
+      (await debug(notebook)).evaluate(expression, frameId, realm),
     ),
   ];
 }

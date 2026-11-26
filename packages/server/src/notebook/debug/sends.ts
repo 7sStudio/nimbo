@@ -6,18 +6,25 @@ import type { CellId } from "@jsnb/core";
 import type { DapConnection } from "../../kernel/debug/dap.js";
 import { dap } from "../../kernel/debug/protocol.js";
 import type { BreakpointRecord, Breakpoints } from "./breakpoints.js";
+import type { Dialect } from "./conditions.js";
 import { translated } from "./conditions.js";
 
 export type CellBreakpoints = {
   readonly path: string;
   readonly cell: CellId;
-  /** What js-debug should hold for the cell: none for a client cell (its are `debugger;` statements). */
+  /** The cell runs in this js-debug's realm: its breakpoints are this session's to bind. */
+  readonly owns: boolean;
+  /** What js-debug should hold for the cell: none for a cell of the other realm. */
   readonly breakpoints: readonly BreakpointRecord[];
+  readonly dialect: Dialect;
+  /** js-debug's bound line is the cell's code: false after an edit until the cell runs again, when js-debug still
+   * holds the code from before the edit and binds the new lines in it. */
+  readonly follows: boolean;
 };
 
 /** What setBreakpoints sends for `each`; a condition that does not parse leaves its message on the breakpoint. */
-function optionsOf(each: BreakpointRecord) {
-  const { condition, message } = translated(each);
+function optionsOf(each: BreakpointRecord, dialect: Dialect) {
+  const { condition, message } = translated(each, dialect);
   if (message !== undefined) each.message = message;
   return {
     line: each.line,
@@ -45,19 +52,15 @@ type Bound = {
 };
 
 /** js-debug's answer taken in, entry by entry; true when a breakpoint moved onto another's line and went. */
-function taken(
-  store: Breakpoints,
-  sent: readonly BreakpointRecord[],
-  answer: readonly Bound[],
-): boolean {
+function taken(store: Breakpoints, sent: CellBreakpoints, answer: readonly Bound[]): boolean {
   let merged = false;
   for (const [index, bound] of answer.entries()) {
-    const each = sent[index];
+    const each = sent.breakpoints[index];
     if (!each) continue;
     each.verified = bound.verified;
     if (bound.id === undefined) delete each.dapId;
     else each.dapId = bound.id;
-    if (bound.verified && bound.line !== undefined)
+    if (sent.follows && bound.verified && bound.line !== undefined)
       merged = store.bound(each, bound.line) || merged;
   }
   return merged;
@@ -69,16 +72,17 @@ export async function sendBreakpoints(
   sent: CellBreakpoints,
   held: Map<string, string>,
 ): Promise<void> {
-  const breakpoints = sent.breakpoints.map(optionsOf);
+  const breakpoints = sent.breakpoints.map((each) => optionsOf(each, sent.dialect));
   const signature = JSON.stringify(breakpoints);
   if (held.get(sent.path) === signature) return;
   const answer = await dap.setBreakpoints(child, { source: { path: sent.path }, breakpoints });
   held.set(sent.path, signature);
+  if (!sent.owns) return;
   for (const each of store.ofCell(sent.cell)) {
     if (sent.breakpoints.includes(each)) continue;
     each.verified = false;
     delete each.dapId;
   }
-  if (taken(store, sent.breakpoints, answer.breakpoints))
+  if (taken(store, sent, answer.breakpoints))
     await sendBreakpoints(child, store, { ...sent, breakpoints: store.ofCell(sent.cell) }, held);
 }

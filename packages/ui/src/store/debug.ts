@@ -1,14 +1,7 @@
 // The page's side of the debugger: the state the mirror keeps from notebook.get and the debug.* events,
 // the frame the user chose on the paused stack, the watch expressions (per notebook, in this browser), and the debug
 // commands sent through the daemon. Reads of a paused kernel (stack, scopes, variables, evaluations) go through here.
-import type {
-  CellId,
-  DebugFrame,
-  DebugPause,
-  DebugScope,
-  DebugState,
-  DebugVariable,
-} from "@jsnb/core";
+import type { CellId, DebugFrame, DebugScope, DebugState, DebugVariable } from "@jsnb/core";
 import { defineStore } from "pinia";
 import type { PauseClock } from "@jsnb/runtime-web";
 import type { ComputedRef } from "vue";
@@ -47,12 +40,12 @@ function writeWatches(notebook: string, watches: readonly string[]): void {
   }
 }
 
-/** How long the kernel was paused in the debugger: a bridge call's timeout does not count it. */
-function pauseClockOf(paused: ComputedRef<DebugPause | null>): PauseClock {
+/** How long the server kernel was paused in the debugger: a bridge call's timeout does not count it. */
+function pauseClockOf(paused: ComputedRef<boolean>): PauseClock {
   let since: number | undefined;
   let held = 0;
   watch(paused, (now) => {
-    if (now !== null) since ??= performance.now();
+    if (now) since ??= performance.now();
     else if (since !== undefined) {
       held += performance.now() - since;
       since = undefined;
@@ -107,7 +100,7 @@ export const useDebugStore = defineStore("debug", () => {
     frame: computed<DebugFrame | undefined>(
       () => frames.value.find((each) => each.frameId === chosen.value) ?? frames.value[0],
     ),
-    pauseClock: pauseClockOf(paused),
+    pauseClock: pauseClockOf(computed(() => state.value.realms.server === "paused")),
     watches,
     loadWatches: () => {
       watches.value = readWatches(notebook());

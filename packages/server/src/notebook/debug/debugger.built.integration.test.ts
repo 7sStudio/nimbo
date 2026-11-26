@@ -347,3 +347,20 @@ describe("the debugger and execution.autoRunDependents", () => {
     });
   });
 });
+
+describe("a pause the debugger has not read", () => {
+  it("is answered as the kernel's, never guessed, when no debugger is attached to show where", async () => {
+    await withDaemon(async (daemon) => {
+      await daemon.client.notebook.create({ path: notebook });
+      // a statement js-debug is not attached for: the kernel's own inspector reports the pause
+      const cell = await server(daemon, ['new Function("deb" + "ugger")();', "1"]);
+      const { execution } = await daemon.client.cell.run({ notebook, cell, timeoutMs: 20_000 });
+      expect(execution).toMatchObject({
+        status: "running",
+        paused: { realm: "server", reason: "pause" },
+      });
+      expect((await daemon.client.debug.state({ notebook })).realms.server).toBe("off");
+      await daemon.client.kernel.interrupt({ notebook });
+    });
+  });
+});

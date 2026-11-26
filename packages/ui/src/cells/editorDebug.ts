@@ -26,24 +26,30 @@ const kindOf = (each: Debug["state"]["breakpoints"][number]): GutterBreakpoint["
   return each.condition === undefined && each.hitCondition === undefined ? "plain" : "condition";
 };
 
-/** The cell's breakpoints as the gutter draws them: filled once bound, or while no debugger is attached. */
+/** The cell's breakpoints as the gutter draws them: filled once bound, or while no debugger is attached and nothing
+ * keeps it from binding; the reason it cannot bind as its tooltip. */
 const breakpointsOf = (debug: Debug, cell: CellId): GutterBreakpoint[] =>
   debug.state.breakpoints
     .filter((each) => each.cell === cell)
     .map((each) => ({
       line: each.line,
-      verified: (each.verified || debug.state.state === "off") && each.message === undefined,
+      verified:
+        (each.verified || debug.state.state === "off") &&
+        each.message === undefined &&
+        each.reason === undefined,
       kind: kindOf(each),
+      ...(each.reason === undefined ? {} : { note: each.reason }),
     }));
 
 /** The cell's line the kernel is paused on, or the chosen frame's when it is a frame of this cell. */
 function pausedLineOf(debug: Debug, cell: CellId): PausedLine {
   const paused = debug.paused;
   if (paused === null) return null;
+  // a frame in code from before its cell's last edit: no line of the text shown is the one it is on
   const frame = debug.frame;
   if (frame !== undefined && frame !== debug.frames[0])
-    return frame.cell === cell ? { line: frame.line, top: false } : null;
-  return paused.cell === cell && paused.line !== undefined
+    return frame.cell === cell && frame.stale !== true ? { line: frame.line, top: false } : null;
+  return paused.cell === cell && paused.line !== undefined && paused.stale !== true
     ? { line: paused.line, top: true }
     : null;
 }

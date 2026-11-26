@@ -1,7 +1,7 @@
 // One headless page, guarded: its top frame loads the daemon's own origin only (any other document
 // it navigates to is refused before it is fetched, and a top frame that ends up elsewhere closes the page), its frames
-// and the cells' fetches go where a tab's may; the daemon keeps the page's CDP session, which a client-cell debugger
-// would attach beside. It starts the realm through the page's entry with the token, the notebook and a one-time key
+// and the cells' fetches go where a tab's may; the daemon keeps the page's CDP session, and a client-cell debugger gets
+// a relay of its own to the page (relay.ts). It starts the realm through the page's entry with the token, the notebook and a one-time key
 // passed over the browser's pipe, never in a URL, and takes a cell container's PNG for cell.snapshot. Any navigation of
 // the top frame after its first load is aborted, so the page stays; a page that does not close when told within 3 s is
 // reported stuck, and its browser is killed.
@@ -9,6 +9,8 @@ import type { CDPSession, CookieData, Page } from "puppeteer-core";
 import { z } from "zod";
 
 import type { Log } from "../../events/log.js";
+import type { CdpRelay } from "../debug/relay.js";
+import { openPageRelay } from "./relay.js";
 
 export type PageTarget = {
   /** `http://127.0.0.1:<port>`: the only origin the page's top frame may load. */
@@ -48,6 +50,11 @@ export type GuardedPage = {
   /** Runs the page's entry: the realm connects with `token` and attaches as `notebook`'s headless realm, with `key`, the
    * one-time key that tells the daemon its own page. */
   readonly startRealm: (start: RealmStart) => Promise<void>;
+  /** A new CDP relay to this page for js-debug (relay.ts). */
+  readonly relay: () => Promise<CdpRelay>;
+  /** Ends the JavaScript the page runs now, or the next it runs: a page paused in the debugger ends what it paused in
+   * once it resumes (the page answers only then, so this does not wait for it). */
+  readonly terminate: () => void;
   /** A PNG of the cell's container, scaled down until it fits `maxBytes`; undefined when it has no box; "timeout" when
    * the page did not let itself be taken within `timeoutMs`. */
   readonly shoot: (
@@ -191,9 +198,10 @@ async function load(
 export async function guardPage(
   page: Page,
   target: PageTarget,
-  log: Log,
+  options: { readonly log: Log; readonly dir: string },
   ends: PageEnds,
 ): Promise<GuardedPage> {
+  const { log } = options;
   const closed = new AbortController();
   const ended = (): void => {
     if (closed.signal.aborted) return;
@@ -225,6 +233,12 @@ export async function guardPage(
       close,
       lost: ended,
       startRealm: (start) => startRealm(page, start),
+      relay: () => openPageRelay(page, { dir: options.dir, log }),
+      terminate: () => {
+        cdp.send("Runtime.terminateExecution").catch((error: unknown) => {
+          log.debug({ err: error }, "the headless page did not take Runtime.terminateExecution");
+        });
+      },
       shoot: (cell, limits) => shoot(page, cell, limits),
     };
   } catch (error) {

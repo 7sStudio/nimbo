@@ -4,7 +4,7 @@ import { z } from "zod";
 import { Route } from "./binding.js";
 import { Cell } from "./cell.js";
 import { ExecStatus } from "./execution.js";
-import { Breakpoint, DebugPause, DebugStatus } from "./debug.js";
+import { Breakpoint, DebugPause, DebugRealm, DebugStatus } from "./debug.js";
 import { CellId, ExecutionId } from "./ids.js";
 import { keybindingFilesSchema } from "./keybinding.js";
 import { CellDiagnostics } from "./language.js";
@@ -122,10 +122,15 @@ export const eventData = {
   "kernel.status": KernelStatus,
   "realm.status": RealmStatus,
   "debug.paused": DebugPause,
-  /** Not paused any more: `running` with the debugger still attached, `off` once it left (the kernel ended); `notice`
-   * when it left unexpectedly (js-debug exited) and the daemon resumed the kernel itself. */
+  /** `realm` is not paused any more: `running` with the debugger still attached to it, `off` once it left (the kernel
+   * ended, the headless page closed); `notice` when it left unexpectedly (js-debug exited) and the daemon resumed the
+   * kernel itself. */
   "debug.resumed": z
-    .object({ state: DebugStatus.exclude(["paused"]), notice: z.string().optional() })
+    .object({
+      realm: DebugRealm,
+      state: DebugStatus.exclude(["paused"]),
+      notice: z.string().optional(),
+    })
     .readonly(),
   "debug.breakpoints": z.object({ breakpoints: z.array(Breakpoint).readonly() }).readonly(),
   "packages.progress": z.object({ names, line: z.string(), action: packageAction }).readonly(),

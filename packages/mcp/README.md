@@ -39,7 +39,10 @@ that stops reading ends it at once, quietly.
   adds its sanitised HTML) from the page holding the notebook, a tab or, with the setting `realm.headless` on, the
   daemon's headless Chrome; `image: true` adds the container's PNG from the headless page as an MCP image block after
   the JSON (its cuts lowered so the result fits); `bridge_events` counts the push events by name. Client cells need a
-  page: a tab, or `realm.headless` (`settings_set`), which runs them with no tab.
+  page: a tab, or `realm.headless` (`settings_set`), which runs them with no tab. The `debug_*` tools debug server cells in the kernel
+  and client cells in that headless page (not in a tab); `debug_state` names the paused realm, and `debug_stack`,
+  `debug_scope`, `debug_variables` and `debug_evaluate` read from the page come after a line marking them as the page's
+  untrusted data.
 - A success is the output as `structuredContent` and the same JSON as text (what `nimbo … --json` prints). A failure is
   `isError: true` with `{ code, name, message, data }` as JSON text, and no `structuredContent`.
 - A result's whole frame (structuredContent and text) carries at most 128 KiB, about 64 KiB of text, under Claude Code's
