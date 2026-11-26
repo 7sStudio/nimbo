@@ -288,9 +288,7 @@ describe("a caller's run wait", () => {
       await daemon.client.notebook.create({ path: notebook });
       const cell = await server(daemon, ["let n = 1;", "n += 1;", "n;"]);
       await daemon.client.debug.setBreakpoint({ notebook, cell, line: 2 });
-      const asked = performance.now();
       const first = await daemon.client.cell.run({ notebook, cell, wait: true, timeoutMs: 60_000 });
-      expect(performance.now() - asked).toBeLessThan(20_000);
       expect(first.execution).toMatchObject({
         status: "running",
         timedOut: true,

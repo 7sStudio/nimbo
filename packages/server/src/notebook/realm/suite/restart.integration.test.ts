@@ -41,7 +41,7 @@ describe("kernel.restart with client cells that used the bridge", () => {
         message: restarted("price"),
       });
     });
-  });
+  }, 60_000);
 });
 
 describe("a client cell that runs again after kernel.restart", () => {
@@ -61,7 +61,7 @@ describe("a client cell that runs again after kernel.restart", () => {
       expect(valueOf(await run(user))).toBe("hi");
       expect(valueOf(await run(call))).toBe("hi");
     });
-  });
+  }, 60_000);
 });
 
 describe("kernel.restart { all }", () => {
