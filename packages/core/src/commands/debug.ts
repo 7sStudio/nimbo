@@ -1,4 +1,4 @@
-// The debug commands of 03-api §4.9: breakpoints, a realm (the server kernel, or the client cells' headless page)
+// The debug commands: breakpoints, a realm (the server kernel, or the client cells' headless page)
 // paused, stepped and resumed, the stack, scopes, variables and evaluations of the paused realm, over the daemon's
 // debugger (js-debug).
 import { z } from "zod";

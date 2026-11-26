@@ -1,4 +1,4 @@
-// Where a debugger attached to the page finds the cells' names (03-api §4.9): a paused frame that does not close over
+// Where a debugger attached to the page finds the cells' names: a paused frame that does not close over
 // the cell's scope, a breakpoint's condition and an evaluation with nothing paused read them through these getters on
 // `globalThis`, which no code can redefine or delete; the latest realm and run of the page are the ones they answer.
 import { pageRecordKey, pageScopeKey } from "@jsnb/core";

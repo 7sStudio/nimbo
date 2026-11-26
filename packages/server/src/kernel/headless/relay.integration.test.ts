@@ -1,4 +1,4 @@
-// The headless page's CDP relay for js-debug against the system's real Chrome (02-architecture §8): a Unix socket in a
+// The headless page's CDP relay for js-debug against the system's real Chrome: a Unix socket in a
 // new 0700 folder, at a secret path; a wrong path is refused, the first connection is the only one (the folder goes with
 // it), the page's Runtime answers and the browser's methods and other domains are refused. Skipped, with the reason in
 // its name, on a machine with no Chrome, Chromium or Edge.

@@ -1,4 +1,4 @@
-// One notebook's debugger (03-api §4.9): its breakpoints, and js-debug on each realm: on the kernel from the first debug
+// One notebook's debugger: its breakpoints, and js-debug on each realm: on the kernel from the first debug
 // command (and again after each restart, before the next run), on the headless page holding the client realm before a
 // client run that may stop (breakpoints of client cells, a debug command used, a `debugger` in the cell). Each realm
 // pauses on its own; the commands act on the latest pause, or the realm they name. Every string they answer goes

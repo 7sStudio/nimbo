@@ -1,4 +1,4 @@
-// The headless page's CDP relay for js-debug (02-architecture §8): a WebSocket on a Unix socket in a new 0700 folder
+// The headless page's CDP relay for js-debug: a WebSocket on a Unix socket in a new 0700 folder
 // (under `.jsnb/headless/` when the socket's path fits, else where js-debug's own goes), at a random path, that takes one
 // connection and then listens no more (the socket file goes with the folder), so only the js-debug given the address
 // reaches it. That connection is one new CDP session on the one page, never the browser's, and carries only what a

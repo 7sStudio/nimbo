@@ -1,4 +1,4 @@
-// The debugger's state of 03-api §4.9: breakpoints on cells' lines, where a paused realm (the server kernel or the
+// The debugger's state: breakpoints on cells' lines, where a paused realm (the server kernel or the
 // headless page) stopped, a frame's scopes and their variables, as the `debug.*` commands and events carry them.
 import { z } from "zod";
 
