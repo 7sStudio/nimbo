@@ -1,4 +1,4 @@
-// Tests the bridge error messages of 05-bridge §7 against the catalogue, word for word.
+// Tests the bridge error messages against the catalogue, word for word.
 import { describe, expect, it } from "vitest";
 
 import {

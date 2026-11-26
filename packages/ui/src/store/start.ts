@@ -1,7 +1,7 @@
 // The page's start, in the order the stores need: the socket to the daemon the page came from, the
 // session over it, the notebook's mirror, then the workspace and the settings. The client realm is mounted after it by
 // main.ts (realm/ reads the stores, the stores never import realm/). The output tab starts the same session without a
-// realm, so a tab that only shows a value never takes the notebook's page (03-api §4.5).
+// realm, so a tab that only shows a value never takes the notebook's page.
 import { isJsnbError } from "@jsnb/core";
 
 import type { PageAddress } from "./address.js";

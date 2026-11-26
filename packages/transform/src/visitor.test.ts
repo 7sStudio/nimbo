@@ -1,4 +1,4 @@
-// The any-depth rules of 04 §3.2 (9 to 12, dynamic import, nested var) on the generated text.
+// The any-depth rules (scoped references, calls, shorthand, typeof, dynamic import, nested var) on the generated text.
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { analyze, transform } from "./index.js";
@@ -15,7 +15,7 @@ beforeAll(() => {
   transform("1", { filename });
 });
 
-describe("free identifiers (rule 9)", () => {
+describe("free identifiers", () => {
   it("rewrites reads and every kind of write onto __scope", () => {
     const out = code("x = y\nx++\nx += 1;\n[x] = e;\n({ x } = e);\nfor (x of e) {}");
     expect(out).toContain("__scope.x = __scope.y;");
@@ -47,7 +47,7 @@ describe("free identifiers (rule 9)", () => {
   });
 });
 
-describe("declared names (rule 9)", () => {
+describe("declared names", () => {
   it("leaves names declared below top level alone, at any depth", () => {
     const out = code(
       "function f(p) { let l = p; for (const i of [l]) { class K { m() { return i } } } try {} catch (e) { return e } return l }",
@@ -67,7 +67,7 @@ describe("declared names (rule 9)", () => {
   });
 });
 
-describe("calls (rule 10)", () => {
+describe("calls", () => {
   it("calls a scoped function through (0, __scope.f) so this is undefined", () => {
     expect(code("f(a)\nfetch(url)\n0")).toContain(
       "(0, __scope.f)(__scope.a);\n    (0, __scope.fetch)(__scope.url);",
@@ -92,7 +92,7 @@ describe("calls (rule 10)", () => {
   });
 });
 
-describe("shorthand properties (rule 11)", () => {
+describe("shorthand properties", () => {
   it("expands a scoped shorthand read and leaves a local one", () => {
     expect(code("const o = { x, y }\nfunction f(l) { return { l } }")).toContain(
       "__scope.o = { x: __scope.x, y: __scope.y };",
@@ -107,7 +107,7 @@ describe("shorthand properties (rule 11)", () => {
   });
 });
 
-describe("typeof (rule 12)", () => {
+describe("typeof", () => {
   it("peeks a scoped name so an unknown name does not throw", () => {
     expect(code("typeof x\nconst d = 1\ntypeof d")).toContain(
       'typeof __scope.$peek("x");\n    __scope.d = 1;\n    return (typeof __scope.$peek("d"));',
@@ -120,7 +120,7 @@ describe("typeof (rule 12)", () => {
   });
 });
 
-describe("nested var (rule 5)", () => {
+describe("nested var", () => {
   it("assigns var in a top-level block, if, for, for-in and for-of onto __scope", () => {
     const out = code(
       "{ var a = 1, b }\nif (c) var d = 2\nfor (var i = 0; i < 2; i++) {}\nfor (var k in o) {}\nfor (var v of o) {}\nfor (var [p, q] of o) {}",

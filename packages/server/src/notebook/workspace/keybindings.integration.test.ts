@@ -1,4 +1,4 @@
-// Keybindings through the daemon (03-api §4.11, 07-file-format §6): keybindings.set writes VS Code's pairs into the
+// Keybindings through the daemon: keybindings.set writes VS Code's pairs into the
 // user's file (the default) or the workspace's with the comments kept, list shows the result and its conflicts, reset
 // takes a file's rules away, a hand edit applies live as keybindings.changed, and the page's JSON view is refused text
 // it cannot read.

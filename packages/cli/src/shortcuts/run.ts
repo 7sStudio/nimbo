@@ -1,5 +1,5 @@
 // `nimbo run <cell...>` (cell.run for each, waiting, in order) and `nimbo run --all | --above <cell> | --deps <cell> |
-// --stale` (notebook.run with that selection) (03-api §8, §4.2); exit 1 when a run ended in error,
+// --stale` (notebook.run with that selection); exit 1 when a run ended in error,
 // a dependent execution.autoRunDependents ran included.
 import type { AutoRunReport, Execution, Selection } from "@jsnb/core";
 import { cellRun, notebookRun } from "@jsnb/core";

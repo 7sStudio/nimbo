@@ -1,4 +1,4 @@
-// The keys of a keybinding (03-api §4.11, 07-file-format §6): keybindings.json writes VS Code's words (`cmd+shift+p`,
+// The keys of a keybinding: keybindings.json writes VS Code's words (`cmd+shift+p`,
 // `ctrl+k ctrl+s`, `escape`, `up`); the page and core work on canonical keys ("Mod+Shift+P", "Mod+K Mod+S", "Escape",
 // "ArrowUp"), where Mod is Cmd on macOS and Ctrl elsewhere and Ctrl is the Control key on macOS. A chord's two keys are
 // apart.

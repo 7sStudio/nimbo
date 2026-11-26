@@ -1,4 +1,4 @@
-// Rebuilds a server error for a client cell from its ErrorInfo (05-bridge §4.2, §7): name, message, data and the stack.
+// Rebuilds a server error for a client cell from its ErrorInfo: name, message, data and the stack.
 import type { ErrorInfo } from "@jsnb/core";
 import { ErrorInfo as ErrorInfoSchema, JsnbError, apiErrorCodes } from "@jsnb/core";
 import { z } from "zod";
@@ -9,7 +9,7 @@ const BridgeCallFailure = z.object({
   data: z.object({ error: ErrorInfoSchema }),
 });
 
-/** The server's ErrorInfo of each error rebuilt here, so a client cell's error can show the server stack (§4.2). */
+/** The server's ErrorInfo of each error rebuilt here, so a client cell's error can show the server stack. */
 const rebuilt = new WeakMap<object, ErrorInfo>();
 
 /** A JsnbError with the server's name and message, so `catch (e)` works; `cause` keeps the server stack. */

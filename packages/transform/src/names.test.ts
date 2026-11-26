@@ -1,4 +1,4 @@
-// Function and class names (04 §3.2): a cell's functions and classes are named as the same code run as
+// Function and class names: a cell's functions and classes are named as the same code run as
 // plain JavaScript names them. The oracle is the source itself, transpiled and run unchanged; the transformed cell runs
 // over a plain scope object, and every declared name's `.name` must match.
 import fc from "fast-check";

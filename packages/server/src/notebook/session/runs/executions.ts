@@ -1,4 +1,4 @@
-// One run's record (03-api §5 Execution) as it moves through 02-architecture §5: created queued (the cell's previous
+// One run's record (an Execution) through the run's life: created queued (the cell's previous
 // run's retained values dropped), every status transition a cell.status event, every output a cell.output event and,
 // for a value, its full form retained; the terminal status with its duration and error. The cell's events follow its
 // latest run: an earlier run of a cell run again goes on and answers its own waiter, without events.
@@ -9,7 +9,7 @@ import type { ExecutionRecord } from "../records.js";
 import { terminalStatuses } from "../records.js";
 import { savesOutputs } from "../fileForm.js";
 
-/** An execution id no cell of the notebook uses (09-testing §1.4: from the injected generator). */
+/** An execution id no cell of the notebook uses (from the injected generator). */
 function freshId(context: SessionContext): ExecutionId {
   const used = new Set(
     context.cells.list().flatMap((record) => (record.last ? [record.last.id] : [])),
@@ -87,7 +87,6 @@ export function finish(context: SessionContext, execution: ExecutionRecord, endi
   if (ending.error) execution.error = ending.error;
   setStatus(context, execution, ending.status);
   // a finished run is a change of the file when the file keeps outputs, or holds some the policy now leaves out
-  // (07-file-format §2)
   const outputsInFile = savesOutputs(context.settings(), context.header) || context.header.outputs;
   if (isLatest(context, execution) && outputsInFile) context.autosave.touched();
 }

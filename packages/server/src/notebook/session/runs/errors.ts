@@ -1,4 +1,4 @@
-// The ErrorInfo of a run that failed on the daemon's side of 02-architecture §5 (a transform error, a missing package,
+// The ErrorInfo of a run that failed on the daemon's side (a transform error, a missing package,
 // a kernel that would not start): the error's name, message and data, a frame at the cell's line when the error names
 // one (a syntax error) with an excerpt of the source there, a caret under the column (`data.excerpt`),
 // and `raw` as the user reads it, not the daemon's own stack.

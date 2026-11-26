@@ -1,4 +1,4 @@
-// `--format csv` (03-api §8): RFC 4180 lines with CRLF and a header row. A table, for export, is a SQL answer (its
+// `--format csv`: RFC 4180 lines with CRLF and a header row. A table, for export, is a SQL answer (its
 // columns, the header even with no rows), or a value that is a non-empty array of records (the columns the union of
 // their keys, in first-seen order) or of arrays of one length (columns 0 … n-1); one row is a table. The viewer's
 // display rule (two rows, 60 % of keys shared) chooses a grid to show, not what may be exported. Text a spreadsheet

@@ -1,4 +1,4 @@
-<!-- The line under the grid (gallery card 2), only when the grid shows part of the rows: how many show, and "Load
+<!-- The line under the grid, only when the grid shows part of the rows: how many show, and "Load
 next 2,000" where the kernel cut them and the host can load more. The full count is in the head. -->
 <script setup lang="ts">
 import { computed } from "vue";

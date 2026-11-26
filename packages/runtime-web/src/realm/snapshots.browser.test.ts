@@ -1,4 +1,4 @@
-// Tests value snapshots, error bindings and a kernel restart through runs (05-bridge §2, §7, §8).
+// Tests value snapshots, error bindings and a kernel restart through runs.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { World } from "../fixtures/world.js";

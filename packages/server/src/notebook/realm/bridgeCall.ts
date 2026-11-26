@@ -1,4 +1,4 @@
-// bridge.call of 05-bridge §4 (03-api §4.5): only a current server export is callable; the kernel runs it under the
+// bridge.call: only a current server export is callable; the kernel runs it under the
 // defining cell, with bridge.rpcTimeoutMs; the answer is `{ result, redacted }` (the kernel's redaction flag). A throw,
 // a name that is no current export (as a client run's resolution says: ExportNotRun, KernelRestarted, NotExported) and
 // a timeout (RpcTimeout) are BRIDGE_CALL_FAILED with the ErrorInfo. Calls are not queued behind the runs, so a call

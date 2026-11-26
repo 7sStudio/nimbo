@@ -1,4 +1,4 @@
-// What the command handlers act on (02-architecture §4.1: validate, act on the session, emit): the workspace and its
+// What the command handlers act on (validate, act on the session, emit): the workspace and its
 // notebooks, the event stream, the feedback notes and the daemon's own stop.
 import type { EventOf } from "@jsnb/core";
 

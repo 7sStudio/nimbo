@@ -1,4 +1,4 @@
-// A run's timers (04-kernel §7): setTimeout, setInterval and requestAnimationFrame whose handles are disposed with it.
+// A run's timers: setTimeout, setInterval and requestAnimationFrame whose handles are disposed with it.
 import type { Disposers } from "./disposers.js";
 import type { Callable } from "./guard.js";
 import { guard, isCallable } from "./guard.js";
@@ -30,7 +30,7 @@ type Kind = {
 const notScheduled = 0;
 
 /**
- * A function callback is guarded (04-kernel §5.3); a string handler (an eval) passes through as the page would take
+ * A function callback is guarded; a string handler (an eval) passes through as the page would take
  * it. The real handle is returned, so the real `clearTimeout` (reached through `window`) still works.
  */
 function scheduler(kind: Kind, disposers: Disposers, onError: (error: unknown) => void) {

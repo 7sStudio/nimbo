@@ -1,4 +1,4 @@
-// The kernel's pre-flight error of 04-kernel §4: a cell imports packages the workspace does not have.
+// The kernel's pre-flight error: a cell imports packages the workspace does not have.
 import { JsnbError } from "./jsnbError.js";
 
 type Names = { readonly names: readonly string[] };

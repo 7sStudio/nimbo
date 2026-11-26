@@ -1,4 +1,4 @@
-// The notebook commands of 03-api §4.2 (notebook.run joins with the runs): create, open, get, save, reload, close,
+// The notebook commands (notebook.run joins with the runs): create, open, get, save, reload, close,
 // errors and graph, each on the workspace's open notebooks.
 import {
   notebookClose,

@@ -1,4 +1,4 @@
-// What a NodeKernel knows about its child (04-kernel §2.1, §6): the fork, the started session, the death, the export
+// What a NodeKernel knows about its child: the fork, the started session, the death, the export
 // and route tables, the sends held back while an interrupt is pending (interrupting.ts sends the interrupts); the
 // kernel's messages routed to executions, requests and callbacks; the exit failing them all.
 import type { ExecutionId, Route } from "@jsnb/core";
@@ -49,7 +49,7 @@ export type QueuedInterrupts = {
 };
 
 /**
- * The kernel log's redaction, which the package root composes (04-kernel §10): `chunk` before each chunk the child
+ * The kernel log's redaction, which the package root composes: `chunk` before each chunk the child
  * writes to a pipe and `refresh` when an `execute` leaves for the kernel (the redactor may rebuild from .env, and gives
  * back a notice for the log when it could not), `line` on every line handed to onLog.
  */

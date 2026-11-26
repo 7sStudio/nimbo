@@ -1,4 +1,4 @@
-// What a dead kernel answers (02-architecture §7, 04-kernel §6): a kernel killed from outside stays dead
+// What a dead kernel answers: a kernel killed from outside stays dead
 // through reads. cell.bindings and kernel.scope answer KERNEL_DEAD with its signal, bridge.call of an export of the
 // kernel that died is BRIDGE_CALL_FAILED with KernelRestarted (its exports went with it; run the cell again),
 // kernel.routes is empty and kernel.status says dead, none of them starting a kernel; the next run starts a fresh one.

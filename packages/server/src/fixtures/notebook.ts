@@ -1,5 +1,5 @@
-// A notebook in a test daemon (03-api §4.2, §4.3): created, with cells added and run through the daemon's client, the
-// decoded value of a run, and waits on a run's status through the event recorder (09-testing §1: no sleeps).
+// A notebook in a test daemon: created, with cells added and run through the daemon's client, the
+// decoded value of a run, and waits on a run's status through the event recorder (no sleeps).
 import type { CellType, ExecStatus, Execution } from "@jsnb/core";
 import { decode } from "@jsnb/core";
 import type { Daemon } from "./daemon.js";

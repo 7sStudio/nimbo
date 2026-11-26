@@ -1,4 +1,4 @@
-// Saved outputs, compare and export through a real daemon (07-file-format §2 and §9, 03-api cell.compare and
+// Saved outputs, compare and export through a real daemon (cell.compare and
 // notebook.export): outputs.save writes each cell's last finished run into the file, redacted, and a reopened notebook
 // shows it as a restored run that the next run is compared with; `never` writes none; an export lands inside the
 // workspace and never outside it.

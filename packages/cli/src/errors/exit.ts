@@ -1,8 +1,8 @@
-// The exit codes of 03-api §8 and the code each failure ends the command with.
+// The exit codes and the code each failure ends the command with.
 import { ApiError, isJsnbError } from "@jsnb/core";
 
 /**
- * 0 ok; 1 a run ended in error; 2 usage or INVALID_PARAMS; 3 no daemon reachable; 4 any other API error (03-api §8);
+ * 0 ok; 1 a run ended in error; 2 usage or INVALID_PARAMS; 3 no daemon reachable; 4 any other API error;
  * 130 a Ctrl-C the CLI read itself (at a raw-mode prompt), the code a shell gives SIGINT.
  */
 export const exitCodes = {

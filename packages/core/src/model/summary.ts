@@ -1,4 +1,4 @@
-// NotebookSummary of 03-api §4.2: what notebook.summary reads of a notebook without opening it, for Home's search and
+// NotebookSummary: what notebook.summary reads of a notebook without opening it, for Home's search and
 // preview. Every field is derived from the cells' text and meta, never from running them.
 import { z } from "zod";
 
@@ -35,7 +35,7 @@ export const CellSummary = z
   .readonly();
 export type CellSummary = z.infer<typeof CellSummary>;
 
-/** The last result an open notebook's session holds (a notebook file holds no outputs, 07-file-format §3): the cell
+/** The last result an open notebook's session holds (a notebook file holds no outputs): the cell
  * whose run ended last with an output, when, and a few lines of it. */
 export const LastResult = z
   .object({

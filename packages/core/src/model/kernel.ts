@@ -1,4 +1,4 @@
-// The Kernel interface of 04-kernel §11 and the shapes of its messages (04-kernel §2.1), shared by both realms.
+// The Kernel interface and the shapes of its messages, shared by both realms.
 import { z } from "zod";
 
 import type { Binding, BindingValue } from "./binding.js";
@@ -15,7 +15,7 @@ export const ExecuteRequest = z
     code: z.string(),
     map: z.string(),
     bindings: z.record(z.string(), SnapshotBinding).optional(),
-    /** The run's `analysis.defines`, so the kernel reports `Binding.definedBy` exactly (04-kernel §5.2). */
+    /** The run's `analysis.defines`, so the kernel reports `Binding.definedBy` exactly. */
     defines: z.array(z.string()).readonly().optional(),
     /** The run's `analysis.kinds`, so the kernel reports `Binding.kind` (the kernel has no analyser). */
     kinds: z.record(z.string(), BindingKind).optional(),
@@ -23,7 +23,7 @@ export const ExecuteRequest = z
   .readonly();
 export type ExecuteRequest = z.infer<typeof ExecuteRequest>;
 
-/** The uncapped wire form of a truncated `value` output, for the daemon to retain (03-api §7.5). */
+/** The uncapped wire form of a truncated `value` output, for the daemon to retain. */
 export const FullValue = z.object({ json: z.unknown(), truncated: z.boolean() }).readonly();
 export type FullValue = z.infer<typeof FullValue>;
 
@@ -70,20 +70,20 @@ export const RouteResponse = z
   .readonly();
 export type RouteResponse = z.infer<typeof RouteResponse>;
 
-/** A bridge call's result: the wire form of the value and whether redaction changed it (04-kernel §10). */
+/** A bridge call's result: the wire form of the value and whether redaction changed it. */
 export const CallResult = z.object({ value: z.unknown(), redacted: z.boolean() }).readonly();
 export type CallResult = z.infer<typeof CallResult>;
 
 export type BindingsOptions = { readonly names?: readonly string[]; readonly full?: boolean };
 
-/** `bindings()` lists the scope (all names, or `names`); with `full: true` each binding carries its value (04-kernel §5.2). */
+/** `bindings()` lists the scope (all names, or `names`); with `full: true` each binding carries its value. */
 export type BindingsQuery = {
   (options: BindingsOptions & { readonly full: true }): Promise<readonly BindingValue[]>;
   (options?: BindingsOptions): Promise<readonly Binding[]>;
 };
 
 /**
- * A context Node enters from JavaScript (04-kernel §6): a timer's or an immediate's callback, process.nextTick's
+ * A context Node enters from JavaScript: a timer's or an immediate's callback, process.nextTick's
  * TickObject, an AsyncResource scope, a promise job under an async hook. An interrupt does not stop user code there.
  */
 export const InterruptContext = z.enum([
@@ -102,10 +102,10 @@ export type Kernel = {
   readonly snapshot: (names: readonly string[]) => Promise<Record<string, SnapshotBinding>>;
   readonly bindings: BindingsQuery;
   readonly handleRoute: (req: RouteRequest) => Promise<RouteResponse>;
-  /** Runs the disposers of a deleted cell (04-kernel §7): its routes, timers and listeners end; its scope stays. */
+  /** Runs the disposers of a deleted cell: its routes, timers and listeners end; its scope stays. */
   readonly dispose: (cell: CellId) => Promise<void>;
   /**
-   * Stops the user code that runs (04-kernel §6). A Node kernel rejects with InterruptRefused when that code runs in
+   * Stops the user code that runs. A Node kernel rejects with InterruptRefused when that code runs in
    * an InterruptContext, where stopping it would end the kernel: it keeps running until a restart.
    */
   readonly interrupt: () => Promise<void>;

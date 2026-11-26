@@ -1,4 +1,4 @@
-// Tests an interrupt in each async context through the real child (04-kernel §6). In a context Node entered from
+// Tests an interrupt in each async context through the real child. In a context Node entered from
 // JavaScript (a raw setImmediate, setTimeout or process.nextTick callback, a cell spinning inside runInAsyncScope, a raw
 // queueMicrotask callback, a cell spinning under promise hooks) the hook terminates nothing and interrupt() rejects
 // InterruptRefused naming the context and the cell; the kernel lives, the code returns once the test writes a flag

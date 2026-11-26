@@ -1,4 +1,4 @@
-// Pins on the real JSONPath engine (11-query §4): ⌘↩ runs and pins, Esc unpins and closes, a pin saved in
+// Pins on the real JSONPath engine: ⌘↩ runs and pins, Esc unpins and closes, a pin saved in
 // meta.outputQuery runs again when the viewer mounts, and a readonly viewer keeps its pin to itself.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 

@@ -1,5 +1,5 @@
-<!-- A grid column's header (gallery card 2): the label sorts on click (asc, desc, off) and the filter popover narrows
-the rows (its funnel shows on hover, focus, or while a filter is on), or adds a chip to the query bar when Filter mode is there (11-query §4).
+<!-- A grid column's header: the label sorts on click (asc, desc, off) and the filter popover narrows
+the rows (its funnel shows on hover, focus, or while a filter is on), or adds a chip to the query bar when Filter mode is there.
 Right-click opens the column menu (sort, hide, move, show all, as a JetBrains data grid's); dragging a header onto
 another moves the column there. -->
 <script setup lang="ts">

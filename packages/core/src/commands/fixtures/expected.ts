@@ -1,4 +1,4 @@
-// Every command name of 03-api §4 in document order, as registry.test.ts holds the registry to it.
+// Every command name in registry order, as registry.test.ts holds the registry to it.
 export const expected: readonly string[] = [
   "workspace.info",
   "workspace.stop",

@@ -1,4 +1,4 @@
-// Opens a socket so that its events always find the handle (03-api §7.2): an OpenSocket may report open, message or
+// Opens a socket so that its events always find the handle: an OpenSocket may report open, message or
 // close before it returns, so those early events are held and delivered once the connection has taken the handle.
 import type { OpenSocket, SocketLike } from "./socketLike.js";
 

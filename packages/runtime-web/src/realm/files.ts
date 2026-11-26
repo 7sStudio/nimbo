@@ -1,4 +1,4 @@
-// The cells' virtual filenames (the `sourceURL`, 04-kernel §9) → cell and source map, for frames and late errors.
+// The cells' virtual filenames (the `sourceURL`) → cell and source map, for frames and late errors.
 import { TraceMap } from "@jridgewell/trace-mapping";
 
 export type CellFile = { readonly cell: string; readonly tracer: () => TraceMap | undefined };

@@ -1,4 +1,4 @@
-// A STUB of the npm registry, named as one (09-testing §1.3, §8): the real registry is an external service no
+// A STUB of the npm registry, named as one: the real registry is an external service no
 // test can produce on demand, so a local HTTP server answers what an install asks for (a packument per package and its
 // tarball), and the real package manager runs against it through the workspace's .npmrc (registry, its own cache, no
 // audit, no fund, no update check), so nothing is fetched from the network or written to the user's home. It can hold

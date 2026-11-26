@@ -1,4 +1,4 @@
-// The notebooks of a workspace as workspace.info and the notebooks.changed event give them (03-api §4.1, §6).
+// The notebooks of a workspace as workspace.info and the notebooks.changed event give them.
 import { z } from "zod";
 
 /**

@@ -1,4 +1,4 @@
-// The DOM snapshot of a container (04-kernel §5.5): the `dom` output after a run and the answer to realm.snapshot.
+// The DOM snapshot of a container: the `dom` output after a run and the answer to realm.snapshot.
 
 export type DomSnapshot = { readonly html: string; readonly text: string };
 

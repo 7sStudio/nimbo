@@ -1,4 +1,4 @@
-// The compile step of 04-kernel §4 step 3: once per cell and code, vm.runInThisContext under the cell's URL (the
+// The compile step: once per cell and code, vm.runInThisContext under the cell's URL (the
 // map's file), keeping the cell's SourceMap so error frames map back to the TypeScript source.
 import { SourceMap } from "node:module";
 import vm from "node:vm";
@@ -19,13 +19,13 @@ export type Compiler = {
   readonly compile: (cell: CellId, code: string, map: string) => Compiled;
   /** The source map of the latest code compiled for `cell`. */
   readonly mapFor: (cell: string) => SourceMap | undefined;
-  /** The cell compiled under `url`, the exact filename its code runs under (04-kernel §4 step 3). */
+  /** The cell compiled under `url`, the exact filename its code runs under. */
   readonly cellOf: (url: string) => CellId | undefined;
   /** Every cell URL compiled so far; a new array whenever one is added. */
   readonly cellUrls: () => readonly string[];
 };
 
-/** The v3 map the transform emits (04-kernel §9): the cell URL as `file` and source, the TypeScript inside. */
+/** The v3 map the transform emits: the cell URL as `file` and source, the TypeScript inside. */
 const MapPayload = z.object({
   version: z.number(),
   file: z.string().optional(),
@@ -37,7 +37,7 @@ const MapPayload = z.object({
 
 const isCellFunction = (value: unknown): value is CellFunction => typeof value === "function";
 
-/** Captured when the module loads: a cell that replaces JSON.parse cannot stop later cells compiling (§3.3). */
+/** Captured when the module loads: a cell that replaces JSON.parse cannot stop later cells compiling. */
 const parse = JSON.parse.bind(JSON);
 
 type Built = { readonly fn: CellFunction; readonly map: SourceMap; readonly url: string };

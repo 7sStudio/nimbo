@@ -1,5 +1,5 @@
-// The cells of an open notebook in order, with the dependency graph and the stale flags over them (00-overview §4.2,
-// 05-bridge §5): adds, moves and removals by id, the graph rebuilt from the analyses, staleness through core's rules.
+// The cells of an open notebook in order, with the dependency graph and the stale flags over them:
+// adds, moves and removals by id, the graph rebuilt from the analyses, staleness through core's rules.
 import type { CellId, Graph, GraphInput, StaleMap } from "@jsnb/core";
 import { buildGraph, CellNotFound, Conflict } from "@jsnb/core";
 

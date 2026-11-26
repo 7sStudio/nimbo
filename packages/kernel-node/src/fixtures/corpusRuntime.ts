@@ -1,4 +1,4 @@
-// Cases 14 to 17 of the 04-kernel §12 corpus for the real child, as far as they are cell sequences: thrown and rejected
+// Cases 14 to 17 corpus for the real child, as far as they are cell sequences: thrown and rejected
 // cells, a cell name shadowing the env built-in (for cells, not for workspace modules), nested var and for-const, and
 // an error on line 5 reported on line 5. The route that throws later and `debugger;` have their own tests.
 import type { CorpusCase } from "./corpus.js";

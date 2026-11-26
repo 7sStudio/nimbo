@@ -1,4 +1,4 @@
-// The notebook's HTML export (07-file-format §9, notebook.export): one self-contained page with every cell in order,
+// The notebook's HTML export (notebook.export): one self-contained page with every cell in order,
 // markdown rendered by the host's renderer, code as text, and each cell's last outputs drawn as the output export draws
 // one (html.ts). The same strict Content-Security-Policy: no script runs, user HTML stays in sandboxed frames.
 import type { ErrorInfo, Output } from "@jsnb/core";

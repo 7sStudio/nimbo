@@ -1,4 +1,4 @@
-// A session's client realm (02-architecture §2, 03-api §4.5, 05-bridge): the attached page, the client runs it runs,
+// A session's client realm: the attached page, the client runs it runs,
 // its reports, the bridge calls into the kernel and the resets; what the runs need of it (RealmPart) and what the
 // realm commands call. The kernel's exports reach it through the session's hooks.
 import type {

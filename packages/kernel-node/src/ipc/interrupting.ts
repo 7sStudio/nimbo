@@ -1,4 +1,4 @@
-// The interrupts of 04-kernel §6 as the daemon sends them: evaluates of the kernel's interrupt hook, one at a time, the
+// The interrupts as the daemon sends them: evaluates of the kernel's interrupt hook, one at a time, the
 // sends to the child held until the last one answered (kernelState.ts holds them), each interrupt settled with the
 // hook's refusal, or nothing, once its own evaluates answered.
 import type { ExecutionId } from "@jsnb/core";
@@ -10,7 +10,7 @@ import type { Context, InterruptWaiter, QueuedInterrupts } from "./kernelState.j
 import { write } from "./kernelState.js";
 import { notice } from "./notice.js";
 
-/** How many second calls one interrupt sends at most, each after the one before failed (04-kernel §6). */
+/** How many second calls one interrupt sends at most, each after the one before failed. */
 const secondCalls = 5;
 
 /**
@@ -34,7 +34,7 @@ function settle(waiters: readonly InterruptWaiter[], refusal: InterruptRefusal |
 }
 
 /**
- * One evaluate of the interrupt hook at a time (04-kernel §6). A second evaluate that the kernel's inspector dispatches
+ * One evaluate of the interrupt hook at a time. A second evaluate that the kernel's inspector dispatches
  * beside the first runs while the first one's termination is pending, is terminated itself, and V8 then cancels the
  * termination: two interrupts in a row left `while (true) {}` running and the kernel answering nothing. So the
  * interrupts asked for while one is answered go in one evaluate after it, and the held sends go out after the last.
@@ -85,7 +85,7 @@ function evaluateHook(context: Context, cdp: Cdp, carried: QueuedInterrupts, aga
 }
 
 /**
- * The interrupt of 04-kernel §6: a Runtime.evaluate that calls the kernel's interrupt hook with the executions the
+ * The interrupt: a Runtime.evaluate that calls the kernel's interrupt hook with the executions the
  * daemon ended. The hook terminates only user code, and its own evaluation may be terminated with it, so its answer,
  * a result or an error, means delivered: every send waits until each pending interrupt is answered, so an execution
  * the hook remembers never reaches the kernel first. A failed or closed session releases them too. Resolves with the

@@ -1,6 +1,6 @@
-// The daemon of another workspace folder, for workspace.open (03-api §4.1): the live one its server.json names, found
-// as a start finds it (files/existingDaemon.ts), else one this daemon starts as `nimbo open` forks it (02-architecture
-// §7): its own entry with `--workspace <folder>`, the same built UI and user config folder, detached, its stdout read
+// The daemon of another workspace folder, for workspace.open: the live one its server.json names, found
+// as a start finds it (files/existingDaemon.ts), else one this daemon starts as `nimbo open` forks it:
+// its own entry with `--workspace <folder>`, the same built UI and user config folder, detached, its stdout read
 // until the listening line, its stderr in a file of its own (in the temp folder until it listens, then moved into the
 // folder's `.jsnb/logs/stderr.log`), then let go. Its port and token are read from the server.json it wrote. A start
 // that another start won (`DaemonRunning`) means a daemon is there to use.

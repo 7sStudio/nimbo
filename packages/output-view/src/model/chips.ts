@@ -1,4 +1,4 @@
-// Filter-mode chips (11-query §2): `key op value` clauses the bar renders and edits; the host's
+// Filter-mode chips: `key op value` clauses the bar renders and edits; the host's
 // compiler (query-json's chipsToJsonPath) turns them into JSONPath. The operators are core's ChipOp; the chip itself is
 // core's Chip narrowed so a text op always carries a string and `exists` carries no value.
 import type { ChipOp, Path } from "@jsnb/core";
@@ -85,7 +85,7 @@ export function chipText(chip: Chip): string {
 }
 
 /**
- * The chip a grid column filter adds (11-query §4): equality on a numeric column when the text is a number,
+ * The chip a grid column filter adds: equality on a numeric column when the text is a number,
  * `contains` otherwise.
  */
 export function columnChip(column: string | number, text: string, numeric: boolean): Chip {

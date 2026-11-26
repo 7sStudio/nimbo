@@ -1,4 +1,4 @@
-// The Fetch side of a route (04-kernel §8): the forwarded request becomes a Request whose text() is the raw body,
+// The Fetch side of a route: the forwarded request becomes a Request whose text() is the raw body,
 // and the handler's result becomes the RouteResponse the daemon writes back, its body in base64.
 import { Buffer } from "node:buffer";
 
@@ -11,7 +11,7 @@ const plainText = "text/plain; charset=utf-8";
 
 const base64 = (text: string): string => Buffer.from(text, "utf8").toString("base64");
 
-/** Captured when the module loads: a cell that replaces JSON's functions breaks its own code only (§3.3). */
+/** Captured when the module loads: a cell that replaces JSON's functions breaks its own code only. */
 const json = { stringify: JSON.stringify.bind(JSON), parse: JSON.parse.bind(JSON) };
 
 /** JSON.stringify as it behaves: a function, a symbol or undefined has no JSON text. */
@@ -58,7 +58,7 @@ export async function toRouteResponse(result: unknown, spec: string): Promise<Ro
   return { status: 200, headers: { "content-type": "application/json" }, body: base64(json) };
 }
 
-/** The top-level string `type` of a JSON request body (a Stripe event's type, 04-kernel §5.6), if there is one. */
+/** The top-level string `type` of a JSON request body (a Stripe event's type), if there is one. */
 export function requestType(req: RouteRequest): string | undefined {
   const text = Buffer.from(req.rawBody, "base64").toString("utf8");
   if (!text.trimStart().startsWith("{")) return undefined;

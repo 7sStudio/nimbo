@@ -1,4 +1,4 @@
-// Cases 14 to 17 of 04 §12: thrown and rejected cells, builtin shadowing, nested var, source-mapped lines.
+// Cases 14 to 17: thrown and rejected cells, builtin shadowing, nested var, source-mapped lines.
 import type { CorpusCase } from "./cases.js";
 
 const sixLines = [

@@ -1,4 +1,4 @@
-// cache.clear (03-api §4.14): the npm cache emptied while the daemon runs. The folder is renamed aside in
+// cache.clear: the npm cache emptied while the daemon runs. The folder is renamed aside in
 // one step and a fresh empty one made in its place, so a request under way either finds its entry whole in the old
 // folder or nothing in the new one: an entry a build was writing when the folder moved lacks its meta.json in the new
 // folder and is built again (cache.ts writes meta.json last). The folder aside is then measured and removed, a link in
@@ -61,7 +61,7 @@ export async function clearNpmCache(
   const stale = (await readdir(parent).catch(() => [])).filter(
     (name) => name.startsWith(asidePrefix(cacheDir)) && join(parent, name) !== aside,
   );
-  // a link planted in the cache's place is removed as itself, never read through (07 §7)
+  // a link planted in the cache's place is removed as itself, never read through
   const real = moved && (await lstat(aside)).isDirectory();
   const measured = real
     ? { entries: await entriesIn(aside), bytes: await bytesUnder(aside) }

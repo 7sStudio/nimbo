@@ -1,4 +1,4 @@
-// cell.snapshot (03-api §4.3): the page holding the realm reads the client cell's container, sanitised and cut
+// cell.snapshot: the page holding the realm reads the client cell's container, sanitised and cut
 // (runtime-web's display/agentSnapshot.ts); the daemon redacts what it answers like every report of the page's. An
 // image is the headless page's PNG of that container, taken by the daemon through the browser (a tab cannot give one).
 import type { CellId, RealmSnapshotAnswer } from "@jsnb/core";

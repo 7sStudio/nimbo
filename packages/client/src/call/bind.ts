@@ -1,4 +1,4 @@
-// The two binders the generated client is made of: one typed method per registry command (08-code-standards §2).
+// The two binders the generated client is made of: one typed method per registry command.
 import type { CommandDescriptor } from "@jsnb/core";
 import type { z } from "zod";
 

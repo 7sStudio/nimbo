@@ -1,4 +1,4 @@
-// The workspace (03-api §8, §9; 02-architecture §7): the nearest ancestor of the working folder that holds a `.jsnb/`
+// The workspace: the nearest ancestor of the working folder that holds a `.jsnb/`
 // folder, else the working folder itself, found as the CLI finds it. The MCP server lives for an agent's session and
 // Node keeps the working folder's path from its start, so a folder deleted or moved since is WorkingFolderGone, never
 // an ancestor's workspace found from a path that leads nowhere.

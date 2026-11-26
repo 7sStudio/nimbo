@@ -1,4 +1,4 @@
-// The run commands of 03-api §4.3.1 and §4.2 on a session: cell.run queues a run and, with `wait`, answers at its
+// The run commands on a session: cell.run queues a run and, with `wait`, answers at its
 // terminal status or at `timeoutMs` (`timedOut: true`, the run going on; a timeout is not an error); notebook.run
 // queues the selected cells in notebook order (markdown left out, client cells with no page listed as skipped) and
 // stops after an error when asked. A client cell run with no page (and none the headless realm can open) is the call

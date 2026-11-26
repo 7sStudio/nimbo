@@ -1,4 +1,4 @@
-// Tests a cell that replaces process.nextTick or process.emit, through the real child (04-kernel §3.3): Node delivers
+// Tests a cell that replaces process.nextTick or process.emit, through the real child: Node delivers
 // every daemon message, and calls every send back, through the ones it finds at that moment. A replacement that does
 // not deliver (a fake-timers nextTick whose queue never runs, an emit that drops "message") is put back for Node's own
 // after the run, the call or the timer callback that installed it, or by the interrupt hook, with a ProcessHookReplaced

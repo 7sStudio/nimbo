@@ -1,5 +1,5 @@
-// The query engines a host injects into OutputView (11-query §4), built once at app start as 06
-// §9.2 has the app do: query-json's JSONPath and jq engines and its Filter chips compiler, and query-sql's SQL engine.
+// The query engines a host injects into OutputView, built once at app start as the app does:
+// query-json's JSONPath and jq engines and its Filter chips compiler, and query-sql's SQL engine.
 // This is the composition a host copies (ui needs exactly it); the host's tests run the viewer with these.
 import type { QueryEngines } from "@jsnb/output-view/model";
 import {

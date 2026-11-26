@@ -1,10 +1,10 @@
-// The stdio transport of `nimbo mcp` (03-api §9): one JSON-RPC message per line on stdin and stdout, read with the SDK's
+// The stdio transport of `nimbo mcp`: one JSON-RPC message per line on stdin and stdout, read with the SDK's
 // own line buffer. Written here rather than the SDK's StdioServerTransport, which neither ends when stdin does nor
 // hears a write fail: a reader gone (the agent exited: EPIPE, ECANCELED, ENOTCONN, …) closes the
 // transport at once and quietly; stdin's end stops the reading and closes it once every request already read has been
 // answered (or cancelled), so `printf … | nimbo mcp` gets its answers; a line that is no JSON-RPC message is reported
 // and skipped, as the SDK's is. A class, as the SDK's transports are: it is the long-lived stateful thing whose
-// callbacks the SDK sets (08 §6).
+// callbacks the SDK sets.
 import type { Readable, Writable } from "node:stream";
 
 import { ReadBuffer, serializeMessage } from "@modelcontextprotocol/sdk/shared/stdio.js";

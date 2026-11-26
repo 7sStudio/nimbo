@@ -1,4 +1,4 @@
-<!-- Full screen (⌘⇧O, gallery card 8): the same viewer in a Reka dialog. The breadcrumb of the
+<!-- Full screen (⌘⇧O): the same viewer in a Reka dialog. The breadcrumb of the
 path sits on top (a container row goes down, a crumb goes back), with copy path, "open in a new tab" and close; the
 nested OutputView in the default slot brings the view switch, find with its scope, the query bar, copy and export. -->
 <script setup lang="ts">

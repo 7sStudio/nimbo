@@ -1,4 +1,4 @@
-// What each notebook of the Home page holds (03-api §4.2 notebook.summary), read for the notebooks whose
+// What each notebook of the Home page holds (notebook.summary), read for the notebooks whose
 // file changed since the last read, a few at a time, its failure kept on the notebook (a file the app cannot load says
 // why in the preview) rather than a toast per notebook; and the workspace's packages and secret names, for the
 // preview's lines. A summary read for a notebook deleted or renamed meanwhile is dropped.

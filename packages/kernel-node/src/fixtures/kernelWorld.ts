@@ -1,4 +1,4 @@
-// A real kernel for the integration tests (09-testing §3): createNodeKernel over a fresh withWorkspace folder with the
+// A real kernel for the integration tests: createNodeKernel over a fresh withWorkspace folder with the
 // child from source (kernelEntry), every callback recorded, and the kernel killed when the test ends, failed, passed or
 // timed out (a test Vitest's timeout abandoned never reaches its finally, and its kernel would spin on).
 import { chmod, writeFile } from "node:fs/promises";

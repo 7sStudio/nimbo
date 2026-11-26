@@ -1,4 +1,4 @@
-<!-- The query bar (11-query §4, gallery cards 9 to 13): Filter, JSONPath, jq, SQL, the one-line input or the chips,
+<!-- The query bar: Filter, JSONPath, jq, SQL, the one-line input or the chips,
 the result count, Only matches / All, Back to source or Back to rows, cancel, the examples, and the notes below. -->
 <script setup lang="ts">
 import type { QueryMode } from "@jsnb/core";

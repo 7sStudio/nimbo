@@ -1,4 +1,4 @@
-// The cache of package bundles for /npm/ (04-kernel §8.1, 07-file-format §7): `.jsnb/cache/npm/<name>@<version>/` for
+// The cache of package bundles for /npm/: `.jsnb/cache/npm/<name>@<version>/` for
 // the page's own import of a package and `.jsnb/cache/npm/_/<key>/` for a resolved form hold
 // `index.js` (or the subpath's file) and `meta.json`, which names the esbuild version that made it and the version of
 // the path rule it passed, so a newer esbuild or rule builds (and checks) again; a refused bundle is never cached, and

@@ -1,4 +1,4 @@
-// Tests interrupts aimed at a run the moment its `running` arrives, through the real child (04-kernel §6): a fresh
+// Tests interrupts aimed at a run the moment its `running` arrives, through the real child: a fresh
 // kernel's very first run, with nothing warmed by an earlier cell, and many rounds of trivial, printing and
 // heavy-valued cells whose interrupt often reaches the kernel while its own code runs after the cell (encode, repr,
 // flush, the status), where the hook terminates nothing; each round is followed by a cell that must answer.

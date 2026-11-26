@@ -1,4 +1,4 @@
-// A session's headless realm (02-architecture §7, 05-bridge §6): with realm.headless on and no page holding the
+// A session's headless realm: with realm.headless on and no page holding the
 // notebook, a client run, a snapshot or a queued client run opens a page of the daemon's headless browser and waits for
 // it to attach. A tab always wins: its attach takes the realm from the headless page (attach.ts), which is then closed,
 // and no headless page starts while a tab holds the notebook. The page closes when it detaches (taken over, its socket

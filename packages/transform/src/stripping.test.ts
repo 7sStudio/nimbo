@@ -1,4 +1,4 @@
-// Rule 15 of 04 §3.2: TypeScript syntax is stripped or lowered by the emitter, never read as a value reference.
+// TypeScript syntax is stripped or lowered by the emitter, never read as a value reference.
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { analyze, transform } from "./index.js";
@@ -15,7 +15,7 @@ beforeAll(() => {
   transform("1", { filename });
 });
 
-describe("type stripping (rule 15)", () => {
+describe("type stripping", () => {
   it("strips annotations, as, satisfies, angle-bracket assertions and non-null", () => {
     const out = code(
       "const a: number = b as number\nconst c = d satisfies string\nconst e = <string>f\nconst g = h!",
@@ -45,7 +45,7 @@ describe("type stripping (rule 15)", () => {
   });
 });
 
-describe("lowering (rule 15)", () => {
+describe("lowering", () => {
   it("lowers a decorated class and keeps the decorator's free name on the scope", () => {
     const out = code("@dec class C { @mark m() {} }");
     expect(out).toContain("__scope).dec.bind");

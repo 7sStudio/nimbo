@@ -1,4 +1,4 @@
-// The repr of a value output (04-kernel §5.2): util.inspect at depth 3, redacted, then capped at 4 096 characters.
+// The repr of a value output: util.inspect at depth 3, redacted, then capped at 4 096 characters.
 import { inspect } from "node:util";
 
 import { cut } from "./cut.js";
@@ -15,7 +15,7 @@ const options = {
 /** The longest repr, `…` included. */
 const reprLimit = 4096;
 
-/** `util.inspect(value)` with the 04-kernel §5.2 options, redacted before it is cut. */
+/** `util.inspect(value)` with the repr options, redacted before it is cut. */
 export function repr(value: unknown, redact: Redact): string {
   return cut(redact(inspect(value, options)), reprLimit);
 }

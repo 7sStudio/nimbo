@@ -1,4 +1,4 @@
-// packages.remove and packages.cancel through the daemon (03-api §4.6), with the real npm against the STUB registry
+// packages.remove and packages.cancel through the daemon, with the real npm against the STUB registry
 // of @jsnb/test-tools/registry: a declared package removed, its events saying remove, an undeclared name refused before
 // anything runs; the run under way cancelled, PackagesCancelled, the next run going on; a cancel naming a queued run
 // answering it at once without its manager ever running, the run under way left alone.
@@ -41,7 +41,7 @@ describe("packages.remove", () => {
         await expect(
           daemon.http().packages.remove({ names: ["tiny-pkg", "never-added"] }),
         ).rejects.toMatchObject({ code: -32602, data: { issues: [{ path: ["names", 1] }] } });
-        // over HTTP as over the socket (09 §3)
+        // over HTTP as over the socket
         expect(await daemon.http().packages.remove({ names: ["tiny-pkg"] })).toEqual({
           removed: ["tiny-pkg"],
         });

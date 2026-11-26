@@ -1,4 +1,4 @@
-// Tests the shared value corpus of 09-testing §8 through the real child (09-testing §3, kernel-node row): every case
+// Tests the shared value corpus through the real child: every case
 // with a source in fixtures/values/*.json runs as a cell of one real kernel, and its value output carries exactly the
 // json, repr and truncated the file records, as valueCorpus.test.ts checks in-process.
 import type { KernelEvent } from "@jsnb/core";

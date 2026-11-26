@@ -1,4 +1,4 @@
-// The headless client realm (02-architecture §7, 05-bridge §6) against the system's real Chrome, Chromium or Edge: off
+// The headless client realm against the system's real Chrome, Chromium or Edge: off
 // by default (REALM_NOT_ATTACHED naming the setting), started lazily by a client run, a snapshot with its image, push
 // events, a tab that takes over and is never taken back from, the browser closed with the notebook and the daemon (no
 // process or profile left), a killed browser started again, a browser that cannot start not started in a loop. Skipped,

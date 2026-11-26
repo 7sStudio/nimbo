@@ -1,4 +1,4 @@
-// The failures of `nimbo outputs` (03-api §8): a format the value cannot take, no value to read, a cell that never ran,
+// The failures of `nimbo outputs`: a format the value cannot take, no value to read, a cell that never ran,
 // a value cut at the output limit the daemon does not hold whole, a query's answer past its limit or its time. A
 // machine format (json, ndjson, csv) is never written from part of an answer; pretty shows the part with a note.
 import { JsnbError } from "@jsnb/core";
@@ -58,7 +58,7 @@ export class CellNotRun extends JsnbError {
   }
 }
 
-/** What to do about a cut value the daemon does not hold whole, by the daemon's reason (its words, 03-api §4.10). */
+/** What to do about a cut value the daemon does not hold whole, by the daemon's reason (its words). */
 function cutAdvice(reason: string, cell: string): string {
   const again = `restart the kernel with nimbo kernel restart, then run the cell again with nimbo run ${cell}`;
   if (reason.includes("outputs.retainFullValue is off")) {

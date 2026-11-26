@@ -1,4 +1,4 @@
-// Every kernel request with an abort signal (04-kernel §6, §11): a timeout of the daemon's own (bridge.rpcTimeoutMs for
+// Every kernel request with an abort signal: a timeout of the daemon's own (bridge.rpcTimeoutMs for
 // a bridge call), joined with the caller's signal when it has one; a request the timeout abandoned is cancelled in the
 // kernel by kernel-node (`cancel { ids }`) and answered here with a named error rather than the signal's reason.
 import { JsnbError } from "@jsnb/core";

@@ -1,6 +1,6 @@
-// The workspace package.json of 03-api §4.6 and 07-file-format §7: the packages it declares, and the file packages.add
-// creates as `{ "private": true, "type": "module" }` when there is none; the fields the daemon reads are checked with Zod
-// (08 §5), an installed package's version too. Both files are read non-blocking and only as regular files: a FIFO in their place never holds a thread of libuv's pool.
+// The workspace package.json: the packages it declares, and the file packages.add
+// creates as `{ "private": true, "type": "module" }` when there is none; the fields the daemon reads are checked with Zod,
+// an installed package's version too. Both files are read non-blocking and only as regular files: a FIFO in their place never holds a thread of libuv's pool.
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 

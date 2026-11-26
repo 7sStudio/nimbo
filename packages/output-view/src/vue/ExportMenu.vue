@@ -23,7 +23,7 @@ const props = defineProps<{
   readonly input: ViewInput;
   readonly items: readonly ExportItem[];
   /** Streams the full value of a cut one (the host's onFetchFullValue, or a fetch of fullValueUrl), every format then
-   * exporting it rather than the 256 KB slice (03-api §7.5). */
+   * exporting it rather than the 256 KB slice. */
   readonly fetchFull: ((signal: AbortSignal) => Promise<Blob>) | undefined;
 }>();
 const viewer = useViewer();

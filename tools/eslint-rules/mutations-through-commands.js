@@ -1,4 +1,4 @@
-// Rule 2 of 08-code-standards §8: in packages/ui, a registry command tagged mutating or destructive is called only from
+// jsnb/mutations-through-commands: in packages/ui, a registry command tagged mutating or destructive is called only from
 // src/store/ and src/commands/; everything else dispatches a command id. Two call shapes reach a command: the typed
 // client's method (`client.cell.delete(…)`) and the descriptor imported from @jsnb/core (`call(cellDelete, …)`).
 import { mutatingCommands } from "./mutating-commands.js";
@@ -24,12 +24,12 @@ export const mutationsThroughCommands = {
     type: "problem",
     docs: {
       description:
-        "mutating and destructive registry commands are called only from store/ and commands/ (08 §8 rule 2)",
+        "mutating and destructive registry commands are called only from store/ and commands/",
     },
     schema: [],
     messages: {
       direct:
-        "'{{name}}' changes shared state: dispatch the command id instead, or call it from src/store or src/commands (08-code-standards §8 rule 2).",
+        "'{{name}}' changes shared state: dispatch the command id instead, or call it from src/store or src/commands.",
     },
   },
   create(context) {

@@ -1,4 +1,4 @@
-// What the kernel answers through a session (03-api §4.3, §4.4): cell.bindings (the names the cell's last run defined,
+// What the kernel answers through a session: cell.bindings (the names the cell's last run defined,
 // with their current values), kernel.scope for the server realm, kernel.routes; each request carries a timeout. These
 // reads never start a kernel: on a dead one they answer KERNEL_DEAD with its exit.
 import type { Binding, BindingValue, CellId, Route } from "@jsnb/core";

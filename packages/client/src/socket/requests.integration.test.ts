@@ -1,4 +1,4 @@
-// The daemon's requests to the page on the same socket (03-api §7.2, 05-bridge §9), answered by registered handlers
+// The daemon's requests to the page on the same socket, answered by registered handlers
 // that survive reconnects.
 import { BridgeCallFailed } from "@jsnb/core";
 import { describe, expect, it } from "vitest";

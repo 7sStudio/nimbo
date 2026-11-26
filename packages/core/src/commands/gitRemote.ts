@@ -1,4 +1,4 @@
-// The remote side of Source Control (03-api §4.15): fetch, pull, push, publish and sync through the user's own git and
+// The remote side of Source Control: fetch, pull, push, publish and sync through the user's own git and
 // credentials, run without a terminal so a prompt fails at once; progress as git.progress events, one cancel; and
 // what to do when a pull stops (abort, continue). One git write runs at a time per repository: another one while it
 // runs fails GitFailed with reason busy, naming it.

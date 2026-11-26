@@ -1,8 +1,8 @@
-// A log file rotated at a size (07-file-format §7: 5 × 1 MB): `name.log`, then `name.log.1` … `name.log.4`, the oldest
+// A log file rotated at a size (5 × 1 MB): `name.log`, then `name.log.1` … `name.log.4`, the oldest
 // dropped. Writes are synchronous appends, so a line logged right before a crash is on disk and lines never interleave.
 // A log file is never opened through a symbolic link (O_NOFOLLOW): a link planted in `.jsnb/logs` is WorkspaceUnusable.
-// Neither the open nor a write throws anything else (07 §5: a full disk must not end the daemon or a notebook's open,
-// rounds 2 and 3): a file that cannot be opened is opened again at the next line, a line that cannot be written, or
+// Neither the open nor a write throws anything else (a full disk must not end the daemon or a notebook's open):
+// a file that cannot be opened is opened again at the next line, a line that cannot be written, or
 // whose rotation fails, is dropped and `write` says so, and a line cut short is cut back off the file (ftruncate, which
 // a full disk allows), so every line in it is whole; only when that fails too does the next line start on its own.
 import {
@@ -175,7 +175,7 @@ export function openRotatingFile(path: string, options: RotationOptions = {}): R
         return true;
       } catch (error) {
         // A full disk, a folder that refuses writes, a link planted for the rotation: the line is dropped, never thrown
-        // into the caller, which may be any code that logs (07 §5: the daemon keeps running and keeps its state).
+        // into the caller, which may be any code that logs (the daemon keeps running and keeps its state).
         file.failure = codeText(error);
         return false;
       }

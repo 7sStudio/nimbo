@@ -1,6 +1,6 @@
 // The output an OutputView shows: the prop checked with toOutput (a readable message instead of a crash), the value's
 // wire form kept locally so "Load next 2,000" can splice the host's slices in, and the full value streamed from
-// fullValueUrl for SQL and export when the page only has the 256 KB slice (11-query §3).
+// fullValueUrl for SQL and export when the page only has the 256 KB slice.
 import type { Path } from "@jsnb/core";
 import type { Ref } from "vue";
 import { computed } from "vue";
@@ -56,7 +56,7 @@ export function useValue(props: Readonly<OutputViewProps>, output: Readonly<Ref<
     ),
     fetchFullValue: (url: string, signal: AbortSignal) =>
       (props.onFetchFullValue ?? fetchBlob)(url, signal),
-    /** Asks the host for the children of `path` from `offset` and splices them in (03-api §4.3). */
+    /** Asks the host for the children of `path` from `offset` and splices them in. */
     loadMore: async (path: Path, offset: number, signal: AbortSignal): Promise<void> => {
       const request = { path: formatPath(path), offset, limit: loadLimit };
       const slice = await props.onLoadMore?.(request, signal);

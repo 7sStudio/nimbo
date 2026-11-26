@@ -1,4 +1,4 @@
-// The viewer's input: an Output of 03-api §5 or the `{ kind: "value", json, repr }` shorthand, validated at the boundary.
+// The viewer's input: an Output or the `{ kind: "value", json, repr }` shorthand, validated at the boundary.
 import type { Output } from "@jsnb/core";
 import { Output as OutputSchema, JsnbError } from "@jsnb/core";
 
@@ -20,7 +20,7 @@ export type OutputIssue = { readonly path: string; readonly message: string };
 const invalidOutputMessage = (issues: readonly OutputIssue[]): string => {
   const first = issues[0];
   const where = first === undefined || first.path === "" ? "" : ` at ${first.path}`;
-  return `The viewer was given something that is not an output${where}: ${first?.message ?? "unknown shape"}. Pass an Output of 03-api §5 or { kind: "value", json, repr }.`;
+  return `The viewer was given something that is not an output${where}: ${first?.message ?? "unknown shape"}. Pass an Output or { kind: "value", json, repr }.`;
 };
 
 /** An input the viewer cannot render: the host passed something that is not an Output. */
@@ -56,8 +56,8 @@ const withTruncated = (input: unknown): unknown =>
     : input;
 
 /**
- * The full value the daemon streams for a cut one (`GET /outputs/<execution>/<index>.json`, 03-api §7.5): the value
- * output's `json` in its wire form, encoded without the node cap (04-kernel §5.2). Every reader (export, SQL) parses it
+ * The full value the daemon streams for a cut one (`GET /outputs/<execution>/<index>.json`): the value
+ * output's `json` in its wire form, encoded without the node cap. Every reader (export, SQL) parses it
  * here and then treats it exactly as an uncut value's `json`.
  */
 export function fullValueJson(text: string): unknown {

@@ -1,4 +1,4 @@
-// Routes one frame from the daemon (03-api §7.2): answers settle pending calls, `event` notifications reach the
+// Routes one frame from the daemon: answers settle pending calls, `event` notifications reach the
 // listeners, the daemon's requests are answered on the socket they came on, unreadable frames get a JSON-RPC error.
 import type { ReportError } from "../errors/report.js";
 import { notifyAll } from "../errors/report.js";

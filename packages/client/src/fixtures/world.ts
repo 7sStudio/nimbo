@@ -1,4 +1,4 @@
-// Each socket test owns its world (09-testing §1.6): peers and clients it starts here are closed after the test.
+// Each socket test owns its world: peers and clients it starts here are closed after the test.
 import { afterEach } from "vitest";
 
 import { connectSocket } from "../socket/client.js";

@@ -1,12 +1,12 @@
-// Redaction of what leaves the page (02-architecture §3, 04-kernel §10): the secret-looking tokens become `***`.
+// Redaction of what leaves the page: the secret-looking tokens become `***`.
 import type { ErrorInfo, Frame, Output } from "@jsnb/core";
 
-/** The page knows no secret values (the client env has none), so it redacts the prefixes 04-kernel §10 names. */
+/** The page knows no secret values (the client env has none), so it redacts the known token prefixes. */
 const secretToken = /\b(?:sk_live_|sk_test_|rk_|whsec_)[A-Za-z0-9_]+/g;
 
 export const redact = (text: string): string => text.replace(secretToken, "***");
 
-/** True when `text` holds a secret-looking token (the client env drops such a value, 04-kernel §8). */
+/** True when `text` holds a secret-looking token (the client env drops such a value). */
 export const looksSecret = (text: string): boolean => redact(text) !== text;
 
 const isPlain = (value: object): boolean => {

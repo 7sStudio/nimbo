@@ -1,4 +1,4 @@
-// Format migrations of 07-file-format §4: pure steps from one version to the next, run in order on load.
+// Format migrations: pure steps from one version to the next, run in order on load.
 
 export type RawNotebook = Readonly<Record<string, unknown>>;
 

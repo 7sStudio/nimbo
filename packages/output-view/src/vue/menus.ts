@@ -85,7 +85,7 @@ export function exportItems(
   ];
 }
 
-/** A cut value output as its full value: the wire-form `json` the daemon streams (03-api §7.5, 04-kernel §5.2), read
+/** A cut value output as its full value: the wire-form `json` the daemon streams, read
  * as an uncut value's, so every format exports what the same value uncut exports. */
 export async function fullInput(input: ViewInput, blob: Blob): Promise<ViewInput> {
   if (input.kind !== "value") return input;

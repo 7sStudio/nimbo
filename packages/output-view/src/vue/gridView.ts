@@ -1,5 +1,5 @@
-// How the grid reads (gallery card 2): a cell's tokens, its date and hints, the columns' widths from what they hold,
-// the row and cell ids find's matches use, and an SQL result as a grid of its own (11-query §4: "results show in the
+// How the grid reads: a cell's tokens, its date and hints, the columns' widths from what they hold,
+// the row and cell ids find's matches use, and an SQL result as a grid of its own ("results show in the
 // same grid").
 import type { Path } from "@jsnb/core";
 import { encode, escapeKey } from "@jsnb/core";
@@ -55,7 +55,7 @@ export function columnWidths(
   });
 }
 
-/** Whether a column holds numbers and nothing else but nulls (its filter then matches `=` a number, 11-query §4). */
+/** Whether a column holds numbers and nothing else but nulls (its filter then matches `=` a number). */
 export function isNumeric(
   grid: Grid,
   column: Column,
@@ -84,7 +84,7 @@ export function sqlGrid(result: SqlRows): Grid {
 type TimeHint = Extract<Hint, { readonly kind: "time" }>;
 
 /** What a leaf cell shows besides its text, with hooks given the cell's path from the grid's
- * value. Dates stay compact (gallery card 2): a unix time shows as its date and any time keeps both forms in the
+ * value. Dates stay compact: a unix time shows as its date and any time keeps both forms in the
  * cell's title, never as a label beside it; links, "View as tree" and add-on hints show as in the tree. */
 export type CellHints = {
   readonly time: TimeHint | undefined;

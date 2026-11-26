@@ -1,4 +1,4 @@
-// Case 17 of 04 §12, the map half: sources, sourcesContent, the inline map, and a generated position for every line.
+// Case 17, the map half: sources, sourcesContent, the inline map, and a generated position for every line.
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { transform } from "../index.js";
@@ -17,7 +17,7 @@ const source = [
 type MapShape = { file: string; sources: string[]; sourcesContent: string[]; sourceRoot?: string };
 
 beforeAll(() => {
-  // A representative cell, so the first test does not pay the compiler's warm-up (09 §2).
+  // A representative cell, so the first test does not pay the compiler's warm-up.
   transform(`import d from "p"\nconst { x } = o\n${source}\nclass C extends B {}`, { filename });
 });
 

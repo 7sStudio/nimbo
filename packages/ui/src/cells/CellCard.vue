@@ -18,7 +18,7 @@ import CellHead from "./CellHead.vue";
 import CellResult from "./CellResult.vue";
 import type { CellModel } from "./models";
 
-// the prompts a failed run asks for are chunks of their own: most pages never show one (08 §10's first-load budget)
+// the prompts a failed run asks for are chunks of their own: most pages never show one (the first-load budget)
 const InstallPrompt = defineAsyncComponent(() => import("./InstallPrompt.vue"));
 // the values view (N) too: a cell shows it only when asked, and the error block: most runs end well
 const CellValues = defineAsyncComponent(() => import("./CellValues.vue"));

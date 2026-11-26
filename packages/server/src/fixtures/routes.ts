@@ -1,4 +1,4 @@
-// The routes suite's world (04-kernel §8, 09-testing §5): a daemon of its own (in-process, the real kernel child), a
+// The routes suite's world: a daemon of its own (in-process, the real kernel child), a
 // notebook, and the helpers a webhook test needs: a server cell run to ok, a raw request below the notebook's routes
 // as a sender without the token makes it, kernel.routes, the routes.changed events and the `event` outputs a cell got.
 import type { EventOf, Execution, Output, Route } from "@jsnb/core";

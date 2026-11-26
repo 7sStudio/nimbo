@@ -1,4 +1,4 @@
-// Forking a kernel child (04-kernel §2): the entry under --inspect=127.0.0.1:0 with the child config as argv[2], IPC
+// Forking a kernel child: the entry under --inspect=127.0.0.1:0 with the child config as argv[2], IPC
 // with advanced serialization, stdout and stderr lines to the log, kernel messages validated with Zod (a failure is a
 // log notice), and the start settled by `ready`, an exit before it, or the start timeout. On POSIX the kernel leads a
 // process group of its own, which every kill of it signals and which is signalled again when it exits, so the

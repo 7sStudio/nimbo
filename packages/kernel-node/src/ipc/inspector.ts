@@ -1,4 +1,4 @@
-// The daemon's Chrome DevTools Protocol session with a kernel's inspector (04-kernel §6, §9): JSON-RPC calls over
+// The daemon's Chrome DevTools Protocol session with a kernel's inspector: JSON-RPC calls over
 // the global WebSocket, frames validated with Zod, pending calls rejected when the socket closes, the paused state
 // tracked from Debugger.paused and Debugger.resumed, and the session closed when the kernel waits for it to exit.
 import { z } from "zod";

@@ -1,5 +1,4 @@
-// What the kernel does with the process hooks after user code, on its interval and in its interrupt hook (04-kernel
-// §3.3): the checks of processHooks.ts, each probe's call of a replacement run under the store of the cell it would
+// What the kernel does with the process hooks after user code, on its interval and in its interrupt hook: the checks of processHooks.ts, each probe's call of a replacement run under the store of the cell it would
 // blame (so an interrupt of that cell can stop a replacement that spins), then each finding reported: one notice in the
 // kernel log and a ProcessHookReplaced error output on that cell; a hook Node's own could not be put back on leaves a
 // kernel that cannot hear the daemon, which ends instead.

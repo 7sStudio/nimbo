@@ -1,4 +1,4 @@
-// A notebook subscription against the peer (02-architecture §4.2): hydrate with buffering, events in seq
+// A notebook subscription against the peer: hydrate with buffering, events in seq
 // order, duplicates dropped, resync on a gap and on a malformed event.
 import { describe, expect, it } from "vitest";
 

@@ -1,4 +1,4 @@
-// The workspace .env as the kernel holds it (04-kernel §2, §8, §10): read at start and before every run into the
+// The workspace .env as the kernel holds it: read at start and before every run into the
 // env built-in, process.env and the redaction set; a key that leaves the file gets its earlier value back. Only a
 // regular file of at most 1 MiB is read, opened without blocking: anything else (a FIFO that would block the kernel
 // for good, a directory) is EnvUnreadable at once, which ends a start before `ready` and a run before its cell.
@@ -17,7 +17,7 @@ export type Environment = {
   readonly env: Readonly<Record<string, unknown>>;
   /** Reads `.env` again (a missing file is empty). */
   readonly reload: () => void;
-  /** Redacts with the secrets of the latest read: every non-public value (04-kernel §10). */
+  /** Redacts with the secrets of the latest read: every non-public value. */
   readonly redact: (text: string) => string;
 };
 

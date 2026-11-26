@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The pull-request pipeline of 09-testing §9 as named stages, each calling the root script that runs it alone.
+# The pull-request pipeline as named stages, each calling the root script that runs it alone.
 # `STAGES=lint,typecheck pnpm ci` runs a subset. Stages that do not depend on each other run at the same time:
 # lint, typecheck and the unit stage together; then the build; then integration, browser and contract together. Each stage
 # writes its own log, printed whole once its group ends, and the summary table comes last.

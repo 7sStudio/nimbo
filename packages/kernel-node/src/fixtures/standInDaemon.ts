@@ -1,4 +1,4 @@
-// A process of its own standing in for the daemon (04-kernel §2), for the tests of what a kernel does once its daemon
+// A process of its own standing in for the daemon, for the tests of what a kernel does once its daemon
 // is gone: it starts a real NodeKernel from source over the test's workspace and runs one cell, which spawns a long
 // `sleep` (it stays in the kernel's process group), says its pid on fd 1 and then "ready", and then idles or spins. The
 // stand-in passes the sleep's pid on from the kernel log, then the kernel's once the cell said "ready". The test ends

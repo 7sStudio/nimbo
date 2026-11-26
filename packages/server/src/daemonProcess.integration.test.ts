@@ -1,4 +1,4 @@
-// runDaemon in-process (02-architecture §7), as src/main.ts runs it against the real process: the listening line once
+// runDaemon in-process, as src/main.ts runs it against the real process: the listening line once
 // it listens, the clean stop on each signal with exit code 0 and server.json gone, 1 with one JSON line when the start
 // fails, 2 for arguments it cannot use. A stand-in takes the place of `process` (its cwd, streams and signals); the
 // daemon is the real one. The built dist/main.js runs as a process in daemonProcess.built.integration.test.ts.

@@ -1,4 +1,4 @@
-// What a session answers about itself (03-api §4.2): the NotebookState of notebook.get, the dependency graph of
+// What a session answers about itself: the NotebookState of notebook.get, the dependency graph of
 // notebook.graph (uses restricted to names other cells provide) and the failed last runs of notebook.errors.
 import type {
   CellId,

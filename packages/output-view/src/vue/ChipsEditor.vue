@@ -1,4 +1,4 @@
-<!-- Filter mode (gallery card 9): the conditions as chips, each edited in place, a new one from three fields, and the
+<!-- Filter mode: the conditions as chips, each edited in place, a new one from three fields, and the
 JSONPath they compile to shown under them, so the syntax is learned on the way. -->
 <script setup lang="ts">
 import { ref } from "vue";
@@ -12,7 +12,7 @@ defineProps<{ readonly jsonPath: string | undefined; readonly keys: readonly str
 const chips = defineModel<readonly Chip[]>({ required: true });
 const emit = defineEmits<{ run: [pin: boolean]; close: [] }>();
 const editing = ref(-1);
-// Each chip keeps one id while it lives (08 §7: keyed by stable ids): chips are immutable, so an edit is a new chip.
+// Each chip keeps one id while it lives (keyed by stable ids): chips are immutable, so an edit is a new chip.
 const ids = new WeakMap<Chip, number>();
 let issued = 0;
 function idOf(chip: Chip): number {

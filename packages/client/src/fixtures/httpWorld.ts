@@ -1,4 +1,4 @@
-// Each HTTP test owns its world (09-testing §1.6): the peers it starts here are closed after the test.
+// Each HTTP test owns its world: the peers it starts here are closed after the test.
 import { afterEach } from "vitest";
 
 import type { Peer } from "./peer.js";

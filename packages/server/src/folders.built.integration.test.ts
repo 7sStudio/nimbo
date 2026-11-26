@@ -1,4 +1,4 @@
-// workspace.open with the built daemon (03-api §4.1, 02-architecture §7): the daemon of the folder opened is started
+// workspace.open with the built daemon: the daemon of the folder opened is started
 // from the same entry as `nimbo open` forks it (or the live one there is used), the answer is its Home's address with a
 // token that works there, the daemon the page leaves stops cleanly, and both folders are among the recent ones.
 import { existsSync } from "node:fs";

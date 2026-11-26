@@ -1,4 +1,4 @@
-// The daemon harness of @jsnb/test-tools/daemon (09-testing §8) bound to this package's own startServer, for the
+// The daemon harness of @jsnb/test-tools/daemon bound to this package's own startServer, for the
 // server's tests. The other packages take the same binding from @jsnb/test-daemon, which depends on the server and so
 // cannot be one of its dependencies.
 import type { Daemon as DaemonOf, DaemonOptions as DaemonOptionsOf } from "@jsnb/test-tools/daemon";

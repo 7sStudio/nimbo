@@ -1,4 +1,4 @@
-// realm.report (03-api §4.5): one ordered queue per realm, every string redacted once on its way out (04-kernel §10).
+// realm.report: one ordered queue per realm, every string redacted once on its way out.
 import type { ErrorInfo, ExecStatus, Output } from "@jsnb/core";
 
 import type { RealmTransport } from "../bridge/transport.js";
@@ -21,7 +21,7 @@ export type Reports = {
 
 /**
  * Reports are chained, each sent after the previous one was answered, so outputs arrive in order. A report with no
- * attached realm is dropped (there is nobody to tell); a failed one goes to `onError` (08-code-standards §5).
+ * attached realm is dropped (there is nobody to tell); a failed one goes to `onError`.
  */
 export function createReports(
   transport: RealmTransport,

@@ -52,7 +52,7 @@ describe("Close", () => {
       await dispatcher.dispatch("ui.notebook.close", { path: "busy.jsnb" });
       expect(ui.overlay).toEqual({ kind: "confirmNotebook", action: "close", path: "busy.jsnb" });
       ui.overlay = null; // the confirm's answer closes it
-      // F2 on the open notebook: the field, no confirm, the kernel left running (07 §5)
+      // F2 on the open notebook: the field, no confirm, the kernel left running
       await dispatcher.dispatch("ui.notebook.rename", { path: "busy.jsnb" });
       expect([ui.overlay, home.renaming]).toEqual([null, "busy.jsnb"]);
       await dispatcher.dispatch("ui.escape");

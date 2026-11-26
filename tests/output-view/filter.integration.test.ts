@@ -1,4 +1,4 @@
-// Filter mode on the real chips compiler and JSONPath engine (11-query §2): the host's filter as chips with the
+// Filter mode on the real chips compiler and JSONPath engine: the host's filter as chips with the
 // JSONPath they compile to, a chip added, edited and removed, a grid column filter becoming a chip, and each run
 // counted by what the real selection matched.
 import type { VueWrapper } from "@vue/test-utils";

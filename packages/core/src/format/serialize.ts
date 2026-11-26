@@ -1,4 +1,4 @@
-// serialize: the deterministic .jsnb layout of 07-file-format §2, written by hand so source arrays are one line each.
+// serialize: the deterministic .jsnb layout, written by hand so source arrays are one line each.
 import { cellMetaKeys } from "../model/cell.js";
 import { toLines } from "./lines.js";
 import type { DocumentCell, NotebookDocument } from "./schema.js";
@@ -26,7 +26,7 @@ function lines(source: string, depth: number): string {
   return `[\n${items.map((line) => `${inner}${JSON.stringify(line)}`).join(",\n")}\n${indentUnit.repeat(depth)}]`;
 }
 
-/** Known meta keys in the 07-file-format §2 order, then the unknown ones as they came. */
+/** Known meta keys in their fixed order, then the unknown ones as they came. */
 function meta(value: Readonly<Record<string, unknown>>, depth: number): string | undefined {
   const known = cellMetaKeys.filter((key) => value[key] !== undefined);
   const unknown = Object.keys(value).filter((key) => !cellMetaKeys.some((k) => k === key));
@@ -59,7 +59,7 @@ function savedRunPairs(doc: NotebookDocument): (readonly [string, string])[] | u
   });
 }
 
-/** The file text: two-space indent, LF, a trailing newline, keys in the documented order. */
+/** The file text: two-space indent, LF, a trailing newline, keys in a fixed order. */
 export function serialize(doc: NotebookDocument): string {
   const pairs: (readonly [string, string])[] = [["version", JSON.stringify(doc.version)]];
   if (doc.jsnb !== undefined) pairs.push(["jsnb", JSON.stringify(doc.jsnb)]);

@@ -1,4 +1,4 @@
-// The line diff behind an agent edit's review (03-api §5): the source before the first edit no one reviewed
+// The line diff behind an agent edit's review: the source before the first edit no one reviewed
 // against the source now, as the lines kept, removed and added (a longest common subsequence of lines), the lines of
 // the source now that an agent changed, and the hunks a card shows with a little context around each change.
 import type { LineRange } from "../model/cell.js";

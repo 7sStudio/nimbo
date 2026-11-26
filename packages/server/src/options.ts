@@ -1,6 +1,6 @@
 // startServer's options: the workspace folder, the port (0 in tests), the user config folder (default
 // `$XDG_CONFIG_HOME/nimbo` or `~/.config/nimbo`, `%APPDATA%\nimbo` on Windows), the built UI folder, the kernel entry
-// (default: the built kernel-node), an injectable id generator and clock (09-testing §1.4), the log level (NIMBO_LOG)
+// (default: the built kernel-node), an injectable id generator and clock, the log level (NIMBO_LOG)
 // and the daemon's own timeouts for a route request and a /npm/ build (30 s each by default).
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
@@ -39,14 +39,14 @@ export type ServerOptions = {
   readonly routeTimeoutMs?: number;
   /** How long one /npm/ build may run before it is cancelled; default 30 s. */
   readonly bundleTimeoutMs?: number;
-  /** The size at which `.jsnb/logs/daemon.log` rotates (07-file-format §7); default 1 MiB. */
+  /** The size at which `.jsnb/logs/daemon.log` rotates; default 1 MiB. */
   readonly logMaxBytes?: number;
   /** How long one packages.add may run before its package manager is killed; default 10 minutes. */
   readonly installTimeoutMs?: number;
   /** How long the daemon waits for a kernel's snapshot or bindings answer and a page's reset; default 10 s. */
   readonly requestTimeoutMs?: number;
   /** How often the daemon checks that its workspace folder still exists and that each open notebook's file
-   * is where it was (07 §5); default 2 s. */
+   * is where it was; default 2 s. */
   readonly rootCheckMs?: number;
   /** The daemon's own process entry, which workspace.open runs to start another folder's daemon; default the built
    * `dist/main.js` beside this module, when this module is the built one. */
@@ -97,7 +97,7 @@ function builtEntry(): string | undefined {
   return existsSync(entry) ? entry : undefined;
 }
 
-/** The user config folder of 07-file-format §6. */
+/** The user config folder. */
 export function defaultUserConfigDir(env: NodeJS.ProcessEnv = process.env): string {
   return productConfigDir(env, env.HOME ?? homedir(), process.platform);
 }

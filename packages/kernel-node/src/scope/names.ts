@@ -1,9 +1,9 @@
-// The metadata of each scope name (03-api §5 Binding): the cell that defined it and its declaration kind.
+// The metadata of each scope name (Binding): the cell that defined it and its declaration kind.
 import type { BindingKind, CellId } from "@jsnb/core";
 
 type NameInfo = { readonly definedBy: CellId; readonly kind: BindingKind };
 
-/** What one finished run tells about the names it defined (04-kernel §5.2). */
+/** What one finished run tells about the names it defined. */
 export type RunFacts = {
   readonly cell: CellId;
   readonly ok: boolean;

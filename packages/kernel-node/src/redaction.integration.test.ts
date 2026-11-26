@@ -1,4 +1,4 @@
-// Tests redaction at the kernel boundary through the real child (04-kernel §10; 09-testing §3, kernel-node row): a .env
+// Tests redaction at the kernel boundary through the real child: a .env
 // secret and the four token prefixes pushed through streams, display, a value (json, repr and the full form), a
 // failing run's error, a route's event and late error, a call result (redacted: true), a snapshot and bindings, all
 // *** once they reach the daemon side.

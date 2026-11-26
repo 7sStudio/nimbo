@@ -1,4 +1,4 @@
-// The git service behind the Source Control commands (03-api §4.15): the status and a file's diff (diff.ts); the
+// The git service behind the Source Control commands: the status and a file's diff (diff.ts); the
 // writes (writes.ts), remotes (remote.ts), branches (branches.ts), stash (stash.ts) and history (history.ts); each
 // write runs through operations.ts (one at a time, long ones cancellable) and is announced once it ends (announce.ts).
 import { join } from "node:path";

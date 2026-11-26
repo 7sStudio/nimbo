@@ -1,4 +1,4 @@
-// The history (03-api §4.15): git log of a ref or of one file (following renames), paged, and one commit's files
+// The history: git log of a ref or of one file (following renames), paged, and one commit's files
 // against its first parent with diff-tree, the plumbing that never runs an external diff or a textconv.
 import type { GitChange, GitCommitSummary } from "@jsnb/core";
 

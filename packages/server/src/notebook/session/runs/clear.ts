@@ -1,4 +1,4 @@
-// notebook.clearOutputs (03-api §4.2): the cells' last runs forgotten, as Jupyter's Clear All Outputs: no outputs, no
+// notebook.clearOutputs: the cells' last runs forgotten, as Jupyter's Clear All Outputs: no outputs, no
 // execution count, the status idle; the kernel's state stays. A cell running or queued keeps its run.
 import type { CellId } from "@jsnb/core";
 

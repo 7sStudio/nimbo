@@ -9,7 +9,7 @@ export type CellDeclarations = {
   /** Every top-level name the cell declares or binds by an import, with its kind. */
   readonly names: ReadonlyMap<string, NameKind>;
   /** The names the cell's own source exports (`export const a`, `export { a }`, `export { a as b }` as `b`), with the
-   * kind of what they name: the bridge's exports (05 §3, transform/src/exports.ts). */
+   * kind of what they name: the bridge's exports (transform/src/exports.ts). */
   readonly exported: ReadonlyMap<string, NameKind>;
   /** Every name the cell's own export statements already export (an `as` target included), for the suffix. */
   readonly exportNames: ReadonlySet<string>;

@@ -1,4 +1,4 @@
-// Property test (09-testing §3): a .env written the way secrets.set writes it (07-file-format §8: each value double-
+// Property test: a .env written the way secrets.set writes it (each value double-
 // quoted with ", \ and newlines escaped), between comments and blank lines, LF or CRLF, parses back to the same values.
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";

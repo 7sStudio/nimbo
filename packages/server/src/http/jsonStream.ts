@@ -1,4 +1,4 @@
-// A value's JSON text in pieces (03-api §7.5: a full value streams whatever its size): the walk yields chunks of about
+// A value's JSON text in pieces (a full value streams whatever its size): the walk yields chunks of about
 // 64 KiB, so no single string holds a large value and the socket's backpressure paces the walk. What JSON cannot
 // write (undefined, a function) is `null` in an array and left out of an object, as JSON.stringify does.
 const chunkLength = 64 * 1024;

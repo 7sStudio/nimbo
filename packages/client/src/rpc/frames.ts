@@ -1,4 +1,4 @@
-// JSON-RPC 2.0 frames of 03-api §7.2 and §7.3: what the daemon sends, read and validated with Zod, and the frames this
+// JSON-RPC 2.0 frames: what the daemon sends, read and validated with Zod, and the frames this
 // client writes (requests, and its answers to the daemon's requests).
 import type { ApiIssue } from "@jsnb/core";
 import { z } from "zod";

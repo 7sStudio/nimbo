@@ -1,4 +1,4 @@
-// The settings files of 07-file-format §6: JSONC read with a tolerant parser (comments, trailing commas) and written
+// The settings files: JSONC read with a tolerant parser (comments, trailing commas) and written
 // back through the same parser's edit API, so a comment the user wrote survives settings.set; keys are flat dotted names.
 // A settings file that is a symbolic link (a dotfiles manager's) is read through the link but never written: replacing
 // it would cut the link, so settings.set answers SettingsUnusable, as `.env` does.

@@ -1,4 +1,4 @@
-<!-- stdout and stderr (gallery card 3): ANSI colors and OSC 8 links, monospace, wrap and timestamps as toggles, the
+<!-- stdout and stderr: ANSI colors and OSC 8 links, monospace, wrap and timestamps as toggles, the
 last 2,000 lines until "Show all", and the tail followed while the cell runs. -->
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from "vue";

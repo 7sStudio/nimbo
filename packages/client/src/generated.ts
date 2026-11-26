@@ -386,7 +386,7 @@ const language = (call: Caller) =>
     rename: bind(call, languageRename),
   }) as const;
 
-/** Every command not tagged internal, one method each, grouped by domain (03-api §3, 09-testing §4.1). */
+/** Every command not tagged internal, one method each, grouped by domain. */
 export const bindCommands = (call: Caller) =>
   ({
     workspace: workspace(call),
@@ -408,5 +408,5 @@ export const bindCommands = (call: Caller) =>
     language: language(call),
   }) as const;
 
-/** The generated methods every client has, readonly at every level (08 §6). */
+/** The generated methods every client has, readonly at every level. */
 export type Commands = ReturnType<typeof bindCommands>;

@@ -22,7 +22,7 @@ beforeAll(() => {
 });
 
 describe("parse", () => {
-  it("reads the 07-file-format §2 example", () => {
+  it("reads a version 1 file", () => {
     const result = parse(v1, { ids, path: "demo.jsnb" });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
@@ -112,7 +112,7 @@ describe("parse of invalid files", () => {
 });
 
 describe("parse of newer versions", () => {
-  it("refuses them with the 07-file-format §4 message", () => {
+  it("refuses them with the version message", () => {
     const result = parse(text({ version: 3, cells: [] }), {
       ids,
       path: "payment-element.jsnb",

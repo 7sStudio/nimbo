@@ -1,4 +1,4 @@
-// Tests answering the daemon's requests to a page (03-api §7.2, 05-bridge §9): results, errors, validation.
+// Tests answering the daemon's requests to a page: results, errors, validation.
 import { JsnbError, RealmNotAttached } from "@jsnb/core";
 import { describe, expect, it } from "vitest";
 

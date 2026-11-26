@@ -1,4 +1,4 @@
-// The captured `console` of a run (04-kernel §5.1): our own object, never the real console; Node's line formats.
+// The captured `console` of a run: our own object, never the real console; Node's line formats.
 import { formatArgs } from "./format.js";
 import { consoleInspect, inspect } from "./inspect.js";
 import type { StreamName } from "./streams.js";

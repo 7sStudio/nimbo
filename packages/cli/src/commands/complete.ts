@@ -1,4 +1,4 @@
-// What the CLI adds to the flags before a call (03-api §8, §4.7): the default notebook when -n was left out (opened
+// What the CLI adds to the flags before a call: the default notebook when -n was left out (opened
 // first when this command started the daemon), a secret's value from stdin (or asked for, unechoed, on a terminal),
 // and the y/N question of a destructive command. A question not answered sends nothing: no, an empty answer or the end
 // of input is Cancelled (exit 0), Ctrl-C at the raw-mode secret prompt Interrupted (exit 130).

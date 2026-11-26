@@ -1,5 +1,5 @@
 // Journey: a page whose token is wrong while its page cookie still lets the page itself load (an old link in a browser
-// that has the daemon's cookie; 03-api §7.1): the socket is refused (4401), so the page stops at once and
+// that has the daemon's cookie): the socket is refused (4401), so the page stops at once and
 // says so in one banner, the status bar reads disconnected, no toast repeats it, and nothing claims a notebook it never
 // loaded. A notebook that is gone (a valid token) stops the same way and names it.
 import AxeBuilder from "@axe-core/playwright";

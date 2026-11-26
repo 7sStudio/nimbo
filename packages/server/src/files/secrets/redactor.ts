@@ -1,4 +1,4 @@
-// The daemon's own redaction (04-kernel §10, 08-code-standards §5): the rules kernel-node applies (non-public .env
+// The daemon's own redaction: the rules kernel-node applies (non-public .env
 // values of 8 characters or more, as written and escaped, and the sk_live_/sk_test_/rk_/whsec_ tokens) plus the daemon's
 // token, for what leaves the daemon itself: its log lines and what a page reports. `.env` is looked at again when its
 // identity changed, at most every 250 ms of use and at once after `refresh()` (a secrets.set).
@@ -41,7 +41,7 @@ export function createDaemonRedactor(
     if (identity === seen) return;
     seen = identity;
     const read = readRegularFileSync(envPath, maxEnvBytes);
-    // A .env that cannot be read keeps the secrets read last, as kernel-node's log redaction does (04-kernel §10).
+    // A .env that cannot be read keeps the secrets read last, as kernel-node's log redaction does.
     if (read.kind === "refused") return;
     const secrets = read.kind === "read" ? secretValues(parseDotenv(read.text)) : [];
     redact = createRedactor([...always, ...secrets]);

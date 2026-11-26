@@ -1,4 +1,4 @@
-// realm.attach and realm.detach of 03-api §4.5: the first page that attaches runs the notebook's client cells; a later
+// realm.attach and realm.detach: the first page that attaches runs the notebook's client cells; a later
 // one is refused with REALM_ATTACHED (1011: runtime-web then shows that page view-only) until the first one
 // detaches or its socket closes, or until it takes over (`takeover`): the page that held it is told with
 // realm.reset { takenOver } and detached, and realm.status names the new page at once, never a page-less moment.

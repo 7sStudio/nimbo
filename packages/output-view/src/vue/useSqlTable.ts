@@ -1,4 +1,4 @@
-// SQL mode's table (11-query §3): the output's rows registered as `t` (plus the binding's alias) before the first
+// SQL mode's table: the output's rows registered as `t` (plus the binding's alias) before the first
 // query, from the full value when the page only has the 256 KB slice; one table per page engine, so an output that
 // finds another's rows in `t` registers its own again; dropped when the output changes or the view goes away.
 import type { Ref, ShallowRef } from "vue";

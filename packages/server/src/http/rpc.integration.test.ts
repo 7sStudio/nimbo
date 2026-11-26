@@ -1,4 +1,4 @@
-// JSON-RPC 2.0 over HTTP and the WebSocket (03-api §7.2, §7.3): the protocol codes, the bearer token and the 4401 close,
+// JSON-RPC 2.0 over HTTP and the WebSocket: the protocol codes, the bearer token and the 4401 close,
 // concurrent calls answered by id, events.subscribe refused over HTTP, and notifications carried out unanswered.
 import { readFile } from "node:fs/promises";
 

@@ -1,4 +1,4 @@
-// The conflict's state as a page reads it, and the recovery copy of unsaved text (07-file-format §5, §7): a conflict
+// The conflict's state as a page reads it, and the recovery copy of unsaved text: a conflict
 // that ends by itself says so, and notebook.get carries it; text a conflict or a failing save holds survives a close
 // in `.jsnb/recovery/` and comes back as a conflict at the next open, whatever the length of the path; a copy is never
 // written or read through a link put in place of the folder, and one of another notebook at the path, or one that

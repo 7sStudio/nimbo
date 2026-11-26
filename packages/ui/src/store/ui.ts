@@ -106,7 +106,7 @@ export const useUiStore = defineStore("ui", () => {
    * so a view shows the draft until the cell's source catches up (cells/useDrafts.ts clears it then). */
   const drafts = reactive(new Map<CellId, string>());
   /** The cell's text each draft was typed on, as the daemon had it: an edit names it (cell.update's `base`), so one
-   * made on a text the file replaced since is a conflict (07-file-format §5). */
+   * made on a text the file replaced since is a conflict. */
   const bases = new Map<CellId, string>();
 
   const palette = ref({ open: false, query: "" });

@@ -1,4 +1,4 @@
-// The viewer's long work (08 §5: everything long takes a signal; nothing is swallowed): one task at a time, shown
+// The viewer's long work (everything long takes a signal; nothing is swallowed): one task at a time, shown
 // with its label and a Cancel that aborts its signal; a task cancelled, by the user or by the next one, is said so,
 // and a failure is shown to the user instead of only the console.
 import { ref, shallowRef } from "vue";

@@ -1,4 +1,4 @@
-// `mcp install` (03-api §8, §9): registers the MCP server with the agents on this machine. Claude Code through its own
+// `mcp install`: registers the MCP server with the agents on this machine. Claude Code through its own
 // `claude mcp add` (user scope by default, so every project gets it), VS Code through `code --add-mcp`, Cursor and
 // Claude Desktop by their JSON config files; any other client gets the JSON entry to paste. The command registered is
 // the launcher's absolute path, which an upgrade keeps, since a GUI agent does not see the shell's PATH. An entry that

@@ -1,4 +1,4 @@
-// Runs a 04-kernel §12 corpus case through a real kernel: every cell compiled up front (the transform is not test
+// Runs a corpus case through a real kernel: every cell compiled up front (the transform is not test
 // time), each run checked for its value or its error (name, message, line of the cell's own frame), then the export
 // table against the cells that exported each name.
 import { mkdir, writeFile } from "node:fs/promises";

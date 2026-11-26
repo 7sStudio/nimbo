@@ -1,4 +1,4 @@
-// The attempts of one outage of a WebSocket (03-api §7.6): the wait before each reconnect, and when to give up.
+// The attempts of one outage of a WebSocket: the wait before each reconnect, and when to give up.
 import type { Backoff } from "./backoff.js";
 import { backoffMs } from "./backoff.js";
 

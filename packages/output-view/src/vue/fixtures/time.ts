@@ -1,5 +1,5 @@
 // A clock and a scheduler the test moves by hand, for code that takes its time as a dependency (the tooltips): no
-// global clock is faked (09 §1.4), and no test sleeps.
+// global clock is faked, and no test sleeps.
 import type { Scheduler } from "../tooltip.js";
 
 export function manualTime() {

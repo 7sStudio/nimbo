@@ -1,4 +1,4 @@
-// The page's modules at /npm/ (04-kernel §8.1): esbuild's builds under a signal that cancels them (esbuild's
+// The page's modules at /npm/: esbuild's builds under a signal that cancels them (esbuild's
 // context().cancel()), and a workspace module (a relative specifier) served as its own source, TypeScript stripped,
 // its imports rewritten to /npm/ URLs (a relative one to the /npm/ path of the file it resolves to, as Node and
 // TypeScript resolve it: relativeImport.ts). A workspace module's build holds that module alone: the

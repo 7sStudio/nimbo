@@ -1,4 +1,4 @@
-// The jq engine (11-query §2): jq's WebAssembly build in the query worker, started by load() and kept for the
+// The jq engine: jq's WebAssembly build in the query worker, started by load() and kept for the
 // engine's life; every program runs there under the timeout and the heap cap. A held value (hold) is sent to the
 // worker once and queried by its key (transformHeld) after that.
 import type { HeldBound, HeldTransform, HoldingTransformEngine, RunOptions } from "../engine.ts";

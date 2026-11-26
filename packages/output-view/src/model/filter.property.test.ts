@@ -1,4 +1,4 @@
-// Property tests of filter.ts: chips survive the Filter text round trip, and no text makes the parser throw (08 §9).
+// Property tests of filter.ts: chips survive the Filter text round trip, and no text makes the parser throw.
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 

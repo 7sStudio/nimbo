@@ -1,5 +1,5 @@
 // @vitest-environment node
-// The reducer against the recorded logs of fixtures/ (09-testing §3): each replay ends at the state the
+// The reducer against the recorded logs of fixtures/: each replay ends at the state the
 // daemon itself reported, and the save, run and output steps along the way read as the page shows them.
 import type { EventEnvelope, Execution } from "@jsnb/core";
 import { describe, expect, it } from "vitest";

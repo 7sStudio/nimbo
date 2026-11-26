@@ -1,4 +1,4 @@
-// What the queue runs (02-architecture §5): a markdown cell is `ok` with no outputs (03-api §4.3.1), a server cell runs
+// What the queue runs: a markdown cell is `ok` with no outputs, a server cell runs
 // in the kernel, a client cell in the attached page, each with the cell's source as it is when the run starts; a run
 // whose cell was deleted before it started, or whose notebook.run stopped on an error, ends `interrupted` without
 // running, the latter naming the cell whose run failed (`stoppedBy`). Every other queued run executes in call

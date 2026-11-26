@@ -1,4 +1,4 @@
-// A run's builtins layer (04-kernel §3.3, §7, §8): console, env, display, dispose, on, the wrapped timers and listeners,
+// A run's builtins layer: console, env, display, dispose, on, the wrapped timers and listeners,
 // and the run's views of `window` and `document`. Code reads them through its own run's scope, so attribution is lexical.
 import { InvalidDisposer, typeName } from "@jsnb/core";
 
@@ -17,13 +17,13 @@ export type BuiltinParts = {
   readonly disposers: Disposers;
   readonly listeners: ListenerRegistry;
   readonly streams: Streams;
-  /** A late failure of a wrapped callback: an `error` output on the run's execution (04-kernel §5.3). */
+  /** A late failure of a wrapped callback: an `error` output on the run's execution. */
   readonly reportError: (error: unknown) => void;
-  /** `on(name, callback)`, listening for the run (05-bridge §6). */
+  /** `on(name, callback)`, listening for the run. */
   readonly on: (name: unknown, callback: unknown, options?: unknown) => () => void;
 };
 
-/** `dispose(fn)` registers the cell's own cleanup (04-kernel §7); a stale run's cleanup runs at once. */
+/** `dispose(fn)` registers the cell's own cleanup; a stale run's cleanup runs at once. */
 const disposeWith =
   (disposers: Disposers) =>
   (cleanup: unknown): undefined => {

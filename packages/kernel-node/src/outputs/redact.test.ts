@@ -1,4 +1,4 @@
-// Tests the redactor of 04-kernel §10: secrets of 8+ characters, longest first, escaped forms, token prefixes.
+// Tests the redactor: secrets of 8+ characters, longest first, escaped forms, token prefixes.
 import { inspect } from "node:util";
 
 import { describe, expect, it } from "vitest";

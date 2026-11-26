@@ -1,8 +1,8 @@
-// The per-package layer table of 08-code-standards §4 as eslint-plugin-boundaries elements and policies.
+// The per-package layer table as eslint-plugin-boundaries elements and policies.
 // Elements are folders named `<package>:<layer>`; a package's own src root (index.ts, main.ts) is `<package>:root`.
 // Imports inside one layer, to unknown local files (lib/, fixtures) and to packages are not this file's business:
 // dependency-cruiser owns the package graph.
-// It also holds output-view's model rule (`outputViewModel`): 08 §4's "`model/` has no DOM and no Vue" as imports.
+// It also holds output-view's model rule (`outputViewModel`): "`model/` has no DOM and no Vue" as imports.
 
 import { builtinModules } from "node:module";
 
@@ -82,9 +82,9 @@ export const boundariesRules = {
     {
       default: "disallow",
       policies: [
-        // core: "`format/`, `analysis/`, `commands/`, `types/` are leaves; `index.ts` exports them" (08 §4), with
-        // the shared schemas in `model/` because 08 §2 rejects a directory named `types/`, and three more leaves the
-        // table does not name but 02 §2 assigns to core: `errors/` (JsnbError), `settings/`, `serialize/`.
+        // core: "`format/`, `analysis/`, `commands/`, `types/` are leaves; `index.ts` exports them", with
+        // the shared schemas in `model/` because no directory may be named `types/`, and three more leaves the
+        // table does not name but core holds: `errors/` (JsnbError), `settings/`, `serialize/`.
         // Every leaf may read the model and raise the errors; `commands/` also reads the settings schema.
         allow("core:root", [
           "core:model",
@@ -162,7 +162,7 @@ export const boundariesRules = {
         allow(["ui:editor", "ui:keyboard", "ui:theme"], "ui:commands"),
         // ui: "`primitives/` imports nothing of ours" — the default already disallows it.
 
-        // cli: "generated from the registry plus `shortcuts/`" (08 §4; the table names no folders, so these are the
+        // cli: "generated from the registry plus `shortcuts/`" (the table names no folders, so these are the
         // smallest set): the root (run, the root help) over the generated `commands/` and the `shortcuts/`, the
         // shortcuts over the generated commands' parsing; both over `daemon/` (finding, starting, the session) and
         // `render/`; `io/` reads `errors/` (a closed output is OutputClosed), which is a leaf.
@@ -190,7 +190,7 @@ export const boundariesRules = {
         allow("cli:render", "cli:errors"),
         allow("cli:io", "cli:errors"),
 
-        // mcp: "generated from the registry" (08 §4; no shortcuts, and the table names no folders, so these are the
+        // mcp: "generated from the registry" (no shortcuts, and the table names no folders, so these are the
         // smallest set): the root (main, the public API) over `server/` (the SDK's server, the stdio transport)
         // and `io/`; the server over the generated `tools/` and the `resources/`; both over `daemon/` (finding and
         // starting the daemon, as the CLI does); `io/` reads `errors/` (a gone working folder), which is a leaf.
@@ -204,7 +204,7 @@ export const boundariesRules = {
   ],
 };
 
-// 08 §4: output-view's model has no DOM and no Vue and runs in Node and in the page, so it imports
+// output-view's model has no DOM and no Vue and runs in Node and in the page, so it imports
 // neither Vue, the view libraries nor Node modules and reads no browser global (its tests may use Node).
 export const outputViewModel = {
   files: ["packages/output-view/src/model/**"],
@@ -216,11 +216,11 @@ export const outputViewModel = {
         patterns: [
           {
             group: ["node:*", ...builtinModules, "vue", "@vue/*", "reka-ui", "@tanstack/*"],
-            message: "output-view's model has no Vue, no DOM and no Node (08 §4).",
+            message: "output-view's model has no Vue, no DOM and no Node.",
           },
           {
             group: ["@codemirror/*", "@lezer/*"],
-            message: "No editor in output-view's model (08 §4).",
+            message: "No editor in output-view's model.",
           },
         ],
       },

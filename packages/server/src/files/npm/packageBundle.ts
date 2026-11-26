@@ -1,4 +1,4 @@
-// A package's bundle for the page (04-kernel §8.1): esbuild
+// A package's bundle for the page: esbuild
 // bundles the package from the folder Node found it from, for the browser (ESM), with the plugin of packagePlugin.ts
 // (each bare import external under the URL of the folder Node resolves it to, the package's `browser` and `imports`
 // maps applied first, its own entries shared by URL). Literal requires get the prelude of requires.ts; a CommonJS

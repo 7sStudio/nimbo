@@ -1,5 +1,5 @@
 // Tests of client.ts's timers at unit tier: the worker is a real MessageChannel whose far end never answers, and the
-// clock is faked (09-testing §1.4 allows it here, and only here).
+// clock is faked (allowed here, and only here).
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ok } from "../errors.ts";

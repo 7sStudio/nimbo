@@ -1,4 +1,4 @@
-// The query bar's state (11-query §4) as a pure reducer: the mode, its text or chips, loading and running, the result
+// The query bar's state as a pure reducer: the mode, its text or chips, loading and running, the result
 // or the error, Only matches / All, the pin saved as `meta.outputQuery`, and each mode's history for ↑ and ↓.
 import type { CellMeta, Path, QueryMode } from "@jsnb/core";
 
@@ -48,7 +48,7 @@ export type QueryAction =
   | { readonly type: "succeeded"; readonly result: QueryResult }
   | { readonly type: "failed"; readonly error: QueryFailure };
 
-/** The pinned query of a cell, `meta.outputQuery` of 03-api §5 (Filter mode stores its Filter text). */
+/** The pinned query of a cell, `meta.outputQuery` (Filter mode stores its Filter text). */
 export type QueryPin = NonNullable<CellMeta["outputQuery"]>;
 
 /** Entries kept per mode for ↑ and ↓. */
@@ -67,7 +67,7 @@ export function resultCount(result: QueryResult): string {
 export const resultTime = (result: QueryResult): string | undefined =>
   result.kind === "rows" ? `${String(Math.round(result.durationMs))} ms` : undefined;
 
-/** The count right of the input (11-query §4): `12 nodes`, `2 items`, `6 rows in 41 ms`, `10,000 of 48,120 rows in 41 ms`. */
+/** The count right of the input: `12 nodes`, `2 items`, `6 rows in 41 ms`, `10,000 of 48,120 rows in 41 ms`. */
 export function resultLabel(result: QueryResult): string {
   const time = resultTime(result);
   return time === undefined ? resultCount(result) : `${resultCount(result)} in ${time}`;

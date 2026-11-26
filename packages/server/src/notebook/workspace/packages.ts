@@ -1,4 +1,4 @@
-// The workspace packages of 03-api §4.6: what package.json declares (packages.list), packages.add and packages.remove,
+// The workspace packages: what package.json declares (packages.list), packages.add and packages.remove,
 // which run the package manager (install.ts) one at a time, stopped with the daemon, past the install timeout, or by
 // packages.cancel. Decision: a caller that goes away does not cancel its run, which goes to its
 // end and reports it as packages.done: a manager cut half-way leaves node_modules worse than one that finishes; only an

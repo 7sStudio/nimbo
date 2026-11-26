@@ -1,5 +1,5 @@
-// The routes suite, what the daemon says of the routes (03-api §4.4 kernel.routes, §5 Route, §6 routes.changed; 04-kernel
-// §5.6, §8): each route's spec, method, path, URL (routeUrl's, exactly), cell, registeredAt and hits; routes.changed on
+// The routes suite, what the daemon says of the routes (kernel.routes, Route, routes.changed):
+// each route's spec, method, path, URL (routeUrl's, exactly), cell, registeredAt and hits; routes.changed on
 // a registration, a replacement, a disposal and a hit, with a growing seq; hits for every answered request, not a 404;
 // an `event` output per hit on the registering cell's latest run; names and paths that need escaping in a URL.
 import type { Route } from "@jsnb/core";
@@ -88,7 +88,7 @@ describe("hits and events", () => {
       expect((await send("/webhook")).status).toBe(404);
       expect((await routes())[0]?.hits).toBe(3);
       const events = await eventsOn(id, 3);
-      // each with the time its handler took (04-kernel §5.6); a sender with no User-Agent is named by none
+      // each with the time its handler took; a sender with no User-Agent is named by none
       const took = expect.any(Number) as unknown;
       expect(events.map(({ name, data }) => [name, data])).toEqual([
         ["POST /webhook", { status: 200, type: "payment_intent.succeeded", durationMs: took }],

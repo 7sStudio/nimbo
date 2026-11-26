@@ -1,4 +1,4 @@
-// The named exports of a CommonJS module in the page (04-kernel §8.1): the names Node
+// The named exports of a CommonJS module in the page: the names Node
 // gives an `import` of it, found as Node finds them, with Node's own lexer (cjs-module-lexer, from the nodejs
 // organisation) over the module's file and, through each re-export it reports (`module.exports = require("./impl")`,
 // react's index files), over the file Node's require resolves that to. The bundle of a CommonJS entry then exports

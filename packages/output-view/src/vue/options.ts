@@ -34,10 +34,10 @@ export type OutputViewOptions = {
   readonly expandControl?: boolean;
 };
 
-/** `outputs.maxHeightPx` (03-api §4.10). */
+/** `outputs.maxHeightPx`. */
 export const defaultMaxHeight = 400;
 
-/** 03-api §4.3 `cell.outputValue`'s input: the children of `path` (copy-path form) from `offset`, at most `limit`. */
+/** `cell.outputValue`'s input: the children of `path` (copy-path form) from `offset`, at most `limit`. */
 export type LoadMoreRequest = {
   readonly path: string;
   readonly offset: number;
@@ -53,7 +53,7 @@ export type CopyEvent = {
   readonly text: string;
 };
 
-/** `meta.outputHeight` (03-api §5), core's own type. */
+/** `meta.outputHeight`, core's own type. */
 export type OutputHeight = NonNullable<CellMeta["outputHeight"]>;
 
 /**

@@ -16,7 +16,7 @@
 /* Test files and fixtures are not the page: their classes never reach the build. */
 @source not "./**/*.test.ts";
 
-/* A pointer's hover only where a mouse or trackpad gives one (08 §7), as output-view's utilities.css does: Tailwind's own
+/* A pointer's hover only where a mouse or trackpad gives one, as output-view's utilities.css does: Tailwind's own
    variant asks (hover: hover) alone. */
 @custom-variant hover {
   @media (hover: hover) and (pointer: fine) {
@@ -178,7 +178,7 @@
 }
 
 /* While a cell is dragged (cells/useCellDrag.ts) the page shows the grabbing hand and selects no text; the attribute sits
-   on .jsnb-ui and a client cell's live container is left as it is (08 §7). */
+   on .jsnb-ui and a client cell's live container is left as it is. */
 .jsnb-ui[data-dragging] {
   user-select: none;
 }

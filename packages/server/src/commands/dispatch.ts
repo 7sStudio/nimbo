@@ -1,5 +1,5 @@
-// One JSON-RPC call to its answer (02-architecture §4.1): the bound command for the method (-32601 when none), its
-// handler run with the call's context, and the result or the call failure as the wire carries it (03-api §7.4).
+// One JSON-RPC call to its answer: the bound command for the method (-32601 when none), its
+// handler run with the call's context, and the result or the call failure as the wire carries it.
 import type { Log } from "../events/log.js";
 import type { Bound } from "./bind.js";
 import { OutputMismatch } from "./bind.js";

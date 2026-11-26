@@ -1,4 +1,4 @@
-// The live executions of 04-kernel §2.1 and §6 on the daemon side: one async queue per execute() fed by that
+// The live executions on the daemon side: one async queue per execute() fed by that
 // execution's output and status messages and ended by its terminal status, after which its outputs are late (onOutput);
 // interrupt ends every live one at once as interrupted, and whatever an interrupted execution reports afterwards is
 // dropped (the last 1 000 interrupted are remembered).

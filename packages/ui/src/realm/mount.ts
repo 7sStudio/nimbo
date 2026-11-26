@@ -1,7 +1,7 @@
-// Mounts the client realm (02-architecture §2): runtime-web's Realm over the page's one socket, answering
+// Mounts the client realm: runtime-web's Realm over the page's one socket, answering
 // the daemon's realm.execute, realm.reset, realm.snapshot and realm.interrupt, its own calls sent as registry commands. It attaches on
 // start, again after every reconnect, and again when the page is free on a live socket; a refusal with REALM_ATTACHED (1011, another tab has the page) makes this tab
-// view-only (03-api §4.5); a refusal because the notebook is not open (it closed, and the store follows its
+// view-only; a refusal because the notebook is not open (it closed, and the store follows its
 // reopen) leaves the attach unsettled rather than failed; any other refusal is reported to the store as a failed attach the page shows. The store mirrors realm.status from events; this file only attaches.
 import { bridgeCall, commandByName, isJsnbError, JsnbError } from "@jsnb/core";
 import type { SocketClient } from "@jsnb/client";
@@ -24,7 +24,7 @@ export type MountedRealm = {
   /** The last attach's outcome, renewed after every reconnect. */
   readonly attached: () => Promise<Attach>;
   readonly detach: () => Promise<void>;
-  /** This view-only tab takes the notebook from the tab that holds it (03-api §4.5 `takeover`). */
+  /** This view-only tab takes the notebook from the tab that holds it (`takeover`). */
   readonly takeOver: () => Promise<Attach>;
 };
 
@@ -117,7 +117,7 @@ function attacher(realm: Realm, store: Store): (takeover?: boolean) => Promise<A
 
 /** When the tab attaches again: after a reconnect, when the notebook opened again after another client closed it
  * (its session is new and holds no page; every tab tries, the second-tab rules decide), and, for a view-only tab,
- * once the tab that held the page lets go (03-api §4.5: refused "until the first detaches or its socket closes"). */
+ * once the tab that held the page lets go (refused "until the first detaches or its socket closes"). */
 function followThePage(client: SocketClient, store: Store, again: () => void): void {
   // side effect: the notebook opened again: attach again, whichever role this tab had
   watch(

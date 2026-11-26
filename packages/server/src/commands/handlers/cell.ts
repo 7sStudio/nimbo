@@ -1,4 +1,4 @@
-// The cell edits of 03-api §4.3: add (with `run`, run and wait as cell.run does), get, update, revert, mark reviewed,
+// The cell edits: add (with `run`, run and wait as cell.run does), get, update, revert, mark reviewed,
 // move and delete, each stamped with the connection's declaration in `meta.lastEdit`.
 import {
   cellAdd,

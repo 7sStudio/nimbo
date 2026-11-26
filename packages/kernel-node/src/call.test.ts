@@ -1,4 +1,4 @@
-// Tests a bridge call (05-bridge §4): the defining cell's store, decoded arguments, the strict result and its
+// Tests a bridge call: the defining cell's store, decoded arguments, the strict result and its
 // redaction flag, the errors for a missing export, bad arguments, a throw and a result that cannot cross.
 import { compileCell } from "@jsnb/test-tools/kernel";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";

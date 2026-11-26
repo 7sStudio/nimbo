@@ -1,4 +1,4 @@
-// The Source Control commands of 03-api §4.15: the repository's status, a file's diff (a notebook's
+// The Source Control commands: the repository's status, a file's diff (a notebook's
 // cell by cell), the whole-file writes (stage, unstage, discard, commit and amend) and init. Remotes, branches, stash
 // and history are in gitRemote.ts, gitBranch.ts, gitStash.ts and gitHistory.ts. A command that can lose work takes
 // `confirm`, which the page sets from a dialog and the CLI from --yes.

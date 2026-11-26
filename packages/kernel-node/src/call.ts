@@ -1,6 +1,6 @@
-// A bridge `call` (05-bridge §4): the export's function, the decoded argument array, the call under the defining
-// cell's store (its logs land there), the process hooks checked (04-kernel §3.3), the result in strict wire form with
-// the redaction flag; a throw fails the call and is also an error output on the defining cell (§4.2).
+// A bridge `call`: the export's function, the decoded argument array, the call under the defining
+// cell's store (its logs land there), the process hooks checked, the result in strict wire form with
+// the redaction flag; a throw fails the call and is also an error output on the defining cell.
 import { decode, encodeStrict, InvalidParams, ResultNotSerializable } from "@jsnb/core";
 
 import { callUserCode } from "./builtins/userCode.js";
@@ -20,7 +20,7 @@ function storeOf(realm: Realm, cell: string): Store | undefined {
   return execution === undefined ? undefined : { cell, execution };
 }
 
-/** The result's wire form, `redacted` true when redaction changed any string (04-kernel §10); bytes cross whole up to
+/** The result's wire form, `redacted` true when redaction changed any string; bytes cross whole up to
  * `limit`, the request's or the launch one. */
 function encodeResult(realm: Realm, fn: string, value: unknown, limit: number): ResultFields {
   let redacted = false;
@@ -49,7 +49,7 @@ function argumentsOf(args: readonly unknown[]): readonly unknown[] | undefined {
 }
 
 /** The result of one `call`: the function's value in strict wire form, or the error it threw or that refused it. A call
- * refused before anything ran says why (`refused`), so the daemon can answer in the catalogue's words (05-bridge §7). */
+ * refused before anything ran says why (`refused`), so the daemon can answer in the catalogue's words. */
 async function callResult(realm: Realm, message: CallMessage): Promise<ResultFields> {
   const target = realm.exports.resolve(message.fn);
   if (!target) {

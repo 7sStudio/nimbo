@@ -1,4 +1,4 @@
-// /n/<name>/… (04-kernel §8): the notebooks' routes, the one surface without a token, since a webhook sender has none.
+// /n/<name>/…: the notebooks' routes, the one surface without a token, since a webhook sender has none.
 // The method, the path, the query (as the URL parser keeps it), the headers and the raw body (base64) go to the notebook's kernel, and its
 // answer comes back; what of each passes is routeCredentials.ts (no daemon credential to user code, no CORS header to
 // the sender). A path no route answers is 404: nothing else exists below /n/.

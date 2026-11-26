@@ -1,4 +1,4 @@
-// Who asked for a run (03-api §5 Execution.requestedBy), as the page's Activity log says it: the declaration of the
+// Who asked for a run (Execution.requestedBy), as the page's Activity log says it: the declaration of the
 // connection behind cell.add with run, cell.run and notebook.run, kept on the execution cell.outputs answers.
 import { withDaemon } from "../../../fixtures/daemon.js";
 import { describe, expect, it } from "vitest";

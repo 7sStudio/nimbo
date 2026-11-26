@@ -1,4 +1,4 @@
-// The table of open notebooks (03-api §4.2): notebook.create of a notebook that is open, or whose open is pending, is
+// The table of open notebooks: notebook.create of a notebook that is open, or whose open is pending, is
 // NOTEBOOK_EXISTS and leaves that session in place; one file is open under one ref only (a path through a linked
 // folder, a case variant on a disk that ignores case: NotebookAlreadyOpen naming the open ref), before and after the
 // file's saves gave it new inodes; two closes of one notebook at once make one close; a long non-ASCII name opens (its

@@ -1,4 +1,4 @@
-// `sql status` and `sql install` read for a person (03-api §4.16, §8): where DuckDB goes and how big it is, a progress
+// `sql status` and `sql install` read for a person: where DuckDB goes and how big it is, a progress
 // line while it installs, and how to remove it. The workspace's daemon does it when one runs (it uses DuckDB at once);
 // with none, the server's install runs in a process of its own, so no workspace and no daemon are needed. With --json or --help they are the registry's generated
 // commands, unchanged, as is any other `sql` verb.

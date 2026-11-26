@@ -1,5 +1,5 @@
 // The notebook mirror: the page's copy of one notebook, a pure value the reducer derives from notebook.get
-// and the event stream (02-architecture §4.2). No Vue here; store/notebook.ts holds it in a Pinia store.
+// and the event stream. No Vue here; store/notebook.ts holds it in a Pinia store.
 import type {
   Cell,
   CellId,
@@ -42,7 +42,7 @@ export type Mirror = {
    * absent here has no list from the service yet. */
   readonly diagnostics: ReadonlyMap<CellId, readonly Diagnostic[]>;
   /** The last edit made to the file outside nimbo that the daemon merged, or found unreadable or in conflict
-   * (notebook.reconciled, 07-file-format §5), with its event's seq; null until one comes. */
+   * (notebook.reconciled), with its event's seq; null until one comes. */
   readonly external: (EventOf<"notebook.reconciled">["data"] & { readonly seq: number }) | null;
   /** The open conflict holds text recovered from a session that ended (notebook.get's `recovered`), until it ends. */
   readonly recovered: string | null;

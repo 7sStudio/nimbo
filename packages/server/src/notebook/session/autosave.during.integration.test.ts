@@ -1,4 +1,4 @@
-// A change that lands while a save writes (07-file-format §5): the autosaver over a real file, whose
+// A change that lands while a save writes: the autosaver over a real file, whose
 // state changes right after a write took its text, during that write's own reads and writes. The write does not mark
 // the state saved: `dirty` stays true until a later write holds the change, and a close (flush) writes until the file
 // holds the last state, as a save that found the file unchanged does too. A reload asked for while a write is under way

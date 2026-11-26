@@ -1,4 +1,4 @@
-// Tests what the process-hook checks of 04-kernel §3.3 do with a replacement they kept, over the emitter standing in
+// Tests what the process-hook checks do with a replacement they kept, over the emitter standing in
 // for `process` (fixtures/hookedEmitter.ts, a stub named as one; the real process is tested in
 // processHooksKept.integration and processHookAccessors.integration): a wrapper function or an accessor found to
 // deliver is not called again by a later check while it stays the same (the same value, getter or Proxy in the same

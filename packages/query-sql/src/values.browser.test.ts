@@ -84,7 +84,7 @@ describe("ENUM", () => {
   });
 });
 
-describe("what DuckDB-WASM cannot send (11-query §3)", () => {
+describe("what DuckDB-WASM cannot send", () => {
   it("gives BIGNUM in a MAP as bytes, where DuckDB-WASM drops the name, and fails on TIME_NS", async () => {
     expect(await one("SELECT MAP {'k': 7::BIGNUM} AS m")).toEqual({ m: { k: "0x80000107" } });
     const error = await engine

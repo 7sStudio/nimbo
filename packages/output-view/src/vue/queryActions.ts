@@ -1,4 +1,4 @@
-// The query bar's actions over its state (11-query §4), for useQueryBar: load a mode's engine on first use, run (and
+// The query bar's actions over its state, for useQueryBar: load a mode's engine on first use, run (and
 // pin), reset, recall history, add a grid column's chip, switch mode and cancel. Each takes the bar it acts on.
 import type { QueryMode } from "@jsnb/core";
 import type { Ref, ShallowRef } from "vue";
@@ -32,7 +32,7 @@ export type Bar = {
   readonly open: Ref<boolean>;
   readonly progress: Ref<Progress | undefined>;
   readonly recalled: Ref<number>;
-  /** The mode last picked or run on each view (11-query §1: the bar remembers the last mode per view). */
+  /** The mode last picked or run on each view (the bar remembers the last mode per view). */
   readonly last: Partial<Record<"tree" | "grid", QueryMode>>;
   controller: AbortController | undefined;
 };
@@ -128,7 +128,7 @@ export function recall(bar: Bar, direction: 1 | -1): void {
   dispatch(bar, parsed?.ok ? { type: "chips", chips: parsed.value } : { type: "text", text });
 }
 
-/** A grid column's filter (11-query §4): one more chip in Filter mode, run at once. */
+/** A grid column's filter: one more chip in Filter mode, run at once. */
 export async function addChip(bar: Bar, chip: Chip): Promise<void> {
   if (bar.state.value.mode !== "filter") dispatch(bar, { type: "mode", mode: "filter" });
   dispatch(bar, { type: "chips", chips: [...bar.state.value.chips, chip] });

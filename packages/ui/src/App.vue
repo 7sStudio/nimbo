@@ -29,7 +29,7 @@ import { useUiStore } from "./store/ui";
 
 // The side panel, the inspector (and its icons when hidden) and the bottom panel are chunks of their own, loaded when
 // they first show: the first load carries the
-// notebook alone (the page bundle's budget, 08-code-standards §10).
+// notebook alone (the page bundle's budget).
 const SidePanel = defineAsyncComponent(() => import("./panel/SidePanel.vue"));
 const Inspector = defineAsyncComponent(() => import("./panel/Inspector.vue"));
 const BottomPanel = defineAsyncComponent(() => import("./panel/BottomPanel.vue"));

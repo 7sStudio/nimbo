@@ -1,4 +1,4 @@
-<!-- ToastViewport: the stack at the bottom right (inline end), above everything but nothing else of ours (--z-toast), in the page's .jsnb-ui root (08 §7). aria-live="off" keeps the stack in the accessibility tree while a modal dialog hides the rest of the page (Reka's hideOthers spares [aria-live] elements), so a toast a dialog raises (Copy path) is still a status; the toasts inside announce themselves. -->
+<!-- ToastViewport: the stack at the bottom right (inline end), above everything but nothing else of ours (--z-toast), in the page's .jsnb-ui root. aria-live="off" keeps the stack in the accessibility tree while a modal dialog hides the rest of the page (Reka's hideOthers spares [aria-live] elements), so a toast a dialog raises (Copy path) is still a status; the toasts inside announce themselves. -->
 <script setup lang="ts">
 import { ToastPortal, ToastViewport } from "reka-ui";
 

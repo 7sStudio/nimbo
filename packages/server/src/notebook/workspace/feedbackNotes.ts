@@ -1,4 +1,4 @@
-// The feedback notes as the commands of 03-api §4.12 read them, over the store /feedback/ serves (files/feedback): the
+// The feedback notes as the commands read them, over the store /feedback/ serves (files/feedback): the
 // notes listed for an agent (the screenshots as absolute paths, the bulky element details only with `full`) and one
 // marked done or reworded.
 import { join } from "node:path";

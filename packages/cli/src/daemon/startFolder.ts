@@ -1,4 +1,4 @@
-// The start folder of 03-api §8's start: `<workspace>/.jsnb/start-<the CLI's pid>-<random>/` (0700, its files
+// The start folder of a daemon start: `<workspace>/.jsnb/start-<the CLI's pid>-<random>/` (0700, its files
 // 0600), or `<tmp>/nimbo-start-<pid>-<random>/` when `.jsnb` cannot be made there. It holds the daemon's stderr until
 // the daemon listens (then moved into `.jsnb/logs/stderr.log`, never across devices in the normal case) and
 // `start.json`. A CLI killed before the move leaves the folder, and its daemon lives on: each start first
@@ -63,7 +63,7 @@ export async function stderrFile(workspace: string) {
   };
   record();
   const path = join(dir, "stderr.log");
-  const handle = await open(path, "w", 0o600); // the daemon's raw stderr, beside its 0600 logs (02 §8)
+  const handle = await open(path, "w", 0o600); // the daemon's raw stderr, beside its 0600 logs
   const removeDir = async (): Promise<void> => {
     try {
       await rm(dir, { recursive: true, force: true });

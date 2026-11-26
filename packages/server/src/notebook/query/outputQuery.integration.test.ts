@@ -1,4 +1,4 @@
-// cell.outputQuery through the daemon (03-api §4.3, 11-query): Filter chips and JSONPath select paths and the nodes
+// cell.outputQuery through the daemon: Filter chips and JSONPath select paths and the nodes
 // they name, jq transforms, SQL runs on the value's plain rows as `t`; a wrong query is INVALID_PARAMS on `query`, a
 // timeout a result; only a full value is queried.
 import { createNodeSqlEngine } from "@jsnb/query-sql/node";

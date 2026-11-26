@@ -1,4 +1,4 @@
-// Values held in an engine's query worker under a key (11-query §2): kept on the main side by reference, sent to the
+// Values held in an engine's query worker under a key: kept on the main side by reference, sent to the
 // worker with the first query of their key there, and again after that worker was replaced (a timeout or a crash ends
 // it, and the next one starts empty). What the worker holds is bounded by `maxBytes` of JSON text (UTF-8): past it the
 // oldest held values are forgotten, here and in the worker (the task that sends a value names them), and a later
@@ -10,7 +10,7 @@ import type { WorkerClient } from "./worker/client.ts";
 import type { TaskSource, WorkerTask } from "./worker/protocol.ts";
 import { isReady, toJsonText } from "./worker/protocol.ts";
 
-/** The default bound, the daemon's `outputs.retainMaxBytes` default (03-api §4.10): 64 MiB of JSON text. */
+/** The default bound, the daemon's `outputs.retainMaxBytes` default: 64 MiB of JSON text. */
 export const defaultHeldMaxBytes = 64 * 1024 * 1024;
 
 type Entry = {

@@ -1,4 +1,4 @@
-// Tests what a run does after it settled (04-kernel §5.3 for the page): late outputs and errors on its execution,
+// Tests what a run does after it settled : late outputs and errors on its execution,
 // the window fallback for an error that escaped every wrapper, and nothing from a stale run.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 

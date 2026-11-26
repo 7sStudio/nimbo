@@ -1,4 +1,4 @@
-// The JSONPath engine (11-query §2): the library loads on first use. A select runs in the calling thread only for a
+// The JSONPath engine: the library loads on first use. A select runs in the calling thread only for a
 // linear query over a value within the limits below (mainThreadNodeLimit nodes, 64 levels, 4 000 000 characters, names
 // of 10 000), and for at most one time slice; it runs in the query worker otherwise, where the timeout, the abort and
 // the heap cap apply. A held value (hold) is selected in by its key (selectHeld): sent to the worker once, parsed there

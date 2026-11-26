@@ -1,5 +1,5 @@
 // The shell's view models from the stores: derived with computed, never stored, so a component
-// renders plain values and its test builds them by hand (09-testing §1.3).
+// renders plain values and its test builds them by hand.
 import { computed } from "vue";
 
 import { homePageUrl } from "../store/address.js";
@@ -152,7 +152,7 @@ export function useShell() {
     save: notebook.mirror.saveState,
     staleCount: notebook.staleCount,
     // the kernel runs a cell, or the page runs a client cell, or a run waits behind one (a cell run again while its run
-    // goes on reads queued): interrupt ends the running one and clears the queue (02-architecture §5)
+    // goes on reads queued): interrupt ends the running one and clears the queue
     busy:
       state.value?.kernel.state === "busy" ||
       notebook.cellsInOrder.some((cell) => cell.status === "running" || cell.status === "queued"),

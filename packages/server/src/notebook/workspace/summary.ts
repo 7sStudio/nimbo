@@ -1,4 +1,4 @@
-// notebook.summary (03-api §4.2): what a notebook holds, without opening it and without running anything, for Home's
+// notebook.summary: what a notebook holds, without opening it and without running anything, for Home's
 // search and preview. An open notebook is read from its session, so an edit not saved yet shows; a
 // closed one from its file, through the path rules every command follows (notebookFile.ts: inside the workspace, no
 // link out of it) and core's parser, which refuses a file it cannot load as notebook.open would. The cells are named

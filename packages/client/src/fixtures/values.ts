@@ -1,4 +1,4 @@
-// Results that pass core's output schemas (03-api §4, §5), for the transport tests.
+// Results that pass core's output schemas, for the transport tests.
 import type { Cell, Execution } from "@jsnb/core";
 
 export const cell: Cell = {

@@ -1,4 +1,4 @@
-// `nimbo events [--follow] [-n <notebook>]` (03-api §8, §6): the event stream as JSON lines. Without --follow, what the
+// `nimbo events [--follow] [-n <notebook>]`: the event stream as JSON lines. Without --follow, what the
 // registry gives at once: the stream's current position, `{ notebook, seq }` from events.subscribe; with it, every
 // event of the workspace (or of -n's notebook) as it comes, one envelope per line, until SIGINT or SIGTERM (exit 0).
 import type { SeqGap, SocketClient, Subscription } from "@jsnb/client";

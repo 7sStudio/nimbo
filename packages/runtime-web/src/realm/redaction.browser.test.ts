@@ -1,4 +1,4 @@
-// Tests redaction of every string that leaves the page (02-architecture §3, 04-kernel §10, 09-testing §4.3): streams,
+// Tests redaction of every string that leaves the page: streams,
 // values, the DOM output, late errors, a failed status and realm.snapshot.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 

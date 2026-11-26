@@ -1,4 +1,4 @@
-<!-- VariablesSection: the inspector's Variables group: everything defined in the server kernel or in the page, with its value and the cell that defined it. A Server / Client switch, a filter, rows name, value and cell from kernel.scope under one column header (an exported name says so in words; a client name a server cell also exports says it shadows that export, 05-bridge §3.3, since the page's own is the one in effect there); a row click expands it with an OutputView of the full value, read through cell.bindings of the cell that defined it. -->
+<!-- VariablesSection: the inspector's Variables group: everything defined in the server kernel or in the page, with its value and the cell that defined it. A Server / Client switch, a filter, rows name, value and cell from kernel.scope under one column header (an exported name says so in words; a client name a server cell also exports says it shadows that export, since the page's own is the one in effect there); a row click expands it with an OutputView of the full value, read through cell.bindings of the cell that defined it. -->
 <script setup lang="ts">
 import type { Binding, BindingValue } from "@jsnb/core";
 import { OutputView } from "@jsnb/output-view";
@@ -37,7 +37,7 @@ const scope = useScope(store, realm);
 const numbers = computed(
   () => new Map(store.cellsInOrder.map((cell, at) => [cell.id, String(at + 1)])),
 );
-/** Each name a server cell exports, with its cell's number: a client name among them shadows it (05-bridge §3.3). */
+/** Each name a server cell exports, with its cell's number: a client name among them shadows it. */
 const exporters = computed(() =>
   exportersOf(store.cellsInOrder, (cell) => store.mirror.graph.get(cell)?.exports),
 );

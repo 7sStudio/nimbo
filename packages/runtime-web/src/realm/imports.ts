@@ -1,4 +1,4 @@
-// Client imports (04-kernel §8.1): the URL a specifier loads from, and the loader behind `__scope.__import`.
+// Client imports: the URL a specifier loads from, and the loader behind `__scope.__import`.
 
 const scheme = /^[A-Za-z][A-Za-z0-9+.-]*:/;
 
@@ -9,7 +9,7 @@ const isRelative = (specifier: string): boolean =>
   specifier.startsWith("../");
 
 /**
- * The 04-kernel §8.1 rule: a URL (`https:`, `data:`, `blob:` …) or a path from the root is used as it is; a relative
+ * The client import rule: a URL (`https:`, `data:`, `blob:` …) or a path from the root is used as it is; a relative
  * specifier travels as one escaped path segment under `/npm/` (no dot segment for the URL parser to collapse, and never
  * a package, since npm names cannot start with a dot); anything else is a package spec, `/npm/<spec>`.
  */
@@ -19,7 +19,7 @@ export function importUrl(specifier: string): string {
   return `/npm/${specifier}`;
 }
 
-/** Loads a module by URL: the daemon bundles packages and serves relative files at `/npm/` (04-kernel §8.1). */
+/** Loads a module by URL: the daemon bundles packages and serves relative files at `/npm/`. */
 export async function loadModule(url: string): Promise<unknown> {
   const loaded: unknown = await import(/* @vite-ignore */ url);
   return loaded;

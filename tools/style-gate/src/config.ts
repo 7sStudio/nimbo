@@ -33,7 +33,7 @@ const added = {
   "declaration-property-value-allowed-list": {
     "z-index": ["/^var\\(--z-(?:toolbar|panel|overlay|toast)\\)$/"],
   },
-  // :focus-visible is the one focus style (08 §7); :focus and :focus-within light on a pointer's focus too
+  // :focus-visible is the one focus style; :focus and :focus-within light on a pointer's focus too
   "selector-pseudo-class-disallowed-list": ["focus", "focus-within"],
   "jsnb/in-scope": true,
   "jsnb/in-its-place": true,

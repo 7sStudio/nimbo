@@ -1,4 +1,4 @@
-// Tests the kernel message shapes of 04-kernel §2.1 and the Kernel interface of §11.
+// Tests the kernel message shapes and the Kernel interface.
 import { describe, expect, expectTypeOf, it } from "vitest";
 
 import type { Binding, BindingValue } from "./binding.js";

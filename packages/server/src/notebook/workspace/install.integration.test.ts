@@ -1,4 +1,4 @@
-// packages.add through the daemon (03-api §4.6) with the real npm against a STUB registry (@jsnb/test-tools/registry): the
+// packages.add through the daemon with the real npm against a STUB registry (@jsnb/test-tools/registry): the
 // package.json created, progress and done events, the installed versions, the package usable by the next run; a
 // package the registry lacks fails with the manager's output, over HTTP (the progress still reaches the subscribers);
 // a spec that reads as an option never reaches it; a manager that is not installed is PackageManagerMissing; a manager

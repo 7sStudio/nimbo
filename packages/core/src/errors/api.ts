@@ -1,4 +1,4 @@
-// The call failures of 03-api §7.4: one JsnbError subclass per JSON-RPC error code, with its message template.
+// The call failures: one JsnbError subclass per JSON-RPC error code, with its message template.
 import type { InterruptContext } from "../model/kernel.js";
 import type { ErrorInfo } from "../model/output.js";
 import { JsnbError } from "./jsnbError.js";
@@ -6,7 +6,7 @@ import { JsnbError } from "./jsnbError.js";
 export type ApiIssue = { readonly path: readonly PropertyKey[]; readonly message: string };
 type Cause = { readonly cause?: unknown };
 
-/** The UPPER_SNAKE names of 03-api §7.4 by code. */
+/** The UPPER_SNAKE names by code. */
 export const apiErrorCodes = {
   INVALID_PARAMS: -32602,
   NOTEBOOK_NOT_FOUND: 1001,
@@ -69,7 +69,7 @@ export class InvalidParams extends ApiError {
   }
 }
 
-/** `closed`: the file exists, the daemon just does not have it open (03-api §4.2: commands address open notebooks). */
+/** `closed`: the file exists, the daemon just does not have it open (commands address open notebooks). */
 type NotFound = { readonly path: string; readonly closed?: true };
 const notebookNotFoundMessage = ({ path, closed }: NotFound): string =>
   closed === true
@@ -121,7 +121,7 @@ export class KernelDead extends ApiError {
   }
 }
 
-/** Where the code runs, by the context Node entered from JavaScript (04-kernel §6). */
+/** Where the code runs, by the context Node entered from JavaScript. */
 const runningIn: Readonly<Record<InterruptContext, string>> = {
   Immediate: "an immediate callback (Node's own setImmediate)",
   Timeout: "a timer callback (Node's own setTimeout or setInterval)",
@@ -196,7 +196,7 @@ type Feature = {
   /** Why it is not available here, and how to fix it. */
   readonly reason?: string;
 };
-/** A planned setting says "not implemented yet" (03-api §4.10); a reason is given as it is; every other v1.x surface
+/** A planned setting says "not implemented yet"; a reason is given as it is; every other v1.x surface
  * names the version. */
 const notAvailableMessage = ({ feature, planned, reason }: Feature): string => {
   if (reason !== undefined) return `${feature} is not available: ${reason}`;

@@ -1,4 +1,4 @@
-// The page's start-order errors (08-code-standards §5): a store or a view reached the session or the dispatcher before
+// The page's start-order errors: a store or a view reached the session or the dispatcher before
 // the page's start provided it, a bug in the page, never a user's error.
 import { JsnbError } from "@jsnb/core";
 

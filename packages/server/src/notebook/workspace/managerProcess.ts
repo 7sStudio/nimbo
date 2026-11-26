@@ -1,6 +1,6 @@
-// The package manager's process for packages.add (03-api §4.6): run without a shell in the workspace, each output line
+// The package manager's process for packages.add: run without a shell in the workspace, each output line
 // handed on, in a process group of its own on POSIX, so a kill (the install timeout, the daemon's stop) reaches the
-// lifecycle scripts it started too, as kernel-node does for kernels (04-kernel §2). Windows has no
+// lifecycle scripts it started too, as kernel-node does for kernels. Windows has no
 // process group a kill can name: there the manager alone is killed, and a script it started may outlive it. A manager
 // that exited while a process it left still holds its pipes is waited for until the run aborts; the abort then kills
 // that group and rejects at once.

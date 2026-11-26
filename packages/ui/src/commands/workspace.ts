@@ -51,7 +51,7 @@ function packageCommands(workspace: ReturnType<typeof useWorkspaceStore>): reado
   ].map((command) => ({ ...command, writes: true }));
 }
 
-/** File > Export as HTML (07-file-format §9): notebook.export's page, saved by the browser as `<name>.html`. */
+/** File > Export as HTML: notebook.export's page, saved by the browser as `<name>.html`. */
 function exportCommand(): Command {
   const session = useSessionStore();
   const store = useUiStore();

@@ -1,4 +1,4 @@
-// The workspace commands of 03-api §4.1: workspace.info; workspace.stop, which answers `{}` and then stops; and Open
+// The workspace commands: workspace.info; workspace.stop, which answers `{}` and then stops; and Open
 // folder's listing, recent folders and workspace.open, which answers the other daemon's address and then stops this one.
 import {
   workspaceInfo,

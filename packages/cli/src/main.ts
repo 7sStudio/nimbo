@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The CLI binary (03-api §8): `run` over the real process, its exit code as the process's. The Node check comes before
+// The CLI binary: `run` over the real process, its exit code as the process's. The Node check comes before
 // anything else is imported, so a checkout run on an older Node says so instead of failing inside a dependency. The rest
 // is in run.ts and io/process.ts; this file is proven by the tests that run the built dist/main.js (cli:integration).
 import { nodeTooOld } from "./nodeCheck.js";

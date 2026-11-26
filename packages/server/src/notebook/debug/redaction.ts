@@ -1,4 +1,4 @@
-// The debugger's answers and events through the daemon's redaction, as every other producer's (04-kernel §10): what a
+// The debugger's answers and events through the daemon's redaction, as every other producer's: what a
 // paused kernel shows can hold a secret's value.
 import type { Breakpoint, DebugFrame, DebugPause, DebugScope, DebugVariable } from "@jsnb/core";
 

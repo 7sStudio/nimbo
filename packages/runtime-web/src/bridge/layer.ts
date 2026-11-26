@@ -1,4 +1,4 @@
-// The bridge layer of one run (05-bridge §3, §3.1, §8): stubs, snapshot copies and error getters, and their tombstones.
+// The bridge layer of one run: stubs, snapshot copies and error getters, and their tombstones.
 import type { CellId, SnapshotBinding } from "@jsnb/core";
 import { KernelRestarted, decode } from "@jsnb/core";
 
@@ -9,7 +9,7 @@ import { createStub } from "./stub.js";
 type BindingKind = SnapshotBinding["kind"];
 
 export type BridgeLayer = {
-  /** What the scope view reads, after the record and before the builtins (05-bridge §3.1). */
+  /** What the scope view reads, after the record and before the builtins. */
   readonly values: Record<string, unknown>;
   readonly kinds: Map<string, BindingKind>;
 };
@@ -56,7 +56,7 @@ export function install(
 }
 
 /**
- * A kernel restart (05-bridge §8): a listed former stub rejects with KernelRestarted, a listed former snapshot throws
+ * A kernel restart: a listed former stub rejects with KernelRestarted, a listed former snapshot throws
  * it when read, and a name the map does not list leaves the layer. The cell's next run installs fresh bindings.
  */
 export function tombstone(layer: BridgeLayer, restarted: RestartedNames): void {

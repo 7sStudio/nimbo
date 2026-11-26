@@ -1,4 +1,4 @@
-// Normalized path utilities shared with output-view (11-query §2): parse, format, parent and join.
+// Normalized path utilities shared with output-view: parse, format, parent and join.
 import type { NormalizedPath } from "./engine.ts";
 import type { Result } from "./errors.ts";
 import { fail, ok } from "./errors.ts";

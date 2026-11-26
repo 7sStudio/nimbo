@@ -1,4 +1,4 @@
-// The run side of a session (02-architecture §5, 03-api §4.3, §4.4): its queue and the commands over it, the outputs
+// The run side of a session: its queue and the commands over it, the outputs
 // and full values of the runs, and the kernel's answers; a late output (a timer's, a route handler's) joins its run.
 import type {
   Binding,

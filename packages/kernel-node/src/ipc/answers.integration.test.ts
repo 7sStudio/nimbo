@@ -1,4 +1,4 @@
-// Tests the typed answers of the daemon side through the real child (04-kernel §2.1): a cell's own "message" listener
+// Tests the typed answers of the daemon side through the real child: a cell's own "message" listener
 // answers the daemon's requests first, with results it forges through process.send, and the daemon takes them for the
 // kernel's (each id is answered once; the kernel's own answers, later, are ignored). Malformed snapshot, bindings and
 // route results are refused as KernelResultInvalid naming the request and the issue, and a failed bindings or route

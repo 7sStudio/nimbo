@@ -1,7 +1,7 @@
-// The kernel child (04-kernel §2): Node's own process.nextTick and process.emit captured and checked four times a
-// second (§3.3), the config from argv[2], the runtime over the workspace (.env read at start), stdout and stderr routed
+// The kernel child: Node's own process.nextTick and process.emit captured and checked four times a
+// second, the config from argv[2], the runtime over the workspace (.env read at start), stdout and stderr routed
 // to the sink, the message and error listeners, the disconnect listener that ends the kernel's process group once the
-// daemon is gone, the interrupt hook on the process and Node's lazy globals warmed up (04-kernel §6), then `ready` with
+// daemon is gone, the interrupt hook on the process and Node's lazy globals warmed up, then `ready` with
 // the pid and the inspector URL. Everything takes the process as a parameter, so tests run it with a fake one.
 import { url } from "node:inspector";
 
@@ -60,7 +60,7 @@ type StartOptions = {
 /**
  * The timers the kernel schedules its own work with and the Date its clock reads, captured when the module loads,
  * before any cell runs: a cell that replaces globalThis.setImmediate, setTimeout or Date (fake timers do) breaks its
- * own code, not the kernel's inbox, flush or timestamps (04-kernel §3.3).
+ * own code, not the kernel's inbox, flush or timestamps.
  */
 const {
   setImmediate: nextTurn,
@@ -70,15 +70,15 @@ const {
 } = globalThis;
 
 /**
- * The sink's flush timer of 04-kernel §5.1: 16 ms. The flush is the kernel's own code, which the interrupt hook never
- * terminates, so it runs in the timer itself: as a microtask it could be dropped with a terminated cell's (§6).
+ * The sink's flush timer: 16 ms. The flush is the kernel's own code, which the interrupt hook never
+ * terminates, so it runs in the timer itself: as a microtask it could be dropped with a terminated cell's.
  */
 const flushLater = (flush: () => void): void => {
   later(flush, 16).unref();
 };
 
 /**
- * How often the kernel compares the process hooks with Node's own besides after the code it starts (04-kernel §3.3): a
+ * How often the kernel compares the process hooks with Node's own besides after the code it starts: a
  * hook replaced by code it did not start (a raw timer's) is put back within this long, rather than at the next interrupt.
  */
 const hookCheckMs = 250;
@@ -115,7 +115,7 @@ export function startKernel(proc: KernelProcess, options: StartOptions = {}): Pr
   const exit = proc.exit.bind(proc);
   const channel = createChannel(
     (message, callback) => {
-      // Node calls a send back through process.nextTick: under Node's own, a cell's fake loses no callback (§3.3).
+      // Node calls a send back through process.nextTick: under Node's own, a cell's fake loses no callback.
       if (send) hooks.withNodeNextTick(() => send(message, callback));
       else callback(null);
     },
@@ -171,7 +171,7 @@ export function startKernel(proc: KernelProcess, options: StartOptions = {}): Pr
   });
   installHook(proc, (executions, again) => {
     // Before a termination, which can end the rest of this call: the process hooks a cell may have replaced, the ones
-    // kept probed again, since a kept wrapper that stopped delivering leaves the kernel deaf until an interrupt (§3.3).
+    // kept probed again, since a kept wrapper that stopped delivering leaves the kernel deaf until an interrupt.
     runtime.recheckHooks();
     return interrupts.interrupt(executions, again);
   });

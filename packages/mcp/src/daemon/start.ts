@@ -1,4 +1,4 @@
-// Starting the daemon for a mutating tool (03-api §8 and §9, 02-architecture §7), as the CLI starts it: `<node> <entry>
+// Starting the daemon for a mutating tool, as the CLI starts it: `<node> <entry>
 // --workspace <ws> [--ui <dir>]` detached, its stdout read until the `{"event":"listening"}` line, then let go; its
 // stderr goes to a file of its own (then `.jsnb/logs/stderr.log`, startFolder.ts), so no later write of the daemon
 // meets a pipe the MCP server closed, and none is lost. An entry that exits first reports the JSON line it wrote there,

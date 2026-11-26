@@ -1,4 +1,4 @@
-// Tests the disposers of 04-kernel §7: reverse order, async ones awaited, failures collected, many taken off at a
+// Tests the disposers: reverse order, async ones awaited, failures collected, many taken off at a
 // constant cost each, dispose(fn) checks.
 import { describe, expect, it } from "vitest";
 

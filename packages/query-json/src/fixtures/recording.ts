@@ -1,5 +1,5 @@
 // The real query workers (spawnWorker: a worker thread in Node) with a record of what the main side posts to them, for
-// the tests of held values (11-query §2): which tasks carried a value, which forgot keys, how many workers started.
+// the tests of held values: which tasks carried a value, which forgot keys, how many workers started.
 import type { SpawnWorker, WorkerTask } from "../worker/protocol.ts";
 import { spawnWorker } from "../worker/spawn.ts";
 

@@ -1,4 +1,4 @@
-// The page corpus, cases 10 to 13 of 04-kernel §12: transform's src/corpus/cases-modules.ts in the page. Case 11 loads
+// The page corpus, cases 10 to 13: transform's src/corpus/cases-modules.ts in the page. Case 11 loads
 // through the realm's loader: fast-check (ESM), a CommonJS package as the daemon serves one (where transform's Node
 // realm uses typescript) and ./answer.ts.
 import { answer } from "../modules/answer.js";

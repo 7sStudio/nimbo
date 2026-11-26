@@ -1,4 +1,4 @@
-// The MCP bundle and its MCP Registry listing (02-architecture §10): nimbo-mcp-<version>.mcpb, one bundle for every
+// The MCP bundle and its MCP Registry listing: nimbo-mcp-<version>.mcpb, one bundle for every
 // platform, holding manifest.json, the launcher (mcp-registry/launcher.mjs as server/index.mjs) and the icon; the client
 // runs the launcher with its own Node, and the launcher runs the nimbo installed on the machine. The manifest lists the
 // tools the built MCP server serves (`packages/mcp/dist`, so the packages must be built). The official MCPB CLI

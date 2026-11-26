@@ -1,4 +1,4 @@
-// Calls, optional calls and tagged templates of a scoped name → `(0, __scope.f)…` (04 §3.2 rule 10), and dynamic `import()`.
+// Calls, optional calls and tagged templates of a scoped name → `(0, __scope.f)…`, and dynamic `import()`.
 import ts from "typescript";
 
 import { isReferencePosition } from "./references.js";
@@ -21,7 +21,7 @@ function indirect(callee: ts.Identifier, rewrite: Rewrite): ts.Expression {
   return ts.setSourceMapRange(factory.createParenthesizedExpression(comma), callee);
 }
 
-/** Rule 7: `import("p")` anywhere → `__scope.__import("p")`; a literal specifier is recorded in the analysis. */
+/** `import("p")` anywhere → `__scope.__import("p")`; a literal specifier is recorded in the analysis. */
 function dynamicImport(
   node: ts.CallExpression,
   rewrite: Rewrite,

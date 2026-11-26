@@ -1,4 +1,4 @@
-// The 48 120 Stripe-like events of 09-testing §8 from a fixed seed (every run sees the same rows), shared by query-sql's SQL budgets and output-view's performance tests.
+// The 48 120 Stripe-like events from a fixed seed (every run sees the same rows), shared by query-sql's SQL budgets and output-view's performance tests.
 
 type Charge = {
   readonly id: string;
@@ -32,7 +32,7 @@ export type StripeEvent = {
   readonly data: { readonly object: Charge | Customer | Invoice | PaymentIntent };
 };
 
-/** The fixture's size: 09-testing §8 and §7 measure the SQL path over this many events. */
+/** The fixture's size: the SQL budgets and the performance tests measure the SQL path over this many events. */
 export const stripeEventCount = 48_120;
 
 /** mulberry32: a small seeded generator, so the fixture is the same on every machine. */

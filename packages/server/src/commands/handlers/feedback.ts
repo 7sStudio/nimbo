@@ -1,4 +1,4 @@
-// The feedback commands of 03-api §4.12: the page's feedback notes listed and resolved by an agent or a script, over the
+// The feedback commands: the page's feedback notes listed and resolved by an agent or a script, over the
 // same store /feedback/ serves (notebook/workspace/feedbackNotes.ts).
 import { feedbackList, feedbackUpdate } from "@jsnb/core";
 

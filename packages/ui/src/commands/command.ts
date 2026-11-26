@@ -8,7 +8,7 @@ export type Command = {
   /** A registry name (`cell.run`) or a UI command (`ui.panel.toggle`, `undo.restore`). */
   readonly id: string;
   readonly title: string;
-  /** "registry" for the 03-api commands, "ui" for the page's own. */
+  /** "registry" for the registry's commands, "ui" for the page's own. */
   readonly source: "registry" | "ui";
   /** True for a command that changes the notebook or the kernel (a registry command tagged mutating or destructive,
    * and the UI commands that send one): the dispatcher refuses it unless the socket is live and this tab holds the

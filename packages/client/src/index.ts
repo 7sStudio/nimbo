@@ -1,5 +1,5 @@
 // Public API of @jsnb/client: the typed client generated from the registry over HTTP or a WebSocket, with retries,
-// reconnects, event subscriptions, the full-value download and the client's own errors (02-architecture §2).
+// reconnects, event subscriptions, the full-value download and the client's own errors.
 
 // clients
 export { createHttpClient } from "./http/client.js";
@@ -31,7 +31,7 @@ export type { SeqGap } from "./events/workspaceOrder.js";
 export { downloadValue } from "./http/download.js";
 export type { ValueRef } from "./http/download.js";
 
-// errors (03-api §7.6); daemon errors are core's ApiError subclasses
+// errors; daemon errors are core's ApiError subclasses
 export {
   CallAborted,
   ConnectionClosed,

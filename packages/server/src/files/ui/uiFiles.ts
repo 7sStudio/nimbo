@@ -1,4 +1,4 @@
-// The built UI the daemon serves at /ui/ (02-architecture §7): a file of the build by its path, never outside the
+// The built UI the daemon serves at /ui/: a file of the build by its path, never outside the
 // build folder (no `..`, no symlink out) and never a directory, else the build's index.html, which the notebook page
 // `/ui/<name>` and the output tab `/ui/<name>/out/<execution>/<index>` both load (the ui build uses `base: "/ui/"`);
 // without a build, nothing, and the page says so. Files are read off the event loop and only when regular.

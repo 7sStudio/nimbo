@@ -1,5 +1,5 @@
-// `nimbo --help` (03-api §8): the shortcuts, the domains generated from the registry with their verbs, the global
-// flags, the exit codes and the environment; a golden snapshot holds it (09-testing §3).
+// `nimbo --help`: the shortcuts, the domains generated from the registry with their verbs, the global
+// flags, the exit codes and the environment; a golden snapshot holds it.
 import { columns } from "./commands/help.js";
 import { commandsByDomain, verbOf } from "./commands/names.js";
 import { shortcuts } from "./shortcuts/all.js";

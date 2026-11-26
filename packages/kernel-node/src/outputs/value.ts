@@ -1,5 +1,5 @@
-// The value output of 04-kernel §5.2 and §5.4: core's encode under the output limits, the repr, and the uncapped
-// full form the daemon retains when the capped one is truncated (03-api §7.5).
+// The value output: core's encode under the output limits, the repr, and the uncapped
+// full form the daemon retains when the capped one is truncated.
 import type { FullValue, Output } from "@jsnb/core";
 import { encode } from "@jsnb/core";
 

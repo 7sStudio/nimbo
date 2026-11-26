@@ -33,7 +33,7 @@ export class WorkingFolderGone extends JsnbError {
 /** MCP's code for a resource that does not exist (the 2025-06-18 specification, Resources § Error Handling). */
 const resourceNotFoundCode = -32002;
 
-/** A URI that is neither `nimbo://notebook/<path>` nor `nimbo://cell/<path>/<id>` (03-api §9). */
+/** A URI that is neither `nimbo://notebook/<path>` nor `nimbo://cell/<path>/<id>`. */
 export class UnknownResource extends ApiError {
   declare readonly data: { readonly uri: string };
   constructor(data: { readonly uri: string }, options: Cause = {}) {

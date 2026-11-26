@@ -1,4 +1,4 @@
-// Tests the rebuilt server errors of 05-bridge §4.2 and §7: name, message, data, the server stack as `cause`.
+// Tests the rebuilt server errors: name, message, data, the server stack as `cause`.
 import { ApiError, BridgeCallFailed, JsnbError } from "@jsnb/core";
 import { describe, expect, it } from "vitest";
 

@@ -1,4 +1,4 @@
-// The server `env` built-in of 04-kernel §8: a read-only Proxy over the workspace .env values, replaced in place
+// The server `env` built-in: a read-only Proxy over the workspace .env values, replaced in place
 // before every run; a name with no value throws core's EnvNotSet, whose message says how to set it.
 import { EnvNotSet } from "@jsnb/core";
 

@@ -1,4 +1,4 @@
-// The reducer: applies one event of 03-api §6 to the mirror, and folds in what the store fetched (a full
+// The reducer: applies one event to the mirror, and folds in what the store fetched (a full
 // execution, the graph, the routes). Pure: no Vue, no IO; tested against recorded event logs (fixtures/*.jsonl).
 import type {
   Cell,

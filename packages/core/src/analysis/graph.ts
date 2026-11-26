@@ -1,4 +1,4 @@
-// The dependency graph of a notebook (00-overview §4.2, 05-bridge §5): edges from uses to defines and exports.
+// The dependency graph of a notebook: edges from uses to defines and exports.
 import type { CellType } from "../model/cell.js";
 import type { CellId } from "../model/ids.js";
 import type { CellAnalysis } from "../model/analysis.js";
@@ -25,7 +25,7 @@ const intersects = (a: readonly string[], b: readonly string[]): boolean =>
   a.some((name) => b.includes(name));
 
 /** The names of `provider` that a cell of `kind` can see: defines in the same realm, a server cell's exports
- * from a client cell (05-bridge §1, §5). A client cell provides nothing to a server cell: nothing crosses that way. */
+ * from a client cell. A client cell provides nothing to a server cell: nothing crosses that way. */
 function provided(provider: GraphInput, kind: CellType): readonly string[] {
   if (provider.type === "markdown") return [];
   if (provider.type === kind) return provider.analysis.defines;

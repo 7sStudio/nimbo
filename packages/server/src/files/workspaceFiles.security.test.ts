@@ -1,4 +1,4 @@
-// What the daemon reads and writes stays inside the workspace (09-testing §5, 07-file-format §7): a `.jsnb` that is a
+// What the daemon reads and writes stays inside the workspace: a `.jsnb` that is a
 // symbolic link or a file is refused with WorkspaceUnusable before anything is written through it, and so are its
 // logs/, recovery/ and cache/ folders and its log files as links; a notebook whose
 // folder or file a symbolic link takes outside the workspace is refused with INVALID_PARAMS and nothing is written

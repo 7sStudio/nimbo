@@ -1,4 +1,4 @@
-// Property: whatever name a cell defines, it lands in the realm's record and never on window (04-kernel §3.3, 08 §8).
+// Property: whatever name a cell defines, it lands in the realm's record and never on window.
 import fc from "fast-check";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 

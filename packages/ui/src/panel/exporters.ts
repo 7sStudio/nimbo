@@ -1,4 +1,4 @@
-// The Variables panel's shadow line (05-bridge §3.3): which server cell's source exports a name, so a
+// The Variables panel's shadow line: which server cell's source exports a name, so a
 // client name that shadows it can say the page's own is the one client cells read.
 import type { CellId } from "@jsnb/core";
 

@@ -1,4 +1,4 @@
-// The shared value corpus of 09-testing §8 (fixtures/values/*.json at the repository root).
+// The shared value corpus (fixtures/values/*.json at the repository root).
 import { readdirSync, readFileSync } from "node:fs";
 
 import { z } from "zod";

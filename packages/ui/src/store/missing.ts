@@ -1,4 +1,4 @@
-// What a run's error asks the user to do. The packages a run found missing (03-api §4.3.1, 04-kernel §4): a run that imports a package the workspace lacks ends
+// What a run's error asks the user to do. The packages a run found missing: a run that imports a package the workspace lacks ends
 // with MissingPackage and the names in its error's data; the cell and the Packages panel offer to install them.
 import type { ErrorInfo } from "@jsnb/core";
 
@@ -16,7 +16,7 @@ export const allMissing = (errors: readonly (ErrorInfo | undefined)[]): readonly
   ...new Set(errors.flatMap(missingNames)),
 ];
 
-/** The client cell a server cell's last run found it needs (DefinedInClient, 05-bridge §7): the name
+/** The client cell a server cell's last run found it needs (DefinedInClient): the name
  * and the place, for the card's "Switch this cell to client"; null for any other ending. */
 export function inClientOf(
   error: ErrorInfo | undefined,

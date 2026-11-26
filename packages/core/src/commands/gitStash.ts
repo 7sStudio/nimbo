@@ -1,4 +1,4 @@
-// The stash of Source Control (03-api §4.15): push, list, apply, pop and drop. A stash is named by its index in
+// The stash of Source Control: push, list, apply, pop and drop. A stash is named by its index in
 // git.stashList; passing its oid too makes a command refuse when the list changed meanwhile.
 import { z } from "zod";
 

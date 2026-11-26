@@ -1,4 +1,4 @@
-// The settings commands of 03-api §4.10: effective values with their sources, a validated write, the JSON Schema.
+// The settings commands: effective values with their sources, a validated write, the JSON Schema.
 import {
   InvalidParams,
   settingsFile,

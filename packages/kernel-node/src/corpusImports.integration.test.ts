@@ -1,4 +1,4 @@
-// Case 11 of the 04-kernel §12 corpus through the real kernel: default, named, namespace and side-effect imports from
+// Case 11 corpus through the real kernel: default, named, namespace and side-effect imports from
 // an ESM, a CJS and a side-effect package in the workspace's node_modules, a relative .ts file edited between runs,
 // `require` and `node:` imports; the pre-flight over the same workspace.
 import { mkdir, utimes, writeFile } from "node:fs/promises";

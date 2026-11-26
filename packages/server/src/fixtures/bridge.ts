@@ -1,4 +1,4 @@
-// The bridge suite's world (05-bridge §11, 09-testing §1.6): a daemon of its own, a notebook, and the real page attached
+// The bridge suite's world: a daemon of its own, a notebook, and the real page attached
 // as its client realm (runtime-web's Realm in Chromium, @jsnb/test-tools/realm), so every bridge test runs the real
 // kernel, the real daemon and the real page end to end; the run of a cell, its decoded value and its errors.
 import { mkdtemp, rm } from "node:fs/promises";

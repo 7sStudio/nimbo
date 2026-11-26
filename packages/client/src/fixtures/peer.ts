@@ -1,4 +1,4 @@
-// A JSON-RPC peer standing in for the daemon in transport tests (nothing of ours is mocked, 09-testing §1): POST /rpc, GET routes, and /rpc over WebSocket with the token rules of 03-api §7.1.
+// A JSON-RPC peer standing in for the daemon in transport tests (nothing of ours is mocked): POST /rpc, GET routes, and /rpc over WebSocket with the token rules.
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import { createServer } from "node:http";
 import { text } from "node:stream/consumers";

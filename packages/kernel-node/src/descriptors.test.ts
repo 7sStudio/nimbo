@@ -1,4 +1,4 @@
-// Tests the descriptor reads of 04-kernel §3.3 and §6: what reading a property would find, an own or an inherited data
+// Tests the descriptor reads: what reading a property would find, an own or an inherited data
 // property, an accessor, a Proxy on the chain or nothing, without running a getter or a trap; the kernel's descriptors
 // prototype-free, so a polluted Object.prototype cannot turn one into another; and the comparisons by which the kernel
 // knows a replacement it kept: the same value, getter or Proxy, in the same descriptor.

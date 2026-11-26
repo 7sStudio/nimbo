@@ -1,4 +1,4 @@
-// Tests the daemon side's executions through a NodeKernel and a real child (04-kernel §2.1, §6, §11): a run whose
+// Tests the daemon side's executions through a NodeKernel and a real child: a run whose
 // iteration stopped early hands its later outputs to onOutput; an interrupt ends every live execution at once and
 // drops what they report later; and the daemon remembers the last 1 000 interrupted executions, so what an older one
 // reports is a late output again. Each waiting run awaits a gate an earlier cell exports, opened by a bridge call

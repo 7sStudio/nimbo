@@ -1,5 +1,5 @@
 // Renders src/generated.ts from the registry: one typed method per command not tagged internal, grouped by domain,
-// each with the registry description as its JSDoc (03-api §3, 08-code-standards §2, 09-testing §4.1).
+// each with the registry description as its JSDoc.
 import type { AnyCommand } from "@jsnb/core";
 import { JsnbError } from "@jsnb/core";
 
@@ -76,9 +76,9 @@ export function renderClient(entries: readonly NamedCommand[]): string {
     header,
     imports(visible),
     ...factories,
-    "/** Every command not tagged internal, one method each, grouped by domain (03-api §3, 09-testing §4.1). */\n" +
+    "/** Every command not tagged internal, one method each, grouped by domain. */\n" +
       `export const bindCommands = (call: Caller) => ({\n${fields.join("\n")}\n}) as const;`,
-    "/** The generated methods every client has, readonly at every level (08 §6). */\n" +
+    "/** The generated methods every client has, readonly at every level. */\n" +
       "export type Commands = ReturnType<typeof bindCommands>;",
   ].join("\n\n");
 }

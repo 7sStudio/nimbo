@@ -1,4 +1,4 @@
-// Tests realm.interrupt (02-architecture §5, 03-api §4.4): a run in progress ends `interrupted` with the names it
+// Tests realm.interrupt: a run in progress ends `interrupted` with the names it
 // defined, realm.execute answers at once and its later outputs are dropped, its definitions and container kept; a run
 // that ended, or one the realm never ran, is left as it is.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";

@@ -1,4 +1,4 @@
-// Tests the route table of 04-kernel §8: spec parsing, registration on the cell, replacement, disposal, hits, URLs.
+// Tests the route table: spec parsing, registration on the cell, replacement, disposal, hits, URLs.
 import { describe, expect, it } from "vitest";
 
 import { createDisposers } from "./disposers.js";

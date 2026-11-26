@@ -1,4 +1,4 @@
-// The built-ins layer of 04-kernel §3.3 and §8, between the record and the globals: console, env, display, route,
+// The built-ins layer, between the record and the globals: console, env, display, route,
 // routeUrl, emit, dispose, require and the wrapped setTimeout, setInterval, setImmediate and queueMicrotask, each wired
 // to the current store.
 import type { Output } from "@jsnb/core";
@@ -27,11 +27,11 @@ type BuiltinsDeps = {
   readonly log: (stream: StreamName, text: string) => void;
   /** An error raised after its cell's run (a timer): an error output, or a notice without a store. */
   readonly reportError: (store: Store | undefined, error: unknown) => void;
-  /** After a timer or queueMicrotask callback returned: the process-hook check of 04-kernel §3.3. */
+  /** After a timer or queueMicrotask callback returned: the process-hook check. */
   readonly afterCallback: (store: Store | undefined) => void;
   /** A value's wire form under the output limits, redacted (display.json). */
   readonly encode: (value: unknown) => unknown;
-  /** `emit`'s queue and its flush to the daemon (05-bridge §6). */
+  /** `emit`'s queue and its flush to the daemon. */
   readonly events: {
     readonly send: (message: EventsMessage) => void;
     readonly schedule: (flush: () => void) => void;
@@ -61,7 +61,7 @@ export function createBuiltins(deps: BuiltinsDeps): Builtins {
     const store = stores.current();
     if (store) sink.emit(store, output);
   };
-  // The wrapped timers and queueMicrotask over the realm's own (04-kernel §7), wired to the current store.
+  // The wrapped timers and queueMicrotask over the realm's own, wired to the current store.
   const timers = createTimers({
     currentStore: stores.current,
     runIn: stores.run,

@@ -1,4 +1,4 @@
-// Tests the regular-file reads and writes of 04-kernel §2, §8.1 and §10 against real files of every kind: a regular
+// Tests the regular-file reads and writes against real files of every kind: a regular
 // file read whole and written, a missing one, a FIFO of fixtures/fifo.ts (refused at once for reading and for writing,
 // never opened for writing), a directory, a device (a symbolic link to /dev/null) and a file over the size allowed;
 // and a symbolic link, which the .env read follows and the loader's read and write refuse. The synchronous read of an

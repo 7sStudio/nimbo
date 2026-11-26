@@ -1,4 +1,4 @@
-// The TypeScript Program of one cell: the compiler options of 04 §3.2 and a host that serves that single file.
+// The TypeScript Program of one cell: the compiler options and a host that serves that single file.
 import ts from "typescript";
 
 import { InvalidSyntax } from "@jsnb/core";
@@ -10,7 +10,7 @@ export type CellProgram = {
   readonly outputs: ReadonlyMap<string, string>;
 };
 
-/** The options of 04 §3.2; `noEmitHelpers` because `helpers.ts` places the helpers inside the wrapper itself. */
+/** The compiler options; `noEmitHelpers` because `helpers.ts` places the helpers inside the wrapper itself. */
 export const compilerOptions: ts.CompilerOptions = {
   noLib: true,
   noResolve: true,
@@ -27,7 +27,7 @@ export const compilerOptions: ts.CompilerOptions = {
   outDir: "/out",
 };
 
-/** The syntax check of 04 §4 step 1: the first syntactic diagnostic is an `InvalidSyntax`; nothing semantic is read. */
+/** The syntax check: the first syntactic diagnostic is an `InvalidSyntax`; nothing semantic is read. */
 export function checkSyntax(program: ts.Program, file: ts.SourceFile): void {
   const [first] = program.getSyntacticDiagnostics(file);
   if (!first) return;

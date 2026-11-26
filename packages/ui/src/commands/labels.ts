@@ -4,7 +4,7 @@
 /** A command's arguments (command.ts's Args; spelled here, since command.ts reads its names from this file). */
 type Args = Readonly<Record<string, unknown>>;
 
-/** The registry's public commands in the words a user looks for (03-api §4). */
+/** The registry's public commands in the words a user looks for. */
 export const registryTitles: Readonly<Record<string, string>> = {
   "workspace.info": "Workspace Info",
   "workspace.stop": "Stop Daemon",

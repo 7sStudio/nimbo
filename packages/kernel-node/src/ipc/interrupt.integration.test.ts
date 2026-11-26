@@ -1,4 +1,4 @@
-// Tests the daemon's side of an interrupt through a NodeKernel and a real child (04-kernel §6): one evaluate of the
+// Tests the daemon's side of an interrupt through a NodeKernel and a real child: one evaluate of the
 // kernel's hook at a time, so two interrupts in a row stop a spinning cell (two evaluates the kernel's inspector ran
 // together left it spinning and the kernel deaf); what is sent while interrupts are pending is held until every one is
 // answered, then reaches the kernel after the hook in the order it was sent; what is held when the kernel dies fails

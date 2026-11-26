@@ -1,4 +1,4 @@
-// The cache command of 03-api §4.14: the page's package bundles in `.jsnb/cache/npm/` (07-file-format §7),
+// The cache command: the page's package bundles in `.jsnb/cache/npm/`,
 // cleared while the daemon runs, each bundle built again by its next import.
 import { z } from "zod";
 

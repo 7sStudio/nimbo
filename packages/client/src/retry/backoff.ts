@@ -1,4 +1,4 @@
-// Exponential backoff for HTTP retries and WebSocket reconnects (02-architecture §2 "retries"), and a pause that an
+// Exponential backoff for HTTP retries and WebSocket reconnects, and a pause that an
 // AbortSignal cuts short.
 
 /** At most `attempts` tries in a row; the n-th wait lasts min(maxMs, baseMs · 2^(n − 1)). */

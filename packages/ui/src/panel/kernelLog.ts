@@ -1,4 +1,4 @@
-// The answer of kernel.log (03-api §4.4) as the Kernel log tab shows it, or undefined when the command did not
+// The answer of kernel.log as the Kernel log tab shows it, or undefined when the command did not
 // answer (refused, failed, or a daemon that has no such command).
 export type KernelLog = {
   readonly path: string;

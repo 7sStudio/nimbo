@@ -43,7 +43,7 @@ describe("checkFormat", () => {
 });
 
 describe("checkOptions", () => {
-  it("fills the defaults of 03-api §4.10", () => {
+  it("fills the defaults", () => {
     expect(checkOptions({})).toEqual({ ok: true, value: { timeoutMs: 5000, maxRows: 10_000 } });
     expect(checkOptions({ timeoutMs: Infinity, maxRows: 0 })).toEqual({
       ok: true,

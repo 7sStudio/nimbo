@@ -1,4 +1,4 @@
-// Top-level functions and classes → assignments on `__scope` (04 §3.2 rules 3 and 4), with their `__export` calls.
+// Top-level functions and classes → assignments on `__scope`, with their `__export` calls.
 import { DefaultExport } from "@jsnb/core";
 import ts from "typescript";
 

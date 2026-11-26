@@ -1,4 +1,4 @@
-// The daemon's stand-in at the transport port runtime-web defines (09-testing §1.3): it records every call, answers
+// The daemon's stand-in at the transport port runtime-web defines: it records every call, answers
 // realm.attach, realm.detach and realm.report, answers bridge.call through the test's handler, and waits for reports.
 import type { Output, RealmReport as Report } from "@jsnb/core";
 import { RealmReport, bridgeCall } from "@jsnb/core";

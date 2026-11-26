@@ -1,5 +1,5 @@
-// The body of a diff of two texts in git.diff's form (03-api §4.15): a notebook cell by cell when both sides parse, else
-// line hunks, the full texts when asked; and notebook.compareDisk's, the file on disk against the session (07 §5).
+// The body of a diff of two texts in git.diff's form: a notebook cell by cell when both sides parse, else
+// line hunks, the full texts when asked; and notebook.compareDisk's, the file on disk against the session.
 import type { z } from "zod";
 
 import type { DiffCellSide, gitDiff, NotebookDiff, NotebookDocument } from "@jsnb/core";

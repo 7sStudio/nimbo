@@ -1,4 +1,5 @@
-// The rules that apply at any depth of the cell (04 §3.2 rules 9 to 12 and 14, dynamic import, nested `var`).
+// The rules that apply at any depth of the cell: scoped references, calls, shorthand properties, `typeof`,
+// dynamic import and nested `var`.
 import { ReservedName } from "@jsnb/core";
 import ts from "typescript";
 
@@ -24,7 +25,7 @@ type Tools = {
   readonly variables: VariableRules;
 };
 
-/** Rule 9 and rule 16: a scoped reference becomes `__scope.x`; `__scope` itself may not appear in a cell. */
+/** A scoped reference becomes `__scope.x`; `__scope` itself may not appear in a cell. */
 function visitIdentifier(id: ts.Identifier, { rewrite }: Tools): ts.Node {
   if (id.text === "__scope" && !isPropertyKey(id)) {
     throw new ReservedName({ name: id.text, ...rewrite.at(id) });
@@ -34,7 +35,7 @@ function visitIdentifier(id: ts.Identifier, { rewrite }: Tools): ts.Node {
   return kind === "local" ? id : reference(rewrite, id, accessOf(id), kind);
 }
 
-/** Rule 11: `{ x }` → `{ x: __scope.x }`; as an assignment target it is a write and keeps its default. */
+/** `{ x }` → `{ x: __scope.x }`; as an assignment target it is a write and keeps its default. */
 function visitShorthand(node: ts.ShorthandPropertyAssignment, tools: Tools): ts.Node {
   const { rewrite, visit, visitor } = tools;
   const { factory, context } = rewrite;
@@ -50,7 +51,7 @@ function visitShorthand(node: ts.ShorthandPropertyAssignment, tools: Tools): ts.
   return ts.setSourceMapRange(factory.createPropertyAssignment(node.name, value), node);
 }
 
-/** Rule 12: `typeof x` (scoped) → `typeof __scope.$peek("x")`, which never throws for an unknown name. */
+/** `typeof x` (scoped) → `typeof __scope.$peek("x")`, which never throws for an unknown name. */
 function visitTypeOf(node: ts.TypeOfExpression, { rewrite }: Tools): ts.Node | undefined {
   const { expression } = node;
   if (!ts.isIdentifier(expression) || rewrite.classify(expression) === "local") return undefined;
@@ -87,7 +88,7 @@ function expressionRule(node: ts.Node, tools: Tools): ts.Node | undefined {
   return undefined;
 }
 
-/** Rule 5: a `var` below the top level but in the cell's function scope is assigned on `__scope`. */
+/** A `var` below the top level but in the cell's function scope is assigned on `__scope`. */
 function variableRule(node: ts.Node, { variables }: Tools): ts.Node | undefined {
   if (ts.isVariableStatement(node)) {
     return isTopLevelVarList(node.declarationList) ? variables.nestedStatement(node) : undefined;

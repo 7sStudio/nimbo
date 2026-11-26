@@ -1,4 +1,4 @@
-// What every hand-written shortcut of 03-api §8 shares: its name, usage and help, its arguments read with parseArgs
+// What every hand-written shortcut shares: its name, usage and help, its arguments read with parseArgs
 // beside the global flags, the daemon session it opens (and closes), and the notebook it addresses.
 import type { ParseArgsOptionsConfig } from "node:util";
 
@@ -34,7 +34,7 @@ export type ShortcutArgs = {
 /** `-n / --notebook`, which every shortcut that addresses a notebook takes. */
 export const notebookOption = { notebook: { type: "string", short: "n" } } as const;
 
-/** The help's line for `-n`: a path from the workspace root, as every command takes it (03-api §8), and its default. */
+/** The help's line for `-n`: a path from the workspace root, as every command takes it, and its default. */
 export const notebookFlagHelp = `  -n, --notebook <path>   the notebook's path from the workspace root, whatever the working folder; defaults to
                           NIMBO_NOTEBOOK, else the only open notebook, else the only .jsnb file`;
 
@@ -86,7 +86,7 @@ const presetOf = (args: ShortcutArgs, io: Io): Promise<string | undefined> =>
 
 /**
  * Runs `work` with a session and the notebook the shortcut addresses: -n or NIMBO_NOTEBOOK, read before the session so
- * a path outside the workspace contacts no daemon, else the default of 03-api §8.
+ * a path outside the workspace contacts no daemon, else the default notebook.
  */
 export async function withNotebook<T>(
   io: Io,

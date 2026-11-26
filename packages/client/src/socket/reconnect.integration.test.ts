@@ -1,4 +1,4 @@
-// Drops and reconnects (03-api §7.1, §7.6): the status the UI mirrors, calls re-sent when safe and
+// Drops and reconnects: the status the UI mirrors, calls re-sent when safe and
 // failed when not, calls held or aborted while reconnecting, 4401 and running out of attempts.
 import { Unauthorized } from "@jsnb/core";
 import { describe, expect, it } from "vitest";

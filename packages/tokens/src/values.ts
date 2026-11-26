@@ -1,5 +1,5 @@
 // The tokens beside the colors that the notebook page and the output viewer both read, held once: the families, the two
-// text sizes, the corners, the motion, the four z-index layers of 08 §7, the shadow made from the ink and the scrim.
+// text sizes, the corners, the motion, the four z-index layers, the shadow made from the ink and the scrim.
 // Sizes are rem at the 16 px root. scripts/generate.ts writes them after the colors.
 
 /** The values in the stylesheets' order, each group under the note its comment carries. */
@@ -34,7 +34,7 @@ export const valueGroups: readonly {
     values: { "ease-out": "cubic-bezier(0.2, 0.8, 0.2, 1)", dur: "150ms", "dur-fade": "200ms" },
   },
   {
-    note: "the four z-index layers of 08 §7",
+    note: "the four z-index layers",
     values: { "z-toolbar": "10", "z-panel": "20", "z-overlay": "30", "z-toast": "40" },
   },
 ];

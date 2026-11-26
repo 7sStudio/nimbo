@@ -1,4 +1,4 @@
-// The bridge suite, 05-bridge §11 item 9 with §8, 09-testing §4.6 and 02-architecture §5's restart paragraph (real
+// The bridge suite, a kernel restart (real
 // kernel, daemon and page): kernel.restart clears the page's bridge layer only, client definitions survive and their
 // dependents are stale; a stub a client function kept and a snapshot a client function reads fail KernelRestarted, and
 // so does a re-run of the client cell, until the server cell runs again; kernel.restart { all } resets the client realm.

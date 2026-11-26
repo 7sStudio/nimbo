@@ -73,7 +73,7 @@ function optionsFor(dir: string) {
   return { options, logs: logs.items, until: messages.until, logged: logs.until };
 }
 
-/** Forks a child with `options` for `body`, and kills it afterwards whatever happened, a timeout too (09-testing §1.6). */
+/** Forks a child with `options` for `body`, and kills it afterwards whatever happened, a timeout too. */
 async function withChild(options: ForkOptions, body: (forked: Forked) => Promise<void>) {
   const forked = forkKernel(options);
   onTestFinished(() => {

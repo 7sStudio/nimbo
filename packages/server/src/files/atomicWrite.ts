@@ -1,4 +1,4 @@
-// Atomic writes of 07-file-format §5: a temp file `<name>.tmp-<pid>-<random>` beside the target, a name of the write's
+// Atomic writes: a temp file `<name>.tmp-<pid>-<random>` beside the target, a name of the write's
 // own created exclusively ("wx"), so nothing already at that name, a symbolic link included, is written through; fsync,
 // rename over the target, its mode kept (or `mode` for a new file); a crash leaves the old file or the new one, never
 // half of either. The rename replaces a link at the target's name: it never writes through one (a fixed `<name>.tmp-<pid>` opened "w" let a link planted at it for the daemon's pid be written through).

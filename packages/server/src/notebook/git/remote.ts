@@ -1,4 +1,4 @@
-// fetch, pull, push, publish and sync (03-api §4.15) through the user's git: its remotes, credentials and pull
+// fetch, pull, push, publish and sync through the user's git: its remotes, credentials and pull
 // strategy. A pull that stops on conflicts is an answer, not an error: the repository is left merging or rebasing for
 // the user to resolve, continue or abort (abortOperation, continueOperation).
 import type { GitPullOutcome, GitState } from "@jsnb/core";

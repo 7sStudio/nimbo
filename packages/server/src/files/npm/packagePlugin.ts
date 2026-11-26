@@ -1,4 +1,4 @@
-// The esbuild plugin of a package's bundle (04-kernel §8.1). A
+// The esbuild plugin of a package's bundle. A
 // bare import is external under the URL of the folder Node resolves it to from the importing file (bareImport.ts),
 // unless the importing package's own package.json decides it first (packageFields.ts): its `browser` map disables a
 // name or maps it to its own file (esbuild applies both) or to another bare name, and its `imports` map gives a `#name`

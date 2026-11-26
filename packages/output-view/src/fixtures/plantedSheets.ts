@@ -1,4 +1,4 @@
-// Sheets in the viewer's own forms the 08 §7 gate must refuse in output-view's scope, each with the rule that refuses it
+// Sheets in the viewer's own forms the style gate must refuse in output-view's scope, each with the rule that refuses it
 // (style.plants.contract.test.ts), and a sheet of what it must pass: the scope plugin's real defaults rule, chrome.css's
 // exclusion of the live slot, the dialog's fixed utility and a physical longhand. The gate's own tests plant the rest on
 // fixture CSS.

@@ -1,4 +1,4 @@
-// The kernel's watchdog (04-kernel §2): a worker thread that kills the kernel once the daemon that started it is gone.
+// The kernel's watchdog: a worker thread that kills the kernel once the daemon that started it is gone.
 // The kernel also exits on its IPC disconnect, but that handler runs on the main thread's event loop, which a cell that
 // spins never gives back: such kernels outlived their daemon at 100 % CPU (three test kernels, still spinning 10 h
 // later). The worker has an event loop of its own, reads the parent pid twice a second and sends SIGKILL, which no

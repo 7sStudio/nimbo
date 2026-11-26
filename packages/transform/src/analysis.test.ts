@@ -1,4 +1,4 @@
-// The analysis semantics: defines, uses, exports, imports and kinds, as 04 §3 fixes them.
+// The analysis semantics: defines, uses, exports, imports and kinds.
 import { beforeAll, describe, expect, it } from "vitest";
 
 import type { CellAnalysis } from "@jsnb/core";
@@ -6,7 +6,7 @@ import type { CellAnalysis } from "@jsnb/core";
 import { analyze, transform } from "./index.js";
 
 const filename = "jsnb:///rules.jsnb/c_5.ts";
-/** A representative cell, so the first test does not pay the compiler's warm-up (09 §2). */
+/** A representative cell, so the first test does not pay the compiler's warm-up. */
 const warmCell =
   'import d, { a } from "p"\nconst { x, y: [z] } = o\nfunction f(n) { return n + a }\nclass C extends B { m() { return x } }\nexport { z }\nf(d)';
 

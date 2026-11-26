@@ -1,7 +1,7 @@
-// The child's end of the IPC channel (04-kernel §2.1): daemon messages parsed with Zod, kernel messages sent with
+// The child's end of the IPC channel: daemon messages parsed with Zod, kernel messages sent with
 // a callback counted, so shutdown can wait until the last one left the process. A send counts only once the raw send
 // returned: an interrupt can stop user code inside one (display in a loop), whose callback then never comes, and an
-// uncounted send cannot hold shutdown back (04-kernel §6).
+// uncounted send cannot hold shutdown back.
 import type { KernelMessage } from "./messages.js";
 import { DaemonMessage } from "./messages.js";
 
@@ -12,7 +12,7 @@ type Parsed =
   | { readonly ok: true; readonly message: DaemonMessage }
   | { readonly ok: false; readonly issues: string };
 
-/** A daemon message, validated (04-kernel §2.1; 08-code-standards §5: Zod at every boundary). */
+/** A daemon message, validated (Zod at every boundary). */
 export function parseDaemonMessage(raw: unknown): Parsed {
   const parsed = DaemonMessage.safeParse(raw);
   return parsed.success

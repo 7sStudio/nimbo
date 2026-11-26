@@ -1,10 +1,10 @@
-// jsnb/in-its-place: what 08 §7 allows in one place only, which Stylelint's rules cannot say (they refuse a value
+// jsnb/in-its-place: what the style rules allow in one place only, which Stylelint's rules cannot say (they refuse a value
 // everywhere or nowhere, not by the media query or the rule around it):
 // - motion (a transition, an animation, smooth scrolling) under @media (prefers-reduced-motion: no-preference); a value
 //   of none, which stops motion, anywhere;
 // - a :hover rule under @media (hover: hover) and (pointer: fine), where a mouse or trackpad gives one;
 // - position: fixed on the scope's `fixed` utility only, which the package keeps for its full-screen dialog;
-// - `all` on the scope's `live-slot` utility only, as `all: initial`, the live slot's reset (04 §5.5): anywhere else it
+// - `all` on the scope's `live-slot` utility only, as `all: initial`, the live slot's reset: anywhere else it
 //   resets what the package's own rules set, the :focus-visible ring of a lower layer among them, and `unset` or
 //   `inherit` on the slot would pass inherited properties down to the user's elements.
 import { AtRule } from "postcss";
@@ -41,7 +41,7 @@ function hovers(rule: Rule): boolean {
   return found;
 }
 
-/** Declarations 08 §7 allows on one utility of the scope only: what they match, and that utility's name. */
+/** Declarations the style rules allow on one utility of the scope only: what they match, and that utility's name. */
 const held: readonly (readonly [(decl: Declaration) => boolean, string, string])[] = [
   [({ prop, value }) => prop === "position" && value === "fixed", "fixed", "position: fixed"],
   [({ prop }) => prop === "all", "live-slot", "all"],

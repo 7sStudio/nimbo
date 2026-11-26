@@ -1,4 +1,4 @@
-// One headless page, guarded (02-architecture §8): its top frame loads the daemon's own origin only (any other document
+// One headless page, guarded: its top frame loads the daemon's own origin only (any other document
 // it navigates to is refused before it is fetched, and a top frame that ends up elsewhere closes the page), its frames
 // and the cells' fetches go where a tab's may; the daemon keeps the page's CDP session, and a client-cell debugger gets
 // a relay of its own to the page (relay.ts). It starts the realm through the page's entry with the token, the notebook and a one-time key

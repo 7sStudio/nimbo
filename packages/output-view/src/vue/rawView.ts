@@ -28,7 +28,7 @@ const kinds: Readonly<Partial<Record<string, TokenKind>>> = {
 };
 
 /** A line of the Raw view: its tokens, each with its offset in the line, and the line's own offset in the text (the
- * stable keys of the view's v-fors, 08 §7). */
+ * stable keys of the view's v-fors). */
 export type RawLine = {
   readonly start: number;
   readonly tokens: readonly (Token & { readonly start: number })[];

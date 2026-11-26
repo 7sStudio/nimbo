@@ -1,4 +1,4 @@
-// @jsnb/style-gate: 08 §7 on a compiled stylesheet, a package's built CSS, whose rules are mostly its views' Tailwind
+// @jsnb/style-gate: the style rules on a compiled stylesheet, a package's built CSS, whose rules are mostly its views' Tailwind
 // utilities, which Stylelint never sees in the CSS files it lints. Stylelint itself runs on it, with the repository's
 // rules for the package's CSS files and what compiled CSS adds (config.ts), on the sheet as prepare.ts reads it.
 import stylelint from "stylelint";
@@ -22,7 +22,7 @@ export type Repository = {
 };
 
 /**
- * The gate for one package: every fault of a stylesheet against 08 §7. The sheet is linted as code with no filename,
+ * The gate for one package: every fault of a stylesheet against the style rules. The sheet is linted as code with no filename,
  * because the repository ignores dist/** and a named dist file would come back ignored with no warnings; disable
  * comments in it are ignored, and a sheet Stylelint still ignores is a fault.
  */

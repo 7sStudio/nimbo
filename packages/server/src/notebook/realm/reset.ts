@@ -1,4 +1,4 @@
-// The page's resets (03-api §4.4, §4.5, 05-bridge §8): after a kernel restart, realm.reset { bridge } maps each export
+// The page's resets: after a kernel restart, realm.reset { bridge } maps each export
 // the kernel had to its defining cell and place, so the page's stubs and snapshots of them fail KernelRestarted until
 // their client cell re-runs (client definitions survive); with `all` (and realm.restart), realm.reset {} resets the
 // client realm and every client cell is idle again with no outputs, which subscribers see as cell.updated. A client run

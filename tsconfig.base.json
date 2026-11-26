@@ -1,5 +1,5 @@
 {
-  "// owns": "The TypeScript flags of 08-code-standards §6 that every package inherits.",
+  "// owns": "The TypeScript flags that every package inherits.",
   "compilerOptions": {
     "strict": true,
     "noUncheckedIndexedAccess": true,

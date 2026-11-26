@@ -1,4 +1,4 @@
-// The headless realm's page (02-architecture §4.5, 05-bridge): runtime-web's Realm with no editor around it, loaded by
+// The headless realm's page: runtime-web's Realm with no editor around it, loaded by
 // the daemon's headless browser when no tab holds a notebook. The daemon calls __nimboHeadless over the browser's pipe
 // with the token, the notebook and the one-time key its attach must carry, so none is ever in a URL; the realm attaches as kind "headless" and answers the
 // daemon's requests. It follows the notebook's debugger, so a bridge call's timeout does not count the time the server

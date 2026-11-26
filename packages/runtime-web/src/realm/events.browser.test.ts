@@ -1,4 +1,4 @@
-// Tests realm.event in Chromium (05-bridge §6): prototype names are names; a `latest` listener gets only the last event
+// Tests realm.event in Chromium: prototype names are names; a `latest` listener gets only the last event
 // of its name in a batch; a slow listener lets the page run between slices; an event output is cut to the run's value
 // limit and a run keeps at most 1 MB of event data; on() takes names as emit does.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";

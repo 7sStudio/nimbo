@@ -1,4 +1,4 @@
-// The daemon's doors (09-testing §5; 02-architecture §7, §8; 03-api §7.1): every endpoint refuses a call without the
+// The daemon's doors: every endpoint refuses a call without the
 // token (HTTP 401, the WebSocket closed 4401 after its upgrade); the page cookie (nimbo-<port>, a page key that is never
 // the token nor in server.json) lets in /ui/ and /npm/ only, never /rpc, /outputs/ or /schema/, and only as a browser
 // sends it from the daemon's own page (Sec-Fetch-Site same-origin or none): without that header, from

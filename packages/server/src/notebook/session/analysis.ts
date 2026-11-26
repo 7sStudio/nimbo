@@ -1,5 +1,5 @@
-// A cell's analysis for the graph (00-overview §4.2): transform's `analyze` for code cells; nothing for markdown
-// and for a cell that does not parse yet (its run reports the syntax error, 04-kernel §4).
+// A cell's analysis for the graph: transform's `analyze` for code cells; nothing for markdown
+// and for a cell that does not parse yet (its run reports the syntax error).
 import type { CellAnalysis, CellType } from "@jsnb/core";
 import { emptyAnalysis, isJsnbError } from "@jsnb/core";
 import { analyze } from "@jsnb/transform";

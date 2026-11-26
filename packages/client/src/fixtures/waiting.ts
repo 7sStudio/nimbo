@@ -1,4 +1,4 @@
-// Waiting without timers (09-testing §1.4): for a connection status, or for a log to hold enough entries.
+// Waiting without timers: for a connection status, or for a log to hold enough entries.
 import type { ConnectionStatus } from "../socket/status.js";
 
 type Watched = {

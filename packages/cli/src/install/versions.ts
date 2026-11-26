@@ -1,4 +1,4 @@
-// The installed versions side by side (02-architecture §10): which release an upgrade takes, and which old versions
+// The installed versions side by side: which release an upgrade takes, and which old versions
 // may go. A version some process still runs from (a daemon, its kernels, an agent's MCP server) is kept until it stops,
 // since an upgrade under a running daemon would hand it new kernel code and new page chunks it never built.
 

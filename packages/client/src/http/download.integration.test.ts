@@ -1,4 +1,4 @@
-// The full-value download of 03-api §7.5 against the peer: the token and the declaration, a streamed body, failures.
+// The full-value download against the peer: the token and the declaration, a streamed body, failures.
 import { Unauthorized } from "@jsnb/core";
 import { afterEach, describe, expect, it } from "vitest";
 

@@ -1,4 +1,4 @@
-// The data folder's lock (02-architecture §10) on real folders and real processes: a live holder is waited for and
+// The data folder's lock on real folders and real processes: a live holder is waited for and
 // named, a dead or reused pid is taken over, and takers racing over a stale lock get in one at a time.
 import { mkdir, mkdtemp, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";

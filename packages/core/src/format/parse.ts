@@ -1,4 +1,4 @@
-// parse: text of a .jsnb file in, a NotebookDocument with warnings out, per the rules of 07-file-format §2 and §4.
+// parse: text of a .jsnb file in, a NotebookDocument with warnings out.
 import type { z } from "zod";
 
 import { DuplicateCellId, InvalidNotebook, NewerVersion } from "../errors/format.js";

@@ -1,4 +1,4 @@
-// One command's link to the workspace's daemon (03-api §7.1, §7.3, §8): server.json read and the daemon it names
+// One command's link to the workspace's daemon: server.json read and the daemon it names
 // asked once for workspace.info (a dead pid, a refused port or another daemon there is no daemon); one whose root is
 // another folder (a workspace copied with its .jsnb/) is not this workspace's: a mutating command starts the
 // workspace's own, any other is DaemonForeign. HTTP for calls and a WebSocket only for what needs events, both
@@ -27,7 +27,7 @@ export type Session = {
   readonly daemon: DaemonOptions;
   /** True when this command started the daemon. */
   readonly started: boolean;
-  /** A call over HTTP (03-api §7.3), with the client's retries; a closed notebook it names is opened first. */
+  /** A call over HTTP, with the client's retries; a closed notebook it names is opened first. */
   readonly call: Caller;
   /** The command's one WebSocket, opened on first use and closed by close(). */
   readonly socket: () => SocketClient;
@@ -35,7 +35,7 @@ export type Session = {
 };
 
 /**
- * Whether finding no daemon starts one: mutating commands (03-api §8); a destructive one has nothing to act on, and a
+ * Whether finding no daemon starts one: mutating commands; a destructive one has nothing to act on, and a
  * planned one (v1.x) is answered NOT_AVAILABLE before any daemon is sought.
  */
 export const startsDaemon = (command: AnyCommand): boolean =>

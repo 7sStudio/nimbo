@@ -82,7 +82,7 @@ const columnsOwner = computed(
 );
 const firstDom = computed(() => shown.value.find(({ output }) => output.kind === "dom")?.index);
 /** While a client run is in progress its container shows in the cell, before the dom output its end brings, so what
- * the run renders (a form, a Pay button it awaits) is there to see and use (02-architecture §5). */
+ * the run renders (a form, a Pay button it awaits) is there to see and use. */
 const liveRunning = computed(
   () => props.live !== null && props.running && firstDom.value === undefined,
 );

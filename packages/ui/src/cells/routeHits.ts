@@ -1,5 +1,5 @@
 // A route cell's result: the requests each of its listening routes answered, from the event
-// outputs the kernel attributes to the cell (04-kernel §5.6: `POST /webhook` with `{ status, type }`), and never the
+// outputs the kernel attributes to the cell (`POST /webhook` with `{ status, type }`), and never the
 // disposer `route()` returns, which is the cell's last value but means nothing to read.
 import type { Output, Route } from "@jsnb/core";
 

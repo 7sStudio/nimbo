@@ -1,5 +1,5 @@
 // The Secrets panel's usage count: how many cells name a secret through the kernel's env
-// proxy (04-kernel §8), `env.NAME`, `env["NAME"]` or `env.has("NAME")`; the page's count of cells, not the kernel's
+// proxy, `env.NAME`, `env["NAME"]` or `env.has("NAME")`; the page's count of cells, not the kernel's
 // reads. A bare word match would count a secret named PORT in every comment; `process.env.NAME` is Node's own
 // environment, not the proxy, and is not counted.
 

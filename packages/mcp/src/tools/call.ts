@@ -1,5 +1,5 @@
-// One tools/call (03-api §9): the arguments checked with the command's schema before any daemon is found, so a bad call
-// starts none (as the CLI's flags, 03 §8); the daemon found, or started for a mutating tool, and the notebook the call
+// One tools/call: the arguments checked with the command's schema before any daemon is found, so a bad call
+// starts none (as the CLI's flags); the daemon found, or started for a mutating tool, and the notebook the call
 // addresses opened first when this call started it (a fresh daemon has none open); the call over
 // HTTP; every failure the tool's error result. workspace_stop with no daemon has nothing to stop, as `nimbo stop`; a
 // planned tool, its arguments checked, is NOT_AVAILABLE from the registry, before any daemon.

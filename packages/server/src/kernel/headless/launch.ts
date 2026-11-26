@@ -1,4 +1,4 @@
-// Launching and ending the headless browser (02-architecture §8). The daemon spawns the browser itself, in a process
+// Launching and ending the headless browser. The daemon spawns the browser itself, in a process
 // group of its own, and connects puppeteer-core over its pipe (no debugging port on TCP), so it always holds the process:
 // a browser that hangs at start is killed with its group after a bound, and a stop kills a launch in flight. The sandbox
 // stays on unless realm.headlessSandbox is off; permission prompts are denied, popups blocked and any window a page

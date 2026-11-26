@@ -1,4 +1,4 @@
-// Tests chips.ts: Filter-mode chips, their keys, typed values and clause text (11-query §2).
+// Tests chips.ts: Filter-mode chips, their keys, typed values and clause text.
 import { describe, expect, it } from "vitest";
 
 import {

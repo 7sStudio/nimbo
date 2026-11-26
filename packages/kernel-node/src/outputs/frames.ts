@@ -1,5 +1,5 @@
-// V8 stack lines parsed into the Frames of 04-kernel §5.3, and cell positions rewritten in stack text: a frame in a
-// cell is mapped through the cell's source map, kernel-internal frames (the kernel's files, the user-code frame of §6
+// V8 stack lines parsed into the Frames, and cell positions rewritten in stack text: a frame in a
+// cell is mapped through the cell's source map, kernel-internal frames (the kernel's files, the user-code frame
 // included), node:internal frames and frames without a location are dropped, from the frames and from the raw stack
 // alike. A cell is known by the exact URL it was compiled under; no URL is parsed with a pattern, so whatever the
 // notebook ref holds, its positions are found.

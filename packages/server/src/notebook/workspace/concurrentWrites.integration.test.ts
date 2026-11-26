@@ -1,5 +1,5 @@
-// Writers that ask at once (an agent's parallel tool calls, two clients, a settings panel changing values quickly;
-// 07-file-format §6, §8): ten secrets.set and six settings.set at once each answer, and every key lands in its file.
+// Writers that ask at once (an agent's parallel tool calls, two clients, a settings panel changing values quickly):
+// ten secrets.set and six settings.set at once each answer, and every key lands in its file.
 import { readFile } from "node:fs/promises";
 
 import { withDaemon } from "../../fixtures/daemon.js";

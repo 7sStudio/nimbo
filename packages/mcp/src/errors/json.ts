@@ -1,6 +1,6 @@
-// A failure as the agent reads it (03-api §9, as the CLI's `--json` failure of §8): `{ code, name, message, data }`,
+// A failure as the agent reads it (as the CLI's `--json` failure): `{ code, name, message, data }`,
 // the JSON-RPC code of a daemon error or null for the MCP server's and the client's own; a -32603 carrying a named
-// JsnbError gives that name and its data (03-api §7.4).
+// JsnbError gives that name and its data.
 import { ApiError, isJsnbError } from "@jsnb/core";
 
 export type ErrorJson = {

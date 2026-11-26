@@ -1,5 +1,5 @@
 // Tests the query bar's history walk on its own (no viewer mounted, no engine needed): ↑ recalls the newest query, then
-// the one before, and ↓ empties the input past the newest (11-query §4). The mode each view's bar opens in, which
+// the one before, and ↓ empties the input past the newest. The mode each view's bar opens in, which
 // needs the engines, is tested through the viewer on the real engines in tests/output-view (query.integration.test.ts).
 import { describe, expect, it } from "vitest";
 import { ref, shallowRef } from "vue";

@@ -55,7 +55,7 @@ function packageName(specifier: string): string {
 const isBare = (specifier: string): boolean =>
   !/^(\.{1,2}(\/|$)|\/|[a-z][a-z0-9+.-]*:\/\/)/iu.test(specifier);
 
-/** A name the other realm declares: the bridge's NotExported wording, or its mirror (05 §7). */
+/** A name the other realm declares: the bridge's NotExported wording, or its mirror. */
 function crossRealm(realm: Realm, name: string): string {
   return realm === "client"
     ? `${name} is defined in a server cell but not exported. Add export in that cell to use it here.`

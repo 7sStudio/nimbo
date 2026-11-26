@@ -1,4 +1,4 @@
-// The SqlEngine contract the hosts use (11-query §3), its value types and the defaults of 03-api §4.10.
+// The SqlEngine contract the hosts use, its value types and the settings' defaults.
 import type { Table } from "apache-arrow";
 
 /** A JSON value, the shape every row value takes once it leaves DuckDB. */
@@ -46,7 +46,7 @@ export type QueryOptions = { readonly limit?: number; readonly signal?: AbortSig
 export type ExportFormat = "csv" | "ndjson";
 export type ExportOptions = { readonly format: ExportFormat; readonly signal?: AbortSignal };
 
-/** `timeoutMs` is the `query.timeoutMs` setting, `maxRows` the `query.sqlMaxRows` setting (03-api §4.10). */
+/** `timeoutMs` is the `query.timeoutMs` setting, `maxRows` the `query.sqlMaxRows` setting. */
 export type SqlEngineOptions = { readonly timeoutMs?: number; readonly maxRows?: number };
 
 export type SqlEngine = {
@@ -66,8 +66,8 @@ export type SqlEngine = {
   dispose(): Promise<void>;
 };
 
-/** `query.timeoutMs` default (03-api §4.10). */
+/** `query.timeoutMs` default. */
 export const defaultTimeoutMs = 5000;
 
-/** `query.sqlMaxRows` default (03-api §4.10). */
+/** `query.sqlMaxRows` default. */
 export const defaultMaxRows = 10_000;

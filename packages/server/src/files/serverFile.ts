@@ -1,4 +1,4 @@
-// `.jsnb/server.json` of 03-api §7.1 and 07-file-format §7 (its schema is core's `ServerFile`), mode 0600,
+// `.jsnb/server.json` (its schema is core's `ServerFile`), mode 0600,
 // created only when absent (a hard link from a fsynced temp file, so two daemons never both write it), read back for
 // discovery, and removed on a clean stop only while it is still this daemon's.
 import { randomBytes } from "node:crypto";

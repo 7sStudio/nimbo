@@ -1,4 +1,4 @@
-// The headless pages the daemon's notebooks share (02-architecture §7): its one headless browser, each page loaded from
+// The headless pages the daemon's notebooks share: its one headless browser, each page loaded from
 // the daemon's own origin with the page cookie a tab gets on its first load, then started with the token over the
 // browser's pipe; the token is never in a URL, a log or the browser's command line.
 import type { CookieData } from "puppeteer-core";

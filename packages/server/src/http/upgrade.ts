@@ -1,4 +1,4 @@
-// The WebSocket upgrade of 03-api §7.1: the same Host and Origin rules as every request (a refusal is an HTTP 403),
+// The WebSocket upgrade: the same Host and Origin rules as every request (a refusal is an HTTP 403),
 // `/rpc` only (404 elsewhere), then the upgrade is accepted and a missing or wrong `?token=` closes the socket with 4401,
 // never a 401 on the upgrade, which browsers and Node's WebSocket cannot read (a refused upgrade looks like a drop).
 // Every raw socket and every accepted WebSocket has an `error` listener: a client that resets during a refusal, or a

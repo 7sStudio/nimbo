@@ -1,4 +1,4 @@
-// Tests the query bar's entry in the viewer without an engine: no Query tool then (11-query §4). The bar itself, on the
+// Tests the query bar's entry in the viewer without an engine: no Query tool then. The bar itself, on the
 // real engines, is tested in tests/output-view (query, results, filter, pins and history integration tests).
 import { beforeAll, describe, expect, it } from "vitest";
 

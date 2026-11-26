@@ -9,7 +9,7 @@ import type { Sheet } from "./render.js";
 import { renderSheet } from "./render.js";
 
 /**
- * The two sheets (08-code-standards §2 lets them be committed, as the generated client is): the page's on :root, which
+ * The two sheets (committed, as the generated client is): the page's on :root, which
  * the notebook page imports, and the viewer's on its root .jsnb-ov, which output-view's theme.css imports, so a viewer
  * alone never touches the :root of the page it is embedded in. Inside a page that declares them already and says so with
  * data-jsnb-tokens on an ancestor (the notebook page, on <html>), the viewer declares none and reads the page's, so it

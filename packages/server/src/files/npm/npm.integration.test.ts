@@ -1,4 +1,4 @@
-// /npm/ through the daemon (04-kernel §8.1): a package bundled for the browser with its own bare imports external as
+// /npm/ through the daemon: a package bundled for the browser with its own bare imports external as
 // /npm/<dep>, cached per version under .jsnb/cache/npm/, a subpath and a scoped name; a workspace file transformed
 // with its imports rewritten; a missing package and a failed build as JSON-RPC bodies naming the spec, a build that
 // fails tried again on the next request, a path the path rule refuses a bare 404; the page credentials.

@@ -1,4 +1,4 @@
-// The names the daemon could not bind (05-bridge §3, §7; realm.execute's `unbound`): the run fails with the first one
+// The names the daemon could not bind (realm.execute's `unbound`): the run fails with the first one
 // this page does not hold itself, before it starts. The page holds the names its client cells define (the daemon may not
 // have their report yet) and its built-ins (`document`, `window`, `console`, `env`, `display`, the timers and listeners);
 // a server value under any other name of `window` (`status`, `name`, `find`) is NotExported, never the browser's by

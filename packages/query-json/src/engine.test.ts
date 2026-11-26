@@ -1,5 +1,5 @@
 // Tests of the engine registry: register, replace by id, look up, list; an engine of another package, which implements
-// QueryEngine alone (no held values, 02-architecture §9), registers as it did before held values existed.
+// QueryEngine alone (no held values), registers as it did before held values existed.
 import { describe, expect, it } from "vitest";
 
 import type { SelectEngine } from "./engine.ts";

@@ -8,7 +8,7 @@ class Stripe {
 }
 
 describe("encodeStrict", () => {
-  it("accepts plain data with cycles and every plain kind of 05-bridge §2", () => {
+  it("accepts plain data with cycles and every plain kind", () => {
     const cycle: { self?: unknown } = {};
     cycle.self = cycle;
     const value = [

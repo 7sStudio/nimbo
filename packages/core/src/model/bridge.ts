@@ -1,4 +1,4 @@
-// The bridge protocol shapes of 05-bridge §9 that travel over the page's WebSocket.
+// The bridge protocol shapes that travel over the page's WebSocket.
 import { z } from "zod";
 
 import { ExecStatus } from "./execution.js";
@@ -14,16 +14,16 @@ export type SnapshotBinding = z.infer<typeof SnapshotBinding>;
 
 const limit = z.number().int().positive();
 
-/** The settings a client run applies in the page (03-api §4.10), read by the daemon for each run like the env. */
+/** The settings a client run applies in the page, read by the daemon for each run like the env. */
 export const RealmLimits = z
   .object({
-    /** `bridge.rpcTimeoutMs`: how long a stub waits for its server function (05-bridge §4.1). */
+    /** `bridge.rpcTimeoutMs`: how long a stub waits for its server function. */
     rpcTimeoutMs: limit,
-    /** `bridge.maxBytesPerValue`: bytes cross whole up to it, in both directions (05-bridge §2). */
+    /** `bridge.maxBytesPerValue`: bytes cross whole up to it, in both directions. */
     maxBytesPerValue: limit,
-    /** `outputs.maxValueBytes`: a value output's json budget (04-kernel §5.4). */
+    /** `outputs.maxValueBytes`: a value output's json budget. */
     maxValueBytes: limit,
-    /** `outputs.maxStreamBytes`: stream text per execution before `[output truncated]` (04-kernel §5.1). */
+    /** `outputs.maxStreamBytes`: stream text per execution before `[output truncated]`. */
     maxStreamBytes: limit,
   })
   .readonly();
@@ -36,12 +36,12 @@ export const RealmExecute = z
     code: z.string(),
     map: z.string(),
     bindings: z.record(z.string(), SnapshotBinding),
-    /** The client's public env (04-kernel §8: `PUBLIC_*`, `*_PUBLISHABLE_KEY`), re-read by the daemon per run. */
+    /** The client's public env (`PUBLIC_*`, `*_PUBLISHABLE_KEY`), re-read by the daemon per run. */
     env: z.record(z.string(), z.string()).optional(),
-    /** The run's limits from the notebook's settings; absent, the page's own defaults (the 03-api §4.10 ones). */
+    /** The run's limits from the notebook's settings; absent, the page's own defaults (the settings' defaults). */
     limits: RealmLimits.optional(),
     /**
-     * The server names the daemon could not bind (NotExported, KernelRestarted, ExportNotRun; 05-bridge §3, §7), in
+     * The server names the daemon could not bind (NotExported, KernelRestarted, ExportNotRun), in
      * the order the cell uses them: the page fails the run with the first one it does not hold itself (one of its
      * built-ins, `document` and `window` among them, or a name a client cell defined) before it runs anything.
      */
@@ -50,7 +50,7 @@ export const RealmExecute = z
   .readonly();
 export type RealmExecute = z.infer<typeof RealmExecute>;
 
-/** A kernel.interrupt while the page runs a client cell (02-architecture §5): the page ends that run `interrupted`. */
+/** A kernel.interrupt while the page runs a client cell: the page ends that run `interrupted`. */
 export const RealmInterrupt = z.object({ execution: ExecutionId }).readonly();
 export type RealmInterrupt = z.infer<typeof RealmInterrupt>;
 
@@ -64,11 +64,11 @@ export const RealmInterruptAnswer = z
   .readonly();
 export type RealmInterruptAnswer = z.infer<typeof RealmInterruptAnswer>;
 
-/** A name the bridge layer held before a kernel restart: its defining cell and 1-based index (05-bridge §7, §8). */
+/** A name the bridge layer held before a kernel restart: its defining cell and 1-based index. */
 const RestartedName = z.object({ cell: CellId, index: z.number().int().positive() }).readonly();
 
 /** Absent `bridge`: the full reset (`realm.restart`, `kernel.restart { all }`); present: a kernel restart clears only
- * the bridge layer, and each listed name fails with `KernelRestarted` until its client cell re-runs (05-bridge §8). */
+ * the bridge layer, and each listed name fails with `KernelRestarted` until its client cell re-runs. */
 /** realm.reset: everything (no key), the bridge layer only after a kernel restart (`bridge`), or this page lost the
  * notebook to a tab that took it over (`takenOver`: the full local reset, and the page turns view-only). */
 export const RealmReset = z
@@ -102,7 +102,7 @@ export type RealmSnapshotAnswer = z.infer<typeof RealmSnapshotAnswer>;
 export const RealmDispose = z.object({ cell: CellId }).readonly();
 export type RealmDispose = z.infer<typeof RealmDispose>;
 
-/** One server `emit(name, data)` (05-bridge §6): `data` in strict wire form, redacted; `at` when it was emitted. */
+/** One server `emit(name, data)`: `data` in strict wire form, redacted; `at` when it was emitted. */
 export const BridgeEvent = z
   .object({ name: z.string(), data: z.unknown(), at: z.string(), cell: CellId.optional() })
   .readonly();
@@ -128,7 +128,7 @@ export const realmReportShape = {
   execution: ExecutionId,
   output: Output.optional(),
   status: ExecStatus.optional(),
-  /** A failed run's error and every run's duration, as the kernel's `status` message carries them (04-kernel §2.1). */
+  /** A failed run's error and every run's duration, as the kernel's `status` message carries them. */
   error: ErrorInfo.optional(),
   durationMs: z.number().optional(),
   defines: z.array(z.string()).readonly().optional(),

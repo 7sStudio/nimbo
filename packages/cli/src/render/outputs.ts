@@ -1,4 +1,4 @@
-// The human rendering of a run (03-api §5): its status line, then each output as the page shows it: stream text, a
+// The human rendering of a run: its status line, then each output as the page shows it: stream text, a
 // value's tree (output-view's model), a display's mime, a DOM's text, an event, an error with its frames.
 import type { ErrorInfo, Execution, Output } from "@jsnb/core";
 import { preview } from "@jsnb/output-view/model";

@@ -1,4 +1,4 @@
-// The wire form of a serialized value (04-kernel §5.4, 05-bridge §2), shared by kernel-node, runtime-web
+// The wire form of a serialized value, shared by kernel-node, runtime-web
 // and server: the markers, their builders and the `$` key escape.
 //
 // The form is JSON-shaped so JSONPath over `$.data[*].email` works on it unchanged:

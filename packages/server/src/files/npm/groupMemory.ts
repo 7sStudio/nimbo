@@ -1,4 +1,4 @@
-// What the daemon remembers of its packages' builds (04-kernel §8.1): the builds that failed, each until its package
+// What the daemon remembers of its packages' builds: the builds that failed, each until its package
 // changed (a registry package's version is its folder's name; a linked one's files are stamped, the stamp kept a few
 // seconds; an install or upgrade in the workspace's node_modules retries a standalone build), and the last split
 // builds, bounded by bytes, served when the cache cannot hold them.

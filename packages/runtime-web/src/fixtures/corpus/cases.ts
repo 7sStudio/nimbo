@@ -1,4 +1,4 @@
-// The page corpus (04-kernel §12, cases 1 to 6): transform's src/corpus/cases.ts case by case, with the names each
+// The page corpus (cases 1 to 6): transform's src/corpus/cases.ts case by case, with the names each
 // run defines. The page checks behaviour (value, status, ErrorInfo, defines, record), not the generated code.
 
 export type PageCell = {

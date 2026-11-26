@@ -1,4 +1,4 @@
-// The credentials of 03-api §7.1 and the page cookie: constant-time checks, the bearer header, the page
+// The credentials and the page cookie: constant-time checks, the bearer header, the page
 // cookie named after the daemon's port and set for /ui/ and /npm/ only, another port's cookie ignored.
 import type { IncomingMessage } from "node:http";
 

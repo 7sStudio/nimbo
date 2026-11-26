@@ -1,9 +1,9 @@
-// The client `env` (04-kernel §8): a Proxy over the public values the daemon sends with realm.execute.
+// The client `env`: a Proxy over the public values the daemon sends with realm.execute.
 import { EnvNotPublic, EnvNotSet } from "@jsnb/core";
 
 import { looksSecret } from "./redact.js";
 
-/** Only `PUBLIC_*` and `*_PUBLISHABLE_KEY` reach the browser (04-kernel §8, 05-bridge §2). */
+/** Only `PUBLIC_*` and `*_PUBLISHABLE_KEY` reach the browser. */
 const isPublicName = (name: string): boolean =>
   name.startsWith("PUBLIC_") || name.endsWith("_PUBLISHABLE_KEY");
 

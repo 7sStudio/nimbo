@@ -1,4 +1,4 @@
-<!-- SqlEngineRow: under the Query settings, the daemon's DuckDB binding, which SQL output queries from the CLI and agents run on (03-api §4.16); the page's own SQL runs on DuckDB-WASM and needs none of it. Shown only while it is not installed: one Install button (sql.install), the step under way from the sql.progress events, then Installed. Nothing installs unless clicked. -->
+<!-- SqlEngineRow: under the Query settings, the daemon's DuckDB binding, which SQL output queries from the CLI and agents run on; the page's own SQL runs on DuckDB-WASM and needs none of it. Shown only while it is not installed: one Install button (sql.install), the step under way from the sql.progress events, then Installed. Nothing installs unless clicked. -->
 <script setup lang="ts">
 import { Download } from "@lucide/vue";
 import { onMounted } from "vue";

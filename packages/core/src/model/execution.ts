@@ -1,4 +1,4 @@
-// Execution and ExecutionSummary of 03-api §5: one run of a cell, in full and as the cell's last-run summary.
+// Execution and ExecutionSummary: one run of a cell, in full and as the cell's last-run summary.
 import { z } from "zod";
 
 import { DebugPause } from "./debug.js";
@@ -27,20 +27,20 @@ export const Execution = z
     error: ErrorInfo.optional(),
     /** A run notebook.run's stopOnError ended `interrupted` before it started: the cell whose run failed. */
     stoppedBy: CellId.optional(),
-    /** Who asked for the run: the connection's declaration (03-api §7.1), as `meta.lastEdit` names an editor. */
+    /** Who asked for the run: the connection's declaration, as `meta.lastEdit` names an editor. */
     requestedBy: z
       .object({ client: z.enum(["ui", "cli", "mcp", "file"]), agent: z.string().optional() })
       .readonly()
       .optional(),
-    /** Started by execution.autoRunDependents after that run of that cell ended well (04-kernel §4.1). */
+    /** Started by execution.autoRunDependents after that run of that cell ended well. */
     autoRun: z.object({ cell: CellId, execution: ExecutionId }).readonly().optional(),
-    /** Read from the notebook file's saved outputs (07-file-format §2): a run of an earlier session, not this kernel's. */
+    /** Read from the notebook file's saved outputs: a run of an earlier session, not this kernel's. */
     restored: z.literal(true).optional(),
   })
   .readonly();
 export type Execution = z.infer<typeof Execution>;
 
-/** Why execution.autoRunDependents left a dependent alone (04-kernel §4.1). */
+/** Why execution.autoRunDependents left a dependent alone. */
 export const AutoRunSkip = z.enum([
   "manual",
   "notRun",

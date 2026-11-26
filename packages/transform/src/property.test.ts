@@ -1,4 +1,4 @@
-// Property tests (09 §3): for random valid programs the output parses, free names are rewritten or shadowed, never both.
+// Property tests: for random valid programs the output parses, free names are rewritten or shadowed, never both.
 import fc from "fast-check";
 import ts from "typescript";
 import { beforeAll, describe, expect, it } from "vitest";

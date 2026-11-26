@@ -2,7 +2,7 @@
 // move the row selection, fold a folder, with the palette, Escape and the theme toggle the notebook page has too. A
 // command names its notebook with `path`, or acts on the selected row. Delete always asks, and so does closing a busy
 // kernel (store/overlay.ts `confirmNotebook`); an open notebook is closed before it is deleted, and renamed as it
-// is, its kernel running on (07 §5). Opening and creating land on the notebook's page.
+// is, its kernel running on. Opening and creating land on the notebook's page.
 import { useHomeStore } from "../store/home.js";
 import { notebookPageUrl } from "../store/address.js";
 import { useUiStore } from "../store/ui.js";
@@ -112,7 +112,7 @@ const closeNotebook = (home: Home, store: Ui): Command =>
   );
 
 /** ui.notebook.rename: without `to`, the row's inline field (the Explorer's tree, else the list); with it, the
- * rename, an open notebook staying open under the new name (07 §5). Once it went through, or did nothing, the search
+ * rename, an open notebook staying open under the new name. Once it went through, or did nothing, the search
  * field has the focus again (never the page, where Delete asks about a row). */
 const renameNotebook = (home: Home): Command =>
   ui(

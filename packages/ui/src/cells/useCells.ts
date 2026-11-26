@@ -1,6 +1,6 @@
 // The cell list's models from the stores: one CellModel per cell, the page every card shares and
 // each card's own state, derived with computed and never stored, so the components render plain values and their tests
-// build them by hand (09-testing §1.3). The elapsed time of a running cell is redrawn every 100 ms while one runs.
+// build them by hand. The elapsed time of a running cell is redrawn every 100 ms while one runs.
 import type { Cell, CellId } from "@jsnb/core";
 import { computed } from "vue";
 

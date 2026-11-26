@@ -1,4 +1,4 @@
-// Variable declarations that belong to the cell's scope → assignments on `__scope` (04 §3.2 rules 1, 2 and 5).
+// Variable declarations that belong to the cell's scope → assignments on `__scope`.
 import type { BindingKind } from "@jsnb/core";
 import ts from "typescript";
 

@@ -1,4 +1,4 @@
-// The CLI's own failures of its arguments and its questions (03-api §8): bad arguments, no notebook to default to, a
+// The CLI's own failures of its arguments and its questions: bad arguments, no notebook to default to, a
 // question not answered, Ctrl-C at the raw-mode prompt, an output closed early. The daemon's are in daemon.ts, those of
 // `nimbo outputs` in output.ts; each a JsnbError with a catalogue name and a template.
 import { JsnbError } from "@jsnb/core";

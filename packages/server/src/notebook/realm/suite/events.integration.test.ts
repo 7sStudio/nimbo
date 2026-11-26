@@ -1,4 +1,4 @@
-// The bridge suite, 05-bridge §6 (real kernel, daemon and page): a server cell's emit(name, data) reaches the client
+// The bridge suite, push events (real kernel, daemon and page): a server cell's emit(name, data) reaches the client
 // cell's on(name) listeners in order, each delivery an `event` output on the listening run; a re-run, the disposer `on`
 // returns and a deleted cell stop a listener; with no page attached, or no listener, an event is dropped and
 // bridge.events counts it; data that is not plain is refused with EventNotSerializable; secrets are redacted; a burst

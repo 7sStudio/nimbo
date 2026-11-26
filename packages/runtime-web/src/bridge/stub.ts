@@ -1,4 +1,4 @@
-// The async stub a client cell gets for an exported server function (05-bridge §2, §4): encode, call, time out, decode.
+// The async stub a client cell gets for an exported server function: encode, call, time out, decode.
 import { ArgumentNotSerializable, RpcTimeout, bridgeCall, decode, encodeStrict } from "@jsnb/core";
 
 import { stubFailure } from "./rebuild.js";
@@ -7,11 +7,11 @@ import type { RealmTransport } from "./transport.js";
 export type StubContext = {
   readonly notebook: string;
   readonly transport: RealmTransport;
-  /** `bridge.rpcTimeoutMs` (03-api §4.10). */
+  /** `bridge.rpcTimeoutMs`. */
   readonly rpcTimeoutMs: number;
-  /** `bridge.maxBytesPerValue`: bytes cross whole up to it, in both directions (05-bridge §2). */
+  /** `bridge.maxBytesPerValue`: bytes cross whole up to it, in both directions. */
   readonly maxBytesPerValue: number;
-  /** The kernel redacted a secret in the result of `fn`: the calling cell gets a stderr warning (04-kernel §10). */
+  /** The kernel redacted a secret in the result of `fn`: the calling cell gets a stderr warning. */
   readonly onRedacted: (fn: string) => void;
   /** The time the server kernel spends paused in the debugger, which a call's timeout does not count. */
   readonly pauses: PauseClock;

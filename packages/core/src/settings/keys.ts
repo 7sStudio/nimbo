@@ -1,4 +1,4 @@
-// Every v1 settings key (03-api §4.10, 07-file-format §6), and the shape of its title, description and status.
+// Every v1 settings key, and the shape of its title, description and status.
 export type SettingStatus = "stable" | "planned";
 export type SettingMeta = {
   readonly title: string;

@@ -1,5 +1,5 @@
-// The query engines a host injects (11-query §4): structural types that query-json's engines and
-// chip compiler and query-sql's SqlEngine satisfy as they are, so output-view never imports them (02-architecture §2).
+// The query engines a host injects: structural types that query-json's engines and
+// chip compiler and query-sql's SqlEngine satisfy as they are, so output-view never imports them.
 import type { QueryMode } from "@jsnb/core";
 
 import type { Chip } from "./chips.js";
@@ -11,7 +11,7 @@ export type EngineError = {
   readonly position?: number;
 };
 
-/** The discriminated union every engine returns (08-code-standards §5). */
+/** The discriminated union every engine returns. */
 export type EngineResult<T> =
   { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: EngineError };
 
@@ -93,7 +93,7 @@ export type ChipCompiler = {
   fromJsonPath(query: string): { readonly at: string; readonly chips: readonly Chip[] } | undefined;
 };
 
-/** `options.engines` / `:engines`: any may be absent; with none the Query button is hidden (11-query §4). */
+/** `options.engines` / `:engines`: any may be absent; with none the Query button is hidden. */
 export type QueryEngines = {
   readonly jsonpath?: SelectQueryEngine;
   readonly jq?: TransformQueryEngine;
@@ -101,10 +101,10 @@ export type QueryEngines = {
   readonly chips?: ChipCompiler;
 };
 
-/** The modes in the bar's order (11-query §1: Filter · JSONPath · jq · SQL). */
+/** The modes in the bar's order (Filter · JSONPath · jq · SQL). */
 export const queryModes: readonly QueryMode[] = ["filter", "jsonpath", "jq", "sql"];
 
-/** What jq and SQL download on first use (11-query §1), shown beside the mode until it is loaded (11-query §4). */
+/** What jq and SQL download on first use, shown beside the mode until it is loaded. */
 export const firstUseSizes = { jq: "1.5 MB", sql: "6 MB" } as const;
 
 const firstUseNote = (size: string): string => `loads ${size} on first use`;
@@ -126,7 +126,7 @@ const supports: Readonly<Record<QueryMode, (engines: QueryEngines) => boolean>> 
 export const availableModes = (engines: QueryEngines): readonly QueryMode[] =>
   queryModes.filter((mode) => supports[mode](engines));
 
-/** The mode the bar opens in (11-query §1): SQL on a grid, JSONPath on a tree, else the first available; undefined
+/** The mode the bar opens in: SQL on a grid, JSONPath on a tree, else the first available; undefined
  * when no engine was injected (the Query button is then hidden). */
 export function defaultMode(engines: QueryEngines, view: "tree" | "grid"): QueryMode | undefined {
   const modes = availableModes(engines);

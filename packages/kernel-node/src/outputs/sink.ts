@@ -1,9 +1,9 @@
-// The output sink of 04-kernel §5: every output leaves as an `output` message on its store's execution. Stream text
+// The output sink: every output leaves as an `output` message on its store's execution. Stream text
 // is coalesced per execution and flushed after 16 ms, before any other output of that execution and before its
 // terminal status; at flush it is redacted, its cell positions are rewritten (a printed stack shows the cells' own
 // lines), then it is capped at maxStreamBytes with a final "[output truncated]". An interrupt can stop user code
 // inside a write (console.log), so the flush timer is scheduled before the execution is marked pending: a mark never
-// stands without the timer that clears it (04-kernel §6).
+// stands without the timer that clears it.
 import { Buffer } from "node:buffer";
 
 import type { CellId, ExecutionId, FullValue, Output } from "@jsnb/core";
@@ -17,10 +17,10 @@ export type SinkOptions = {
   readonly send: (execution: ExecutionId, output: Output, full?: FullValue) => void;
   /** The current redactor; stream text is the one output the sink redacts itself (each producer redacts its own). */
   readonly redact: Redact;
-  /** Rewrites the cell positions of a stack printed in stream text to the cells' own lines (04-kernel §5.3). */
+  /** Rewrites the cell positions of a stack printed in stream text to the cells' own lines. */
   readonly rewrite: (text: string) => string;
   readonly maxStreamBytes: number;
-  /** Runs `flush` later (production: a 16 ms timer, 04-kernel §5.1). */
+  /** Runs `flush` later (production: a 16 ms timer). */
   readonly schedule: (flush: () => void) => void;
 };
 

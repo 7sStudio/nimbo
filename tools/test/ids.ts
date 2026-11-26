@@ -1,4 +1,4 @@
-// createIds (09-testing §8): a seeded generator of cell and execution ids (03-api §2) so fixtures are stable.
+// createIds: a seeded generator of cell and execution ids so fixtures are stable.
 
 export type Ids = {
   /** `c_` plus six lowercase base36 characters. */

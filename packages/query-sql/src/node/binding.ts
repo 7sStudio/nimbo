@@ -1,4 +1,4 @@
-// Where the daemon's engine finds `@duckdb/node-api` (11-query §3): the package's own dependency when it is installed
+// Where the daemon's engine finds `@duckdb/node-api`: the package's own dependency when it is installed
 // beside it (a checkout), else a folder the host names, which holds `node_modules/@duckdb/…` (an install made on
 // demand outside the app). A resolve hook sends the `@duckdb/node-*` imports Node cannot find to that folder; it asks
 // the file system first, so a lookup made before the folder existed is never what Node remembers.

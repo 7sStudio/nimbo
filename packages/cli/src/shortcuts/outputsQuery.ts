@@ -1,4 +1,4 @@
-// A query of `nimbo outputs` (03-api §8, §4.3): cell.outputQuery on the daemon (--where read into chips by output-view's
+// A query of `nimbo outputs`: cell.outputQuery on the daemon (--where read into chips by output-view's
 // model, --query, --jq, --sql), with --limit when given. An answer that is not whole is never written in a machine
 // format (as ValueCut): one that stopped at its limit or SQL's cap, or whose entries outputs.maxValueBytes cut
 // (each holding core's truncated marker), is QueryTruncated, counting the results that came whole; one that ran past
@@ -41,7 +41,7 @@ const defaultLimit = cellOutputQuery.input.shape.limit.parse(undefined);
 
 type Answer = QueryOutput & { readonly total: number; readonly truncated: boolean };
 
-/** Whether a node holds core's truncated marker: outputs.maxValueBytes cut it (03-api §4.3, the slice's marking). */
+/** Whether a node holds core's truncated marker: outputs.maxValueBytes cut it (the slice's marking). */
 function holdsCut(node: unknown, depth = 0): boolean {
   if (typeof node !== "object" || node === null || depth > 64) return false;
   if (!Array.isArray(node) && Reflect.get(node, "$type") === truncatedMarker.$type) return true;
@@ -68,7 +68,7 @@ function cameOf(
   return { whole, sizeCut: whole < came };
 }
 
-/** query.sqlMaxRows, which caps every SQL answer whatever its limit (03-api §4.3): asked when one stopped short. */
+/** query.sqlMaxRows, which caps every SQL answer whatever its limit: asked when one stopped short. */
 async function sqlMaxRows(session: Session): Promise<number | undefined> {
   const { values } = await session.call(settingsGet, { key: "query.sqlMaxRows" });
   const value = values["query.sqlMaxRows"]?.value;
@@ -83,7 +83,7 @@ export type Target = {
   readonly asJson: boolean;
 };
 
-/** The daemon's reason when the query's value is cut and not held whole (03-api §4.10's words), else undefined. */
+/** The daemon's reason when the query's value is cut and not held whole (its words), else undefined. */
 function cutReason(error: unknown): string | undefined {
   if (!(error instanceof InvalidParams)) return undefined;
   const [issue] = error.data.issues;

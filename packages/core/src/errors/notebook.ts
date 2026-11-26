@@ -1,4 +1,4 @@
-// The notebook's own call failures of 03-api §7.4: a file command (notebook.delete, notebook.rename) on a notebook that
+// The notebook's own call failures: a file command (notebook.delete, notebook.rename) on a notebook that
 // is open (1012); an ApiError of the catalogue in api.ts.
 import { ApiError } from "./api.js";
 

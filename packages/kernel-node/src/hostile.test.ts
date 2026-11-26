@@ -1,4 +1,4 @@
-// Tests that every flow ends whatever user code throws back (04-kernel §2.1, §4): a thrown value whose custom inspect
+// Tests that every flow ends whatever user code throws back: a thrown value whose custom inspect
 // throws, an Error whose name getter throws, a value whose getter throws while it is encoded. Each run sends one
 // terminal status, each request gets its result, and a snapshot answers the names it can.
 import type { RouteResponse } from "@jsnb/core";

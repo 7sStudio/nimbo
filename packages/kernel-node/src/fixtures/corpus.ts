@@ -1,4 +1,4 @@
-// The 04-kernel §12 corpus as data for the integration tests through the real child: the case shape and cases 1 to 6
+// The transform corpus as data for the integration tests through the real child: the case shape and cases 1 to 6
 // (declarations and re-runs, late binding, hoisting, classes across cells, destructuring).
 
 export type CorpusCell = {

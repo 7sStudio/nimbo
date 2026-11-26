@@ -1,4 +1,4 @@
-// The paths notebook.delete and notebook.rename act on (03-api §4.2): notebook.create's rules (notebookPath: a
+// The paths notebook.delete and notebook.rename act on: notebook.create's rules (notebookPath: a
 // notebook ref inside the workspace, the file system's refusals named), and then no symbolic link anywhere on the
 // path, the file itself included. Opening through a link stays allowed; deleting or moving through one
 // would act on a file the ref does not name, so it is refused at either end.

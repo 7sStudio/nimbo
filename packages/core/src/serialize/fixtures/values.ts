@@ -1,4 +1,4 @@
-// The serialization corpus of 09-testing §8 (the devalue cases plus ours), reused by kernel-node and output-view.
+// The serialization corpus (the devalue cases plus ours), reused by kernel-node and output-view.
 
 class Price {
   readonly amount: number;

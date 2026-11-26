@@ -1,7 +1,7 @@
 // Text split at find's ranges, so a view can wrap each match in <mark> ("matches highlighted").
 import type { TextRange } from "../model/matcher.js";
 
-/** A run of text and where it starts in the whole: the offset is its stable key in a v-for (08 §7). */
+/** A run of text and where it starts in the whole: the offset is its stable key in a v-for. */
 export type Segment = { readonly text: string; readonly mark: boolean; readonly start: number };
 
 /** Runs of text with the offset each starts at, from `from`. */

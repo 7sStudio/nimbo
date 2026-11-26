@@ -1,4 +1,4 @@
-// What `uninstall` removes and keeps (02-architecture §10), worked out from what is on disk before anything goes: the
+// What `uninstall` removes and keeps, worked out from what is on disk before anything goes: the
 // versions with their sizes, DuckDB, the command's link when it is this install's, the profile files holding the
 // installer's PATH line, the MCP registrations it made, and the settings unless purged.
 import { homedir } from "node:os";

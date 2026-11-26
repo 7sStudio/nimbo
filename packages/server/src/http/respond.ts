@@ -1,5 +1,5 @@
-// The daemon's HTTP answers: JSON-RPC bodies, the 401 of a missing token, plain refusals; never a CORS header
-// (02-architecture §8). Request bodies are read up to a limit.
+// The daemon's HTTP answers: JSON-RPC bodies, the 401 of a missing token, plain refusals; never a CORS header.
+// Request bodies are read up to a limit.
 import type { IncomingMessage, ServerResponse } from "node:http";
 
 import type { WireError } from "../commands/wireError.js";
@@ -19,12 +19,12 @@ export function sendJson(response: ServerResponse, status: number, body: string)
   response.end(body);
 }
 
-/** A JSON-RPC error body with `status` (03-api §7.5: a failed download carries one, id null). */
+/** A JSON-RPC error body with `status` (a failed download carries one, id null). */
 export const sendError = (response: ServerResponse, status: number, error: WireError): void => {
   sendJson(response, status, writeError(null, error));
 };
 
-/** 401 with the UNAUTHORIZED error of 03-api §7.4. */
+/** 401 with the UNAUTHORIZED error. */
 export const sendUnauthorized = (response: ServerResponse): void => {
   sendError(response, 401, {
     code: 1006,
@@ -46,7 +46,7 @@ export const sendReadOnly = (response: ServerResponse): void => {
   sendStatus(response, 405, { allow: "GET, HEAD" });
 };
 
-/** An empty answer: a refused Host or Origin says nothing more (03-api §7.1). */
+/** An empty answer: a refused Host or Origin says nothing more. */
 export function sendStatus(
   response: ServerResponse,
   status: number,

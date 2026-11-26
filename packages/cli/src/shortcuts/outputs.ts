@@ -1,4 +1,4 @@
-// `nimbo outputs <cell>` (03-api §8, §4.3, §7.5): the last run's outputs (cell.outputs); a query of one value output on
+// `nimbo outputs <cell>`: the last run's outputs (cell.outputs); a query of one value output on
 // the daemon (cell.outputQuery: --where, read into chips by output-view's model, --query, --jq, --sql; one at a time);
 // four formats (of the whole value when the kept one was cut); --full, the whole value streamed (outputsValue.ts).
 import type { Execution } from "@jsnb/core";

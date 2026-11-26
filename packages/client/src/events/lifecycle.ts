@@ -1,4 +1,4 @@
-// The life of an event subscription on a connection (02-architecture §4.2, 03-api §7.6): it starts when its first
+// The life of an event subscription on a connection: it starts when its first
 // sync succeeds, syncs again after every reconnect, and ends when its owner closes it, the connection closes, a sync
 // fails, or the subscriber's own callback throws.
 import type { JsnbError } from "@jsnb/core";

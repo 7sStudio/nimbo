@@ -44,7 +44,7 @@ function workspaceTypeRoots(root: string): string[] {
   }
 }
 
-/** The compiler options of §3.3 for a realm. */
+/** The compiler options for a realm. */
 export function compilerOptions(
   realm: Realm,
   root: string,

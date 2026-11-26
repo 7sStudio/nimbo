@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "The ESLint rules of 08-code-standards §8.",
+  "description": "The repository's own ESLint rules, the jsnb plugin.",
   "main": "index.js",
   "exports": "./index.js",
   "scripts": {

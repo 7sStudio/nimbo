@@ -1,4 +1,4 @@
-// The registry contract of 09-testing §4 item 1, shared by every surface that exposes core's commands (the daemon's
+// The registry contract, shared by every surface that exposes core's commands (the daemon's
 // handlers, the cli's subcommands, the mcp server's tools): which registry commands a surface lacks, and which of its
 // names the registry does not know. The daemon binds every command, internal ones included; the cli and mcp threads
 // check their public commands the same way, and that no internal one leaks onto them.

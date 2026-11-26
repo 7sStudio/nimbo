@@ -1,4 +1,4 @@
-// Tests the V8 stack parser, the frame mapping and the position rewrite of 04-kernel §5.3: the parser over every V8
+// Tests the V8 stack parser, the frame mapping and the position rewrite: the parser over every V8
 // line shape, then a real cell (the transform and the kernel's compiler) of a notebook whose ref holds spaces and
 // parentheses: its frames mapped to its own lines by its exact URL, the kernel's own frames dropped, and its positions
 // rewritten in stack text; a cell URL the kernel did not compile is left alone.

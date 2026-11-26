@@ -1,4 +1,4 @@
-// Binding.preview (03-api §5, kernel.scope): one line of util.inspect, redacted, capped at 120 characters.
+// Binding.preview (kernel.scope): one line of util.inspect, redacted, capped at 120 characters.
 import { inspect } from "node:util";
 
 import { cut } from "./cut.js";

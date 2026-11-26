@@ -1,4 +1,4 @@
-// The cell containers (04-kernel §5.5): one per cell, created on first use, kept across runs.
+// The cell containers: one per cell, created on first use, kept across runs.
 
 /** Places a new container in the page; the host slots it once (ui's DomView), the default appends it to the body. */
 export type Mount = (cell: string, container: HTMLElement) => void;
@@ -10,7 +10,7 @@ export type Containers = {
   readonly get: (cell: string) => HTMLElement | undefined;
   /** The cell's container, created and mounted synchronously on first use, so user code sees a connected node. */
   readonly ensure: (cell: string) => HTMLElement;
-  /** Emptied before the cell re-runs (04-kernel §7): a Vue app mounted in it is unmounted, its children go (a swapped-in iframe too) and its attributes are
+  /** Emptied before the cell re-runs: a Vue app mounted in it is unmounted, its children go (a swapped-in iframe too) and its attributes are
    * its own again, so a style a run set does not outlive it. */
   readonly empty: (cell: string) => void;
   /** A deleted cell's container leaves the registry and the DOM. */

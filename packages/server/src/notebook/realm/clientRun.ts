@@ -1,7 +1,7 @@
-// A client cell's run (02-architecture §5, 05-bridge §3): the transform and the pre-flight of uninstalled packages; the kernel's snapshot of the server exports
+// A client cell's run: the transform and the pre-flight of uninstalled packages; the kernel's snapshot of the server exports
 // the cell uses (not those the page's own cells define), the names it cannot bind with their errors (the page ends the
 // run with the first it does not resolve itself), then realm.execute to the attached page with those bindings, the
-// public env and the run's limits, both read again per run (04-kernel §8, 03-api §4.10). The page's realm.report calls
+// public env and the run's limits, both read again per run. The page's realm.report calls
 // carry the outputs and the terminal status, and its answer ends the wait; a page that goes away (detach, closed
 // socket) or a kernel.interrupt ends the run `interrupted`.
 import type { RealmLimits, Settings, SnapshotBinding } from "@jsnb/core";
@@ -38,7 +38,7 @@ const failWith = (context: SessionContext, execution: ExecutionRecord, error: un
   });
 };
 
-/** The kernel's snapshot of `names` (05-bridge §3 step 3), with a timeout of the daemon's own; a stopped run stops
+/** The kernel's snapshot of `names`, with a timeout of the daemon's own; a stopped run stops
  * waiting for it at once (the kernel drops the request, or its late result). */
 async function snapshotOf(
   context: SessionContext,
@@ -191,7 +191,7 @@ export async function runClientCell(
     return;
   }
   const { code, map, analysis } = prepared.compiled;
-  // The pre-flight of a server run (04-kernel §4): the page would only see its import fail to fetch, with no name.
+  // The pre-flight of a server run: the page would only see its import fail to fetch, with no name.
   const missing = missingPackages(context.root, analysis.imports);
   if (missing.length > 0) {
     failWith(context, execution, new MissingPackage({ names: missing }));

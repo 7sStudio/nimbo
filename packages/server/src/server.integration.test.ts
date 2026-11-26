@@ -1,4 +1,4 @@
-// startServer's life (02-architecture §7, 03-api §7.1, 07-file-format §7, §9): .jsnb/ prepared, server.json written
+// startServer's life: .jsnb/ prepared, server.json written
 // 0600 once listening and removed on stop, a stale file replaced, a live daemon refused, crash leftovers removed; a
 // port in use fails the start with nothing left behind, and of two daemons started at once one serves; a stop step that
 // fails is logged and the stop goes on.

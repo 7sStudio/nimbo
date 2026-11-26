@@ -1,4 +1,4 @@
-// The bridge suite, 05-bridge §11 item 6 with §4.1 (real kernel, daemon and page): concurrent calls from one client cell
+// The bridge suite, concurrent calls (real kernel, daemon and page): concurrent calls from one client cell
 // resolve independently, a failing one leaving the others alone; a call that never answers is RpcTimeout after
 // bridge.rpcTimeoutMs with the catalogue's message; the page applies the notebook's settings to each client run.
 import { describe, expect, it } from "vitest";

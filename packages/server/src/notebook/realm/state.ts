@@ -1,6 +1,6 @@
-// What a session knows of its client realm (03-api §4.5, 05-bridge §3): the attached page (the first attach wins), the
+// What a session knows of its client realm: the attached page (the first attach wins), the
 // record of names the page's client cells defined, the server's current exports and those it had before the kernel
-// last went, the client runs in flight and those it finished (for their late outputs, 04-kernel §5.3); plus what the
+// last went, the client runs in flight and those it finished (for their late outputs); plus what the
 // realm needs from the daemon (redaction, the public env).
 import type { CellId, ExecutionId, RealmStatus } from "@jsnb/core";
 import type { ExportEntry } from "@jsnb/kernel-node";
@@ -26,9 +26,9 @@ export type Attachment = {
 };
 
 export type RealmDeps = {
-  /** The daemon's redaction (secrets and the token) for what a page reports (08-code-standards §5). */
+  /** The daemon's redaction (secrets and the token) for what a page reports. */
   readonly redact: (text: string) => string;
-  /** The client's public env, read again per run (04-kernel §8). */
+  /** The client's public env, read again per run. */
   readonly publicEnv: () => Promise<Readonly<Record<string, string>>>;
   /** The daemon's headless pages (realm.headless); undefined, no headless realm. */
   readonly headless?: HeadlessService | undefined;
@@ -39,9 +39,9 @@ type ClientStop = { readonly controller: AbortController; readonly startedAt: nu
 
 export type RealmState = {
   attachment: Attachment | undefined;
-  /** Each name the page's client cells defined, with the client cell that defined it last (05-bridge §3). */
+  /** Each name the page's client cells defined, with the client cell that defined it last. */
   readonly record: Map<string, CellId>;
-  /** The server's current exports, from the kernel's `exports` messages (05-bridge §3, step 1). */
+  /** The server's current exports, from the kernel's `exports` messages. */
   exports: readonly ExportEntry[];
   /** The exports a kernel had when it went (died or restarted) and no kernel made since: a call to one, and a client run
    * using one, is KernelRestarted. */
@@ -85,14 +85,14 @@ export function hold(state: RealmState, names: readonly string[]): void {
   }
 }
 
-/** The page's record: the names `cell` defines now replace those it defined before (05-bridge §3 step 1). */
+/** The page's record: the names `cell` defines now replace those it defined before. */
 export function remember(state: RealmState, cell: CellId, defines: readonly string[]): void {
   for (const [name, owner] of state.record)
     if (owner === cell && !defines.includes(name)) state.record.delete(name);
   for (const name of defines) state.record.set(name, cell);
 }
 
-/** How many finished client runs a page can still report late outputs on, as the kernel's interrupted runs (04 §6). */
+/** How many finished client runs a page can still report late outputs on, as the kernel's interrupted runs. */
 const maxFinished = 1000;
 
 /** Notes that the page finished the client run `execution`: its late outputs are taken (reports.ts). */

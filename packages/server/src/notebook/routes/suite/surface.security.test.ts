@@ -1,4 +1,4 @@
-// The routes row of 09-testing §5 (02-architecture §8, 03-api §7.1): /n/<name>/… works without a token and reaches only
+// The routes' surface: /n/<name>/… works without a token and reaches only
 // user handlers; nothing else exists below /n/ (an unknown notebook, an unknown path, another method, a closed
 // notebook, the daemon's own endpoints named below a notebook, a path that climbs out stays out and meets the token);
 // the Host and Origin rules hold there as everywhere, and no answer below /n/ carries a CORS header, whatever the

@@ -1,4 +1,4 @@
-// Tests the interrupt hook's decision (04-kernel §6) over its real checks (stackReads.test.ts tests those):
+// Tests the interrupt hook's decision over its real checks (stackReads.test.ts tests those):
 // the interrupted executions remembered, the last 1 000, a refusal included; a termination requested only when user
 // code is on the stack, and only in a context a termination leaves intact, by the real async context: in one Node
 // entered from JavaScript the hook terminates nothing and answers the context with the cell whose frame it found

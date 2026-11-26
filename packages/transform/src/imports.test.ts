@@ -1,4 +1,4 @@
-// Every import and export form of 04 §3.2 (rules 6, 7 and 8) on the generated text and in the analysis.
+// Every import and export form on the generated text and in the analysis.
 import { beforeAll, describe, expect, it } from "vitest";
 
 import { analyze, transform } from "./index.js";
@@ -16,7 +16,7 @@ beforeAll(() => {
   transform("1", { filename });
 });
 
-describe("imports (rule 6)", () => {
+describe("imports", () => {
   it("destructures a default and named bindings from the awaited __import", () => {
     const { code, analysis } = run('import d, { a as b, c } from "p"');
     expect(code).toContain(
@@ -58,14 +58,14 @@ describe("imports (rule 6)", () => {
   });
 });
 
-describe("dynamic import (rule 7)", () => {
+describe("dynamic import", () => {
   it("records dynamic import specifiers in source order, deduplicated, literals only", () => {
     const { analysis } = run('import "a"\nimport("b")\nimport("a")\nimport(name)');
     expect(analysis.imports).toEqual(["a", "b"]);
   });
 });
 
-describe("exports (rule 8)", () => {
+describe("exports", () => {
   it("exports declared names after their assignment", () => {
     const { code, analysis } = run("export const x = 1\nexport let y = 2\nexport class C {}");
     expect(code).toContain(

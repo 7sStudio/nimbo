@@ -11,7 +11,7 @@ import { isTerminal } from "../store/mirror.js";
 export function announcement(execution: Execution, position: number): string | null {
   if (!isTerminal(execution.status)) return null;
   const cell = `Cell ${String(position)}`;
-  // a run that Run all never started (an earlier cell failed) was not run, not interrupted (03-api §5 stoppedBy)
+  // a run that Run all never started (an earlier cell failed) was not run, not interrupted (stoppedBy)
   if (execution.status === "interrupted")
     return execution.stoppedBy === undefined ? `${cell} was interrupted` : `${cell} was not run`;
   if (execution.status === "error")

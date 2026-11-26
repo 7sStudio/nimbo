@@ -1,4 +1,4 @@
-// Settings through the daemon (03-api §4.10, 07-file-format §6): precedence with sources, settings.set into either
+// Settings through the daemon: precedence with sources, settings.set into either
 // file with comments kept, a hand edit applied live as settings.changed, invalid and planned values refused, and the
 // page's Settings (JSON): a file read as text and replaced once it parses and its values are valid.
 import { mkdir, readFile, writeFile } from "node:fs/promises";

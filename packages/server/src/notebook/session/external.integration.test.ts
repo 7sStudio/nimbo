@@ -1,4 +1,4 @@
-// External edits of an open notebook's file (07-file-format §5) through the daemon and real files: the session takes a
+// External edits of an open notebook's file through the daemon and real files: the session takes a
 // change made on disk while nothing is unsaved (outputs kept where the code did not change, the change stamped as the
 // file's), merges it with unsaved edits of other cells and writes the result, and keeps the conflict path for the same
 // cell changed on both sides; the daemon's own writes, a file that does not parse, an atomic rename, a burst, a delete,

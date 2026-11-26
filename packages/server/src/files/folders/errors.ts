@@ -1,4 +1,4 @@
-// The failures of Home's Open folder (03-api §4.1), each in words a person reads in the picker: a path
+// The failures of Home's Open folder, each in words a person reads in the picker: a path
 // that names no readable folder, a folder that is already the open workspace, open notebooks whose changes cannot be
 // saved first, and a folder whose daemon could not start.
 import { JsnbError } from "@jsnb/core";

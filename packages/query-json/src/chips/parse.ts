@@ -1,5 +1,5 @@
 // Filter mode backwards: a JSONPath query chips could have produced → those chips, so a generated or hand-typed query
-// can be edited as chips again (11-query §2). Anything else (||, !, nesting, other functions) is not chips.
+// can be edited as chips again. Anything else (||, !, nesting, other functions) is not chips.
 import { maxQueryLength } from "../engine.ts";
 import type { Scan } from "../literal.ts";
 import { scanString } from "../literal.ts";

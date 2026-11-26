@@ -1,4 +1,4 @@
-// Journey: user output stays browser-default inside the page (09-testing §4.4). An agent adds a client cell whose output carries elements classed `flex` and `hidden` (the names of Tailwind
+// Journey: user output stays browser-default inside the page. An agent adds a client cell whose output carries elements classed `flex` and `hidden` (the names of Tailwind
 // utilities) next to an h1, a button and a table; the user clicks Run all; the page's realm runs the cell and
 // CellOutputs slots its real container into the DOM output's `[data-live]` slot inside .jsnb-ui. Each element's
 // computed style there equals the same markup's on a bare page.

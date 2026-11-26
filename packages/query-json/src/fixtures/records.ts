@@ -40,5 +40,5 @@ export const chargeList = (count: number): ChargeList => ({
   url: "/v1/charges",
 });
 
-/** The gallery's Filter query (card 9): succeeded charges over 1 000. */
+/** A Filter query: succeeded charges over 1 000. */
 export const galleryQuery = `$.data[?@.status == "succeeded" && @.amount > 1000]`;

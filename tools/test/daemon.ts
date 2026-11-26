@@ -1,4 +1,4 @@
-// The daemon harness (09-testing §8): the real daemon in-process on port 0 over a test's workspace, with the kernel child
+// The daemon harness: the real daemon in-process on port 0 over a test's workspace, with the kernel child
 // from source, a user config folder inside the workspace, seeded ids, a typed WebSocket client subscribed to every event
 // (the recorder's `until`), HTTP and extra socket clients on demand, and stop(), also run when the test ends.
 // The caller hands it the server's startServer, so this package never depends on @jsnb/server: the server's own tests
@@ -23,7 +23,7 @@ import { kernelEntry } from "./kernel.js";
 import type { Workspace, WorkspaceOptions } from "./workspace.js";
 import { beforeRemoval, withWorkspace, writeWorkspaceFiles } from "./workspace.js";
 
-/** How a test client declares itself (03-api §7.1). */
+/** How a test client declares itself. */
 export type Declaration = { readonly client?: ClientKind; readonly agent?: string };
 
 /** A socket client's declaration and, for a test of reconnects, its socket and backoff. */
@@ -50,7 +50,7 @@ export type ServerHandle = {
  * into the workspace before the daemon starts. */
 export type DaemonOptions<Options> = Partial<Omit<Options, "workspace">> &
   Declaration & {
-    /** The seed of the id generator (09-testing §1.4); default 1. */
+    /** The seed of the id generator; default 1. */
     readonly seed?: number;
     readonly files?: WorkspaceOptions;
   };
@@ -76,7 +76,7 @@ export type Daemon<Running extends ServerHandle> = {
   readonly events: EventRecorder;
   /** A one-shot HTTP client, declared as given. */
   readonly http: (declaration?: Declaration) => Client;
-  /** The full-value download of 03-api §7.5 through the client (`cli`), its streaming Response. */
+  /** The full-value download through the client (`cli`), its streaming Response. */
   readonly download: (ref: ValueRef) => Promise<Response>;
   /** Another WebSocket client, closed at stop. */
   readonly socket: (declaration?: SocketDeclaration) => SocketClient;
@@ -147,7 +147,7 @@ export async function connectDaemon(
   };
 }
 
-/** A socket opener whose live socket a test can drop, to watch the client reconnect and resync (03-api §7.6). */
+/** A socket opener whose live socket a test can drop, to watch the client reconnect and resync. */
 export function droppableSocket(): { readonly openSocket: OpenSocket; readonly drop: () => void } {
   let current: WebSocket | undefined;
   const openSocket: OpenSocket = (url, events) => {

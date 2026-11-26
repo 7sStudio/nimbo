@@ -1,4 +1,4 @@
-// A kernel's start (04-kernel §2, §9): the Node check, the workspace loader, the fork awaited until `ready`, then the
+// A kernel's start: the Node check, the workspace loader, the fork awaited until `ready`, then the
 // daemon's CDP session with the debugger enabled; a start that fails after the fork or is stopped kills the child.
 import { KernelDead } from "@jsnb/core";
 
@@ -29,7 +29,7 @@ export type LaunchHooks = {
 };
 
 /**
- * The CDP session of a ready kernel: Debugger.enable so `debugger;` pauses and is reported (04-kernel §9), and the
+ * The CDP session of a ready kernel: Debugger.enable so `debugger;` pauses and is reported, and the
  * notice of an exit waiting for this session, which then closes so the kernel can exit (a connected client holds it).
  */
 async function connect(ready: Ready, hooks: LaunchHooks): Promise<Cdp> {

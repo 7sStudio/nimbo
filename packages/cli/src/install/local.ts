@@ -1,4 +1,4 @@
-// The installer's files on this machine (02-architecture §10): the versions folder, the launcher link, the processes
+// The installer's files on this machine: the versions folder, the launcher link, the processes
 // running from each version and the workspaces whose daemon is one of them. Unpacking and the link switch are each one
 // rename, so an interrupted upgrade leaves the old version and the old link in place.
 import { execFile } from "node:child_process";
@@ -287,7 +287,7 @@ export async function sweepVersions(dataDir: string, current: string): Promise<S
 
 const Recent = z.object({ folders: z.array(z.object({ path: z.string() })) });
 
-/** The user config folder (07-file-format §6), as the daemon places it. */
+/** The user config folder, as the daemon places it. */
 export function userConfigDir(env: Readonly<Record<string, string | undefined>>): string {
   return withLegacyConfigMoved(productConfigDir(env, env.HOME ?? homedir(), process.platform));
 }
@@ -307,7 +307,7 @@ const alive = (pid: number): boolean => {
   }
 };
 
-/** The daemons the recent workspaces' server.json name that still run (Home's list, 03-api §4.1). */
+/** The daemons the recent workspaces' server.json name that still run (Home's list). */
 export async function recentDaemons(
   env: Readonly<Record<string, string | undefined>>,
 ): Promise<RecentDaemon[]> {

@@ -1,6 +1,6 @@
-// The flags of a generated subcommand, derived from its input's JSON Schema (03-api §8, 09-testing §4.1): one
+// The flags of a generated subcommand, derived from its input's JSON Schema: one
 // `--kebab-case` flag per key, booleans with --no-<flag>, arrays repeated, `source` also from --file or stdin, objects
-// and unions as JSON text, `notebook` with -n; `secrets.set`'s value is never a flag (03-api §4.7).
+// and unions as JSON text, `notebook` with -n; `secrets.set`'s value is never a flag.
 import type { AnyCommand } from "@jsnb/core";
 import { commandJsonSchema } from "@jsnb/core";
 
@@ -37,7 +37,7 @@ type Schema = Readonly<Record<string, unknown>>;
 const isSchema = (value: unknown): value is Schema =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-/** The keys whose value is a secret, read from stdin or asked for, never from argv (03-api §4.7). */
+/** The keys whose value is a secret, read from stdin or asked for, never from argv. */
 const secretKeys: Readonly<Record<string, string>> = { "secrets.set": "value" };
 
 /** Past this many characters an enum's values are listed under the flags, its label the flag's name. */

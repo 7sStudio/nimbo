@@ -1,6 +1,6 @@
 // DuckDB's integer types with no Arrow type, which DuckDB-WASM sends as Arrow's `arrow.opaque` extension (their bytes,
 // named in the field's metadata): UHUGEINT and BIGNUM read by the bigint rule at any depth, any other refused rather
-// than shown as bytes. A MAP's key and value fields lose that metadata on the way (11-query §3).
+// than shown as bytes. A MAP's key and value fields lose that metadata on the way.
 import type { Data, Field } from "apache-arrow";
 import { DataType } from "apache-arrow";
 

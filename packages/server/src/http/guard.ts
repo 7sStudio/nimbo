@@ -1,4 +1,4 @@
-// The network rules of 03-api §7.1 and 02-architecture §8 that hold before anything else: the `Host` must name this
+// The network rules that hold before anything else: the `Host` must name this
 // daemon (127.0.0.1 or localhost with its port: DNS-rebinding protection), and an `Origin`, when a browser sends one,
 // must be the daemon's own origin, so no other web page can drive it. Node clients (CLI, MCP) send no Origin.
 import type { IncomingHttpHeaders } from "node:http";

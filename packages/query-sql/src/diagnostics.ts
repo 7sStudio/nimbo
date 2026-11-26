@@ -1,5 +1,5 @@
 // DuckDB's error as a QueryError: its message without the `LINE n:` block, and the 0-based offset of the mistake
-// in the SQL, so the query bar can underline it (11-query §2, §4). DuckDB-WASM reports errors as JSON
+// in the SQL, so the query bar can underline it. DuckDB-WASM reports errors as JSON
 // (`exception_type`, `exception_message`, `position`); node-api reports the plain text with the LINE block.
 import type { Outcome } from "./errors.ts";
 import { QueryError } from "./errors.ts";

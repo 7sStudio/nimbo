@@ -81,7 +81,7 @@ const inPackage = (source: string, map: string): string => {
 
 export default defineConfig({
   plugins: [vue(), tailwindcss(), theme()],
-  // Tailwind's --tw-* internals stay inside .jsnb-ov (08 §7; @jsnb/style-gate/tailwind-scope)
+  // Tailwind's --tw-* internals stay inside .jsnb-ov (@jsnb/style-gate/tailwind-scope)
   css: { postcss: { plugins: [scopeTailwindProperties(viewerScope)] } },
   build: {
     outDir: "dist",

@@ -1,4 +1,4 @@
-// The output viewers' query engines (11-query §3, §4), built once at start as tests/output-view's host
+// The output viewers' query engines, built once at start as tests/output-view's host
 // composes them: query-json's JSONPath and jq engines and its Filter chips compiler, and query-sql's page engine. Each
 // starts its worker, or downloads DuckDB-WASM, on first use, so the page's first load carries none of them.
 import {
