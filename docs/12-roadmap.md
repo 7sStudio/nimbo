@@ -19,7 +19,7 @@ These settings exist in the registry with their schemas as the contract and answ
 
 ## 3. Debugging
 
-- **Client-cell debugging** (M): breakpoints and stepping in client cells, in the same Debug view as server cells: js-debug attached (`pwa-chrome`) to the headless page's target beside the CDP session the daemon already owns (`kernel/headless/page.ts`), with the transform's source maps for the cells' URLs.
+- **Watching a client-cell debug session** (M): client cells stop only in the daemon's headless page (03 §4.9), and a tab that opens takes the realm from it, so a person sees a client pause only through the CLI or an agent. A nimbo-owned visible browser window would let them watch: the same launch with a headed window (no `--headless`) in its own fresh profile, the realm page beside a read-only view of the notebook (the Debug view, gutter and stack following `debug.*` events without attaching), and the tab-takeover rule kept for ordinary tabs; the relay, the breakpoints and the commands stay as they are.
 
 ## 4. Product and distribution
 
