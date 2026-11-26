@@ -1,6 +1,7 @@
 // Journey 1 of the Home page: a workspace with no notebook shows the empty state with the cursor in
 // the search field; typing "first" and Cmd Enter lands on /ui/first with the page attached and its kernel idle; back
-// on Home the row reads idle and Running lists it.
+// on Home the row reads idle and Running lists it. Start Tutorial copies the nine lessons into tutorial/ and opens the
+// first; back on Home the empty state is gone, and Help > Start Tutorial opens that copy again rather than a new one.
 import { axeClean, expect, homeShot, row, running, test } from "./home.js";
 
 test("an empty workspace: the empty state, a first notebook created, back on Home it is open", async ({
@@ -26,4 +27,26 @@ test("an empty workspace: the empty state, a first notebook created, back on Hom
   await page.mouse.move(4, 600);
   await homeShot(page, "first-open");
   await axeClean(page);
+});
+
+test("an empty workspace: Start Tutorial copies the lessons and opens the first, and opens that copy again", async ({
+  page,
+  world,
+}) => {
+  await world.open(page);
+  await expect(page.getByTestId("tutorial").locator("li")).toHaveCount(9);
+  await expect(page.getByTestId("tutorial").locator("li").first()).toContainText("First steps");
+  await page.getByTestId("start-tutorial").click();
+  await expect(page).toHaveURL(/\/ui\/tutorial\/01-first-steps\?token=/u);
+  await expect(page.getByRole("listitem", { name: /^Cell 1, markdown/u })).toContainText(
+    "First steps",
+  );
+  await page.goBack();
+  await expect(page.getByTestId("empty")).toHaveCount(0);
+  await expect(row(page, "tutorial/09-files-and-git.jsnb")).toBeVisible();
+  await page.getByRole("menuitem", { name: "Help" }).click();
+  await page.getByRole("menuitem", { name: "Start Tutorial" }).click();
+  await expect(page).toHaveURL(/\/ui\/tutorial\/01-first-steps\?token=/u);
+  await page.goBack();
+  await expect(row(page, "tutorial/01-first-steps-2.jsnb")).toHaveCount(0);
 });
