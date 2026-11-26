@@ -68,7 +68,8 @@ function pausedNote(execution: Execution): string | undefined {
   const where =
     paused.cell === undefined ? "" : ` at ${paused.cell} line ${String(paused.line ?? "?")}`;
   const what = paused.realm === "client" ? "the headless page" : "the kernel";
-  return ` (${what} is paused in the debugger${where}: ${paused.reason})\n  nimbo debug stack to see where, nimbo debug resume to go on`;
+  const stale = paused.stale === true ? ", in the cell's code from before its last edit" : "";
+  return ` (${what} is paused in the debugger${where}${stale}: ${paused.reason})\n  nimbo debug stack to see where, nimbo debug resume to go on`;
 }
 
 /** `x_9f8e7d6c ok 12 ms`, `… running (timed out waiting)`. */
