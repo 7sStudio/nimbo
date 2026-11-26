@@ -1,9 +1,13 @@
-// The debugger's state of 03-api §4.9: breakpoints on server cells' lines, where a paused kernel stopped, a frame's
-// scopes and their variables, as the `debug.*` commands and events carry them.
+// The debugger's state of 03-api §4.9: breakpoints on cells' lines, where a paused realm (the server kernel or the
+// headless page) stopped, a frame's scopes and their variables, as the `debug.*` commands and events carry them.
 import { z } from "zod";
 
 import { CellId } from "./ids.js";
 import { frameShape } from "./output.js";
+
+/** Where code stops: the server kernel, or the daemon's headless page running the client cells. */
+export const DebugRealm = z.enum(["server", "client"]);
+export type DebugRealm = z.infer<typeof DebugRealm>;
 
 /** The shape behind Breakpoint; `debug.setBreakpoint` returns it as its output object. */
 export const breakpointShape = {
@@ -17,18 +21,23 @@ export const breakpointShape = {
   hitCondition: z.string().optional(),
   /** A logpoint: print this message (`{expr}` interpolated) and go on, never pausing. */
   logMessage: z.string().optional(),
-  /** Bound to the cell's code in the kernel: false before the cell's code is loaded, or on a line with none. */
+  /** The realm its cell runs in: the server kernel, or the client realm (the headless page). */
+  realm: DebugRealm,
+  /** Bound to the cell's code: false before the cell's code is loaded, or on a line with none. */
   verified: z.boolean(),
   /** Why it does not work as set: its condition or a logpoint's expression does not parse, or threw when hit. */
   message: z.string().optional(),
+  /** Why nimbo cannot bind it now (a client cell's while a tab holds the client realm); it binds once that changes. */
+  reason: z.string().optional(),
 };
 
 export const Breakpoint = z.object(breakpointShape).readonly();
 export type Breakpoint = z.infer<typeof Breakpoint>;
 
-/** Where and why a kernel paused. */
+/** Where and why a realm paused. */
 export const DebugPause = z
   .object({
+    realm: DebugRealm,
     /** breakpoint, step, pause, exception, debugger statement, entry, … (DAP's stopped reasons). */
     reason: z.string(),
     description: z.string().optional(),
@@ -44,10 +53,13 @@ export type DebugPause = z.infer<typeof DebugPause>;
 export const DebugStatus = z.enum(["off", "running", "paused"]);
 export type DebugStatus = z.infer<typeof DebugStatus>;
 
-/** `off`: no debugger attached to the kernel; `running`: attached; `paused`: stopped, `paused` says where. */
+/** `off`: no debugger attached to either realm; `running`: attached; `paused`: one is stopped, and `paused` says where:
+ * the pause the commands act on (the latest), `pauses` every one, latest first; `realms` each realm's own state. */
 export const debugStateShape = {
   state: DebugStatus,
   paused: DebugPause.nullable(),
+  pauses: z.array(DebugPause).readonly(),
+  realms: z.object({ server: DebugStatus, client: DebugStatus }).readonly(),
   breakpoints: z.array(Breakpoint).readonly(),
 };
 
@@ -80,3 +92,41 @@ export const DebugScope = z
   })
   .readonly();
 export type DebugScope = z.infer<typeof DebugScope>;
+
+/** What `debug.paused`, `debug.resumed` and `debug.breakpoints` make of a debugger's state. */
+export type DebugChange =
+  | { readonly type: "debug.paused"; readonly data: DebugPause }
+  | {
+      readonly type: "debug.resumed";
+      readonly data: { readonly realm: DebugRealm; readonly state: "off" | "running" };
+    }
+  | {
+      readonly type: "debug.breakpoints";
+      readonly data: { readonly breakpoints: readonly Breakpoint[] };
+    };
+
+/** The state after `change`, as the daemon's own `debug.state` then answers. */
+export function debugAfter(state: DebugState, change: DebugChange): DebugState {
+  if (change.type === "debug.breakpoints")
+    return { ...state, breakpoints: change.data.breakpoints };
+  const realm = change.data.realm;
+  const others = state.pauses.filter((each) => each.realm !== realm);
+  const pauses = change.type === "debug.paused" ? [change.data, ...others] : others;
+  const realms = {
+    ...state.realms,
+    [realm]: change.type === "debug.paused" ? "paused" : change.data.state,
+  } as const;
+  const attached = realms.server !== "off" || realms.client !== "off";
+  return {
+    state: pauses.length > 0 ? "paused" : attached ? "running" : "off",
+    paused: pauses[0] ?? null,
+    pauses,
+    realms,
+    breakpoints: state.breakpoints,
+  };
+}
+
+/** The registry keys of the symbols under which a client realm's page holds the cells' names for a debugger: the scope
+ * a cell reads (the latest run's) and the record of the names cells defined. */
+export const pageScopeKey = "jsnb.realm.scope";
+export const pageRecordKey = "jsnb.realm.record";

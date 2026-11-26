@@ -20,8 +20,8 @@ export const Execution = z
     endedAt: z.string().optional(),
     durationMs: z.number().optional(),
     timedOut: z.boolean().optional(),
-    /** A waiting cell.run or notebook.run answered early: the kernel is paused in the debugger, where and why (the run
-     * goes on once it resumes; `timedOut` is true with it). */
+    /** A waiting cell.run or notebook.run answered early: a realm (the kernel, or the headless page) is paused in the
+     * debugger, where and why (the run goes on once it resumes; `timedOut` is true with it). */
     paused: DebugPause.optional(),
     outputs: z.array(Output).readonly(),
     error: ErrorInfo.optional(),

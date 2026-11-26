@@ -50,7 +50,7 @@ export const NotebookState = z
     /** The session took unsaved text from the recovery copy a previous session left (07-file-format §7): when it was
      * written. */
     recovered: z.string().optional(),
-    /** The debugger's state: breakpoints, and where a paused kernel stopped (03-api §4.9). */
+    /** The debugger's state: breakpoints, and where a paused realm stopped (03-api §4.9). */
     debug: DebugState.optional(),
     /** execution.autoRunDependents at work: the dependent running and those waiting, in run order (04-kernel §4.1). */
     autoRun: z
