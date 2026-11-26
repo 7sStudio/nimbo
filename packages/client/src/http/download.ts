@@ -1,4 +1,4 @@
-// The full-value download of 03-api §7.5: GET /outputs/<execution>/<index>.json with the bearer token, as a stream.
+// The full-value download: GET /outputs/<execution>/<index>.json with the bearer token, as a stream.
 import { Unauthorized } from "@jsnb/core";
 
 import type { CallOptions } from "../call/caller.js";

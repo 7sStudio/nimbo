@@ -1,4 +1,4 @@
-// The daemon's `--ui` arguments (02-architecture §7), shared by the CLI and the MCP server so a daemon either one starts
+// The daemon's `--ui` arguments, shared by the CLI and the MCP server so a daemon either one starts
 // serves the same UI: NIMBO_UI_DIR when it is an absolute path to an existing folder, else `@jsnb/ui`'s build as the
 // caller resolves it (the caller depends on `@jsnb/ui`, this package cannot), else none, which the daemon answers at
 // /ui/ with a page naming the build. Node only: the `./node` export, never the page's.

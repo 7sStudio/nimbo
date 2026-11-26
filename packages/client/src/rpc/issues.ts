@@ -1,4 +1,4 @@
-// Turns a Zod error into the ApiIssue list that INVALID_PARAMS and InvalidResponse carry (03-api §7.4, §7.6).
+// Turns a Zod error into the ApiIssue list that INVALID_PARAMS and InvalidResponse carry.
 import type { ApiIssue } from "@jsnb/core";
 import type { z } from "zod";
 

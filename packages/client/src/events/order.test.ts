@@ -1,4 +1,4 @@
-// Tests the ordering steps of 02-architecture §4.2: buffer, start at the seq, deliver in order, drop, gap.
+// Tests the ordering steps: buffer, start at the seq, deliver in order, drop, gap.
 import { describe, expect, it } from "vitest";
 
 import type { Ordering, Sequenced, Step } from "./order.js";

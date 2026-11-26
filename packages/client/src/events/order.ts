@@ -1,4 +1,4 @@
-// The ordering rule of 02-architecture §4.2 as pure steps: events go out in seq order from the subscription's seq,
+// The ordering rule as pure steps: events go out in seq order from the subscription's seq,
 // each once; while the state is being fetched they are buffered; a missing seq asks for a resync.
 
 /** What ordering reads of an event. */

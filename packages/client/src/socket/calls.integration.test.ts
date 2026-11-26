@@ -1,4 +1,4 @@
-// Calls over the WebSocket (03-api §7.1, §7.2) against the peer: the declaration, concurrent calls matched by id,
+// Calls over the WebSocket against the peer: the declaration, concurrent calls matched by id,
 // calls made while connecting, aborts, closing, and frames the client cannot read.
 import { CellNotFound } from "@jsnb/core";
 import { describe, expect, it } from "vitest";

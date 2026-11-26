@@ -1,4 +1,4 @@
-// The HTTP retry rules against a JSON-RPC peer on a real port (03-api §7.6): refused connections retried for any
+// The HTTP retry rules against a JSON-RPC peer on a real port: refused connections retried for any
 // command, dropped ones only for a repeatable call, the last attempt DaemonUnreachable, and aborts.
 import { describe, expect, it } from "vitest";
 

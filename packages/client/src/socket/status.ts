@@ -1,4 +1,4 @@
-// The connection status of 03-api §7.6 that the UI store mirrors, as a value with change listeners.
+// The connection status that the UI store mirrors, as a value with change listeners.
 import type { ReportError } from "../errors/report.js";
 import { notifyAll } from "../errors/report.js";
 

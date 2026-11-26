@@ -1,4 +1,4 @@
-// The client's own call failures of 03-api §7.6: the daemon unreachable, a dropped connection, an answer that does not
+// The client's own call failures: the daemon unreachable, a dropped connection, an answer that does not
 // fit the API, an aborted call and a closed connection; each a JsnbError with a catalogue name and a message template.
 import type { ApiIssue } from "@jsnb/core";
 import { JsnbError } from "@jsnb/core";
@@ -9,7 +9,7 @@ type Method = { readonly method: string };
 const daemonUnreachableMessage = (url: string, attempts: number): string =>
   `No nimbo daemon answered at ${url} after ${String(attempts)} ${attempts === 1 ? "attempt" : "attempts"}. Start it in the workspace with nimbo open or nimbo serve.`;
 
-/** No daemon answered: the connection was refused or failed on every attempt (the CLI exits 3, 03-api §8). */
+/** No daemon answered: the connection was refused or failed on every attempt (the CLI exits 3). */
 export class DaemonUnreachable extends JsnbError {
   declare readonly data: { readonly url: string; readonly attempts: number };
   constructor(data: { readonly url: string; readonly attempts: number }, options: Cause = {}) {
@@ -25,7 +25,7 @@ export class DaemonUnreachable extends JsnbError {
 const connectionDroppedMessage = (method: string): string =>
   `The connection to the daemon dropped while ${method} was in flight. It was not sent again because it may already have taken effect; check before calling it again.`;
 
-/** The connection dropped while a call that is not safe to repeat was in flight (03-api §7.6). */
+/** The connection dropped while a call that is not safe to repeat was in flight. */
 export class ConnectionDropped extends JsnbError {
   declare readonly data: Method;
   constructor(data: Method, options: Cause = {}) {
@@ -59,7 +59,7 @@ export class InvalidResponse extends JsnbError {
 const callAbortedMessage = (method: string): string =>
   `${method} was aborted before the daemon answered; the daemon may still carry it out.`;
 
-/** The caller's AbortSignal fired before the answer came; nothing is cancelled on the daemon (03-api §7.6). */
+/** The caller's AbortSignal fired before the answer came; nothing is cancelled on the daemon. */
 export class CallAborted extends JsnbError {
   declare readonly data: Method;
   constructor(data: Method, options: Cause = {}) {

@@ -1,4 +1,4 @@
-// One HTTP exchange with the daemon, retried with backoff (02-architecture §2 "retries", 03-api §7.6): always while
+// One HTTP exchange with the daemon, retried with backoff: always while
 // the connection is refused, since the daemon never saw the request, and on any network failure when repeating is safe.
 import { isJsnbError } from "@jsnb/core";
 

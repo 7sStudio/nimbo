@@ -1,4 +1,4 @@
-// The daemon's requests to a page on the same socket (03-api §4.5, §7.2; 05-bridge §9): realm.execute, realm.reset,
+// The daemon's requests to a page on the same socket: realm.execute, realm.reset,
 // realm.snapshot, realm.interrupt, realm.event and realm.dispose, validated with core's schemas, answered with the handler's result or its error.
 import {
   InvalidParams,

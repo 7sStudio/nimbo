@@ -1,5 +1,5 @@
-// The typed call of 03-api §3, `call(descriptor, input, options)`, over any transport: the input is typed from the
-// command's input schema and validated by the daemon; the result is parsed with its output schema (08 §5).
+// The typed call, `call(descriptor, input, options)`, over any transport: the input is typed from the
+// command's input schema and validated by the daemon; the result is parsed with its output schema.
 import type { CommandDescriptor, CommandTags } from "@jsnb/core";
 import type { z } from "zod";
 
@@ -7,7 +7,7 @@ import { InvalidResponse } from "../errors/transport.js";
 import { issuesOf } from "../rpc/issues.js";
 
 export type CallOptions = {
-  /** Stops waiting for the answer with CallAborted; the daemon may still carry the call out (03-api §7.6). */
+  /** Stops waiting for the answer with CallAborted; the daemon may still carry the call out. */
   readonly signal?: AbortSignal;
 };
 
@@ -31,7 +31,7 @@ export type OutgoingCall = {
 export type Transport = (call: OutgoingCall) => Promise<unknown>;
 
 /**
- * Safe to send twice: tagged idempotent, or neither mutating, destructive nor internal (03-api §7.6). Destructive
+ * Safe to send twice: tagged idempotent, or neither mutating, destructive nor internal. Destructive
  * commands change state even where they are not tagged mutating; internal ones (bridge.call, realm.report) belong to
  * a protocol whose owner recovers on reconnect.
  */

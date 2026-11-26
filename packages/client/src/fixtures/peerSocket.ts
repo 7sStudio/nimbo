@@ -15,7 +15,7 @@ const isFrame = (value: unknown): value is Frame =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
 export class PeerSocket {
-  /** The upgrade's query: token, client, agent (03-api §7.1). */
+  /** The upgrade's query: token, client, agent. */
   readonly query: URLSearchParams;
   readonly #ws: WebSocket;
   readonly #handlerOf: (method: string) => MethodHandler;

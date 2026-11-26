@@ -1,10 +1,10 @@
-// Where the daemon listens and how a connection declares itself (03-api §7.1): the bearer token, `client`, `agent`.
+// Where the daemon listens and how a connection declares itself: the bearer token, `client`, `agent`.
 import type { EditInfo } from "@jsnb/core";
 
-/** Which kind of client a connection is; the daemon stamps `meta.lastEdit` from it (03-api §7.1). */
+/** Which kind of client a connection is; the daemon stamps `meta.lastEdit` from it. */
 export type ClientKind = EditInfo["client"];
 
-/** The daemon to talk to and the declaration every request carries (03-api §7.1). */
+/** The daemon to talk to and the declaration every request carries. */
 export type DaemonOptions = {
   /** The daemon's origin, `http://127.0.0.1:<port>`; cli and mcp read it from `.jsnb/server.json`. */
   readonly url: string;
@@ -15,7 +15,7 @@ export type DaemonOptions = {
   readonly agent?: string;
 };
 
-/** The bearer token and the client declaration of every HTTP request (03-api §7.1, §7.3). */
+/** The bearer token and the client declaration of every HTTP request. */
 export function httpHeaders(options: DaemonOptions): Record<string, string> {
   return {
     authorization: `Bearer ${options.token}`,
@@ -29,7 +29,7 @@ export function httpUrl(options: DaemonOptions, path: string): URL {
   return new URL(path, options.url);
 }
 
-/** `ws://…/rpc?token=…&client=…&agent=…`: a browser cannot set headers on a WebSocket (03-api §7.1). */
+/** `ws://…/rpc?token=…&client=…&agent=…`: a browser cannot set headers on a WebSocket. */
 export function socketUrl(options: DaemonOptions): string {
   const url = new URL("/rpc", options.url);
   url.protocol = url.protocol === "https:" ? "wss:" : "ws:";

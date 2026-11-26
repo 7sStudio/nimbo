@@ -1,5 +1,5 @@
-// JSON-RPC errors on the wire and core's ApiError (03-api §7.4): a daemon error becomes the subclass of its code with
-// the daemon's name, message and data; a handler's throw becomes the error the page answers with (03-api §7.6).
+// JSON-RPC errors on the wire and core's ApiError: a daemon error becomes the subclass of its code with
+// the daemon's name, message and data; a handler's throw becomes the error the page answers with.
 import {
   ApiError,
   BridgeCallFailed,
@@ -32,7 +32,7 @@ export type WireError = {
   readonly data?: unknown;
 };
 
-/** The fixed names of the JSON-RPC protocol codes, which 03-api §7.4 leaves unnamed (03-api §7.6). */
+/** The fixed names of the JSON-RPC protocol codes, which the error catalogue leaves unnamed. */
 export const protocolErrorNames: Readonly<Record<number, string>> = {
   [-32700]: "InvalidJson",
   [-32600]: "InvalidRequest",
@@ -40,7 +40,7 @@ export const protocolErrorNames: Readonly<Record<number, string>> = {
   [-32603]: "InternalFailure",
 };
 
-/** The name of an error whose code is outside the catalogue or whose data does not fit its code (03-api §7.6). */
+/** The name of an error whose code is outside the catalogue or whose data does not fit its code. */
 export const unrecognizedFailure = "UnrecognizedFailure";
 
 type Build = (data: unknown) => ApiError | undefined;
@@ -68,7 +68,7 @@ const feature = z.looseObject({
 });
 const refusal = z.looseObject({ context: InterruptContext, cell: z.string().exactOptional() });
 
-/** One builder per code of 03-api §7.4; each validates the data its class types. */
+/** One builder per code; each validates the data its class types. */
 const catalogue: Readonly<Record<number, Build>> = {
   [-32602]: from(issues, (data) => new InvalidParams(data)),
   1001: from(path, (data) => new NotebookNotFound(data)),

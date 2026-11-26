@@ -1,4 +1,4 @@
-// A notebook subscription (02-architecture §4.2): events.subscribe, notebook.get, then every event above
+// A notebook subscription: events.subscribe, notebook.get, then every event above
 // the returned seq in order; a gap, a malformed event or a reconnect runs the same hydrate again.
 import type { ApiIssue, EventEnvelope, JsnbError, NotebookState } from "@jsnb/core";
 import { eventsSubscribe, isJsnbError, notebookGet } from "@jsnb/core";

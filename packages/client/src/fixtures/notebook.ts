@@ -1,4 +1,4 @@
-// A notebook state and event envelopes that pass core's schemas (03-api §5, §6), for the subscription tests.
+// A notebook state and event envelopes that pass core's schemas, for the subscription tests.
 import type { NotebookState } from "@jsnb/core";
 
 export const notebookPath = "demo.jsnb";

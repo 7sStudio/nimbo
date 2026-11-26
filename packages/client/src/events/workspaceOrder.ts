@@ -1,5 +1,5 @@
-// The seq rule of a workspace subscription (03-api §2: seq is monotonic per notebook): a duplicate is dropped, and a
-// gap is reported while delivery goes on, since there is no single state to fetch again (03-api §7.6).
+// The seq rule of a workspace subscription (seq is monotonic per notebook): a duplicate is dropped, and a
+// gap is reported while delivery goes on, since there is no single state to fetch again.
 
 /** The last seq seen per notebook value (`""` for workspace-level events such as settings.changed). */
 export type SeqByNotebook = ReadonlyMap<string, number>;

@@ -1,4 +1,4 @@
-// The client over a WebSocket (03-api §7.2), what the UI and the MCP server keep open: the generated methods, `call`,
+// The client over a WebSocket, what the UI and the MCP server keep open: the generated methods, `call`,
 // the connection status, the daemon's requests to the page, event subscriptions and close.
 import type { Client } from "../call/client.js";
 import { createCaller } from "../call/caller.js";
@@ -22,9 +22,9 @@ export type SocketClient = Client & {
     method: M,
     respond: ServerRequestHandler<M>,
   ) => () => void;
-  /** A notebook's state, then its events in seq order, resynced on gaps and reconnects (02-architecture §4.2). */
+  /** A notebook's state, then its events in seq order, resynced on gaps and reconnects. */
   readonly subscribeNotebook: (options: NotebookSubscriptionOptions) => Promise<Subscription>;
-  /** Every notebook's events as they arrive, with gaps reported (03-api §7.6). */
+  /** Every notebook's events as they arrive, with gaps reported. */
   readonly subscribeWorkspace: (options: WorkspaceSubscriptionOptions) => Promise<Subscription>;
   /** Closes for good; pending and later calls fail with ConnectionClosed. */
   readonly close: () => void;

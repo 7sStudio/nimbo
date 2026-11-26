@@ -1,4 +1,4 @@
-// The options of the HTTP client and the download (03-api §7.3, §7.5): the daemon, the backoff and a retry notice.
+// The options of the HTTP client and the download: the daemon, the backoff and a retry notice.
 import type { DaemonOptions } from "../daemon/address.js";
 import type { Backoff } from "../retry/backoff.js";
 
