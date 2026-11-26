@@ -294,9 +294,9 @@ const keybindings = (call: Caller) =>
 
 const examples = (call: Caller) =>
   ({
-    /** The example notebooks shipped with the app: each one's name, its title, what it is for in one line and how many cells it has. Read-only; examples.copy puts one in the workspace. */
+    /** The notebooks shipped with the app, the tutorial's lessons first (kind "tutorial", named tutorial/<lesson>), then the examples (kind "example"): each one's name, kind, title, what it is for in one line and how many cells it has. Read-only; examples.copy puts one, or the whole tutorial, in the workspace. */
     list: bindOptional(call, examplesList, {}),
-    /** Copy a shipped example notebook into the workspace folder as <name>.jsnb, or <name>-2.jsnb and so on when that name is taken; the shipped file is left as it is. Answers the copy's path, which notebook.open opens. */
+    /** Copy a shipped notebook into the workspace at its name: an example as <name>.jsnb, a lesson as tutorial/<lesson>.jsnb, or every lesson with the name "tutorial". A name already taken gets the next free number (<name>-2.jsnb and so on), so no file is ever written over; the shipped files are left as they are. Answers the first copy's path, which notebook.open opens, and every copy's path. */
     copy: bind(call, examplesCopy),
   }) as const;
 

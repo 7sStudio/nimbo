@@ -1,0 +1,161 @@
+{
+  "version": 1,
+  "cells": [
+    {
+      "id": "c_t70001",
+      "type": "markdown",
+      "source": [
+        "# Debugging server cells",
+        "",
+        "Stop a server cell on a line, look at its variables, step through it line by line, and stop only when a condition holds.",
+        "",
+        "You will set a breakpoint, start the debugger on a cell, step over and into calls, read and watch variables, and use a conditional breakpoint and a logpoint. About 10 minutes. The keys are VS Code's.",
+        "",
+        "Click **Run All** first: the cells below define a small cart and compute its total."
+      ]
+    },
+    {
+      "id": "c_t70002",
+      "type": "server",
+      "source": [
+        "type Item = { name: string; price: number; quantity: number };",
+        "",
+        "const cart: Item[] = [",
+        "  { name: \"notebook\", price: 4, quantity: 3 },",
+        "  { name: \"pen\", price: 1.5, quantity: 10 },",
+        "  { name: \"eraser\", price: 0.8, quantity: 2 },",
+        "];",
+        "",
+        "function lineTotal(item: Item) {",
+        "  const base = item.price * item.quantity;",
+        "  const discount = item.quantity >= 10 ? 0.1 : 0;",
+        "  return base * (1 - discount);",
+        "}",
+        "",
+        "function cartTotal(items: Item[]) {",
+        "  let total = 0;",
+        "  for (const item of items) {",
+        "    const line = lineTotal(item);",
+        "    total += line;",
+        "  }",
+        "  return total;",
+        "}"
+      ]
+    },
+    {
+      "id": "c_t70003",
+      "type": "server",
+      "source": [
+        "cartTotal(cart)"
+      ]
+    },
+    {
+      "id": "c_t70004",
+      "type": "markdown",
+      "source": [
+        "## 1. A breakpoint",
+        "",
+        "In the first code cell, find the line `total += line;`. Click just left of its line number: a red dot appears. (With the cursor on the line, **F9** does the same.)",
+        "",
+        "Now select the cell `cartTotal(cart)` and press **Ctrl+Shift+F5**, on a Mac too. The cell runs under the debugger and stops on your line, before running it: the line is highlighted, and the **Run and Debug** view opens on the left (**Cmd+Shift+D** opens it any time).",
+        "",
+        "While a breakpoint is set, any run that reaches its line stops there, a plain **Shift+Enter** too."
+      ]
+    },
+    {
+      "id": "c_t70005",
+      "type": "markdown",
+      "source": [
+        "## 2. Look around",
+        "",
+        "In **Run and Debug**:",
+        "",
+        "- **Variables** shows the names the paused code sees, scope by scope: `line` and `item` in the loop, `items` and `total` in the function, and under **Notebook** the names the cells defined. Click `item` to unfold it.",
+        "- **Watch** evaluates expressions at each pause: open it and add `total + line`.",
+        "- **Call Stack** shows how you got here: `cartTotal`, called from the cell you started. Click a row to see its line.",
+        "- **Debug Console** evaluates what you type in its **Evaluate** field, in the paused frame, such as `item.price * 2`.",
+        "",
+        "Hover a name in the paused cell to read its value too."
+      ]
+    },
+    {
+      "id": "c_t70006",
+      "type": "markdown",
+      "source": [
+        "## 3. Step",
+        "",
+        "| Key | What it does |",
+        "| --- | --- |",
+        "| F10 | Step over: run this line, stop on the next |",
+        "| F11 | Step into: enter the function this line calls |",
+        "| Shift+F11 | Step out: finish this function, stop in its caller |",
+        "| F5 | Continue to the next breakpoint, or to the end |",
+        "| Shift+F5 | Stop the run |",
+        "",
+        "While the kernel is paused, a small toolbar floats at the top of the notebook with the same actions as buttons.",
+        "",
+        "Press **F5**: the loop comes back to your breakpoint for the second item. Press **F10** twice to finish `total += line` and reach `const line = lineTotal(item)` for the third item, then **F11** to step into `lineTotal`. **Shift+F11** takes you back out. Press **Shift+F5** to stop the run."
+      ]
+    },
+    {
+      "id": "c_t70007",
+      "type": "markdown",
+      "source": [
+        "## 4. Stop only when it matters",
+        "",
+        "A breakpoint can carry a condition. In **Run and Debug**, under **Breakpoints**, hover your breakpoint and click **Edit**. Choose **Expression**, type `item.quantity >= 10` and press **Enter**. The dot gets a bar.",
+        "",
+        "Run `cartTotal(cart)` under the debugger again (**Ctrl+Shift+F5**): it stops only for the pens.",
+        "",
+        "**Hit Count** stops on the n-th time the line runs, for example `>= 3`."
+      ]
+    },
+    {
+      "id": "c_t70008",
+      "type": "markdown",
+      "source": [
+        "## 5. Log without stopping",
+        "",
+        "A **logpoint** prints a message each time its line runs, and never stops. Edit the breakpoint again, choose **Log Message** and type `{item.name}: {line}`. Names in braces are evaluated. The dot becomes a diamond.",
+        "",
+        "Run `cartTotal(cart)` again: it runs to the end, and its output starts with one line per item, `notebook: 12`, `pen: 13.5`, `eraser: 1.6`, as if you had added `console.log`, without changing the code.",
+        "",
+        "When you are done, remove the breakpoint: **Remove Breakpoint** beside **Edit** in the list, or click its mark."
+      ]
+    },
+    {
+      "id": "c_t70009",
+      "type": "markdown",
+      "source": [
+        "## 6. From a terminal or an agent",
+        "",
+        "The same debugger answers the `nimbo debug` commands and the matching MCP tools, so an agent can debug with you. With the notebook open:",
+        "",
+        "```sh",
+        "nimbo ls -n tutorial/07-debugging.jsnb",
+        "nimbo debug set-breakpoint -n tutorial/07-debugging.jsnb --cell <first code cell's id> --line 19",
+        "nimbo run <id of the cartTotal(cart) cell> -n tutorial/07-debugging.jsnb",
+        "nimbo debug scope -n tutorial/07-debugging.jsnb",
+        "nimbo debug remove-breakpoint -n tutorial/07-debugging.jsnb --all",
+        "nimbo debug resume -n tutorial/07-debugging.jsnb",
+        "```",
+        "",
+        "`nimbo ls` prints the cell ids. `nimbo run` answers as soon as the kernel pauses and says where; `nimbo debug scope` prints the variables there. The breakpoint shows in the page too, and the page follows the pause."
+      ]
+    },
+    {
+      "id": "c_t70010",
+      "type": "markdown",
+      "source": [
+        "## Try it",
+        "",
+        "1. Set a breakpoint inside `lineTotal`, on the `return` line, with the condition `discount > 0`. Which item stops it?",
+        "2. Change the discount rule to 5 items or more, and use a logpoint to check every line total without stopping.",
+        "",
+        "Client cells can be debugged too, when they run in the headless page an agent uses; lesson 8 shows that page.",
+        "",
+        "Next: `08-agents`, the same notebook from the command line and from a coding agent."
+      ]
+    }
+  ]
+}

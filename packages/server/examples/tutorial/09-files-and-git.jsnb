@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "cells": [
+    {
+      "id": "c_t90001",
+      "type": "markdown",
+      "source": [
+        "# Files and git",
+        "",
+        "See what a notebook file holds, change it from outside nimbo, and follow a notebook in git with a diff cell by cell.",
+        "",
+        "You will read this notebook's `.jsnb` file, watch an edit made on disk merge into the open page, commit the notebook, read its diff and export it as an HTML page. About 10 minutes. The git part needs `git` installed."
+      ]
+    },
+    {
+      "id": "c_t90002",
+      "type": "markdown",
+      "source": [
+        "## 1. The file is plain JSON",
+        "",
+        "A notebook is one `.jsnb` file: JSON with each cell's id, type and source, the source as a list of lines. Outputs are not in it by default, nor secrets, nor the kernel's state. Run the next cell: it reads this very file. If your copy of the lesson has another name, change the path first."
+      ]
+    },
+    {
+      "id": "c_t90003",
+      "type": "server",
+      "source": [
+        "import { readFile, writeFile } from \"node:fs/promises\";",
+        "",
+        "const notebookFile = \"tutorial/09-files-and-git.jsnb\";",
+        "const notebook = JSON.parse(await readFile(notebookFile, \"utf8\"));",
+        "notebook.cells.map((cell: { id: string; type: string; source: string[] }) => ({",
+        "  id: cell.id,",
+        "  type: cell.type,",
+        "  lines: cell.source.length,",
+        "  first: cell.source[0],",
+        "}))"
+      ]
+    },
+    {
+      "id": "c_t90004",
+      "type": "markdown",
+      "source": [
+        "Every cell keeps its id for life: the CLI, agents and the diff refer to cells by it. Because the source is a list of lines and keys always come in the same order, two versions of a notebook diff and merge line by line, like code.",
+        "",
+        "Open the file in any text editor, or print it from a terminal with `cat tutorial/09-files-and-git.jsnb`, to see the whole thing."
+      ]
+    },
+    {
+      "id": "c_t90005",
+      "type": "markdown",
+      "source": [
+        "## 2. Edits from outside are merged",
+        "",
+        "nimbo watches the files of open notebooks. When another program changes one (your editor, `git pull`, a formatter, an agent's file tools), the change is merged into the open page, cell by cell.",
+        "",
+        "The next cell plays the other program: it adds a line to the Markdown cell after it, by writing the file directly. Run it and watch the cell below change."
+      ]
+    },
+    {
+      "id": "c_t90006",
+      "type": "server",
+      "source": [
+        "const onDisk = JSON.parse(await readFile(notebookFile, \"utf8\"));",
+        "const target = onDisk.cells.find((cell: { source: string[] }) => cell.source[0] === \"### Changed on disk\");",
+        "target.source.push(\"\", `A line written to the file at ${new Date().toLocaleTimeString()}.`);",
+        "await writeFile(notebookFile, `${JSON.stringify(onDisk, null, 2)}\\n`);",
+        "\"written\""
+      ]
+    },
+    {
+      "id": "c_t90007",
+      "type": "markdown",
+      "source": [
+        "### Changed on disk",
+        "",
+        "This cell gets a new line each time the cell above runs."
+      ]
+    },
+    {
+      "id": "c_t90008",
+      "type": "markdown",
+      "source": [
+        "The page says **Updated from disk: 1 cell**. The change counts as an edit made outside nimbo: the **Agent** view lists it for review, as it lists an agent's edits, with **Mark reviewed** and **Revert**. Nothing ran by itself: a code cell changed on disk keeps its old result until you run it."
+      ]
+    },
+    {
+      "id": "c_t90009",
+      "type": "markdown",
+      "source": [
+        "## 3. Notebooks in git",
+        "",
+        "Open **Source Control** (the branch icon on the left, or **Ctrl+Shift+G**, Ctrl on a Mac too).",
+        "",
+        "- If your workspace is not a git repository yet, the view offers **Initialize Repository**. It creates a `.git` folder in the workspace; skip this section if you would rather not.",
+        "- Before the first commit, keep out of git what should not be in it: if lesson 5 left `node_modules/` or `.env` here, create a `.gitignore` file at the workspace's root with these two lines: `node_modules/` and `.env`. (nimbo's own `.jsnb/` folder already ignores what it should.)",
+        "",
+        "Type a message such as `tutorial` and click **Commit**. With nothing staged yet, nimbo asks first: **Stage All and Commit** stages every change and commits it. git needs to know your name and email for that; if it asks, set them with `git config --global user.name` and `user.email` as git says."
+      ]
+    },
+    {
+      "id": "c_t90010",
+      "type": "markdown",
+      "source": [
+        "## 4. A diff cell by cell",
+        "",
+        "Now change the first code cell, the one that reads the file (for example, change `lines: cell.source.length` to `lines: cell.source.length * 1`), give it a title with **Escape** then **F2**, and run the cell that writes the file once more. In **Source Control**, under **Changes**, click this notebook: the diff opens as notebook cells, not a wall of JSON. Unchanged cells fold away, a changed cell shows its old and new code side by side, and a Markdown cell shows its text rendered.",
+        "",
+        "From a terminal, `nimbo diff` prints the same diff, notebook cell by notebook cell. `nimbo git` has the rest: `nimbo git status`, `nimbo git commit`, `nimbo git log` and more."
+      ]
+    },
+    {
+      "id": "c_t90011",
+      "type": "markdown",
+      "source": [
+        "## 5. Share it as one HTML page",
+        "",
+        "**File > Export as HTML…** downloads the notebook as a single HTML page, `09-files-and-git.html`, with its Markdown, its code and the last outputs, readable in any browser without nimbo. From a terminal:",
+        "",
+        "```sh",
+        "nimbo export tutorial-09.html -n tutorial/09-files-and-git.jsnb",
+        "```"
+      ]
+    },
+    {
+      "id": "c_t90012",
+      "type": "markdown",
+      "source": [
+        "## Try it",
+        "",
+        "1. Open this file in your editor, change the text of a Markdown cell, save, and watch the page.",
+        "2. Turn on saved outputs for this workspace with `nimbo config set outputs.save always`, run a cell, and look at the file again: an `outputs` key appears. To take them out again, `nimbo config set outputs.save never` (the next save drops them), then `nimbo config unset outputs.save` for the default.",
+        "",
+        "That is the end of the tutorial. The examples on the Home page (or `nimbo examples list`) show finished notebooks to learn from: data, interfaces, payments, an API and Vue."
+      ]
+    }
+  ]
+}

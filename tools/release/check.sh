@@ -3,7 +3,8 @@
 # ~/.local/bin and the system folders on PATH, so nothing of the machine's own Node, pnpm or config is used:
 #
 #   tools/release/check.sh smoke <release root> <version>       install with curl | sh from a local server, doctor,
-#                                                                 a notebook run headless, a client cell in the
+#                                                                 a notebook run headless, the tutorial copied and its
+#                                                                 first lesson run, a client cell in the
 #                                                                 headless realm (where a Chrome is), the installer's
 #                                                                 flags and refusals (bad versions, a forged manifest,
 #                                                                 a wrong checksum, a second installer at once), the
@@ -120,6 +121,15 @@ n notebook create --path smoke.jsnb >/dev/null
 n cell add -n smoke.jsnb --type server --id c_a1b2c3 --source 'const answer = 6 * 7; answer' --run >/dev/null
 n outputs c_a1b2c3 -n smoke.jsnb --format json | tee "$work/answer"
 grep -q 42 "$work/answer" || fail "the server cell did not answer 42"
+
+say "the tutorial and the examples ship"
+n examples list >"$work/shipped"
+grep -q "name: tutorial/01-first-steps" "$work/shipped" || fail "the tutorial's lessons are not listed"
+grep -q "name: 01-data" "$work/shipped" || fail "the examples are not listed"
+n examples copy --name tutorial >/dev/null
+[ -f "$ws/tutorial/09-files-and-git.jsnb" ] || fail "the tutorial was not copied into tutorial/"
+n run --all -n tutorial/01-first-steps.jsnb >/dev/null || fail "the first lesson did not run"
+echo "listed, copied into tutorial/, its first lesson run"
 
 say "a client cell in the headless realm, where this machine has Chrome, Chromium or Edge"
 n config set realm.headless true >/dev/null

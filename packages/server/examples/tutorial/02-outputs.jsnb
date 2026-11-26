@@ -1,0 +1,196 @@
+{
+  "version": 1,
+  "cells": [
+    {
+      "id": "c_t20001",
+      "type": "markdown",
+      "source": [
+        "# Outputs: look at a result and ask it questions",
+        "",
+        "Read a result as a tree, a grid or raw JSON, then query it with a filter, JSONPath, jq or SQL.",
+        "",
+        "You will also see where `console` output goes, how an error points at your line, how to draw a table or an image, and how to compare two runs of a cell. About 10 minutes.",
+        "",
+        "Click **Run All** in the toolbar (or press **Cmd+Shift+Enter**; Ctrl+Shift+Enter on Linux), then follow the steps. The last code cell fails on purpose."
+      ]
+    },
+    {
+      "id": "c_t20002",
+      "type": "markdown",
+      "source": [
+        "## 1. One result, three views",
+        "",
+        "The next cell builds the orders of a small, made-up tea shop. An array of objects like this one opens as a **grid**."
+      ]
+    },
+    {
+      "id": "c_t20003",
+      "type": "server",
+      "source": [
+        "const orders = [",
+        "  { id: 1, city: \"Lyon\", tea: \"green\", cups: 2, price: 3.5, status: \"paid\" },",
+        "  { id: 2, city: \"Porto\", tea: \"black\", cups: 1, price: 3, status: \"paid\" },",
+        "  { id: 3, city: \"Lyon\", tea: \"mint\", cups: 4, price: 4, status: \"refunded\" },",
+        "  { id: 4, city: \"Ghent\", tea: \"green\", cups: 3, price: 3.5, status: \"paid\" },",
+        "  { id: 5, city: \"Porto\", tea: \"oolong\", cups: 2, price: 5, status: \"pending\" },",
+        "  { id: 6, city: \"Ghent\", tea: \"black\", cups: 6, price: 3, status: \"paid\" },",
+        "  { id: 7, city: \"Lyon\", tea: \"oolong\", cups: 1, price: 5, status: \"paid\" },",
+        "  { id: 8, city: \"Porto\", tea: \"mint\", cups: 2, price: 4, status: \"paid\" },",
+        "];",
+        "orders"
+      ]
+    },
+    {
+      "id": "c_t20004",
+      "type": "markdown",
+      "source": [
+        "Above the grid, on the right, three buttons switch the view:",
+        "",
+        "- **Tree** shows the value as nested, foldable rows: good for objects with depth.",
+        "- **Grid** shows an array of objects as a table. Click a column's name to sort by it.",
+        "- **Raw** shows the JSON text.",
+        "",
+        "Hover the result to see its other buttons: **Find**, **Query**, **Copy**, **Export** (JSON, CSV and more), and **Full screen**."
+      ]
+    },
+    {
+      "id": "c_t20005",
+      "type": "markdown",
+      "source": [
+        "## 2. Ask the result a question",
+        "",
+        "Hover the grid and click **Query** (the funnel). A bar opens with four modes. Pick one, type the query and press **Enter**:",
+        "",
+        "- **Filter**: type a key (`cups`), pick a test (`>`) and type a value (`2`). The filter becomes a chip, and the grid keeps the three orders with more than two cups.",
+        "- **JSONPath**: `$[?(@.status == \"paid\")]` keeps the paid orders. **Only matches** and **All** switch between the matching rows and every row.",
+        "- **jq**: `map(select(.tea == \"green\")) | map(.cups) | add` adds up the cups of green tea: `5`.",
+        "- **SQL**: the value is the table `t`. Try `SELECT city, sum(cups * price) AS revenue FROM t GROUP BY city ORDER BY revenue DESC`.",
+        "",
+        "When a query answers with a new value, a link beside it (**Back to rows**) shows the whole value again.",
+        "",
+        "In an empty query field, `?` shows example queries for the mode you picked.",
+        "",
+        "SQL runs on DuckDB inside the page. The first SQL query loads it, and DuckDB fetches its JSON reader from duckdb.org once, so that first query needs a network connection; the browser keeps both afterwards."
+      ]
+    },
+    {
+      "id": "c_t20006",
+      "type": "markdown",
+      "source": [
+        "## 3. Printed output",
+        "",
+        "`console.log` writes to the cell's **Output**, as it would in a terminal; `console.warn` and `console.error` write to its **Error output**, in red. A cell can print and return a result: the printed lines come first. Lines show as they are printed, even while the cell still runs."
+      ]
+    },
+    {
+      "id": "c_t20007",
+      "type": "server",
+      "source": [
+        "console.log(\"checking\", orders.length, \"orders\");",
+        "for (const city of [\"Lyon\", \"Porto\", \"Ghent\"]) {",
+        "  await new Promise((resolve) => setTimeout(resolve, 400));",
+        "  console.log(city, orders.filter((order) => order.city === city).length);",
+        "}",
+        "console.warn(\"2 orders are not paid\");",
+        "\"done\""
+      ]
+    },
+    {
+      "id": "c_t20008",
+      "type": "markdown",
+      "source": [
+        "## 4. Tables and images",
+        "",
+        "`display` adds outputs of its own to a cell, beside its result. `display.table(rows, { columns })` draws rows as a grid with the columns you pick, in that order. `display.image(...)` takes an image's bytes, a URL, a file path or SVG markup."
+      ]
+    },
+    {
+      "id": "c_t20009",
+      "type": "server",
+      "source": [
+        "display.table(orders, { columns: [\"city\", \"tea\", \"cups\"] });",
+        "",
+        "const cupsByCity = Object.entries(Object.groupBy(orders, (order) => order.city)).map(",
+        "  ([city, rows]) => ({ city, cups: rows!.reduce((sum, order) => sum + order.cups, 0) }),",
+        ");",
+        "const bars = cupsByCity",
+        "  .map(",
+        "    ({ city, cups }, i) =>",
+        "      `<rect x=\"70\" y=\"${i * 30 + 10}\" width=\"${cups * 25}\" height=\"20\" fill=\"#5b8def\"/>` +",
+        "      `<text x=\"0\" y=\"${i * 30 + 25}\" font-family=\"sans-serif\" font-size=\"14\">${city}</text>`,",
+        "  )",
+        "  .join(\"\");",
+        "display.image(`<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"360\" height=\"100\">${bars}</svg>`);",
+        "cupsByCity"
+      ]
+    },
+    {
+      "id": "c_t20010",
+      "type": "markdown",
+      "source": [
+        "## 5. Compare two runs",
+        "",
+        "Run the next cell with **Cmd+Enter**, then change `2` to `3` and run it again. Open the cell's menu (the **…** at the right of its header, or right-click the header) and choose **Compare with Previous Run**: the dialog shows what changed in the result between the two runs."
+      ]
+    },
+    {
+      "id": "c_t20011",
+      "type": "server",
+      "source": [
+        "const discount = 2;",
+        "orders.map((order) => ({ id: order.id, total: order.cups * order.price - discount }))"
+      ]
+    },
+    {
+      "id": "c_t20012",
+      "type": "markdown",
+      "source": [
+        "## 6. Errors point at your line",
+        "",
+        "The next cell defines a function. The cell after it calls the function with a tea the shop does not sell, so the call throws. That cell fails **on purpose**, and it is the last code cell for a reason: **Run All** stops at the first cell that fails and leaves the cells after it unrun."
+      ]
+    },
+    {
+      "id": "c_t20013",
+      "type": "server",
+      "source": [
+        "const menu: Record<string, number> = { green: 3.5, black: 3, mint: 4, oolong: 5 };",
+        "",
+        "function priceOf(tea: string): number {",
+        "  const price = menu[tea];",
+        "  if (price === undefined) throw new Error(`no tea called ${tea} on the menu`);",
+        "  return price;",
+        "}"
+      ]
+    },
+    {
+      "id": "c_t20014",
+      "type": "server",
+      "source": [
+        "priceOf(\"chai\") * 2"
+      ]
+    },
+    {
+      "id": "c_t20015",
+      "type": "markdown",
+      "source": [
+        "The failed cell shows the error's name and message, then the line of **this** cell the error came through. **Details** opens the whole stack: each frame gives a function and a line of your TypeScript, not of compiled JavaScript. **Jump** beside the first frame takes you to the `throw` in the cell above.",
+        "",
+        "Fix it: change `\"chai\"` to `\"mint\"` and run the cell again."
+      ]
+    },
+    {
+      "id": "c_t20016",
+      "type": "markdown",
+      "source": [
+        "## Try it",
+        "",
+        "1. With SQL, find the tea that sold the most cups: group by `tea`, sum `cups`, order by it.",
+        "2. Write a server cell that returns only the orders of one city with `.filter(...)`, then compare it with the same question asked in the query bar.",
+        "3. Change the SVG chart so each bar shows its number of cups at its end.",
+        "",
+        "Next: `03-typescript`, the types that follow your values from cell to cell."
+      ]
+    }
+  ]
+}

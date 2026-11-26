@@ -69,7 +69,11 @@ const banners = computed(() =>
 );
 const theme = computed(() => themeOf(settings.valueOf("ui.theme")));
 const menus = computed(() =>
-  homeMenus(home.examples, theme.value, syntaxThemeOf(settings.valueOf("editor.syntaxTheme"))),
+  homeMenus(
+    { lessons: home.lessons, examples: home.examples },
+    theme.value,
+    syntaxThemeOf(settings.valueOf("editor.syntaxTheme")),
+  ),
 );
 
 const { widthOf, resize } = useHomePanels();

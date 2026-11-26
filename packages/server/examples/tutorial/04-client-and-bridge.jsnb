@@ -1,0 +1,221 @@
+{
+  "version": 1,
+  "cells": [
+    {
+      "id": "c_t40001",
+      "type": "markdown",
+      "source": [
+        "# Client cells and the bridge",
+        "",
+        "Draw in the page with client cells, and call from them the functions a server cell exports.",
+        "",
+        "You will draw HTML from a cell, call a server function from the page, push live updates from the server to the page, and see what can cross between the two and what cannot. About 10 minutes.",
+        "",
+        "So far every cell ran on the server, in Node. A **client cell** runs here, in this browser tab, with `document`, `window` and every browser API. Its header says **client**. Click **Run All** to start; the last code cell fails on purpose."
+      ]
+    },
+    {
+      "id": "c_t40002",
+      "type": "markdown",
+      "source": [
+        "## 1. Draw in the page",
+        "",
+        "`display.div()` gives the cell a container under its code. Whatever you put in it shows there."
+      ]
+    },
+    {
+      "id": "c_t40003",
+      "type": "client",
+      "source": [
+        "const box = display.div();",
+        "box.innerHTML = `<p style=\"font: 600 1.25rem sans-serif; margin: 0\">Hello from the page</p>`;",
+        "box.querySelector(\"p\")!.style.color = \"tomato\";",
+        "navigator.language"
+      ]
+    },
+    {
+      "id": "c_t40004",
+      "type": "markdown",
+      "source": [
+        "The cell drew its HTML, and its last value, `navigator.language`, is your browser's language: this code ran in the page, not in Node.",
+        "",
+        "Run it again: the container is emptied first, so you never get two copies. To add a client cell yourself, press **Escape** then **Shift+C**, or click **+ Client**.",
+        "",
+        "Client cells run in the tab you have open. Reload the page and what they drew is gone until you run them again (the cell keeps only a **Page** output, a record of its text); the server cells keep their state in the kernel."
+      ]
+    },
+    {
+      "id": "c_t40005",
+      "type": "markdown",
+      "source": [
+        "## 2. Call the server from the page",
+        "",
+        "A server cell that writes `export` in front of a function makes it callable from client cells."
+      ]
+    },
+    {
+      "id": "c_t40006",
+      "type": "server",
+      "source": [
+        "const stock = new Map([",
+        "  [\"apples\", 12],",
+        "  [\"pears\", 3],",
+        "  [\"plums\", 0],",
+        "]);",
+        "",
+        "export function inStock(fruit: string): number {",
+        "  return stock.get(fruit) ?? 0;",
+        "}",
+        "",
+        "export function restock(fruit: string, count: number) {",
+        "  stock.set(fruit, inStock(fruit) + count);",
+        "  console.log(`restocked ${count} ${fruit}`);",
+        "  return Object.fromEntries(stock);",
+        "}"
+      ]
+    },
+    {
+      "id": "c_t40007",
+      "type": "client",
+      "source": [
+        "const pears = await inStock(\"pears\");",
+        "display.div().textContent = `${pears} pears in stock`;",
+        "pears"
+      ]
+    },
+    {
+      "id": "c_t40008",
+      "type": "markdown",
+      "source": [
+        "`inStock` ran in Node and its answer came back to the page. Seen from a client cell, an exported function is always **async**: call it with `await`. Hover `inStock` in the client cell: its type is `(fruit: string) => Promise<number>`, taken from the server cell.",
+        "",
+        "Open the **Inspector** on the right (**Cmd+Alt+B** if it is hidden): its **Bridge** section lists what the client cells use from the server (functions, values and events), each with its type, the cells that use it and its last call."
+      ]
+    },
+    {
+      "id": "c_t40009",
+      "type": "client",
+      "source": [
+        "const box = display.div();",
+        "const button = document.createElement(\"button\");",
+        "const answer = document.createElement(\"pre\");",
+        "button.textContent = \"Restock 5 plums\";",
+        "button.addEventListener(\"click\", async () => {",
+        "  answer.textContent = JSON.stringify(await restock(\"plums\", 5));",
+        "});",
+        "box.append(button, answer);"
+      ]
+    },
+    {
+      "id": "c_t40010",
+      "type": "markdown",
+      "source": [
+        "Click the button a few times. Each click calls `restock` on the server: the page shows the new stock, and the server cell that defines `restock` shows its `console.log` lines, since that is where the function runs. Secrets in `.env` stay on the server: the page gets only what the function returns."
+      ]
+    },
+    {
+      "id": "c_t40011",
+      "type": "markdown",
+      "source": [
+        "## 3. Live updates from the server",
+        "",
+        "A server cell can push events to the page with `emit(name, data)`; a client cell listens with `on(name, callback)`. The client cell below listens; the server cell after it sends four steps, one every 0.6 seconds. Run the client cell first, then the server cell, and watch the bar."
+      ]
+    },
+    {
+      "id": "c_t40012",
+      "type": "client",
+      "source": [
+        "const bar = document.createElement(\"progress\");",
+        "bar.max = 100;",
+        "bar.value = 0;",
+        "const step = document.createElement(\"span\");",
+        "display.div().append(bar, step);",
+        "",
+        "on(\"progress\", (data: { done: number; step: string }) => {",
+        "  bar.value = data.done;",
+        "  step.textContent = ` ${data.step}`;",
+        "});"
+      ]
+    },
+    {
+      "id": "c_t40013",
+      "type": "server",
+      "source": [
+        "const steps = [",
+        "  [25, \"washing\"],",
+        "  [50, \"peeling\"],",
+        "  [75, \"slicing\"],",
+        "  [100, \"done\"],",
+        "] as const;",
+        "",
+        "for (const [done, step] of steps) {",
+        "  await new Promise((resolve) => setTimeout(resolve, 600));",
+        "  emit(\"progress\", { done, step });",
+        "}",
+        "`sent ${steps.length} events`"
+      ]
+    },
+    {
+      "id": "c_t40014",
+      "type": "markdown",
+      "source": [
+        "## 4. What crosses, and what cannot",
+        "",
+        "Arguments and results cross as **plain data**: numbers, strings, booleans, arrays, plain objects, `Date`, `Map`, `Set` and bytes. An exported value that is plain data arrives in the client cell as a **copy**: changing it in the page does not change it on the server.",
+        "",
+        "Anything else does not cross: a class instance keeps its methods on the server, and a copy without them would break later, far from the cause. The run fails at once instead, with an error that names the variable."
+      ]
+    },
+    {
+      "id": "c_t40015",
+      "type": "server",
+      "source": [
+        "class Basket {",
+        "  items: string[] = [];",
+        "  add(item: string) {",
+        "    this.items.push(item);",
+        "  }",
+        "}",
+        "",
+        "export const prices = { apples: 0.5, pears: 0.8, plums: 1.2 };",
+        "export const updatedAt = new Date();",
+        "export const basket = new Basket();"
+      ]
+    },
+    {
+      "id": "c_t40016",
+      "type": "client",
+      "source": [
+        "({ prices, updatedAt, isDate: updatedAt instanceof Date })"
+      ]
+    },
+    {
+      "id": "c_t40017",
+      "type": "markdown",
+      "source": [
+        "The next cell reads `basket` and fails **on purpose**: read its error. The way out is the one it suggests: export a function that uses the basket, and call that function from the page."
+      ]
+    },
+    {
+      "id": "c_t40018",
+      "type": "client",
+      "source": [
+        "basket.items"
+      ]
+    },
+    {
+      "id": "c_t40019",
+      "type": "markdown",
+      "source": [
+        "## Try it",
+        "",
+        "1. Export `function basketItems() { return basket.items; }` from a new server cell, run it, and call `await basketItems()` from a client cell.",
+        "2. Make the restock button read a number from an `<input>` instead of always adding 5.",
+        "3. In the **Inspector**, switch **Variables** to **Client**: which names did the client cells define?",
+        "",
+        "Next: `05-packages-and-secrets`, npm packages in both kinds of cells, and secrets kept on the server."
+      ]
+    }
+  ]
+}

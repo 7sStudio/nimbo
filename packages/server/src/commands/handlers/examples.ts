@@ -1,5 +1,5 @@
-// The examples commands: the shipped example notebooks listed, and one copied into the workspace
-// folder, the list announced (notebooks.changed) once the copy is there.
+// The examples commands: the shipped notebooks (the tutorial's lessons and the examples) listed, and one or the
+// whole tutorial copied into the workspace folder, the list announced (notebooks.changed) once the copies are there.
 import { examplesCopy, examplesList } from "@jsnb/core";
 
 import { copyExample, listExamples } from "../../notebook/workspace/examples.js";
@@ -12,9 +12,9 @@ export function examplesHandlers(services: Services): readonly Bound[] {
   return [
     bind(examplesList, async () => ({ examples: await listExamples() })),
     bind(examplesCopy, async ({ name }) => {
-      const path = await copyExample(workspace.facts.root, name);
+      const paths = await copyExample(workspace.facts.root, name);
       await workspace.notebooks.listChanged();
-      return { path };
+      return { path: paths[0] ?? "", paths };
     }),
   ];
 }

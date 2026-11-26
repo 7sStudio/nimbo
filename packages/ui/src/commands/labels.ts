@@ -257,6 +257,7 @@ export const keymapTitles: Readonly<Record<string, string>> = {
   "ui.home.collapseAll": "Collapse Folders",
   "ui.home.copyPath": "Copy Path",
   "ui.home.example": "New from Example",
+  "ui.home.tutorial": "Start Tutorial",
   "ui.home.folder": "Show Folder",
   "ui.home.openFolder": "Open Folder…",
   "ui.home.refresh": "Refresh",

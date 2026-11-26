@@ -86,6 +86,7 @@ Two runtimes, no shared memory: shared scope within a kind, a **bridge** across 
 22. Variables panel and `kernel.scope`: what each realm defines, with previews.
 23. TypeScript language service in the editor: completions, hover, signature help, definition, diagnostics and rename, with cross-cell and bridge types.
 24. Headless client realm (`realm.headless`): with no tab open, client cells, `cell.snapshot` (with a PNG of the container) and push events run in the system's Chrome, Chromium or Edge, for an agent working alone; a tab that opens takes the realm over.
+25. A tutorial shipped with the app: nine runnable lessons, offered first on an empty workspace's Home and by `examples.list` and `examples.copy` (kind `tutorial`), kept true by a test that runs every cell.
 
 ### 3.2 Not built yet
 
@@ -198,7 +199,7 @@ Each cell compiles to `async (__scope) => { … }` where top-level declarations 
 
 ## 7. Status
 
-The core product is built: kernel, transform, bridge, routes, graph, UI, CLI, MCP, language service, debugger for server cells, Source Control (with remotes, branches, stash and history), auto-run of stale dependents, settings scopes and feedback mode. What remains is in [12-roadmap.md](12-roadmap.md).
+The core product is built: kernel, transform, bridge, routes, graph, UI, CLI, MCP, language service, debugger for server cells, Source Control (with remotes, branches, stash and history), auto-run of stale dependents, settings scopes, feedback mode and the tutorial. What remains is in [12-roadmap.md](12-roadmap.md).
 
 ## 8. Open questions
 

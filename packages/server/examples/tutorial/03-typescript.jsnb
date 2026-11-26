@@ -1,0 +1,130 @@
+{
+  "version": 1,
+  "cells": [
+    {
+      "id": "c_t30001",
+      "type": "markdown",
+      "source": [
+        "# TypeScript across cells",
+        "",
+        "Write TypeScript in every cell and let the editor follow your types from one cell to the next.",
+        "",
+        "You will hover a name to read its type, complete a property, read a type error in the Problems panel and rename a name in every cell at once. About 7 minutes.",
+        "",
+        "Every code cell is TypeScript (plain JavaScript is TypeScript too). The editor checks the whole notebook as one program: a type a cell declares is known to the cells below it. Click **Run All** first."
+      ]
+    },
+    {
+      "id": "c_t30002",
+      "type": "markdown",
+      "source": [
+        "## 1. A type, then values of that type"
+      ]
+    },
+    {
+      "id": "c_t30003",
+      "type": "server",
+      "source": [
+        "type Plant = {",
+        "  name: string;",
+        "  waterEveryDays: number;",
+        "  lastWatered: Date;",
+        "};",
+        "",
+        "const plants: Plant[] = [",
+        "  { name: \"fern\", waterEveryDays: 3, lastWatered: new Date(\"2026-03-01\") },",
+        "  { name: \"cactus\", waterEveryDays: 21, lastWatered: new Date(\"2026-02-10\") },",
+        "  { name: \"basil\", waterEveryDays: 1, lastWatered: new Date(\"2026-03-03\") },",
+        "];"
+      ]
+    },
+    {
+      "id": "c_t30004",
+      "type": "server",
+      "source": [
+        "function nextWatering(plant: Plant): Date {",
+        "  const next = new Date(plant.lastWatered);",
+        "  next.setDate(next.getDate() + plant.waterEveryDays);",
+        "  return next;",
+        "}",
+        "",
+        "plants.map((plant) => ({ name: plant.name, next: nextWatering(plant).toDateString() }))"
+      ]
+    },
+    {
+      "id": "c_t30005",
+      "type": "markdown",
+      "source": [
+        "## 2. Hover and complete",
+        "",
+        "- Hover `plants` or `nextWatering` in the cell above: a box shows its type, though both were declared in other cells. Right after the notebook opens, the first hover can take a few seconds while the language service starts.",
+        "- In the cell below, delete `name` after `plants[0].` and press **Ctrl+Space**: the list offers `lastWatered`, `name` and `waterEveryDays`, with the type of the one selected beside it. Pick `waterEveryDays` with **Enter** and run the cell."
+      ]
+    },
+    {
+      "id": "c_t30006",
+      "type": "server",
+      "source": [
+        "plants[0].name"
+      ]
+    },
+    {
+      "id": "c_t30007",
+      "type": "markdown",
+      "source": [
+        "While you type a call such as `nextWatering(`, a box under the cursor shows the function's parameters. **F12** (or Cmd+click) on a name goes to where it is declared, even in another cell."
+      ]
+    },
+    {
+      "id": "c_t30008",
+      "type": "markdown",
+      "source": [
+        "## 3. Type errors",
+        "",
+        "The next cell passes a plant without `lastWatered`, so TypeScript underlines `mint` in `nextWatering(mint)` in red. Hover the red line to read the error.",
+        "",
+        "The status bar at the bottom counts the errors and warnings; click it, or press **Cmd+Shift+M**, to open **Problems**, the list of every error in the notebook. Click an entry to go to its line."
+      ]
+    },
+    {
+      "id": "c_t30009",
+      "type": "server",
+      "source": [
+        "const mint = { name: \"mint\", waterEveryDays: 2 };",
+        "nextWatering(mint)"
+      ]
+    },
+    {
+      "id": "c_t30010",
+      "type": "markdown",
+      "source": [
+        "Types are checked, not enforced: the cell still runs. Here it does not even fail: it answers `Invalid Date`, exactly the mistake the red line warned about. Add `lastWatered: new Date()` to `mint` and the error goes away.",
+        "",
+        "From a terminal, `nimbo check -n tutorial/03-typescript.jsnb` prints the same errors without running anything."
+      ]
+    },
+    {
+      "id": "c_t30011",
+      "type": "markdown",
+      "source": [
+        "## 4. Rename everywhere",
+        "",
+        "Click on `nextWatering` in any cell and press **F2**. Type `nextWateringDate` and press **Enter**: the declaration and every use, in every cell, change together.",
+        "",
+        "F2 renames a name in the code. On a selected cell (after **Escape**), F2 renames the cell itself, as in the first lesson."
+      ]
+    },
+    {
+      "id": "c_t30012",
+      "type": "markdown",
+      "source": [
+        "## Try it",
+        "",
+        "1. Add `room: \"kitchen\" | \"bedroom\"` to the `Plant` type. Which cells get red lines? Fix them.",
+        "2. Write `plants.filter((plant) => plant.` in a new cell and use completion to finish it.",
+        "",
+        "Next: `04-client-and-bridge`, cells that run in the page and call the server."
+      ]
+    }
+  ]
+}

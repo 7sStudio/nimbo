@@ -1,7 +1,7 @@
-<!-- HomeList: the middle of the Home page: a toolbar with the search field (HomeSearch), the folder the Explorer narrowed the list to (a chip that clears it) and New Notebook; then one table of notebooks under its column header (Name, Folder, Kernel, Cells, Routes, Modified). With words typed, the matches, then the row that creates the typed name. A click selects a row, a double click opens it, a right click shows its menu; with the list focused Home's keys act on the selected row. An empty workspace shows New Notebook, Open Folder and the shipped examples. -->
+<!-- HomeList: the middle of the Home page: a toolbar with the search field (HomeSearch), the folder the Explorer narrowed the list to (a chip that clears it) and New Notebook; then one table of notebooks under its column header (Name, Folder, Kernel, Cells, Routes, Modified). With words typed, the matches, then the row that creates the typed name. A click selects a row, a double click opens it, a right click shows its menu; with the list focused Home's keys act on the selected row. An empty workspace shows Start Tutorial first, New Notebook and Open Folder, then the tutorial's lessons and the shipped examples. -->
 <script setup lang="ts">
-import { FilePlus, FolderOpen, Plus, X } from "@lucide/vue";
-import { nextTick, toRef, watch } from "vue";
+import { FilePlus, FolderOpen, GraduationCap, Plus, X } from "@lucide/vue";
+import { computed, nextTick, toRef, watch } from "vue";
 
 import { keysShown, keyWords } from "../keyboard/keymap";
 import Button from "../primitives/button/Button.vue";
@@ -39,6 +39,13 @@ watch(
 const command = (id: string, args?: Record<string, unknown>) => {
   emit("command", id, args);
 };
+/** The shipped notebooks an empty workspace offers: the tutorial's lessons, numbered, then the examples. */
+const shippedGroups = computed(() =>
+  [
+    { id: "tutorial", title: "Tutorial", items: home.lessons, numbered: true },
+    { id: "examples", title: "Examples", items: home.examples, numbered: false },
+  ].filter((group) => group.items.length > 0),
+);
 const grid =
   "ui:grid ui:grid-cols-[2.25rem_minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,1fr)_3.5rem_minmax(0,1.6fr)_7rem] ui:items-center ui:gap-x-3 ui:pe-4";
 </script>
@@ -73,7 +80,17 @@ const grid =
   <div v-if="empty" data-testid="empty" class="ui:flex ui:flex-col ui:gap-4 ui:ps-12 ui:pbs-10">
     <p class="ui:m-0 ui:text-title ui:font-semibold ui:text-fg">No notebooks</p>
     <div class="ui:flex ui:gap-2">
-      <Button variant="go" @click="command('ui.notebook.new')"
+      <Button
+        v-if="home.lessons.length > 0"
+        variant="go"
+        data-testid="start-tutorial"
+        @click="command('ui.home.tutorial')"
+        ><GraduationCap class="ui:block-3.5 ui:inline-3.5" aria-hidden="true" />Start
+        Tutorial</Button
+      >
+      <Button
+        :variant="home.lessons.length > 0 ? undefined : 'go'"
+        @click="command('ui.notebook.new')"
         ><FilePlus class="ui:block-3.5 ui:inline-3.5" aria-hidden="true" />New Notebook</Button
       >
       <Button @click="command('ui.home.openFolder')"
@@ -81,26 +98,30 @@ const grid =
       >
     </div>
     <section
-      v-if="home.examples.length > 0"
-      aria-labelledby="examples-title"
-      data-testid="examples"
+      v-for="group in shippedGroups"
+      :key="group.id"
+      :aria-labelledby="`${group.id}-title`"
+      :data-testid="group.id"
     >
       <h2
-        id="examples-title"
+        :id="`${group.id}-title`"
         class="ui:tracking-wide ui:m-0 ui:mbe-1.5 ui:text-tiny ui:font-semibold ui:text-fg-2 ui:uppercase"
       >
-        Examples
+        {{ group.title }}
       </h2>
       <ul class="ui:m-0 ui:flex ui:list-none ui:flex-col ui:gap-0.5 ui:p-0">
-        <li v-for="example in home.examples" :key="example.name">
+        <li v-for="(each, at) in group.items" :key="each.name" class="ui:flex ui:gap-2">
+          <span v-if="group.numbered" class="ui:text-end ui:text-muted ui:inline-[1.5ch]">{{
+            at + 1
+          }}</span>
           <button
             type="button"
-            :data-example="example.name"
-            :title="example.purpose"
+            :data-example="each.name"
+            :title="each.purpose"
             class="ui:cursor-pointer ui:border-0 ui:bg-transparent ui:p-0 ui:font-inherit ui:text-accent-text ui:hover:underline"
-            @click="command('ui.home.example', { name: example.name })"
+            @click="command('ui.home.example', { name: each.name })"
           >
-            {{ example.title }}
+            {{ each.title }}
           </button>
         </li>
       </ul>

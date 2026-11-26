@@ -14,9 +14,10 @@ export const menuRow =
 
 const line: MenuItem = { kind: "separator" };
 
-const help = (): AppMenuSpec => ({
+const help = (tutorial = false): AppMenuSpec => ({
   label: "Help",
   items: [
+    ...(tutorial ? [item("Start Tutorial", "ui.home.tutorial"), line] : []),
     item("Show All Commands", "ui.palette.open"),
     line,
     item("Feedback Mode", "ui.feedback.toggle"),
@@ -71,22 +72,32 @@ const preferences = (theme: string, syntax: string): MenuItem => ({
   ],
 });
 
-/** Home's menus; `examples` are the notebooks shipped with the app (File > New from Example). */
+type Shipped = readonly { readonly name: string; readonly title: string }[];
+
+/** Home's menus; `lessons` and `examples` are the notebooks shipped with the app (File > New from Tutorial and New
+ * from Example, Help > Start Tutorial). */
 export function homeMenus(
-  examples: readonly { readonly name: string; readonly title: string }[],
+  shipped: { readonly lessons: Shipped; readonly examples: Shipped },
   theme: string,
   syntax = "vscode",
 ): readonly AppMenuSpec[] {
+  const copies = (each: Shipped[number]) =>
+    item(each.title, "ui.home.example", { name: each.name });
   return [
     {
       label: "File",
       items: [
         item("New Notebook", "ui.notebook.new"),
-        {
-          kind: "sub",
-          label: "New from Example",
-          items: examples.map((each) => item(each.title, "ui.home.example", { name: each.name })),
-        },
+        ...(shipped.lessons.length > 0
+          ? [
+              {
+                kind: "sub" as const,
+                label: "New from Tutorial",
+                items: shipped.lessons.map(copies),
+              },
+            ]
+          : []),
+        { kind: "sub", label: "New from Example", items: shipped.examples.map(copies) },
         line,
         item("Open Folder…", "ui.home.openFolder"),
         item("Refresh", "ui.home.refresh"),
@@ -102,7 +113,7 @@ export function homeMenus(
         item("Explorer", "ui.home.side.toggle"),
       ],
     },
-    help(),
+    help(shipped.lessons.length > 0),
   ];
 }
 

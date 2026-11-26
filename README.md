@@ -15,7 +15,7 @@
 
 <p>
 <a href="#install">Install</a> ·
-<a href="#your-first-notebook">Tutorial</a> ·
+<a href="#learn-nimbo">Tutorial</a> ·
 <a href="#features">Features</a> ·
 <a href="#use-it-with-your-coding-agent">Agents</a> ·
 <a href="#cli-at-a-glance">CLI</a> ·
@@ -61,6 +61,7 @@ place to run code, a typed bridge between the two, and a plain-text file that di
 
 - [Why nimbo](#why-nimbo)
 - [Install](#install)
+- [Learn nimbo](#learn-nimbo)
 - [Your first notebook](#your-first-notebook)
 - [Features](#features)
   - [Write](#write)
@@ -128,6 +129,12 @@ brew install 7sStudio/nimbo/nimbo
 ```
 
 Windows is not supported yet.
+
+## Learn nimbo
+
+nimbo ships a tutorial: nine short notebooks you run and edit, from the first cell to the debugger, agents and git.
+`nimbo open` in an empty folder offers **Start Tutorial** on its Home page; from a terminal,
+`nimbo examples copy --name tutorial` copies the lessons into `tutorial/`.
 
 ## Your first notebook
 
@@ -239,7 +246,7 @@ Use the address your cell shows (the port is picked at start). Each request appe
 time; a body that fails the schema answers 500 with zod's message. The route and `revenue` share the kernel's
 `orders`, so `revenue("pending")` now counts two orders.
 
-Where next: run `nimbo` with no arguments to open Home, then open one of the [examples](#examples).
+Where next: run `nimbo` with no arguments to open Home, then start the [tutorial](#learn-nimbo) or open one of the [examples](#examples).
 
 ## Features
 
@@ -340,7 +347,7 @@ Where next: run `nimbo` with no arguments to open Home, then open one of the [ex
 - Drag cells to reorder them, give them titles, fold them, and collapse a heading's whole section.
 - Light and dark themes, several code colour themes, and settings at user and workspace scope, as in VS Code (a
   Settings page, or `nimbo config`).
-- **Home** lists the workspace's notebooks with search and a preview, and opens the examples.
+- **Home** lists the workspace's notebooks with search and a preview, and opens the tutorial and the examples.
 
 ## Use it with your coding agent
 
@@ -487,7 +494,6 @@ Known limits today:
 
 Planned, not yet available:
 
-- A tutorial mode that walks a new user through the concepts
 - Add-ons, starting with a Stripe add-on (webhook forwarding, signature checks, a request log)
 - A desktop app
 - Windows support
