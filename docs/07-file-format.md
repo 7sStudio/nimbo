@@ -139,6 +139,9 @@ A workspace is a folder containing `.jsnb/` (03-api §2); the daemon creates it 
     recovery/<hash>.json     the notebook's unsaved text while the file cannot take it (below); <hash> is the SHA-256
                              of the ref in hex; 0600, the latest only, removed once the file holds the session's state;
                              <hash>.orphaned-<time>.json and <hash>.unusable-<time>.json: copies set aside, never read
+    tutorial.json            the tutorial's progress (03-api §4.11): { version: 1, lessons: { <lesson>: { lastActive, ran:
+                             [cell ids] } } }, 0600, written atomically a moment after a lesson's copy is opened or run in
+                             and at stop; not read through a link; one that is not this record starts over
     feedback/                feedback mode notes (03-api §4.12), made by the first note:
                              feedback.jsonl (one entry per line, oldest first), FEEDBACK.md (for readers, open first),
                              <id>-element.png and <id>-viewport.png; served at /feedback/ with the bearer header

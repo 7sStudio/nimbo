@@ -133,8 +133,10 @@ Windows is not supported yet.
 ## Learn nimbo
 
 nimbo ships a tutorial: nine short notebooks you run and edit, from the first cell to the debugger, agents and git.
-`nimbo open` in an empty folder offers **Start Tutorial** on its Home page; from a terminal,
-`nimbo examples copy --name tutorial` copies the lessons into `tutorial/`.
+`nimbo open` in an empty folder offers **Start Tutorial** on its Home page, then **Continue** where you left off; the
+Tutorial icon in Home's activity bar and Help > Tutorial show the lessons with your progress later. From a terminal,
+`nimbo examples copy --name tutorial` copies the lessons into `tutorial/`, and `nimbo examples list` says how far you
+went in each.
 
 ## Your first notebook
 
