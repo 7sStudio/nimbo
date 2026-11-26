@@ -196,7 +196,7 @@ describe("a syntax error's card on a real daemon", () => {
 });
 
 describe("the line values' scopes on a real daemon", () => {
-  it("reads the server kernel's values by name once the runs settle", async () => {
+  it("reads the server kernel's values under the cell that set them once the runs settle", async () => {
     await withDaemon(async (daemon) => {
       const { store } = await startPage(daemon, notebook);
       const cell = await store.add("server", undefined, "const total = 40 + 2;\ntotal");
@@ -204,8 +204,12 @@ describe("the line values' scopes on a real daemon", () => {
       const scope = effectScope();
       const scopes = scope.run(() => useScopes(store));
       await store.run(cell.id);
-      await whenTrue(() => scopes?.value.has("total") === true);
-      expect(scopes?.value.get("total")).toEqual({ name: "total", text: "42", full: "42" });
+      await whenTrue(() => scopes?.value.get(cell.id)?.has("total") === true);
+      expect(scopes?.value.get(cell.id)?.get("total")).toEqual({
+        name: "total",
+        text: "42",
+        full: "42",
+      });
       scope.stop();
     });
   });

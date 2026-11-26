@@ -110,10 +110,11 @@ const valuesOf = (cell: CellId, meta: CellMeta) =>
 const lineValuesOn = () => stores.settings.valueOf("editor.lineValues") !== false;
 const scopes = useScopes(store, lineValuesOn);
 const none: ReadonlyMap<string, NamedValue> = new Map();
-/** The values a server cell's lines may show while the setting is on, its text is what ran and its run ended well. */
+/** The values a server cell's lines may show while the setting is on, its text is what ran and its run ended well:
+ * the names it last set. */
 const lineValues = (cell: CellModel) =>
   lineValuesOn() && showsValues(cell, cell.editedSince || ui.draftOf(cell.id) !== undefined)
-    ? scopes.value
+    ? (scopes.value.get(cell.id) ?? none)
     : none;
 const on = (cell: CellId) => cellEvents(cell, { dispatcher, ui, drafts });
 const list = ref<HTMLElement | null>(null);

@@ -136,7 +136,7 @@ export const settingsMeta: Readonly<Record<SettingsKey, SettingMeta>> = {
   ),
   "editor.lineValues": stable(
     "Line values",
-    "After a cell runs, each line that declares names shows their current values at its end.",
+    "After a cell runs, each line that declares or assigns names shows their values at its end, in the cell that last set them.",
   ),
   "editor.syntaxTheme": stable(
     "Syntax theme",

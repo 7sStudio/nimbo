@@ -1,8 +1,10 @@
 // What a code cell can show at its lines' ends (editor/lineValues.ts places them): the server kernel's names with the
-// preview of the value each holds now, in a short form. The page's own names are not read: the daemon knows only
-// their names (a client binding's preview says "defined in the page"), so a client cell shows none. No tracing: when
-// the cell's text changed since it ran, or its last run did not end well, it shows none.
-import type { Binding, Cell } from "@jsnb/core";
+// preview of the value each holds now, in a short form, each in the cell that last set it only, where the value now is
+// the one its last run left (another cell's later write would make it a value that cell's lines never produced). The
+// page's own names are not read: the daemon knows only their names (a client binding's preview says "defined in the
+// page"), so a client cell shows none. No tracing: when the cell's text changed since it ran, or its last run did not
+// end well, it shows none.
+import type { Binding, Cell, CellId } from "@jsnb/core";
 import type { ShallowRef } from "vue";
 import { computed, shallowRef, watch } from "vue";
 
@@ -87,27 +89,32 @@ export function shortOf(preview: string): string {
 /** A function or a class says nothing its declaration does not: its line shows no value. */
 const callable = /^\[(?:Async|Generator|AsyncGenerator)?(?:Function|class)\b/u;
 
-/** The values a server cell can show, by name: each variable of the scope (not its functions, classes or imports). */
-export function valuesOf(bindings: readonly Binding[]): ReadonlyMap<string, NamedValue> {
-  const values = new Map<string, NamedValue>();
+/** The values each server cell can show, by name, under the cell that last set them: each variable of the scope (not
+ * its functions, classes or imports). */
+export function valuesOf(
+  bindings: readonly Binding[],
+): ReadonlyMap<CellId, ReadonlyMap<string, NamedValue>> {
+  const byCell = new Map<CellId, Map<string, NamedValue>>();
   for (const binding of bindings) {
     if (!["const", "let", "var"].includes(binding.kind) || callable.test(binding.preview)) continue;
+    const values = byCell.get(binding.definedBy) ?? new Map<string, NamedValue>();
+    byCell.set(binding.definedBy, values);
     values.set(binding.name, {
       name: binding.name,
       text: shortOf(binding.preview),
       full: binding.preview,
     });
   }
-  return values;
+  return byCell;
 }
 
-/** The server kernel's values by name, read again after every run settles; none while `on` is false or the notebook
- * has no server cell. */
+/** The server kernel's values by the cell that last set them, read again after every run settles; none while `on` is
+ * false or the notebook has no server cell. */
 export function useScopes(
   store: ReturnType<typeof useNotebookStore>,
   on: () => boolean = () => true,
-): ShallowRef<ReadonlyMap<string, NamedValue>> {
-  const values = shallowRef<ReadonlyMap<string, NamedValue>>(new Map());
+): ShallowRef<ReadonlyMap<CellId, ReadonlyMap<string, NamedValue>>> {
+  const values = shallowRef<ReadonlyMap<CellId, ReadonlyMap<string, NamedValue>>>(new Map());
   let asked = 0;
   const servers = computed(() => store.cellsInOrder.some((cell) => cell.type === "server"));
   // Side effect: the server's scope is read when the notebook settles after a run, as the Variables group does.

@@ -240,7 +240,7 @@ Files: user `$XDG_CONFIG_HOME/nimbo/settings.json` (default `~/.config/nimbo/`, 
 | `editor.fontSize` / `editor.tabSize` | `13` / `2` | |
 | `editor.wordWrap` | `true` | |
 | `editor.intellisense` / `editor.diagnostics` | `true` / `true` | language-service features and diagnostics |
-| `editor.lineValues` | `true` | after a server cell runs, each top-level declaration or assignment shows the value its names hold now at the line's end; a click opens the name in Variables |
+| `editor.lineValues` | `true` | after a server cell runs, each top-level declaration or assignment shows the value its names hold now at the line's end, only in the cell that last set each name (elsewhere the value now is not what that line produced); a click opens the name in Variables |
 | `editor.keymap` | `"default"` | **planned** (`default`, `vim`) |
 | `editor.syntaxTheme` | `"vscode"` | `vscode`, `github`, `cursor`, `jetbrains`, `one`, `catppuccin`, `tokyo-night`, `nimbo` |
 | `ui.theme` | `"system"` | `system` / `light` / `dark` |
