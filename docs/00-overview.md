@@ -234,7 +234,7 @@ The reasons behind the code live in git history; these documents describe only t
 | **Bridge** | What lets client cells use server exports: stubs, snapshots (05). |
 | **Stub** | The local async function a client cell gets for an exported server function. |
 | **Snapshot** | A copy of an exported server value taken when a client cell runs. |
-| **Stale** | A cell whose inputs changed since it last ran. Marked; re-run on its own only with `execution.autoRunDependents` on. |
+| **Stale** | A cell whose inputs changed since it last ran, or whose own code changed since its last run in this kernel or page. Marked; re-run on its own only with `execution.autoRunDependents` on, which runs a run's stale dependents, never an edited cell by itself. |
 | **Registry** | The single list of commands from which the API, client, CLI and MCP tools derive. |
 | **Disposer** | Cleanup registered by a cell (route, timer, listener), run before the cell re-runs. |
 | **Edit marker** | Who last edited a cell, from `meta.lastEdit`. |

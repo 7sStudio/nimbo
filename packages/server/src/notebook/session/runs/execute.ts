@@ -4,10 +4,12 @@
 // running, the latter naming the cell whose run failed (`stoppedBy`). Every other queued run executes in call
 // order, a cell run twice included.
 import type { CellId } from "@jsnb/core";
+import { afterRunEnded } from "@jsnb/core";
 
 import type { SessionContext } from "../context.js";
+import { restale } from "../edits.js";
 import type { CellRecord, ExecutionRecord } from "../records.js";
-import { terminalStatuses } from "../records.js";
+import { ranOther, terminalStatuses } from "../records.js";
 import { finish } from "./executions.js";
 import type { QueuedRun } from "./queue.js";
 import { runServerCell } from "./server.js";
@@ -27,7 +29,8 @@ export function cancel(
 /** The client realm's side of a run, which the realm part provides. */
 export type ClientRunner = (execution: ExecutionRecord) => Promise<void>;
 
-/** Runs the cell in its realm; a run that started there records the code it ran (CellRecord.ran). */
+/** Runs the cell in its realm; a run that started there records the code it ran (CellRecord.ran), and the cell is
+ * stale after it when its code changed while it ran. */
 async function runIn(
   context: SessionContext,
   execution: ExecutionRecord,
@@ -38,7 +41,10 @@ async function runIn(
   if (record.type === "markdown") finish(context, execution, { status: "ok", durationMs: 0 });
   else if (record.type === "server") await runServerCell(context, execution, record);
   else await client(execution);
-  if (execution.count !== undefined) record.ran = code;
+  if (execution.count === undefined) return;
+  record.ran = code;
+  if (context.cells.get(record.id) === record)
+    restale(context, afterRunEnded(context.cells.stale(), record.id, ranOther(record)));
 }
 
 /** Runs one queued run to its terminal status. */

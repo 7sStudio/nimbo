@@ -107,8 +107,13 @@ export function toExecution(execution: ExecutionRecord): Execution {
   };
 }
 
-/** The API form of a cell at `index`. */
-export function toCell(record: CellRecord, index: number, stale: boolean): Cell {
+/** Whether the cell's last run in its realm ran other code than it has now: its result is of that code. */
+export const ranOther = (record: CellRecord): boolean =>
+  record.ran !== undefined &&
+  (record.ran.source !== record.source || record.ran.type !== record.type);
+
+/** The API form of a cell at `index`; `staleWhy` is the reason of a stale cell ("" for none). */
+export function toCell(record: CellRecord, index: number, stale: boolean, staleWhy = ""): Cell {
   return {
     id: record.id,
     type: record.type,
@@ -117,6 +122,7 @@ export function toCell(record: CellRecord, index: number, stale: boolean): Cell 
     meta: apiMeta(record.meta, record.source),
     status: record.status,
     stale,
+    ...(stale && staleWhy !== "" ? { staleWhy } : {}),
     lastExecution: record.last === undefined ? null : toSummary(record.last),
   };
 }

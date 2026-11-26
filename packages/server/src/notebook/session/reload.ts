@@ -11,6 +11,7 @@ import { loadDocument } from "./fileForm.js";
 import { restale } from "./edits.js";
 import { disposeUnclient, disposeUnserved } from "./runs/disposeDeleted.js";
 import type { CellRecord } from "./records.js";
+import { ranOther } from "./records.js";
 
 const sameCell = (a: CellRecord, b: CellRecord): boolean =>
   a.type === b.type &&
@@ -37,6 +38,7 @@ function plan(current: readonly CellRecord[], fromFile: readonly CellRecord[]): 
       status: old.status,
       last: old.last ?? record.last,
       previous: old.last ? old.previous : undefined,
+      ran: old.ran,
     };
   });
 }
@@ -80,8 +82,10 @@ function restaleAfter(
 ): void {
   let stale: StaleMap = context.cells.stale();
   for (const id of done.removed) stale = afterDelete(before, stale, id);
-  for (const id of [...done.changed, ...done.added])
-    stale = afterEdit(context.cells.graph(), stale, id);
+  for (const id of [...done.changed, ...done.added]) {
+    const record = context.cells.get(id);
+    stale = afterEdit(context.cells.graph(), stale, id, record !== undefined && ranOther(record));
+  }
   restale(context, stale);
 }
 

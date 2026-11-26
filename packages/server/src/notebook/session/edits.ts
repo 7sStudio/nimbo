@@ -10,6 +10,7 @@ import type { SessionContext } from "./context.js";
 import type { Editor } from "./provenance.js";
 import { reviewed, stamped } from "./provenance.js";
 import type { CellRecord } from "./records.js";
+import { ranOther } from "./records.js";
 import { disposeUnclient, disposeUnserved } from "./runs/disposeDeleted.js";
 import { keepDeleted, restoreDeleted } from "./undone.js";
 
@@ -67,7 +68,7 @@ export function addCell(context: SessionContext, input: AddCell, editor: Editor)
       ? context.cells.stale()
       : restoreDeleted(context, record, context.cells.stale());
   context.emit("cell.added", { cell: context.cells.api(record) });
-  restale(context, afterEdit(context.cells.graph(), stale, record.id));
+  restale(context, afterEdit(context.cells.graph(), stale, record.id, ranOther(record)));
   context.autosave.touched();
   return record;
 }
@@ -107,8 +108,8 @@ export function updateCell(context: SessionContext, input: UpdateCell, editor: E
   context.emit("cell.updated", { cell: context.cells.api(record) });
   disposeSwitched(context, was.type, record.id);
   if (code) {
-    const old = afterEdit(before, context.cells.stale(), record.id);
-    restale(context, afterEdit(context.cells.graph(), old, record.id));
+    const old = afterEdit(before, context.cells.stale(), record.id, ranOther(record));
+    restale(context, afterEdit(context.cells.graph(), old, record.id, ranOther(record)));
     context.hooks.edited(record.id, before);
   }
   context.autosave.touched();

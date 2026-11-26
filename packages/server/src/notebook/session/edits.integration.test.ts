@@ -3,7 +3,7 @@
 import { withDaemon } from "../../fixtures/daemon.js";
 import { describe, expect, it } from "vitest";
 
-import { createNotebook } from "../../fixtures/notebook.js";
+import { createNotebook, valueOf } from "../../fixtures/notebook.js";
 import { bodyOf, postRpc } from "../../fixtures/raw.js";
 
 describe("meta.lastEdit", () => {
@@ -139,6 +139,42 @@ describe("cells.stale", () => {
       expect(
         (await daemon.client.notebook.graph({ notebook: "a.jsnb" })).cells.map((cell) => cell.id),
       ).toEqual([a.id, b.id]);
+    });
+  });
+});
+
+describe("an edited cell's own stale flag", () => {
+  it("is set when it ran other code, with the reason, and cleared by an ok run of its code", async () => {
+    await withDaemon(async (daemon) => {
+      const book = await createNotebook(daemon);
+      const { notebook } = book;
+      const agent = daemon.socket({ client: "mcp", agent: "claude-code" });
+      const get = async (cell: string) => (await daemon.client.cell.get({ notebook, cell })).cell;
+      const a = await book.add("let count = 0;");
+      const b = await book.add("count += 1;\ncount");
+      await daemon.client.cell.run({ notebook, cell: a });
+      await daemon.client.cell.run({ notebook, cell: b });
+      expect((await get(a)).stale).toBe(false);
+
+      await agent.cell.update({ notebook, cell: a, source: "let count = 5;" });
+      expect(await get(a)).toMatchObject({ stale: true, staleWhy: "edited since its last run" });
+      expect(await get(b)).toMatchObject({ stale: true, staleWhy: "count changed in cell 1" });
+      const run = await daemon.client.notebook.run({ notebook, select: { stale: true } });
+      expect(run.executions.map((execution) => execution.cell)).toEqual([a, b]);
+      expect(valueOf((await daemon.client.cell.outputs({ notebook, cell: b })).execution)).toBe(6);
+      expect([(await get(a)).stale, (await get(b)).stale]).toEqual([false, false]);
+      expect((await get(a)).staleWhy).toBeUndefined();
+
+      const fresh = await book.add("1");
+      await daemon.client.cell.update({ notebook, cell: fresh, source: "2" });
+      expect((await get(fresh)).stale).toBe(false);
+
+      const slow = await book.add("await new Promise((r) => setTimeout(r, 300));\n1");
+      const answer = daemon.client.cell.run({ notebook, cell: slow });
+      await book.cellReaches(slow, "running");
+      await daemon.client.cell.update({ notebook, cell: slow, source: "2" });
+      expect((await answer).execution.status).toBe("ok");
+      expect(await get(slow)).toMatchObject({ stale: true, staleWhy: "edited since its last run" });
     });
   });
 });
