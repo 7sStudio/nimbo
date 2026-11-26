@@ -142,7 +142,7 @@ export async function startServer(options: ServerOptions): Promise<RunningServer
     // server.json once the socket listens; DaemonRunning when another daemon's file got there first
     const { port } = http;
     // Home's recent folders note this one (a failure is logged, never the start's), before server.json says the daemon
-    // is there: from then on a caller may signal it, and the process entry handles signals once the start returned.
+    // is there: from then on a caller may signal it.
     await folders.rememberOwn();
     const content = { ...own, port, token, version: serverVersion, root };
     if (!(await createServerFile(jsnb.serverFile, content))) {

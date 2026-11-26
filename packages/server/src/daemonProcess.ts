@@ -115,15 +115,23 @@ export async function runDaemon(argv: readonly string[], host: DaemonHost): Prom
     tell(host.stderr, line({ name: "InvalidArguments", message: `${parsed.reason}\n${usage}` }));
     return 2;
   }
+  const starting = startServer(parsed.options);
+  // listened for from the start on: server.json names the daemon before the start returns, and a signal the process
+  // does not handle yet would end it there and then, server.json left behind
+  for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const) {
+    host.once(signal, () => {
+      void starting.then(
+        (started) => started.stop(),
+        () => undefined,
+      );
+    });
+  }
   let server: RunningServer;
   try {
-    server = await startServer(parsed.options);
+    server = await starting;
   } catch (error) {
     tell(host.stderr, failureLine(error));
     return 1;
-  }
-  for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"] as const) {
-    host.once(signal, () => void server.stop());
   }
   tell(
     host.stdout,
