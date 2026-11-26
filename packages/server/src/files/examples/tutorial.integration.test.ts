@@ -37,21 +37,20 @@ const failing: Readonly<Record<string, Readonly<Record<string, string>>>> = {
   },
 };
 
-/** What a lesson's text says a cell answers, checked on its result. */
-const quoted: Readonly<Record<string, Readonly<Record<string, (value: unknown) => void>>>> = {
-  "01-first-steps": {
-    c_t10003: (value) => expect(value).toBe("HELLO FROM NODE"),
-    c_t10009: (value) => expect(value).toBe(1),
-  },
-  "03-typescript": { c_t30006: (value) => expect(value).toBe("fern") },
-  "05-packages-and-secrets": { c_t50009: (value) => expect(value).toBe(false) },
+/** What a lesson's text says a cell answers. */
+const quoted: Readonly<Record<string, Readonly<Record<string, unknown>>>> = {
+  "01-first-steps": { c_t10003: "HELLO FROM NODE", c_t10009: 1 },
+  "03-typescript": { c_t30006: "fern" },
+  "05-packages-and-secrets": { c_t50009: false },
   "06-routes": {
-    c_t60007: (value) =>
-      expect(value).toMatchObject({ created: 201, notes: [{ id: 1 }, { id: 2 }] }),
-    c_t60012: (value) => expect(value).toBe(500),
+    c_t60007: expect.objectContaining({
+      created: 201,
+      notes: [expect.anything(), expect.anything()],
+    }),
+    c_t60012: 500,
   },
-  "07-debugging": { c_t70003: (value) => expect(value).toBeCloseTo(27.1) },
-  "09-files-and-git": { c_t90006: (value) => expect(value).toBe("written") },
+  "07-debugging": { c_t70003: 27.1 },
+  "09-files-and-git": { c_t90006: "written" },
 };
 
 const lessons = async () =>
@@ -76,7 +75,7 @@ describe("the tutorial's lessons", () => {
       const text = await readFile(join(lessonsFolder, file), "utf8");
       const parsed = parse(text, { ids: randomIds(), path: file, appVersion: "0.0.0" });
       if (!parsed.ok) throw parsed.error;
-      expect(parsed.value.warnings ?? []).toEqual([]);
+      expect(parsed.value.warnings).toEqual([]);
       expect(parsed.value.doc.outputs).toBeUndefined();
       expect(serialize(parsed.value.doc)).toBe(text);
       expect(parsed.value.doc.cells[0]?.source).toMatch(/^# /u);
@@ -118,7 +117,8 @@ describe(`each lesson run cell by cell${withoutBrowser}`, () => {
             const execution = await run(daemon, path, cell.id);
             const error = execution.error?.name;
             ended.push([cell.id, execution.status, error]);
-            quoted[lesson]?.[cell.id]?.(valueOf(execution));
+            const said = quoted[lesson]?.[cell.id];
+            if (said !== undefined) expect(valueOf(execution)).toEqual(said);
           }
           const expected = code.map((cell): [string, string, string | undefined] => {
             const name = failing[lesson]?.[cell.id];

@@ -14,7 +14,7 @@ import { serverVersion } from "../version.js";
 /** `packages/server/examples/`, from this module in `src/files/examples/` or `dist/files/examples/` alike. */
 export const shippedExamples = fileURLToPath(new URL("../../../examples/", import.meta.url));
 
-export type ExampleKind = "tutorial" | "example";
+type ExampleKind = "tutorial" | "example";
 
 export type Example = {
   readonly name: string;
