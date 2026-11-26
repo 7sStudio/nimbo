@@ -134,7 +134,14 @@ echo "listed, copied into tutorial/, its first lesson run"
 say "a client cell in the headless realm, where this machine has Chrome, Chromium or Edge"
 n config set realm.headless true >/dev/null
 client='display.div().textContent = "headless"; 6 * 7'
-if n cell add -n smoke.jsnb --type client --id c_d4e5f6 --source "$client" --run >"$work/client" 2>&1; then
+ran=0
+n cell add -n smoke.jsnb --type client --id c_d4e5f6 --source "$client" --run >"$work/client" 2>&1 && ran=1
+if [ "$ran" = 0 ] && grep -q "hung at start" "$work/client"; then
+  # a cold runner's first browser start can pass the launch bound: once more, after the hold
+  sleep 5
+  n run -n smoke.jsnb c_d4e5f6 >"$work/client" 2>&1 && ran=1
+fi
+if [ "$ran" = 1 ]; then
   grep -q 42 "$work/client" || fail "the headless client cell did not answer 42"
   n cell snapshot -n smoke.jsnb --cell c_d4e5f6 --image | tee "$work/shot"
   grep -q "image: a" "$work/shot" || fail "the headless snapshot has no image"

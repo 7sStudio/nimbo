@@ -240,7 +240,7 @@ const sleepersOf = (path: string): number[] =>
     .filter((line) => line.includes(path))
     .map((line) => Number.parseInt(line.trim(), 10));
 
-suite(`a headless browser that hangs at start${skipped}`, { timeout: 60_000 }, () => {
+suite(`a headless browser that hangs at start${skipped}`, { timeout: 150_000 }, () => {
   it("is killed after the launch bound, held back by the delay, and leaves nothing at stop", async () => {
     const dir = await mkdtemp(join(tmpdir(), "nimbo-sleeper-"));
     const path = await sleeper(dir);

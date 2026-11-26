@@ -31,7 +31,7 @@ export type Launched = {
 };
 
 /** How long a launch has, from the spawn to a browser that answers. */
-const launchTimeoutMs = 15_000;
+const launchTimeoutMs = 25_000;
 /** Every protocol call to the browser; puppeteer's own default is three minutes. */
 const protocolTimeoutMs = 30_000;
 /** How long a polite close, then an exit after SIGKILL, may take. */
