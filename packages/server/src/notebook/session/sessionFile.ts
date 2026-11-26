@@ -5,7 +5,7 @@ import type { Settings } from "@jsnb/core";
 
 import type { Log } from "../../events/log.js";
 import { moveKernelLog, openKernelLog } from "../../files/logs/kernelLog.js";
-import type { AutosaveOptions, AutosavePolicy, Autosaver } from "./autosaveApi.js";
+import type { AutosaveOptions, AutosavePolicy, Autosaver } from "./autosave.js";
 import { createAutosaver } from "./autosave.js";
 import type { Emit } from "./context.js";
 import type { LoadedDocument } from "./fileForm.js";
@@ -70,20 +70,22 @@ export function autosaverOf(
   text: () => string,
 ): Autosaver {
   const { emit, place } = parts;
-  const where = {
-    get path() {
-      return place.path;
-    },
-    get ref() {
-      return place.ref;
-    },
-  };
   return createAutosaver(
-    Object.assign(where, {
-      ...{ root: options.root, now: options.now, log: parts.log, text, ...parts.files },
+    {
+      get path() {
+        return place.path;
+      },
+      get ref() {
+        return place.ref;
+      },
+      root: options.root,
+      now: options.now,
+      log: parts.log,
+      text,
+      ...parts.files,
       policy: () => policyOf(options.settings()),
       events: eventsOf(emit, place),
-    }),
+    },
     { text: options.fileText, dirty: options.loaded.dirty },
   );
 }

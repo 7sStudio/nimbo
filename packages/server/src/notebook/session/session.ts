@@ -40,7 +40,6 @@ import type { SessionRuns } from "./runApi.js";
 import { createRuns } from "./runApi.js";
 import type { ErrorsView, GraphView } from "./views.js";
 import { errorsOf, graphOf, stateOf } from "./views.js";
-import type { FileWatch } from "./watch.js";
 import { watchFile } from "./watch.js";
 
 export type { SessionOptions } from "./assemble.js";
@@ -146,11 +145,6 @@ type FileHookSlots = {
   recovery: (needed: boolean, now?: boolean) => Promise<boolean>;
 };
 
-const fileHookSlots = (): FileHookSlots => ({
-  run: () => Promise.resolve("off"),
-  recovery: () => Promise.resolve(false),
-});
-
 /** The context of a session that knows its file (07 §5): by its identity at open, then by each save's and each
  * read's; a write that finds the file changed asks `external` for the merge. */
 function identifiedContext(
@@ -187,24 +181,10 @@ async function moveSession(
     });
   context.emit("notebook.moved", { path: from, to });
   options.bus.moveStream(from, to);
-  Object.assign(context, { ref: to, path, logPath: kernelLogPath(options.logsDir, to) });
+  context.ref = to;
+  context.path = path;
+  context.logPath = kernelLogPath(options.logsDir, to);
   context.log.info({ from, to }, "the notebook's file moved; the session follows it");
-}
-
-/** What a session answers from its state without changing it: the graph, the errors, a query, a comparison, the page. */
-function readers(
-  options: SessionOptions,
-  context: ReturnType<typeof contextOf>,
-  query: ReturnType<typeof queryParts>,
-) {
-  return {
-    graph: () => graphOf(context),
-    errors: () => errorsOf(context),
-    outputQuery: (request: Parameters<Session["outputQuery"]>[0]) =>
-      outputQuery(context, query, request),
-    compare: (cell: CellId, limit: number) => compareCell(context, cell, limit),
-    exportPage: (request: ExportRequest) => exportNotebook(context, request, options.realm.redact),
-  };
 }
 
 /** The notebook's debugger, which a server run waits for and a client cell's compile asks for its lines. */
@@ -219,38 +199,6 @@ function debuggerOf(options: SessionOptions, context: SessionContext): DebugSess
   context.hooks.debugPause = () => debug.pauseDetails();
   context.hooks.debugResumed = () => debug.resumed();
   return debug;
-}
-
-/** The merge of another program's edits into the session (07 §5), unless files.mergeExternalChanges is off: run by
- * the watch on the file, and by a write that finds the file changed. */
-function externalParts(
-  options: SessionOptions,
-  context: SessionContext,
-  parts: {
-    readonly runs: SessionRuns;
-    readonly hook: FileHookSlots;
-  },
-) {
-  const state = externalState();
-  const merge = () => reconcileExternal(context, state, (cell) => void parts.runs.dropRuns(cell));
-  const on = () => context.settings()["files.mergeExternalChanges"];
-  parts.hook.run = async () => {
-    if (!on()) return "off";
-    const outcome = await merge();
-    return outcome === "conflict" || outcome === "unreadable" ? outcome : "merged";
-  };
-  const watch = watchFile({
-    path: () => context.path,
-    log: context.log,
-    debounceMs: options.watchDebounceMs ?? 100,
-    everyMs: options.fileCheckMs ?? 2000,
-    check: async () => {
-      if (on()) await context.autosave.exclusive(merge);
-    },
-  });
-  // the app's own git operations: brought in step whatever files.mergeExternalChanges says of other programs' edits
-  const mergeNow = (): Promise<ExternalOutcome> => context.autosave.exclusive(merge);
-  return { state, watch, mergeNow };
 }
 
 /** notebook.reload: the file's text in place of the session's; the cells whose text it changed are the file's (a page
@@ -315,55 +263,37 @@ function recoveryParts(
     });
 }
 
-/** The session's close: the watch, the debugger, the last write, the page, the runs, the engines, the log. */
-async function closeSession(
-  context: ReturnType<typeof contextOf>,
-  parts: {
-    readonly watch: FileWatch;
-    readonly debug: DebugSession;
-    readonly realm: SessionRealm;
-    readonly runs: SessionRuns;
-    readonly query: QueryParts;
-  },
-): Promise<void> {
-  parts.watch.close();
-  await parts.debug.close();
-  await context.autosave.flush();
-  context.autosave.close();
-  parts.realm.close();
-  await parts.runs.stop();
-  context.runs.retained.clear(); // what the JSON engines hold of this notebook goes with it
-  await parts.query.sql.dispose();
-  context.closeLog();
-  context.emit("notebook.closed", { path: context.ref });
-}
-
-/** A move followed (07 §5): the watch rearmed on the new path, the headless page of the old name closed. */
-async function moved(
-  options: SessionOptions,
-  context: ReturnType<typeof contextOf>,
-  parts: {
-    readonly to: string;
-    readonly path: string;
-    readonly watch: FileWatch;
-    readonly realm: SessionRealm;
-  },
-): Promise<void> {
-  await moveSession(options, context, parts.to, parts.path);
-  parts.watch.rearm();
-  parts.realm.moved();
-}
-
 /** The session of an opened notebook; its kernel starts now, without waiting for `ready`. */
 export function createSession(options: SessionOptions): Session {
-  const hook = fileHookSlots();
+  const hook: FileHookSlots = {
+    run: () => Promise.resolve("off"),
+    recovery: () => Promise.resolve(false),
+  };
   const context = identifiedContext(options, hook);
   void context.kernel.ready().catch(() => undefined); // a failed start is logged and reported as kernel.status dead
   const realm = createRealm(context, options.realm);
   const runs = createRuns(context, realm);
   const query = queryParts(options, context);
   const debug = debuggerOf(options, context);
-  const { state, watch, mergeNow } = externalParts(options, context, { runs, hook });
+  // the merge of another program's edits into the session (07 §5), unless files.mergeExternalChanges is off: run by
+  // the watch on the file, and by a write that finds the file changed
+  const state = externalState();
+  const merge = () => reconcileExternal(context, state, (cell) => void runs.dropRuns(cell));
+  const on = () => context.settings()["files.mergeExternalChanges"];
+  hook.run = async () => {
+    if (!on()) return "off";
+    const outcome = await merge();
+    return outcome === "conflict" || outcome === "unreadable" ? outcome : "merged";
+  };
+  const watch = watchFile({
+    path: () => context.path,
+    log: context.log,
+    debounceMs: options.watchDebounceMs ?? 100,
+    everyMs: options.fileCheckMs ?? 2000,
+    check: async () => {
+      if (on()) await context.autosave.exclusive(merge);
+    },
+  });
   const opened = recoveryParts(options, context, { state, hook });
   return {
     ...runs,
@@ -371,7 +301,12 @@ export function createSession(options: SessionOptions): Session {
       return context.ref;
     },
     opened,
-    moveTo: (to, path) => moved(options, context, { to, path, watch, realm }),
+    // the watch rearmed on the new path, the headless page of the old name closed
+    moveTo: async (to, path) => {
+      await moveSession(options, context, to, path);
+      watch.rearm();
+      realm.moved();
+    },
     context,
     state: () => stateOf(context, realm.status(), debug.state()),
     ...edits(context, state),
@@ -385,10 +320,26 @@ export function createSession(options: SessionOptions): Session {
       await reloaded(context, state);
       return stateOf(context, realm.status(), debug.state());
     },
-    mergeDisk: mergeNow,
-    ...readers(options, context, query),
+    // the app's own git operations: brought in step whatever files.mergeExternalChanges says of other programs' edits
+    mergeDisk: () => context.autosave.exclusive(merge),
+    graph: () => graphOf(context),
+    errors: () => errorsOf(context),
+    outputQuery: (request) => outputQuery(context, query, request),
+    compare: (cell, limit) => compareCell(context, cell, limit),
+    exportPage: (request) => exportNotebook(context, request, options.realm.redact),
     realm: { ...realm, restart: runs.restartRealm },
     debug,
-    close: () => closeSession(context, { watch, debug, realm, runs, query }),
+    close: async () => {
+      watch.close();
+      await debug.close();
+      await context.autosave.flush();
+      context.autosave.close();
+      realm.close();
+      await runs.stop();
+      context.runs.retained.clear(); // what the JSON engines hold of this notebook goes with it
+      await query.sql.dispose();
+      context.closeLog();
+      context.emit("notebook.closed", { path: context.ref });
+    },
   };
 }

@@ -102,8 +102,8 @@ export function updateCell(context: SessionContext, input: UpdateCell, editor: E
     const at = context.now().toISOString();
     const lastEdit = stamped(record.meta.lastEdit, editor, at, { before: was, after: record });
     record.meta = { ...record.meta, lastEdit };
+    record.analysis = analysisOf(record.type, record.source);
   }
-  if (code) record.analysis = analysisOf(record.type, record.source);
   context.emit("cell.updated", { cell: context.cells.api(record) });
   disposeSwitched(context, was.type, record.id);
   if (code) {

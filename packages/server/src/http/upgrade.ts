@@ -33,27 +33,6 @@ function refuse(socket: Duplex, status: number, reason: string): void {
   );
 }
 
-type Upgrade = {
-  readonly request: IncomingMessage;
-  readonly socket: Duplex;
-  readonly head: Buffer;
-};
-
-/** Accepts the upgrade: the socket served, or closed 4401; either way a frame it cannot read closes it alone. */
-function accept(options: UpgradeOptions, upgrade: Upgrade, url: URL): void {
-  const authorized = isToken(url.searchParams.get("token") ?? undefined, options.token);
-  const declaration = declarationOf(url.searchParams.get("client"), url.searchParams.get("agent"));
-  const { request, socket, head } = upgrade;
-  options.wss.handleUpgrade(request, socket, head, (ws) => {
-    ws.on("error", (error) => {
-      // ws has closed the socket already (1009 over maxPayload, 1007 bad UTF-8, 1002 a protocol error).
-      options.log.warn({ err: error, authorized }, "a WebSocket sent a frame it could not read");
-    });
-    if (authorized) options.serve(ws, declaration);
-    else ws.close(4401, "Unauthorized");
-  });
-}
-
 /** The `upgrade` listener of the daemon's HTTP server. */
 export function onUpgrade(options: UpgradeOptions) {
   return (request: IncomingMessage, socket: Duplex, head: Buffer): void => {
@@ -74,6 +53,19 @@ export function onUpgrade(options: UpgradeOptions) {
       refuse(socket, 503, "Service Unavailable");
       return;
     }
-    accept(options, { request, socket, head }, url);
+    // the socket served, or closed 4401; either way a frame it cannot read closes it alone
+    const authorized = isToken(url.searchParams.get("token") ?? undefined, options.token);
+    const declaration = declarationOf(
+      url.searchParams.get("client"),
+      url.searchParams.get("agent"),
+    );
+    options.wss.handleUpgrade(request, socket, head, (ws) => {
+      ws.on("error", (error) => {
+        // ws has closed the socket already (1009 over maxPayload, 1007 bad UTF-8, 1002 a protocol error).
+        options.log.warn({ err: error, authorized }, "a WebSocket sent a frame it could not read");
+      });
+      if (authorized) options.serve(ws, declaration);
+      else ws.close(4401, "Unauthorized");
+    });
   };
 }

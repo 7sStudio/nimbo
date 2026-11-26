@@ -136,13 +136,12 @@ function measure(store: Store, key: string, value: RetainedValue): void {
   slice();
 }
 
-function storeOf(maxBytes: () => number, options: RetainedOptions): Store {
+/** A store bounded by `maxBytes()` (read once each value is sized, so a settings change applies to the next one). */
+export function createRetained(maxBytes: () => number, options: RetainedOptions = {}): Retained {
   const { sliceMs = defaultSliceMs, defer = setImmediate } = options;
-  const values = new Map<string, RetainedValue>();
-  const measuring = new Map<RetainedValue, Measure>();
-  return {
-    values,
-    measuring,
+  const store: Store = {
+    values: new Map(),
+    measuring: new Map(),
     refused: new Map(),
     listeners: [],
     maxBytes,
@@ -150,11 +149,6 @@ function storeOf(maxBytes: () => number, options: RetainedOptions): Store {
     defer,
     total: 0,
   };
-}
-
-/** A store bounded by `maxBytes()` (read once each value is sized, so a settings change applies to the next one). */
-export function createRetained(maxBytes: () => number, options: RetainedOptions = {}): Retained {
-  const store = storeOf(maxBytes, options);
   const forget = (key: string): void => {
     store.refused.delete(key);
     remove(store, key);

@@ -42,8 +42,11 @@ describe("a notebook closed under a running SQL query", () => {
         run: true,
       });
       const sum = await daemon.client.cell.outputQuery({
-        ...{ notebook, cell: again.cell.id, index: 0 },
-        ...{ mode: "sql", query: "SELECT sum(n) AS s FROM t" },
+        notebook,
+        cell: again.cell.id,
+        index: 0,
+        mode: "sql",
+        query: "SELECT sum(n) AS s FROM t",
       });
       expect(sum.result.rows).toEqual([{ s: 5 }]);
     });

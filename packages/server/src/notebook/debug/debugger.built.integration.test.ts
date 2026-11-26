@@ -146,7 +146,10 @@ describe("an interrupt while the debugger attaches", () => {
       await daemon.client.kernel.interrupt({ notebook });
       expect((await run).execution.status).toBe("interrupted");
       const probe = await daemon.client.cell.add({
-        ...{ notebook, type: "server", source: "globalThis.ran ?? false", run: true },
+        notebook,
+        type: "server",
+        source: "globalThis.ran ?? false",
+        run: true,
       });
       expect(valueOf(probe.execution)).toBe(false);
     });

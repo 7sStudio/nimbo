@@ -33,8 +33,13 @@ routeUrl("/webhook")`);
           registeredAt: "",
         },
         {
-          ...{ spec: "GET /ping", method: "GET", path: "/ping" },
-          ...{ url: `http://127.0.0.1:${port}/n/hooks/ping`, cell, hits: 0, registeredAt: "" },
+          spec: "GET /ping",
+          method: "GET",
+          path: "/ping",
+          url: `http://127.0.0.1:${port}/n/hooks/ping`,
+          cell,
+          hits: 0,
+          registeredAt: "",
         },
       ]);
       const ping = await fetch(listed[1]?.url ?? "");

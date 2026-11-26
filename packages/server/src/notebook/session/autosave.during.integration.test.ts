@@ -10,7 +10,7 @@ import { withWorkspace } from "@jsnb/test-tools/workspace";
 import { describe, expect, it } from "vitest";
 
 import { quiet } from "../../fixtures/workspace.js";
-import type { Autosaver } from "./autosaveApi.js";
+import type { Autosaver } from "./autosave.js";
 import { createAutosaver } from "./autosave.js";
 
 type Notebook = { state: string; readonly saver: Autosaver };
@@ -22,7 +22,11 @@ function changingOnce(path: string, initial: string, next: string): Notebook {
     state: initial,
     saver: createAutosaver(
       {
-        ...{ path, root: dirname(path), ref: "a.jsnb", now: () => new Date(0), log: quiet },
+        path,
+        root: dirname(path),
+        ref: "a.jsnb",
+        now: () => new Date(0),
+        log: quiet,
         text: () => {
           const taken = notebook.state;
           const change = pending;
@@ -82,7 +86,11 @@ function reloadingDuringWrite(path: string, initial: string) {
     state: initial,
     saver: createAutosaver(
       {
-        ...{ path, root: dirname(path), ref: "a.jsnb", now: () => new Date(0), log: quiet },
+        path,
+        root: dirname(path),
+        ref: "a.jsnb",
+        now: () => new Date(0),
+        log: quiet,
         text: () => {
           if (seen.read === undefined) {
             seen.read = "";

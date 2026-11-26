@@ -5,41 +5,37 @@ export type Debounced = {
   readonly close: () => void;
 };
 
-type State = {
-  closed: boolean;
-  again: boolean;
-  timer: ReturnType<typeof setTimeout> | undefined;
-  running: boolean;
-};
-
 export function debounced(work: () => Promise<void>, ms: number): Debounced {
-  const state: State = { closed: false, again: false, timer: undefined, running: false };
+  let closed = false;
+  let again = false;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let running = false;
   const fire = (): void => {
-    state.timer = undefined;
-    if (state.closed) return;
-    if (state.running) {
-      state.again = true;
+    timer = undefined;
+    if (closed) return;
+    if (running) {
+      again = true;
       return;
     }
-    state.running = true;
+    running = true;
     void work().finally(() => {
-      state.running = false;
-      if (state.again && !state.closed) {
-        state.again = false;
+      running = false;
+      if (again && !closed) {
+        again = false;
         fire();
       }
     });
   };
   return {
     ask: () => {
-      if (state.closed) return;
-      clearTimeout(state.timer);
-      state.timer = setTimeout(fire, ms);
-      state.timer.unref();
+      if (closed) return;
+      clearTimeout(timer);
+      timer = setTimeout(fire, ms);
+      timer.unref();
     },
     close: () => {
-      state.closed = true;
-      clearTimeout(state.timer);
+      closed = true;
+      clearTimeout(timer);
     },
   };
 }

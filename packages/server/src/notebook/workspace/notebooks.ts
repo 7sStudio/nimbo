@@ -130,8 +130,10 @@ function following(given: NotebooksOptions, table: Table) {
 
 export function createNotebooks(given: NotebooksOptions): Notebooks {
   const table: Table = {
-    ...{ entries: new Map(), closing: new Map() },
-    ...{ stopping: false, gate: Promise.resolve() },
+    entries: new Map(),
+    closing: new Map(),
+    stopping: false,
+    gate: Promise.resolve(),
   };
   const { options, follower } = following(given, table);
   const sessions = { values: () => [...table.entries.values()].map((entry) => entry.opening) };

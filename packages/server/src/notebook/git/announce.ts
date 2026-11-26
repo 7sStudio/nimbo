@@ -25,40 +25,33 @@ type Wiring = { readonly bus: EventBus; readonly log: Log; readonly debounceMs: 
 
 /** Runs `work` debounced and one at a time, once more after a run when it was asked again during it. */
 function debounced(work: () => Promise<void>, ms: number) {
-  const state: {
-    closed: boolean;
-    again: boolean;
-    timer: NodeJS.Timeout | undefined;
-    running: Promise<void> | undefined;
-  } = {
-    closed: false,
-    again: false,
-    timer: undefined,
-    running: undefined,
-  };
+  let closed = false;
+  let again = false;
+  let timer: NodeJS.Timeout | undefined;
+  let running: Promise<void> | undefined;
   const fire = (): void => {
-    state.timer = undefined;
-    if (state.running !== undefined) {
-      state.again = true;
+    timer = undefined;
+    if (running !== undefined) {
+      again = true;
       return;
     }
-    state.running = work().finally(() => {
-      state.running = undefined;
-      if (state.again && !state.closed) {
-        state.again = false;
+    running = work().finally(() => {
+      running = undefined;
+      if (again && !closed) {
+        again = false;
         fire();
       }
     });
   };
   return {
     ask: (): void => {
-      if (state.closed) return;
-      clearTimeout(state.timer);
-      state.timer = setTimeout(fire, ms);
+      if (closed) return;
+      clearTimeout(timer);
+      timer = setTimeout(fire, ms);
     },
     close: (): void => {
-      state.closed = true;
-      clearTimeout(state.timer);
+      closed = true;
+      clearTimeout(timer);
     },
   };
 }

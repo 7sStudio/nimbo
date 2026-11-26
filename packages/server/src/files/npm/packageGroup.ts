@@ -26,7 +26,6 @@ import { targetOf } from "./packageFields.js";
 import type { BareImport, Seen } from "./packagePlugin.js";
 import { packagePlugin } from "./packagePlugin.js";
 import { resolveExtensions } from "./relativeImport.js";
-import type { Required } from "./requires.js";
 import { commonJsMark, splitPrelude } from "./requires.js";
 import type { FoundPackage } from "./resolve.js";
 import { isLinkedPackage } from "./spec.js";
@@ -134,30 +133,12 @@ const withEntryUrls = (text: string, pkg: GroupPackage): string =>
 async function asEntry(
   text: string,
   entryPoint: string | undefined,
-  made: { lookup: string; metafile: Metafile },
+  lookup: string,
+  metafile: Metafile,
 ) {
-  if (entryPoint === undefined || made.metafile.inputs[entryPoint]?.format !== "cjs") return text;
-  const names = await commonJsNames(await realpath(resolve(made.lookup, entryPoint)));
+  if (entryPoint === undefined || metafile.inputs[entryPoint]?.format !== "cjs") return text;
+  const names = await commonJsNames(await realpath(resolve(lookup, entryPoint)));
   return `${commonJsMark}${withNamedExports(text, names)}`;
-}
-
-/** What shapes the outputs of one split build. */
-type Context = {
-  readonly pkg: GroupPackage;
-  readonly requires: readonly Required[];
-  readonly lookup: string;
-  readonly metafile: Metafile;
-};
-
-/** An output's text: entry URLs, the CommonJS form of a CommonJS entry, and the prelude where `__require` is defined. */
-async function outputText(
-  text: string,
-  output: { readonly entryPoint: string | undefined; readonly isEntry: boolean },
-  context: Context,
-): Promise<string> {
-  const pointed = withEntryUrls(text, context.pkg);
-  const shaped = output.isEntry ? await asEntry(pointed, output.entryPoint, context) : pointed;
-  return `${splitPrelude(context.requires, context.pkg, shaped)}${shaped}`;
 }
 
 /** The split bundle of `pkg`; rejects when it would hold a file outside the package, refused when the rule keeps one. */
@@ -187,28 +168,23 @@ export async function bundleGroup(
   const made = await buildUnder(options, signal);
   const checked = await checkedInputs(folder, lookup, made.metafile, seen);
   if (!checked.ok) return refusal;
-  const context = { pkg, requires: seen.requires, lookup, metafile: made.metafile };
-  const { entries, chunks } = await sorted(made.files, outdir, context);
-  return { ok: true, entries, chunks, inputs: checked.inputs, imports: seen.imports, left: [] };
-}
-
-/** The build's outputs, each shaped for the page: the entries by subpath, the chunks by hash. */
-async function sorted(
-  files: readonly { readonly path: string; readonly text: string }[],
-  outdir: string,
-  context: Context,
-) {
+  // each output shaped for the page (entry URLs, the CommonJS form of a CommonJS entry, the prelude where
+  // `__require` is defined): the entries by subpath, the chunks by hash
   const entries = new Map<string, string>();
   const chunks = new Map<string, string>();
-  for (const file of files) {
+  for (const file of made.files) {
     const place = placeOf(outdir, file.path);
-    const key = relative(context.lookup, file.path).split(sep).join("/");
-    const entryPoint = context.metafile.outputs[key]?.entryPoint;
-    const isEntry = place.entry !== undefined;
-    const text = await outputText(file.text, { entryPoint, isEntry }, context);
-    const subpath = place.entry === undefined ? undefined : context.pkg.subpaths[place.entry];
+    const key = relative(lookup, file.path).split(sep).join("/");
+    const entryPoint = made.metafile.outputs[key]?.entryPoint;
+    const pointed = withEntryUrls(file.text, pkg);
+    const shaped =
+      place.entry === undefined
+        ? pointed
+        : await asEntry(pointed, entryPoint, lookup, made.metafile);
+    const text = `${splitPrelude(seen.requires, pkg, shaped)}${shaped}`;
+    const subpath = place.entry === undefined ? undefined : pkg.subpaths[place.entry];
     if (subpath !== undefined) entries.set(subpath, text);
     if (place.chunk !== undefined) chunks.set(place.chunk, text);
   }
-  return { entries, chunks };
+  return { ok: true, entries, chunks, inputs: checked.inputs, imports: seen.imports, left: [] };
 }

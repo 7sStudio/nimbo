@@ -75,12 +75,11 @@ async function bodyOf(request: IncomingMessage): Promise<Buffer | "large" | "lef
 
 /** What the kernel gets of the request: what routeCredentials lets through, the body base64. */
 const callOf = (request: IncomingMessage, url: URL, token: string, body: Buffer) => ({
-  ...{
-    method: request.method ?? "GET",
-    pathname: url.pathname,
-    search: searchFor(url.search, token),
-  },
-  ...{ headers: headersFor(request.headers, token), rawBody: body.toString("base64") },
+  method: request.method ?? "GET",
+  pathname: url.pathname,
+  search: searchFor(url.search, token),
+  headers: headersFor(request.headers, token),
+  rawBody: body.toString("base64"),
 });
 
 export type RouteRequest = {

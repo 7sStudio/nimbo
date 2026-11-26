@@ -26,8 +26,12 @@ describe("Filter mode with `at`", () => {
       const { cell } = await book.ran(stripeList);
       const filter = (at?: string, chips = failed) =>
         daemon.client.cell.outputQuery({
-          ...{ notebook: book.notebook, cell, index: 0 },
-          ...{ mode: "filter", query: [...chips], ...(at === undefined ? {} : { at }) },
+          notebook: book.notebook,
+          cell,
+          index: 0,
+          mode: "filter",
+          query: [...chips],
+          ...(at === undefined ? {} : { at }),
         });
       for (const at of ["$.data", "$['data']"]) {
         const answer = await filter(at);

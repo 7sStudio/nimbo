@@ -108,7 +108,9 @@ function runQueue(install: InstallOptions) {
   const queued = <T>(task: Task<T>): Promise<T> => {
     const { dropped, drop } = droppable();
     const entry: Entry = {
-      ...{ names: task.names, cancel: new AbortController(), state: "queued" },
+      names: task.names,
+      cancel: new AbortController(),
+      state: "queued",
       drop: () => {
         forget(entry);
         drop(answerOf(() => cancelledBeforeRun(install, task)));

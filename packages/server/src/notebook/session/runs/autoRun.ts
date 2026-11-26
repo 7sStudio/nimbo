@@ -72,16 +72,6 @@ type State = {
 
 const pollMs = 250;
 
-const reportOf = (
-  graph: Graph,
-  ticket: Ticket,
-  form: (execution: ExecutionRecord) => Execution,
-): AutoRunReport => ({
-  executions: ticket.started.map((run) => form(run.execution)),
-  pending: autoRunOrder(graph, ticket.undecided),
-  skipped: [...ticket.skipped],
-});
-
 /** Whether the cell's code as it is now ran in its realm, as its type now: auto-run never runs code unseen. */
 const hasRun = (record: CellRecord): boolean =>
   record.ran?.source === record.source && record.ran.type === record.type;
@@ -158,12 +148,8 @@ function reasonFor(
   const by = state.orphans.get(record.id) ?? node?.dependsOn.find((id) => holds(state, id));
   if (by !== undefined) return { reason: "upstream", by };
   if (!hasRun(record)) return { reason: "notRun" };
-  return realmGone(state, record);
-}
-
-/** A client cell with no page to run in, or a server cell with no kernel: a cascade never starts a kernel, and one
- * that ended took what the dependents need with it. */
-function realmGone(state: State, record: CellRecord): Omit<Skip, "cell"> | undefined {
+  // a client cell with no page to run in, or a server cell with no kernel: a cascade never starts a kernel, and one
+  // that ended took what the dependents need with it
   if (record.type === "client" && !state.realmAttached()) return { reason: "noPage" };
   if (record.type === "server" && state.context.kernel.live() === undefined)
     return { reason: "stopped" };
@@ -348,31 +334,25 @@ function realmEnded(state: State, realm: "server" | "client"): void {
   if (state.pending.size > 0) stop(state);
 }
 
-const newState = (
-  context: SessionContext,
-  queue: RunQueue,
-  realmAttached: () => boolean,
-): State => ({
-  context,
-  queue,
-  realmAttached,
-  pending: new Map(),
-  tickets: new WeakMap(),
-  held: new Set(),
-  seen: new Set(),
-  orphans: new Map(),
-  running: undefined,
-  shown: { running: null, pending: new Set() },
-  flushing: false,
-  poll: undefined,
-});
-
 export function createAutoRun(
   context: SessionContext,
   queue: RunQueue,
   realmAttached: () => boolean,
 ): AutoRun {
-  const state = newState(context, queue, realmAttached);
+  const state: State = {
+    context,
+    queue,
+    realmAttached,
+    pending: new Map(),
+    tickets: new WeakMap(),
+    held: new Set(),
+    seen: new Set(),
+    orphans: new Map(),
+    running: undefined,
+    shown: { running: null, pending: new Set() },
+    flushing: false,
+    poll: undefined,
+  };
   return {
     ended: (run) => {
       ended(state, run);
@@ -397,6 +377,10 @@ export function createAutoRun(
       running: state.running?.run.execution.cell ?? null,
       pending: autoRunOrder(context.cells.graph(), new Set(state.pending.keys())),
     }),
-    report: (ticket, form) => reportOf(context.cells.graph(), ticket, form),
+    report: (ticket, form) => ({
+      executions: ticket.started.map((run) => form(run.execution)),
+      pending: autoRunOrder(context.cells.graph(), ticket.undecided),
+      skipped: [...ticket.skipped],
+    }),
   };
 }

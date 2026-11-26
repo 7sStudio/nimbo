@@ -37,8 +37,6 @@ export type DaemonHttp = {
   readonly close: () => Promise<void>;
 };
 
-type State = { port: number; accepting: boolean };
-
 /** The requests and calls under way: the stop answers them before it closes their sockets. */
 type InFlight = {
   readonly track: (work: Promise<void>) => void;
@@ -62,35 +60,6 @@ function createInFlight(): InFlight {
     settled: async () => {
       await withinGrace(Promise.allSettled([...works]));
     },
-  };
-}
-
-function requestListener(options: HttpOptions, state: State, inFlight: InFlight) {
-  const route = async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
-    const refusal = !isAllowed(request.headers, state.port)
-      ? 403
-      : state.accepting
-        ? undefined
-        : 503;
-    if (refusal !== undefined) {
-      sendStatus(response, refusal);
-      return;
-    }
-    const url = new URL(request.url ?? "/", "http://127.0.0.1");
-    if (url.pathname === "/rpc") await answerRpcPost(request, response, options);
-    else {
-      const { token, pages, log } = options;
-      const cookie = { name: () => pageCookieName(state.port), key: options.pageKey };
-      await answerPage({ request, response, url, token, cookie, pages, log });
-    }
-  };
-  return (request: IncomingMessage, response: ServerResponse): void => {
-    const answered = route(request, response).catch((error: unknown) => {
-      options.log.error({ err: error, url: request.url }, "an HTTP request failed");
-      if (response.headersSent) response.destroy();
-      else sendStatus(response, 500);
-    });
-    inFlight.track(answered);
   };
 }
 
@@ -122,10 +91,35 @@ async function closeSockets(wss: WebSocketServer): Promise<void> {
 
 /** Listens on 127.0.0.1 and serves until `close`. */
 export async function startHttp(options: HttpOptions): Promise<DaemonHttp> {
-  const state: State = { port: options.port, accepting: true };
+  let port = options.port;
+  let accepting = true;
   const inFlight = createInFlight();
   const wss = new WebSocketServer({ noServer: true, maxPayload: maxBodyBytes });
-  const server = createServer(requestListener(options, state, inFlight));
+  const route = async (request: IncomingMessage, response: ServerResponse): Promise<void> => {
+    if (!isAllowed(request.headers, port)) {
+      sendStatus(response, 403);
+      return;
+    }
+    if (!accepting) {
+      sendStatus(response, 503);
+      return;
+    }
+    const url = new URL(request.url ?? "/", "http://127.0.0.1");
+    if (url.pathname === "/rpc") await answerRpcPost(request, response, options);
+    else {
+      const { token, pages, log } = options;
+      const cookie = { name: () => pageCookieName(port), key: options.pageKey };
+      await answerPage({ request, response, url, token, cookie, pages, log });
+    }
+  };
+  const server = createServer((request, response) => {
+    const answered = route(request, response).catch((error: unknown) => {
+      options.log.error({ err: error, url: request.url }, "an HTTP request failed");
+      if (response.headersSent) response.destroy();
+      else sendStatus(response, 500);
+    });
+    inFlight.track(answered);
+  });
   const serve = (ws: WebSocket, declaration: Declaration): void => {
     serveSocket(ws, {
       dispatch: options.dispatch,
@@ -139,17 +133,17 @@ export async function startHttp(options: HttpOptions): Promise<DaemonHttp> {
     onUpgrade({
       wss,
       token: options.token,
-      port: () => state.port,
-      accepting: () => state.accepting,
+      port: () => port,
+      accepting: () => accepting,
       serve,
       log: options.log,
     }),
   );
-  state.port = await listen(server, options.port);
+  port = await listen(server, options.port);
   return {
-    port: state.port,
+    port,
     close: async () => {
-      state.accepting = false;
+      accepting = false;
       await inFlight.settled(); // the calls the stop ended get their answers (an install it stopped, a run it ended)
       await closeSockets(wss);
       await new Promise<void>((resolve) => {

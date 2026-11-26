@@ -216,8 +216,14 @@ export function createHeadlessBrowser(options: HeadlessBrowserOptions): Headless
   const prepared = prepareProfiles(options.dir, options.log);
   prepared.catch(() => undefined);
   const state: State = {
-    ...{ options, prepared, running: undefined, current: undefined, opening: 0, stopped: false },
-    ...{ stopping: new AbortController(), ending: new Set<Promise<void>>() },
+    options,
+    prepared,
+    running: undefined,
+    current: undefined,
+    opening: 0,
+    stopped: false,
+    stopping: new AbortController(),
+    ending: new Set<Promise<void>>(),
     backoff: { failures: 0, retryAt: 0, last: "" },
   };
   return {

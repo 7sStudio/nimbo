@@ -8,9 +8,6 @@ import type { SessionContext } from "../context.js";
 import type { ExecutionRecord } from "../records.js";
 import { terminalStatuses } from "../records.js";
 import { savesOutputs } from "../fileForm.js";
-import type { Retained } from "./retained.js";
-
-type ValueOutput = Extract<Output, { readonly kind: "value" }>;
 
 /** An execution id no cell of the notebook uses (09-testing §1.4: from the injected generator). */
 function freshId(context: SessionContext): ExecutionId {
@@ -110,30 +107,18 @@ export function addOutput(
   if (!isLatest(context, execution)) return;
   context.emit("cell.output", { cell: execution.cell, execution: execution.id, output });
   if (output.kind !== "value" || !context.settings()["outputs.retainFullValue"]) return;
-  retain(context.runs, execution.id, index, { output, full });
-}
-
-/**
- * Keeps a value only when it is whole: the full form unless the kernel cut it at its budget
- * (`full.truncated`: never retained, larger than the budget), else the output's own json unless that is cut too.
- */
-function retain(
-  runs: { readonly retained: Retained; readonly kernelBudget: number },
-  execution: ExecutionId,
-  index: number,
-  value: { readonly output: ValueOutput; readonly full: FullValue | undefined },
-): void {
-  const { output, full } = value;
-  const { retained } = runs;
+  // a value is kept only when it is whole: the full form unless the kernel cut it at its budget (`full.truncated`:
+  // never retained, larger than the budget), else the output's own json unless that is cut too
+  const { retained } = context.runs;
   if (full?.truncated) {
-    retained.refuse(execution, index, {
+    retained.refuse(execution.id, index, {
       why: "tooLarge",
-      budget: runs.kernelBudget,
+      budget: context.runs.kernelBudget,
       byKernel: true,
     });
-  } else if (full) retained.keep(execution, index, full.json);
-  else if (output.truncated) retained.refuse(execution, index, { why: "noFullForm" });
-  else retained.keep(execution, index, output.json);
+  } else if (full) retained.keep(execution.id, index, full.json);
+  else if (output.truncated) retained.refuse(execution.id, index, { why: "noFullForm" });
+  else retained.keep(execution.id, index, output.json);
 }
 
 /** The latest run of some cell with id `execution`, if any cell still has it. */

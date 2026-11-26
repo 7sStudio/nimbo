@@ -157,9 +157,16 @@ export function createHeadlessRealm(
   detach: (realmId: string, why: `headless:${string}`) => void,
 ): HeadlessRealm {
   const state: State = {
-    ...{ context, realm, service, detach },
-    ...{ page: undefined, key: undefined, realmId: undefined, starting: undefined },
-    ...{ idle: undefined, closed: false },
+    context,
+    realm,
+    service,
+    detach,
+    page: undefined,
+    key: undefined,
+    realmId: undefined,
+    starting: undefined,
+    idle: undefined,
+    closed: false,
   };
   return {
     ensure: () => ensure(state),

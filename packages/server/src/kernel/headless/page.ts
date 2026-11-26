@@ -219,7 +219,11 @@ export async function guardPage(
   try {
     const cdp = await load(page, target, { log, close });
     return {
-      ...{ page, cdp, closed: closed.signal, close, lost: ended },
+      page,
+      cdp,
+      closed: closed.signal,
+      close,
+      lost: ended,
       startRealm: (start) => startRealm(page, start),
       shoot: (cell, limits) => shoot(page, cell, limits),
     };

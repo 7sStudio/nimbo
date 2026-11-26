@@ -39,14 +39,12 @@ describe("autosave after a failed write", () => {
       const saved = next<string>();
       const saver = createAutosaver(
         {
-          ...{
-            path,
-            root: ws.dir,
-            ref: "a.jsnb",
-            text: () => "after\n",
-            now: () => new Date(0),
-            log: quiet,
-          },
+          path,
+          root: ws.dir,
+          ref: "a.jsnb",
+          text: () => "after\n",
+          now: () => new Date(0),
+          log: quiet,
           events: { saved: saved.hear, failed: failed.hear, conflict: () => undefined },
         },
         { text: "before\n", dirty: false },
