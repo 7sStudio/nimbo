@@ -36,6 +36,8 @@ export const messages = {
     `The SQL engine could not be loaded (${detail}). Check the connection and try again; the next call retries the load.`,
   missing: () =>
     "The SQL engine's native DuckDB binding (@duckdb/node-api) is not installed. Install it, then run the query again.",
+  network: () =>
+    "The SQL engine needs the network the first time, to fetch DuckDB's JSON reader, and could not reach it. Run the query again once the network is back.",
   crashed: () =>
     "The SQL engine stopped unexpectedly. It restarts on the next query and restores the registered tables.",
   closed: () =>

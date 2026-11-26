@@ -65,6 +65,7 @@ Every method rejects with `QueryError { message, position, data.reason }`, `reas
 
 Rules:
 - **Loading**: only when SQL is picked; a "Load the SQL engine" line names the download once. Never in the page bundle.
+- **JSON reader**: DuckDB-WASM fetches DuckDB's json extension from extensions.duckdb.org the first time a table is read from rows or a Blob, or an NDJSON export is written; the browser caches it. The engine loads it on its own before that statement, so a fetch that fails (offline, blocked) rejects `load` saying the engine needs the network and could not reach it, the engine keeps running, and the next call fetches it again.
 - **Table `t`**: one table per output, always `t`, plus the binding name as an alias view when the output is a named binding (`SELECT … FROM events`). `schema(t)` feeds the bar's autocomplete (columns, struct fields). A list with no record in it (numbers, strings, arrays) is one column named `value`.
 - **Full value**: the page registers the whole value from `GET /outputs/<execution>/<index>.json` (03-api §7.5), read as an uncut value, never the 256 KB slice.
 - **Row cap**: `query.sqlMaxRows` (default 10,000) with `truncated: true`; the grid shows the cap and offers "download all" (CSV or NDJSON via `COPY`).
