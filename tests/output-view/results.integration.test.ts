@@ -1,5 +1,5 @@
-// The query modes that replace the view, on the real engines: jq's result in place with "Back to source", and SQL on a
-// grid with "Back to rows", the rows registered as t (and the binding's alias) once for every query, DuckDB's own
+// The query modes that replace the view, on the real engines: jq's result in place with "Show all", and SQL on a
+// grid with "Show all", the rows registered as t (and the binding's alias) once for every query, DuckDB's own
 // error, and a cut value whose full value is what t holds.
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 
@@ -14,7 +14,7 @@ beforeAll(async () => {
 afterAll(() => engines.dispose());
 
 describe("jq", () => {
-  it("replaces the value with the result until Back to source", async () => {
+  it("replaces the value with the result until Show all", async () => {
     const output = {
       kind: "value",
       json: { has_more: true, data: [1, 2] },
@@ -28,13 +28,13 @@ describe("jq", () => {
     typeQuery(".data[]");
     pressInQuery("Enter");
     await until(() => {
-      expect(button("Back to source")).toBeDefined();
+      expect(button("Show all")).toBeDefined();
     });
     expect(wrapper.get('[data-part="query-row"] [data-part="count"]').text()).toBe("2 items");
     expect(wrapper.get('[role="tree"]').text()).toContain("Array(2)");
-    // the result replaces the source: none of the source's keys shows until Back to source
+    // the result replaces the source: none of the source's keys shows until Show all
     expect(wrapper.get('[role="tree"]').text()).not.toContain("has_more");
-    button("Back to source")?.click();
+    button("Show all")?.click();
     await settle();
     expect(wrapper.get('[role="tree"]').text()).toContain("has_more");
   });
@@ -48,7 +48,7 @@ async function sqlRun(query: string) {
   typeQuery(query);
   pressInQuery("Enter");
   await until(() => {
-    expect(button("Back to rows")).toBeDefined();
+    expect(button("Show all")).toBeDefined();
   });
   return { ...mounted, register };
 }
@@ -65,7 +65,7 @@ describe("SQL", () => {
     register.mockRestore();
   });
 
-  it("keeps t for the next query and goes Back to rows", async () => {
+  it("keeps t for the next query and goes back with Show all", async () => {
     const { wrapper, register } = await sqlRun("SELECT count(*) AS n FROM t");
     const query = vi.spyOn(engines.sql, "query");
     typeQuery("SELECT type FROM t ORDER BY type");
@@ -74,7 +74,7 @@ describe("SQL", () => {
       expect(wrapper.findAll('[role="columnheader"]').map((h) => h.text())).toEqual(["#", "type"]);
     });
     expect([register.mock.calls.length, query.mock.calls.length]).toEqual([1, 1]);
-    button("Back to rows")?.click();
+    button("Show all")?.click();
     await settle();
     // back to the records' grid: "#" and their five keys
     expect(wrapper.findAll('[role="columnheader"]')).toHaveLength(6);
@@ -120,7 +120,7 @@ describe("SQL on a cut value", () => {
     typeQuery("SELECT count(*) AS n FROM t");
     pressInQuery("Enter");
     await until(() => {
-      expect(button("Back to rows")).toBeDefined();
+      expect(button("Show all")).toBeDefined();
     });
     // t holds the four records of the full value, not the three the page was given
     expect([fetched, wrapper.get('[role="gridcell"]:nth-child(2)').text()]).toEqual([

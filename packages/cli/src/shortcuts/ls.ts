@@ -17,13 +17,13 @@ const help = `nimbo ls [-n <notebook>]: the cells of a notebook
 
 One line per cell: id, type, status, stale, edited by (you: the page; agent: the CLI or MCP, with the agent's name
 when it gave one; disk: an edit of the file outside nimbo), its title when it has one, and the first line of its
-source.
+source. --json gives a stale cell's reason too: "edited since its last run", or "count changed in cell 2".
 Set a title: nimbo cell update --cell <id> --meta '{"title":"Get a user"}' (null removes it).
 
 Flags:
 ${notebookFlagHelp}
-  --json                  print { notebook, cells: [{ id, type, status, stale, editedBy, agent, title, firstLine }],
-                          conflict?: { cells }, recovered? }
+  --json                  print { notebook, cells: [{ id, type, status, stale, staleWhy, editedBy, agent, title,
+                          firstLine }], conflict?: { cells }, recovered? }
 An open conflict with the file on disk, or unsaved text recovered from a session that ended, is named last.
 `;
 
@@ -51,6 +51,7 @@ const rowOf = (cell: Cell) => ({
   type: cell.type,
   status: cell.status,
   stale: cell.stale,
+  staleWhy: cell.staleWhy ?? null,
   ...editedBy(cell),
   title: cell.meta.title ?? null,
   firstLine: firstLine(cell.source, 72),

@@ -37,6 +37,13 @@ export const Output = z.discriminatedUnion("kind", [
   z.object({ kind: z.literal("display"), mime: z.string(), data: z.string() }),
   z.object({ kind: z.literal("dom"), html: z.string(), text: z.string() }),
   z.object({ kind: z.literal("event"), name: z.string(), data: z.unknown(), at: z.string() }),
-  z.object({ kind: z.literal("error"), error: ErrorInfo }),
+  z.object({
+    kind: z.literal("error"),
+    error: ErrorInfo,
+    /** When it was raised: `during` its run (a callback, a promise nothing awaited) or `after` it ended, as the daemon
+     * stamps an error output when it arrives; `run` is the error the run itself ended with, when a host shows that
+     * one in the viewer. */
+    when: z.enum(["run", "during", "after"]).optional(),
+  }),
 ]);
 export type Output = z.infer<typeof Output>;

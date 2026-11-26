@@ -1,6 +1,7 @@
-<!-- ExplorerView: where things are, as VS Code's Explorer. Outline: the notebook's markdown headings nested by level, and under them the cells a heading does not tell about (a title, a run going, a failed run, an unreviewed agent edit); outline.showAllCells lists every cell instead. A click goes to the cell. Below, the workspace's notebooks as a file tree, unfolded down to this one. -->
+<!-- ExplorerView: where things are, as VS Code's Explorer. Outline: the notebook's markdown headings nested by level, and under them the cells a heading does not tell about (a title, a run going, a failed run, a stale result, an unreviewed agent edit); outline.showAllCells lists every cell instead. A click goes to the cell. Below, the workspace's notebooks as a file tree, unfolded down to this one. -->
 <script setup lang="ts">
-import { CircleX, LoaderCircle } from "@lucide/vue";
+import { staleReason } from "@jsnb/core";
+import { CircleX, History, LoaderCircle } from "@lucide/vue";
 import { computed, onMounted, ref, watch } from "vue";
 
 import FileTree from "../app/FileTree.vue";
@@ -39,6 +40,15 @@ const agentOf = (cell: Row): string | null => {
   const when = whenOf(edit.at);
   return `${words.charAt(0).toUpperCase()}${words.slice(1)}${when === "" ? "" : ` ${when}`}, not reviewed`;
 };
+/** "Stale: count changed in cell 2": the clock's words, for a stale cell. */
+const staleOf = (cell: Row): string | null => {
+  if (!cell.stale) return null;
+  const { graph } = store.mirror;
+  const numberOf = (id: string) => store.cellsInOrder.findIndex((each) => each.id === id) + 1;
+  const why =
+    cell.staleWhy ?? staleReason(graph.get(cell.id), (id) => graph.get(id), false, numberOf);
+  return why === "" ? "Stale" : `Stale: ${why}`;
+};
 const all = computed(() => settings.valueOf("outline.showAllCells") === true);
 const outline = computed(() => {
   const byId = new Map(store.cellsInOrder.map((cell, at) => [cell.id, { cell, at }]));
@@ -63,6 +73,7 @@ const outline = computed(() => {
         type: cell.type,
         running: cell.status === "running",
         failed: cell.status === "error",
+        stale: staleOf(cell),
         agent: agentOf(cell),
       },
     ];
@@ -162,6 +173,15 @@ onMounted(() => {
               class="ui:ms-auto ui:shrink-0 ui:text-err ui:block-3 ui:inline-3"
               aria-label="failed"
             />
+            <span
+              v-else-if="row.stale !== null"
+              data-part="stale"
+              role="img"
+              :title="row.stale"
+              :aria-label="row.stale"
+              class="ui:ms-auto ui:flex ui:shrink-0 ui:text-warn"
+              ><History class="ui:block-3 ui:inline-3" aria-hidden="true"
+            /></span>
           </button>
         </li>
       </ol>

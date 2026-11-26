@@ -134,3 +134,34 @@ describe("cell.add with run", () => {
     });
   });
 });
+
+describe("a callback's error", () => {
+  it("is an error output stamped during the run while it goes on, and after the run once it ended", async () => {
+    await withDaemon(async (daemon) => {
+      const book = await createNotebook(daemon);
+      const { notebook } = book;
+      const cell = await book.add(
+        [
+          "setTimeout(() => { throw new Error('early') }, 0);",
+          "setTimeout(() => { throw new Error('late') }, 300);",
+          "await new Promise((r) => setTimeout(r, 100));",
+          "1",
+        ].join("\n"),
+      );
+      const { execution } = await daemon.client.cell.run({ notebook, cell });
+      expect(execution.status).toBe("ok");
+      await daemon.events.until(
+        "cell.output",
+        (e) => e.data.output.kind === "error" && e.data.output.error.message === "late",
+      );
+      const { execution: last } = await daemon.client.cell.outputs({ notebook, cell });
+      const errors = last?.outputs.flatMap((output) =>
+        output.kind === "error" ? [[output.error.message, output.when]] : [],
+      );
+      expect(errors).toEqual([
+        ["early", "during"],
+        ["late", "after"],
+      ]);
+    });
+  });
+});

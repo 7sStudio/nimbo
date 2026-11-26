@@ -66,7 +66,7 @@
         "- **jq**: `map(select(.tea == \"green\")) | map(.cups) | add` adds up the cups of green tea: `5`.",
         "- **SQL**: the value is the table `t`. Try `SELECT city, sum(cups * price) AS revenue FROM t GROUP BY city ORDER BY revenue DESC`.",
         "",
-        "When a query answers with a new value, a link beside it (**Back to rows**) shows the whole value again.",
+        "When a query answers with a new value, **Show all** beside it shows the whole value again.",
         "",
         "In an empty query field, `?` shows example queries for the mode you picked.",
         "",

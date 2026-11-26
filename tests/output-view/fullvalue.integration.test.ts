@@ -45,7 +45,7 @@ async function registered(props: Record<string, unknown>) {
   typeQuery('SELECT count(*) AS n, max("$meta") AS last FROM t');
   pressInQuery("Enter");
   await until(() => {
-    expect(button("Back to rows")).toBeDefined();
+    expect(button("Show all")).toBeDefined();
   });
   const cells = wrapper
     .findAll('[data-part="grid-row"] [role="gridcell"]')

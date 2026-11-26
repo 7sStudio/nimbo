@@ -3,7 +3,6 @@
 // stores; the pure helpers below are what it derives them with.
 import type { Cell, CellMeta, CellType, ExecStatus, Execution, Route } from "@jsnb/core";
 
-import type { GraphEntry } from "../store/mirror.js";
 import type { SyntaxPlace } from "../editor/lint.js";
 import { syntaxPlace } from "../editor/lint.js";
 
@@ -50,8 +49,8 @@ export type CellModel = {
   /** What the cell is for, and a few words about it (cells/names.ts). */
   readonly name: string;
   readonly about: string;
-  /** Why its result may be out of date ("balance changed in cell 2"), "" when it is stale with no name to give, null
-   * when it is not stale. */
+  /** Why its result may be out of date ("edited since its last run", "balance changed in cell 2"), "" when it is stale
+   * with nothing to say, null when it is not stale. */
   readonly staleWhy: string | null;
   /** Its text changed after its last run started (its last edit is the later of the two). */
   readonly editedSince: boolean;
@@ -92,20 +91,6 @@ export function cellLabel(cell: Pick<CellModel, "number" | "type" | "status" | "
   const busy = cell.status === "running" || cell.status === "queued" || cell.status === "error";
   const state = cell.stale && !busy ? "stale" : cell.status;
   return `Cell ${String(cell.number)}, ${cell.type}, ${state}`;
-}
-
-/** What changed upstream of a stale cell: the first name it uses that a cell it depends on defines, and that cell
- * ("balance changed in cell 2"); "" when the graph names none. */
-export function staleWhy(
-  entry: GraphEntry | undefined,
-  graph: ReadonlyMap<string, GraphEntry>,
-  numberOf: (cell: string) => number,
-): string {
-  for (const upstream of entry?.dependsOn ?? []) {
-    const name = graph.get(upstream)?.defines.find((each) => entry?.uses.includes(each));
-    if (name !== undefined) return `${name} changed in cell ${String(numberOf(upstream))}`;
-  }
-  return "";
 }
 
 /** Whether the cell's last edit came after its last run started: its result is of older text. */

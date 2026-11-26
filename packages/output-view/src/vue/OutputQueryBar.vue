@@ -1,5 +1,5 @@
 <!-- The query bar: Filter, JSONPath, jq, SQL, the one-line input or the chips,
-the result count, Only matches / All, Back to source or Back to rows, cancel, the examples, and the notes below. -->
+the result count, Only matches / All, Show all (after jq or SQL), cancel, the examples, and the notes below. -->
 <script setup lang="ts">
 import type { QueryMode } from "@jsnb/core";
 import { computed, ref } from "vue";
@@ -127,11 +127,12 @@ const run = (pin: boolean) => void props.bar.run(pin);
         ]"
         @update:model-value="(show) => bar.dispatch({ type: 'only', only: show === 'only' })"
       />
-      <TextButton v-if="result?.kind === 'transform'" @click="bar.reset(false)">
-        Back to source
-      </TextButton>
-      <TextButton v-if="result?.kind === 'rows'" @click="bar.reset(false)">
-        Back to rows
+      <!-- the select modes' "All" in a word: the whole value back in place of the result -->
+      <TextButton
+        v-if="result?.kind === 'transform' || result?.kind === 'rows'"
+        @click="bar.reset(false)"
+      >
+        Show all
       </TextButton>
       <IconButton
         v-if="state.status === 'running'"

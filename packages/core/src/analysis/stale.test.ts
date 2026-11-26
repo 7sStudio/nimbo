@@ -4,7 +4,14 @@ import { describe, expect, it } from "vitest";
 import { emptyAnalysis } from "../model/analysis.js";
 import type { GraphInput } from "./graph.js";
 import { buildGraph } from "./graph.js";
-import { afterDelete, afterEdit, afterKernelRestart, afterRun } from "./stale.js";
+import {
+  afterDelete,
+  afterEdit,
+  afterKernelRestart,
+  afterRun,
+  staleReason,
+  withEdited,
+} from "./stale.js";
 
 type Facts = { readonly defines: string[]; readonly uses: string[] };
 const cell = (id: string, type: GraphInput["type"], { defines, uses }: Facts): GraphInput => ({
@@ -51,6 +58,40 @@ describe("afterRun", () => {
   it("clears the cell and marks its dependents", () => {
     const stale = { ...none, c_000002: true };
     expect(afterRun(graph, stale, "c_000002")).toEqual({ ...none, c_000003: true, c_000004: true });
+  });
+});
+
+describe("withEdited", () => {
+  it("adds the cells whose last run ran other code, and drops one edited back to that code", () => {
+    const edited = afterEdit(graph, none, "c_000001");
+    expect(withEdited(edited, ["c_000001"])).toEqual({
+      ...none,
+      c_000001: true,
+      c_000002: true,
+      c_000003: true,
+      c_000004: true,
+    });
+    // edited back: the cell's own part goes, its dependents stay stale
+    expect(withEdited(edited, [])).toEqual({
+      ...none,
+      c_000002: true,
+      c_000003: true,
+      c_000004: true,
+    });
+    expect(withEdited(none, ["c_000005"])).toEqual({ ...none, c_000005: true });
+  });
+});
+
+describe("staleReason", () => {
+  const byId = new Map(graph.cells.map((each) => [each.id, each]));
+  const numberOf = (id: string) => graph.cells.findIndex((each) => each.id === id) + 1;
+  const reason = (id: string, edited: boolean) =>
+    staleReason(byId.get(id), (other) => byId.get(other), edited, numberOf);
+
+  it("says the cell's own edit first, else the name that changed upstream and where", () => {
+    expect(reason("c_000003", true)).toBe("edited since its last run");
+    expect(reason("c_000003", false)).toBe("b changed in cell 2");
+    expect(reason("c_000001", false)).toBe("");
   });
 });
 

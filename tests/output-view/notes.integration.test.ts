@@ -22,7 +22,7 @@ async function ran(query: string, props: Record<string, unknown> = {}) {
   typeQuery(query);
   pressInQuery("Enter");
   await until(() => {
-    expect(button("Back to rows")).toBeDefined();
+    expect(button("Show all")).toBeDefined();
   });
   return mounted;
 }

@@ -37,6 +37,7 @@ function plan(current: readonly CellRecord[], fromFile: readonly CellRecord[]): 
       status: old.status,
       last: old.last ?? record.last,
       previous: old.last ? old.previous : undefined,
+      ran: old.ran,
     };
   });
 }

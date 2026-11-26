@@ -163,12 +163,17 @@ function applied(mirror: Mirror, event: EventEnvelope): Mirror {
     case "cells.autoRun":
       return withAutoRun(mirror, event.data);
     case "cells.stale": {
+      // a cell that is no longer stale loses the reason its last cell.updated gave
       const stale = new Set(event.data.cells);
       return withNotebook(mirror, (notebook) => ({
         ...notebook,
-        cells: notebook.cells.map((cell) =>
-          cell.stale === stale.has(cell.id) ? cell : { ...cell, stale: stale.has(cell.id) },
-        ),
+        cells: notebook.cells.map((cell) => {
+          if (cell.stale === stale.has(cell.id)) return cell;
+          if (stale.has(cell.id)) return { ...cell, stale: true };
+          const left = { ...cell, stale: false };
+          delete left.staleWhy;
+          return left;
+        }),
       }));
     }
     case "cell.status":

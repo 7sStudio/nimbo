@@ -66,7 +66,7 @@ export type CardPage = {
 export type CardState = {
   readonly outputs: readonly Output[];
   /** The error its last run ended with (its error block under the outputs), a cell's id in its data said as "cell 2";
-   * null when it did not throw. An error raised after the run (a handler's, a timer's) is one of the outputs. */
+   * null when it did not throw. An error a callback raised (a handler's, a timer's), during or after the run, is one of the outputs. */
   readonly error: ErrorInfo | null;
   /** The routes it registered that are listening: its result shows their requests. */
   readonly routes: readonly Route[];

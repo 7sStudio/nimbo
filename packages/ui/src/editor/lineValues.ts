@@ -1,6 +1,6 @@
 // Values at the ends of lines, in grey after the code once a cell ran: each name a top-level statement declares or
 // assigns shows the value it holds now, on the cell's last line that writes it. Nothing is traced: a value is the one
-// the name has now, not the one it had on that line. A value never takes layout space (it is placed out of the flow at
+// the name has now, so a cell gets only the names it set last (cells/lineValues.ts). A value never takes layout space (it is placed out of the flow at
 // the line's end), is cut with an ellipsis to the room left and hidden when even a few characters do not fit; a click
 // on one opens its name (onOpen).
 import { syntaxTree } from "@codemirror/language";

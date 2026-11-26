@@ -103,7 +103,7 @@ Path rules for `path` and `to`: inside the workspace, no `..`, a `.jsnb` file. A
 |---|---|---|---|
 | `cell.add` | `{ notebook, type, source? = "", after?, run? = false, id? }` | `{ cell: Cell, execution?: Execution }` | mutating. `run` runs and waits as `cell.run` (a client cell with no page and no headless realm: `REALM_NOT_ATTACHED`, nothing added). `id` (unused, else `CONFLICT`) lets undo restore a deleted cell: with the same type and source it gets its runs back, stale when it was or when what it depends on changed since. |
 | `cell.get` | `{ notebook, cell }` | `{ cell: Cell }` | |
-| `cell.update` | `{ notebook, cell, source?, type?, meta?, base? }` | `{ cell: Cell }` | mutating, idempotent. A `source` change marks dependents stale; a running cell keeps its old code for that run; a server cell retyped away is disposed in the kernel once its run under way ended. `meta` is merged, `null` removes a key; editable: `title`, `showBindings`, `collapsed`, `headingCollapsed`, `outputsHidden`, `outputView`, `outputQuery`, `outputHeight`, `outputColumns`, `manual`. `meta.lastEdit` is server-owned (`INVALID_PARAMS` if sent), stamped only when `source` or `type` changed. `base`: the `textHash` of the source the edit was typed on; when the cell's source is no longer that text (the file, the page or another agent changed it since; the page's own drafts in flight excepted, 07-file-format §5) the edit is taken and the cell is a conflict instead of a silent overwrite (07-file-format §5). Without `base`, `notice` says when the source had come from the file on disk; `nimbo cell update` prints it on a `notice:` line. |
+| `cell.update` | `{ notebook, cell, source?, type?, meta?, base? }` | `{ cell: Cell }` | mutating, idempotent. A `source` or `type` change marks dependents stale, and the cell itself when its last run in its realm ran other code; a running cell keeps its old code for that run; a server cell retyped away is disposed in the kernel once its run under way ended. `meta` is merged, `null` removes a key; editable: `title`, `showBindings`, `collapsed`, `headingCollapsed`, `outputsHidden`, `outputView`, `outputQuery`, `outputHeight`, `outputColumns`, `manual`. `meta.lastEdit` is server-owned (`INVALID_PARAMS` if sent), stamped only when `source` or `type` changed. `base`: the `textHash` of the source the edit was typed on; when the cell's source is no longer that text (the file, the page or another agent changed it since; the page's own drafts in flight excepted, 07-file-format §5) the edit is taken and the cell is a conflict instead of a silent overwrite (07-file-format §5). Without `base`, `notice` says when the source had come from the file on disk; `nimbo cell update` prints it on a `notice:` line. |
 | `cell.revert` | `{ notebook, cell }` | `{ cell: Cell }` | mutating, idempotent. Restores the review's `previousSource`/`previousType` as the caller's edit; no review: answered as is, no event. |
 | `cell.markReviewed` | `{ notebook, cell }` | `{ cell: Cell }` | mutating, idempotent. Drops `meta.lastEdit.review`, keeping who and when. |
 | `cell.move` | `{ notebook, cell, after }` | `{ order: CellId[] }` | mutating, idempotent |
@@ -240,7 +240,7 @@ Files: user `$XDG_CONFIG_HOME/nimbo/settings.json` (default `~/.config/nimbo/`, 
 | `editor.fontSize` / `editor.tabSize` | `13` / `2` | |
 | `editor.wordWrap` | `true` | |
 | `editor.intellisense` / `editor.diagnostics` | `true` / `true` | language-service features and diagnostics |
-| `editor.lineValues` | `true` | after a server cell runs, each top-level declaration or assignment shows the value its names hold now at the line's end; a click opens the name in Variables |
+| `editor.lineValues` | `true` | after a server cell runs, each top-level declaration or assignment shows the value its names hold now at the line's end, only in the cell that last set each name (elsewhere the value now is not what that line produced); a click opens the name in Variables |
 | `editor.keymap` | `"default"` | **planned** (`default`, `vim`) |
 | `editor.syntaxTheme` | `"vscode"` | `vscode`, `github`, `cursor`, `jetbrains`, `one`, `catppuccin`, `tokyo-night`, `nimbo` |
 | `ui.theme` | `"system"` | `system` / `light` / `dark` |
@@ -361,6 +361,7 @@ type Cell = {
     lastEdit?: EditInfo;                               // server-owned
   };
   status: ExecStatus; stale: boolean;
+  staleWhy?: string;                                   // a stale cell's reason: "edited since its last run", "count changed in cell 2"
   lastExecution: ExecutionSummary | null;              // id, status, startedAt, count, durationMs, hasError, defines
 };
 
@@ -409,7 +410,7 @@ type Output =
   | { kind: "display"; mime: string; data: string }
   | { kind: "dom"; html: string; text: string }                          // client cell container
   | { kind: "event"; name: string; data: unknown; at: string }           // route()/on() activity
-  | { kind: "error"; error: ErrorInfo };                                 // raised after the run (handler, timer)
+  | { kind: "error"; error: ErrorInfo; when?: "run" | "during" | "after" }; // a callback's (handler, timer), during or after its run; "run": the run's own error as a host shows it
 
 type ErrorInfo = { name: string; message: string; frames: Frame[]; raw: string; data?: Record<string, unknown> };
 type Frame = { cell?: CellId; line: number; col: number; fn?: string; file?: string };

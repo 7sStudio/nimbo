@@ -7,6 +7,7 @@ import type { HtmlOptions } from "./html.js";
 import { bodyHtml, csp } from "./html.js";
 import { exportStyle } from "./htmlStyle.js";
 import { escapeHtml } from "./htmlValue.js";
+import { mergeStreams } from "./streams.js";
 
 export type NotebookHtmlCell = {
   readonly id: string;
@@ -43,7 +44,9 @@ const notebookRules = [
 
 function outputsHtml(cell: NotebookHtmlCell, options: HtmlOptions): string {
   const outputs = cell.outputs ?? [];
-  const parts = outputs.map((output) => bodyHtml(output, options));
+  const parts = mergeStreams(outputs.map((output, index) => ({ output, index }))).map(
+    ({ output }) => bodyHtml(output, options),
+  );
   const hasError = outputs.some((output) => output.kind === "error");
   if (cell.error !== undefined && !hasError)
     parts.push(bodyHtml({ kind: "error", error: cell.error }, options));
