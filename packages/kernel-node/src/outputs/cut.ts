@@ -1,4 +1,4 @@
-// Caps text at a number of UTF-16 units with a trailing … (the repr and preview caps of 04-kernel §5.2), never
+// Caps text at a number of UTF-16 units with a trailing … (the repr and preview caps), never
 // splitting a surrogate pair.
 
 /** `text` itself when it fits `max`, else its first `max - 1` units and `…`, so the result is at most `max` long. */

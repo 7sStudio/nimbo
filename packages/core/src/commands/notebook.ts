@@ -1,4 +1,4 @@
-// The notebook commands of 03-api §4.2.
+// The notebook commands.
 import { z } from "zod";
 
 import { CellId, ExecutionId, NotebookRef } from "../model/ids.js";

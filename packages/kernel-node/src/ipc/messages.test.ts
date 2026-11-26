@@ -1,4 +1,4 @@
-// Tests the daemon ↔ kernel message schemas of 04-kernel §2.1, the child config and the default limits.
+// Tests the daemon ↔ kernel message schemas, the child config and the default limits.
 import { describe, expect, it } from "vitest";
 
 import {

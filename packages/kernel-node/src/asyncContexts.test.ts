@@ -1,7 +1,7 @@
-// Tests the classification of the async context the code running now is in (04-kernel §6): the resources Node pushes
+// Tests the classification of the async context the code running now is in: the resources Node pushes
 // from JavaScript (a Timeout, an Immediate, an AsyncResource, a Promise, a TickObject) by their prototypes, read
 // through intrinsics captured when the module loads; a Proxy, the resource or on its chain, as an AsyncResource scope
-// with none of its traps run; the natively entered ones and the top level as clean; the documented residuals of
+// with none of its traps run; the natively entered ones and the top level as clean; the known residuals of
 // another realm's Promise or plain object and of a Timeout whose prototype was replaced; and the context read in real
 // callbacks of each kind.
 import {
@@ -63,7 +63,7 @@ describe("contextOf on what Node does not push from JavaScript", () => {
     }
   });
 
-  it("takes a Timeout whose prototype a cell replaced for a native context: the documented residual", () => {
+  it("takes a Timeout whose prototype a cell replaced for a native context: a known residual", () => {
     const timer = setTimeout(() => undefined, 60_000); // under test: a Timeout resource, cleared at once
     clearTimeout(timer);
     Object.setPrototypeOf(timer, null);

@@ -1,4 +1,4 @@
-// Tests emit (05-bridge §6): events in order, one message per flush, the cell that emitted, strict plain data, the size
+// Tests emit: events in order, one message per flush, the cell that emitted, strict plain data, the size
 // limit, redaction; a burst past the queue's count or bytes keeps the latest and counts the dropped by name; with no
 // page listening nothing is queued; prototype names are names; the names counted a flush are bounded.
 import { EventNotSerializable } from "@jsnb/core";

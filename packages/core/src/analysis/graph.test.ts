@@ -1,4 +1,4 @@
-// Tests buildGraph, dependentsOf and dependenciesOf, including the cross-realm edges of 05-bridge §5.
+// Tests buildGraph, dependentsOf and dependenciesOf, including the cross-realm edges.
 import { describe, expect, it } from "vitest";
 
 import { emptyAnalysis } from "../model/analysis.js";

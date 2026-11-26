@@ -1,4 +1,4 @@
-// Tests a `dispose` request in-process (04-kernel §2.1, §7): the deleted cell's routes leave the table with one
+// Tests a `dispose` request in-process: the deleted cell's routes leave the table with one
 // `routes` message, a cleanup that throws is a kernel log notice naming the cell, the cell is retired so a late
 // dispose(fn) runs at once (a throw there logged too) until its next run revives it, and a cell that never ran answers
 // at once; every request gets its one result.

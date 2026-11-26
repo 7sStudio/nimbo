@@ -1,4 +1,4 @@
-// Each settings key's title, description and status (03-api §4.10): for the Settings page, the CLI and the JSON
+// Each settings key's title, description and status: for the Settings page, the CLI and the JSON
 // Schema, beside the schema of schema.ts.
 import type { SettingMeta, SettingsKey } from "./keys.js";
 

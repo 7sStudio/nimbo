@@ -1,4 +1,4 @@
-// The sql commands of 03-api §4.16: the daemon's DuckDB binding, which `cell.outputQuery { mode: "sql" }` runs on and
+// The sql commands: the daemon's DuckDB binding, which `cell.outputQuery { mode: "sql" }` runs on and
 // which is installed on demand, outside the app.
 import { z } from "zod";
 

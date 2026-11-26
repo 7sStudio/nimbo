@@ -1,4 +1,4 @@
-// The Node check of 04-kernel §2: kernels run on Node 26 or later; the version of kernel.nodePath is asked of that
+// The Node check: kernels run on Node 26 or later; the version of kernel.nodePath is asked of that
 // binary itself, the daemon's own is read in place.
 import { execFile } from "node:child_process";
 

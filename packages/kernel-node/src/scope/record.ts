@@ -1,4 +1,4 @@
-// The scope object of 04-kernel §3.3: an ordinary record whose prototype chain is the built-ins layer, then a Proxy
+// The scope object: an ordinary record whose prototype chain is the built-ins layer, then a Proxy
 // over the realm's globals that throws ReferenceError for names that exist nowhere and reports first creations.
 
 /** The transform's own calls on `__scope` besides `$peek`; own, non-writable, never shadowed. */
@@ -19,7 +19,7 @@ export type Scope = {
   readonly record: Record<string, unknown>;
   /** `$peek(name)`: record → built-ins → globals → undefined; `typeof` of an unknown name never throws. */
   readonly peek: (name: string) => unknown;
-  /** The record's own enumerable names in creation order: what `kernel.scope` lists (04-kernel §3.3). */
+  /** The record's own enumerable names in creation order: what `kernel.scope` lists. */
   readonly names: () => readonly string[];
 };
 
@@ -59,7 +59,7 @@ function globalsFallback(onCreate: (receiver: unknown, name: string) => void): o
 }
 
 /**
- * Builds the scope with the lookup order of 04-kernel §3.3 (plumbing → record → built-ins → globals →
+ * Builds the scope with the lookup order (plumbing → record → built-ins → globals →
  * ReferenceError) as a prototype chain, so reads and writes of cell-defined names never run a trap (case 20).
  */
 export function createScope(options: ScopeOptions): Scope {

@@ -1,6 +1,6 @@
-// A forwarded `route` request (04-kernel §5.6, §8): the matching handler run under its cell's latest store with a
+// A forwarded `route` request: the matching handler run under its cell's latest store with a
 // Fetch Request, its result as the RouteResponse; a throw is a 500 and an error output on that cell; every handled
-// request bumps the route's hits and is an event output, once the process hooks were checked (§3.3), with its status,
+// request bumps the route's hits and is an event output, once the process hooks were checked, with its status,
 // the type its body names, the time the handler took and the client its User-Agent names (the page's Activity).
 import { performance } from "node:perf_hooks";
 

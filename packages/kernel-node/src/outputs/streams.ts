@@ -1,6 +1,6 @@
-// The `console` built-in of 04-kernel §5.1: a node:console Console whose stdout and stderr hand their text to a
+// The `console` built-in: a node:console Console whose stdout and stderr hand their text to a
 // writer, so console.log/info/debug become stdout and console.warn/error stderr, formatted by util.format. The
-// streams keep no state of their own: an interrupt can stop user code inside console.log (04-kernel §6), and a
+// streams keep no state of their own: an interrupt can stop user code inside console.log, and a
 // node:stream Writable stopped in the middle of a write stays "writing" and holds every later chunk of every cell.
 import { Console } from "node:console";
 import { Writable } from "node:stream";

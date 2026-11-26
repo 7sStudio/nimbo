@@ -1,4 +1,4 @@
-// Tests interrupts racing the kernel's other work, through the real child (04-kernel §6): an awaiting cell interrupted
+// Tests interrupts racing the kernel's other work, through the real child: an awaiting cell interrupted
 // while another cell's 1 ms interval keeps firing, requests sent right before an interrupt of an idle kernel (no cell
 // code runs, so nothing is terminated and every one answers), and a bridge call, a route handler and a wrapped timer
 // callback that spin in a workspace module's function, below the user-code frame, stopped by an interrupt while the

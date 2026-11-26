@@ -1,4 +1,4 @@
-// What a kernel does once its daemon is gone (04-kernel §2), on its main thread: the IPC disconnect handler, which an
+// What a kernel does once its daemon is gone, on its main thread: the IPC disconnect handler, which an
 // idle or awaiting kernel runs at once (a spinning one never does; its watchdog thread acts instead, watchdog.ts). On
 // POSIX it sends SIGKILL to the process group the kernel leads, itself included, so what its cells started (a dev
 // server, a `sleep`) ends with it, as the daemon's kill would have ended it. It exits alone on Windows, which has no

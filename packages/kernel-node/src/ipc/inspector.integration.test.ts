@@ -1,4 +1,4 @@
-// Tests connectCdp and the CDP session against real inspectors (04-kernel §9): a session on a real kernel's inspector,
+// Tests connectCdp and the CDP session against real inspectors: a session on a real kernel's inspector,
 // as a second client, gets each of its concurrent calls answered by its id, a call the inspector refuses rejected with
 // InspectorFailed, and its pending and later calls rejected once it closed; a closed port is an InspectorFailed
 // connect, not a hang. The paused state is followed in corpusDebugger.integration.test.ts, and the session closing

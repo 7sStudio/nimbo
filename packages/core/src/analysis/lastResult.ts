@@ -1,5 +1,5 @@
-// An open notebook's last result for notebook.summary (03-api §4.2): the run that ended last with an
-// output worth showing, read from the session's runs (a notebook file holds no outputs, 07-file-format §3). Pure.
+// An open notebook's last result for notebook.summary: the run that ended last with an
+// output worth showing, read from the session's runs (a notebook file holds no outputs). Pure.
 import type { Execution } from "../model/execution.js";
 import type { LastResult } from "../model/summary.js";
 

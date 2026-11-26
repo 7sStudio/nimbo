@@ -1,4 +1,4 @@
-// The client realm (02-architecture §2): one per notebook page, attached over the host's socket (03-api §4.5).
+// The client realm: one per notebook page, attached over the host's socket.
 import type { RealmSnapshotAnswer } from "@jsnb/core";
 import {
   RealmDispose,

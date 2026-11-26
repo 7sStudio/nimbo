@@ -1,5 +1,5 @@
-// The ErrorInfo of anything a cell throws (04-kernel §5.3): core's toErrorInfo with the frames mapped; never throws.
-// A server function's error a stub rejected with carries the server stack too (05-bridge §4.2): its frames first, the
+// The ErrorInfo of anything a cell throws: core's toErrorInfo with the frames mapped; never throws.
+// A server function's error a stub rejected with carries the server stack too: its frames first, the
 // innermost, as one stack across the boundary, so the page shows them and jumps to the server cell.
 import type { ErrorInfo, Frame } from "@jsnb/core";
 import { toErrorInfo } from "@jsnb/core";
@@ -34,7 +34,7 @@ export function errorInfo(error: unknown, stacks: StackReads): ErrorInfo {
   try {
     const stack = stackOf(error);
     const info = toErrorInfo(error, stacks.frames(stack));
-    // the raw stack without runtime-web's own frames, as the kernel drops its own (04-kernel §5.3)
+    // the raw stack without runtime-web's own frames, as the kernel drops its own
     const raw = stack === "" ? info.raw : stacks.userStack(stack);
     return acrossTheBridge({ ...info, raw }, serverErrorOf(error));
   } catch {

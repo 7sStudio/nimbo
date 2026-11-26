@@ -1,4 +1,4 @@
-// The cell commands of 03-api §4.3.
+// The cell commands.
 import { z } from "zod";
 
 import { BindingValue } from "../model/binding.js";
@@ -193,7 +193,7 @@ export const cellOutputQuery = defineCommand({
     total: z.number().int().nonnegative(),
     truncated: z.boolean(),
     durationMs: z.number().nonnegative(),
-    /** The query ran past query.timeoutMs and was stopped: a result, not an error (08 §5); `result` is empty. */
+    /** The query ran past query.timeoutMs and was stopped: a result, not an error; `result` is empty. */
     timedOut: z.boolean().optional(),
   }),
 });

@@ -1,4 +1,4 @@
-// A bridge `snapshot` (05-bridge §3): per exported name, fn for a function, an error for a class, the strict wire
+// A bridge `snapshot`: per exported name, fn for a function, an error for a class, the strict wire
 // form of plain data, or NotTransferable naming the path of the first value that cannot cross.
 import type { SnapshotBinding } from "@jsnb/core";
 import { encodeStrict, NotTransferable, unescapeKey } from "@jsnb/core";
@@ -10,10 +10,10 @@ import { reply } from "./result.js";
 
 const identifier = /^[A-Za-z_$][\w$]*$/;
 
-/** Captured when the module loads: a cell that replaces JSON.stringify breaks its own code only (§3.3). */
+/** Captured when the module loads: a cell that replaces JSON.stringify breaks its own code only. */
 const stringify = JSON.stringify.bind(JSON);
 
-/** `prices` + [1] → `prices[1]`; `config` + ["client"] → `config.client` (05-bridge §7 names the value). */
+/** `prices` + [1] → `prices[1]`; `config` + ["client"] → `config.client` (the bridge errors name the value). */
 export function pathName(name: string, path: readonly (string | number)[]): string {
   return path.reduce<string>((text, segment) => {
     if (typeof segment === "number") return `${text}[${String(segment)}]`;
@@ -22,7 +22,7 @@ export function pathName(name: string, path: readonly (string | number)[]): stri
   }, name);
 }
 
-/** A class is a function whose source starts with `class` (05-bridge §2: refused, not shipped). */
+/** A class is a function whose source starts with `class` (refused, not shipped). */
 const isClass = (value: object): boolean =>
   Function.prototype.toString.call(value).startsWith("class");
 
@@ -70,7 +70,7 @@ function snapshotFields(realm: Realm, message: SnapshotMessage): ResultFields {
 
 /**
  * Answers one `snapshot` message. Reading the values can run user code (a getter), so the process hooks are checked
- * before the answer leaves (04-kernel §3.3); no cell's code was started, so none gets the error output.
+ * before the answer leaves; no cell's code was started, so none gets the error output.
  */
 export async function snapshotFlow(realm: Realm, message: SnapshotMessage): Promise<void> {
   const fields = snapshotFields(realm, message);

@@ -1,4 +1,4 @@
-// Pure staleness transitions over the graph (00-overview §4.2, 05-bridge §8); every function returns a new map.
+// Pure staleness transitions over the graph; every function returns a new map.
 import type { CellId } from "../model/ids.js";
 import type { Graph } from "./graph.js";
 import { dependentsOf } from "./graph.js";

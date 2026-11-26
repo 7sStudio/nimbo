@@ -1,4 +1,4 @@
-// Identifier schemas of 03-api §2 (cell ids, execution ids, notebook refs), the API version and the id generator.
+// Identifier schemas (cell ids, execution ids, notebook refs), the API version and the id generator.
 import { z } from "zod";
 
 export const CellId = z.string().regex(/^c_[0-9a-z]{6}$/);
@@ -11,7 +11,7 @@ export type ExecutionId = z.infer<typeof ExecutionId>;
 export const NotebookRef = z.string().min(1);
 export type NotebookRef = z.infer<typeof NotebookRef>;
 
-/** `workspace.info.apiVersion` (03-api §1): bumped on renames and removals, not on additions. */
+/** `workspace.info.apiVersion`: bumped on renames and removals, not on additions. */
 export const apiVersion = 1;
 
 export type IdGenerator = {
@@ -35,7 +35,7 @@ export function createIdGenerator(random: () => number): IdGenerator {
 
 const divisor = 2 ** 32;
 
-/** Id generators over the platform's cryptographic random source (07-file-format §2). */
+/** Id generators over the platform's cryptographic random source. */
 export function randomIds(): IdGenerator {
   const word = new Uint32Array(1);
   return createIdGenerator(() => {

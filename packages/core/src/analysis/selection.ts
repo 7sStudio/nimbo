@@ -1,4 +1,4 @@
-// resolveSelection: the cells a Selection of 03-api §4.2 names, in notebook order.
+// resolveSelection: the cells a Selection names, in notebook order.
 import type { CellId } from "../model/ids.js";
 import type { Selection } from "../model/selection.js";
 import type { Graph } from "./graph.js";

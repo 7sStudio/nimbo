@@ -1,4 +1,4 @@
-// The typed answers of 04-kernel §2.1 on the daemon side: a `result` turned into what the Kernel interface returns,
+// The typed answers on the daemon side: a `result` turned into what the Kernel interface returns,
 // its value validated with Zod, or the named error of a failed request (BridgeCallFailed for a bridge call, CallRefused
 // for one the kernel refused, KernelRequestFailed for the others), carrying the kernel's ErrorInfo.
 import type {

@@ -159,7 +159,7 @@ describe("toErrorInfo", () => {
     ["export default 1", "DefaultExport", { line: 1, col: 1 }],
     ["enum E {}", "UnsupportedSyntax", { construct: "enum", line: 1, col: 1 }],
     ["const $peek = 1", "ReservedName", { name: "$peek", line: 1, col: 7 }],
-  ])("turns the error of %s into the ErrorInfo of 04 §5.3", (source, name, data) => {
+  ])("turns the error of %s into the ErrorInfo", (source, name, data) => {
     const error = thrown(source);
     const info = toErrorInfo(error);
     expect(info).toMatchObject({ name, data, frames: [] });

@@ -1,4 +1,4 @@
-// Tests the Realm's page side of the protocol (03-api §4.5, 05-bridge §9): attach, detach, the three requests, report shapes.
+// Tests the Realm's page side of the protocol: attach, detach, the three requests, report shapes.
 import { InvalidParams, RealmNotAttached, realmReport } from "@jsnb/core";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 

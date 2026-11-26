@@ -1,4 +1,4 @@
-// The cell's top-level statements (04 §3.2 rules 1 to 8, 13 and 16): dispatch, function hoisting and the async wrapper.
+// The cell's top-level statements: dispatch, function hoisting and the async wrapper.
 import { DefaultExport, UnsupportedSyntax } from "@jsnb/core";
 import ts from "typescript";
 
@@ -15,7 +15,7 @@ type Tools = {
   readonly rewrite: Rewrite;
   readonly visit: Visit;
   readonly variables: VariableRules;
-  /** The last real statement of the cell: a trailing `;` or comment does not change it (rule 13). */
+  /** The last real statement of the cell: a trailing `;` or comment does not change it. */
   readonly last: ts.Statement | undefined;
 };
 
@@ -37,7 +37,7 @@ function assignedNames(assignment: ts.Expression): string[] {
   return names;
 }
 
-/** Rules 1 and 2: one statement per declarator; `export` adds `__scope.__export("x")` per declared name. */
+/** One statement per declarator; `export` adds `__scope.__export("x")` per declared name. */
 function convertVariables(statement: ts.VariableStatement, tools: Tools): ts.Statement[] {
   const { rewrite, variables } = tools;
   const exported = hasModifier(statement, ts.SyntaxKind.ExportKeyword);
@@ -50,14 +50,14 @@ function convertVariables(statement: ts.VariableStatement, tools: Tools): ts.Sta
   });
 }
 
-/** Rule 13: the last top-level expression statement becomes `return (expr);`. */
+/** The last top-level expression statement becomes `return (expr);`. */
 function returnValue(statement: ts.ExpressionStatement, { rewrite, visit }: Tools): ts.Statement {
   const { factory } = rewrite;
   const value = factory.createParenthesizedExpression(visit.expression(statement.expression));
   return ts.setSourceMapRange(factory.createReturnStatement(value), statement);
 }
 
-/** The errors of the table in 04 §3.2: `export default`, `export =`, top-level `enum`, `namespace`, `import x = require`. */
+/** The top-level forms that are errors: `export default`, `export =`, top-level `enum`, `namespace`, `import x = require`. */
 function reject(statement: ts.Statement, rewrite: Rewrite): void {
   if (hasModifier(statement, ts.SyntaxKind.DefaultKeyword) || ts.isExportAssignment(statement)) {
     throw new DefaultExport(rewrite.at(statement));

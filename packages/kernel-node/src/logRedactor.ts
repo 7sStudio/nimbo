@@ -1,4 +1,4 @@
-// The kernel log's redaction on the daemon side (04-kernel §2, §10): every line the child writes to its stdout and
+// The kernel log's redaction on the daemon side: every line the child writes to its stdout and
 // stderr pipes (a raw write to fd 1 or 2, a crash report) and every notice of the daemon side passes the redaction
 // outputs pass, built from the workspace .env with the same rules. The one redacting boundary of the log: the child
 // does not redact it. The .env is read again when its identity (type, inode, mtime, size) changed, checked at most once

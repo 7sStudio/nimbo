@@ -1,4 +1,4 @@
-// Tests late errors through the child's own process handlers (04-kernel §5.3): a throw in a raw setImmediate callback
+// Tests late errors through the child's own process handlers: a throw in a raw setImmediate callback
 // reaches uncaughtException and a rejection nobody handles reaches unhandledRejection; each is attributed to its cell by
 // AsyncLocalStorage and arrives as an error output outside any execute() iteration (onOutput), its frames mapped to the
 // cell, the run's status left ok and the kernel still answering.

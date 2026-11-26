@@ -1,4 +1,4 @@
-// Tests the line diff of an agent edit's review (03-api §5): the kept, removed and added lines, the changed ranges of
+// Tests the line diff of an agent edit's review: the kept, removed and added lines, the changed ranges of
 // the source now (a deletion marks the line after the gap), the hunks with their context, and the cap on big diffs.
 import { describe, expect, it } from "vitest";
 

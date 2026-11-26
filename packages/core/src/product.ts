@@ -1,4 +1,4 @@
-// The product's name and version, the one source of truth for both (02-architecture §10). A release build stamps the
+// The product's name and version, the one source of truth for both. A release build stamps the
 // version it builds and its commit into the built copy of this module, so the CLI, the daemon and the page all report
 // what was shipped; a checkout reports the version below and no commit. Kept free of imports: the release tools read
 // this file directly.
@@ -30,7 +30,7 @@ export function xdgDir(env: Env, variable: keyof typeof xdgDefaults, home: strin
   return value.startsWith("/") ? value : `${home}/${xdgDefaults[variable]}`;
 }
 
-/** The user config folder (07-file-format §6): `%APPDATA%\nimbo` on Windows, else `$XDG_CONFIG_HOME/nimbo`. */
+/** The user config folder: `%APPDATA%\nimbo` on Windows, else `$XDG_CONFIG_HOME/nimbo`. */
 export function productConfigDir(env: Env, home: string, platform: string): string {
   if (platform === "win32") {
     const appData =

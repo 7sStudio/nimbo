@@ -1,5 +1,4 @@
-// Tests the workspace files kernel-node opens itself through the real child and the real daemon side (04-kernel §2,
-// §8.1, §10), each made a FIFO (fixtures/fifo.ts), a directory or a file over 1 MiB, none of which may block anything:
+// Tests the workspace files kernel-node opens itself through the real child and the real daemon side, each made a FIFO (fixtures/fifo.ts), a directory or a file over 1 MiB, none of which may block anything:
 // a FIFO .env at start ends the start with KernelDead at once, its EnvUnreadable report in the log; a FIFO or larger
 // .env before a run ends that run with EnvUnreadable, and the next one answers once .env is a regular file again; the
 // daemon's log redaction refuses a FIFO .env with one notice and keeps redacting with the secrets read last, while the

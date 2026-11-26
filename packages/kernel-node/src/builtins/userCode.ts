@@ -1,4 +1,4 @@
-// User code as the kernel starts and calls it (04-kernel §6). It starts in a promise job, never through
+// User code as the kernel starts and calls it. It starts in a promise job, never through
 // queueMicrotask: under an AsyncLocalStorage store, or with an async hook enabled (a debugger's async stack traces),
 // Node runs a queueMicrotask callback inside an AsyncResource whose after-hook an interrupt's termination skips, and
 // Node then exits ("async hook stack has become corrupted") or aborts. A promise job carries the store through V8 and
@@ -7,7 +7,7 @@
 // function comes from a workspace module or a package rather than from a cell's code. The Promise and Reflect
 // intrinsics used here are captured when the module loads, before any cell runs: a cell that replaces
 // Promise.prototype.then, Promise.resolve or Reflect.apply breaks its own code, not the kernel's, and the kernel's
-// own promises read no species a cell could replace (04-kernel §3.3).
+// own promises read no species a cell could replace.
 import { getCallSites } from "node:util";
 
 const { apply, defineProperty } = Reflect;
@@ -17,7 +17,7 @@ const nativeThen: unknown = Reflect.get(Promise.prototype, "then");
 /**
  * Gives a promise of the kernel's own an own `constructor` of undefined, so `then` makes its derived promise with the
  * intrinsic %Promise% and reads neither Promise.prototype.constructor nor Promise[Symbol.species], which a cell can
- * replace (a throwing species, a constructor that is no object) and so stall every message (04-kernel §3.3).
+ * replace (a throwing species, a constructor that is no object) and so stall every message.
  */
 function speciesFree<T extends Promise<unknown>>(promise: T): T {
   defineProperty(promise, "constructor", { value: undefined });
@@ -44,7 +44,7 @@ export type FramePosition = {
 
 /**
  * Calls `fn` with `self` and `args` below the user-code frame, returning what it returns and throwing what it throws.
- * The frame is this function's, at the call below: an ordinary kernel frame (04-kernel §5.3) the hook knows by position.
+ * The frame is this function's, at the call below: an ordinary kernel frame the hook knows by position.
  */
 export function callUserCode(
   fn: (...args: never[]) => unknown,

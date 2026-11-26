@@ -1,7 +1,6 @@
-// The errors the kernel child raises: those of the server built-ins (04-kernel §8, §8.1) beyond core's InvalidDisposer,
+// The errors the kernel child raises: those of the server built-ins beyond core's InvalidDisposer,
 // one per mistake a cell can make with them, an unreadable .env, code that is not a compiled cell and a process hook a
-// cell replaced with one that does not deliver; each message names the thing and says what to do (08-code-standards
-// §5).
+// cell replaced with one that does not deliver; each message names the thing and says what to do.
 import { JsnbError } from "@jsnb/core";
 
 type Cause = { readonly cause?: unknown };
@@ -25,7 +24,7 @@ const invalidRouteSpecMessage = ({ spec }: Spec): string => {
   return `route() takes "METHOD /path", such as route("POST /webhook", handler); got ${got}.`;
 };
 
-/** `route(spec, …)` with a spec that is not `"METHOD /path"` (04-kernel §8). */
+/** `route(spec, …)` with a spec that is not `"METHOD /path"`. */
 export class InvalidRouteSpec extends JsnbError {
   declare readonly data: Spec;
   constructor(data: Spec, options: Cause = {}) {
@@ -76,7 +75,7 @@ type Path = { readonly path: string };
 const loaderInvalidMessage = ({ path }: Path): string =>
   `${path} does not export a load function. Restart the kernel to rewrite it.`;
 
-/** The workspace loader of 04-kernel §8.1 without its `load` export. */
+/** The workspace loader without its `load` export. */
 export class LoaderInvalid extends JsnbError {
   declare readonly data: Path;
   constructor(data: Path, options: Cause = {}) {
@@ -89,7 +88,7 @@ const envUnreadableMessage = ({ path, reason }: Unreadable): string =>
   `${path} could not be read (${reason}), so the run did not start. Make it a regular file the kernel may read, of at most 1 MiB, then run the cell again.`;
 
 /**
- * The workspace .env exists but cannot be read at start or before a run (04-kernel §2, §8): a permission, or something
+ * The workspace .env exists but cannot be read at start or before a run: a permission, or something
  * other than a regular file of at most 1 MiB (a FIFO, a directory), which the kernel refuses without opening it.
  */
 export class EnvUnreadable extends JsnbError {
@@ -103,7 +102,7 @@ type Cell = { readonly cell: string };
 const cellCodeInvalidMessage = ({ cell }: Cell): string =>
   `The code sent for cell ${cell} is not a compiled cell: it does not evaluate to a cell function. Run the cell again, and report it if it happens again.`;
 
-/** An `execute` whose code evaluates to something other than a cell function (04-kernel §4 step 3): a daemon fault. */
+/** An `execute` whose code evaluates to something other than a cell function: a daemon fault. */
 export class CellCodeInvalid extends JsnbError {
   declare readonly data: Cell;
   constructor(data: Cell, options: Cause = {}) {
@@ -117,7 +116,7 @@ const processHookReplacedMessage = ({ name }: Hook): string =>
 
 /**
  * A cell replaced process.nextTick or process.emit, through which Node delivers every daemon message, with a function
- * or an accessor that does not deliver (04-kernel §3.3): the kernel put Node's own back, and the cell whose code ran
+ * or an accessor that does not deliver: the kernel put Node's own back, and the cell whose code ran
  * last says so.
  */
 export class ProcessHookReplaced extends JsnbError {

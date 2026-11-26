@@ -1,4 +1,4 @@
-// stop() and kill() called while start() is still under way (04-kernel §2, §6): each resolves only once that start has
+// stop() and kill() called while start() is still under way: each resolves only once that start has
 // settled, so a caller that awaited them knows no kernel child is left starting behind its back.
 import { describe, expect, it } from "vitest";
 

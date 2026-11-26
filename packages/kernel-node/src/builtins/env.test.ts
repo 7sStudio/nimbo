@@ -1,4 +1,4 @@
-// Tests the env built-in of 04-kernel §8: values, has, EnvNotSet, the safe reads, read-only, replace in place.
+// Tests the env built-in: values, has, EnvNotSet, the safe reads, read-only, replace in place.
 import { inspect } from "node:util";
 
 import { EnvNotSet } from "@jsnb/core";

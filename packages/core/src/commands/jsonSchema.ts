@@ -1,4 +1,4 @@
-// JSON Schema of the registry for MCP tools, the CLI and the contract golden (03-api §9).
+// JSON Schema of the registry for MCP tools, the CLI and the contract golden.
 import { z } from "zod";
 
 import type { AnyCommand, CommandTags } from "./define.js";

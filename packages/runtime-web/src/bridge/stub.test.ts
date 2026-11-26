@@ -1,4 +1,4 @@
-// Tests the async stub of 05-bridge §2 and §4: strict encoding of the arguments, decoding, failures, redaction.
+// Tests the async stub: strict encoding of the arguments, decoding, failures, redaction.
 import { ArgumentNotSerializable, BridgeCallFailed, KernelDead, decode } from "@jsnb/core";
 import { describe, expect, it } from "vitest";
 

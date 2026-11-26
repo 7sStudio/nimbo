@@ -1,4 +1,4 @@
-// The kernel's pre-warm (04-kernel §6): Node loads some globals on their first touch, and a termination that lands
+// The kernel's pre-warm: Node loads some globals on their first touch, and a termination that lands
 // inside such a load (a cell's first fetch, say) leaves the global broken for the life of the process (`performance`
 // stays undefined). So the kernel touches them before `ready`: the ones its own code uses (performance, the Fetch
 // classes behind route()) and the ones a cell commonly reaches for first (fetch, crypto, navigator, structuredClone).

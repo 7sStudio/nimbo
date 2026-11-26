@@ -1,4 +1,4 @@
-// The realm's call failures of 03-api §7.4: a client cell run with no page (1004), a second page that tries to attach
+// The realm's call failures: a client cell run with no page (1004), a second page that tries to attach
 // while another runs the client cells (1011), and a page that does not answer the daemon's request in time (1015);
 // each is an ApiError of the catalogue in api.ts.
 import { ApiError } from "./api.js";
@@ -31,7 +31,7 @@ export class RealmNotAttached extends ApiError {
 const realmAttachedMessage = (notebook: string): string =>
   `Another page already runs the client cells of ${notebook}, so this one is view-only. Close that page and reload this one to run client cells here.`;
 
-/** `realm.attach` of a second page: the first attach wins and later pages are view-only (03-api §4.5). */
+/** `realm.attach` of a second page: the first attach wins and later pages are view-only. */
 export class RealmAttached extends ApiError {
   declare readonly data: { readonly notebook: string };
   constructor(data: { readonly notebook: string }, options: Cause = {}) {

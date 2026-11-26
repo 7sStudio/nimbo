@@ -1,4 +1,4 @@
-// The page corpus, cases 7 to 9 of 04-kernel §12: transform's src/corpus/cases-references.ts in the page.
+// The page corpus, cases 7 to 9: transform's src/corpus/cases-references.ts in the page.
 import type { PageCase } from "./cases.js";
 
 const dataUrl = `data:application/json,${encodeURIComponent(JSON.stringify({ data: [1, 2, 3] }))}`;

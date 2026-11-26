@@ -1,4 +1,4 @@
-// Tests a cell's cleanup through runs (04-kernel §7): timers, frames, listeners and dispose(fn) stop
+// Tests a cell's cleanup through runs: timers, frames, listeners and dispose(fn) stop
 // on a re-run, a full reset and detach; a disposer that throws is an error output on the new execution.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 

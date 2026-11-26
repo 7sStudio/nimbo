@@ -1,4 +1,4 @@
-// A run's disposers (04-kernel §7): run in reverse order before the cell's next run, on a full reset and on detach.
+// A run's disposers: run in reverse order before the cell's next run, on a full reset and on detach.
 // Once they ran the list is closed: what a stale run adds later is disposed at once, and nothing new is started.
 
 export type Disposers = {

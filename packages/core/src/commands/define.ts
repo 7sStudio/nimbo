@@ -1,4 +1,4 @@
-// defineCommand: the one registry entry shape of 03-api §3 (name, description, Zod input and output, tags).
+// defineCommand: the one registry entry shape (name, description, Zod input and output, tags).
 import type { z } from "zod";
 
 import { JsnbError } from "../errors/jsnbError.js";
@@ -9,7 +9,7 @@ export type CommandTags = {
   readonly internal: boolean;
   readonly streaming: boolean;
   readonly idempotent: boolean;
-  /** Our addition to 03-api §3: a v1.x surface registered as the contract that the server
+  /** Our addition to the registry entry: a v1.x surface registered as the contract that the server
    * answers with NotAvailable until it is built. */
   readonly planned: boolean;
 };
@@ -32,7 +32,7 @@ export type CommandDefinition<I extends z.ZodObject, O extends z.ZodObject> = {
   readonly tags?: Partial<CommandTags>;
 };
 
-/** `domain.verb`: a lowercase domain, a dot, a camelCase verb (08-code-standards §3). */
+/** `domain.verb`: a lowercase domain, a dot, a camelCase verb. */
 export const commandNamePattern = /^[a-z]+\.[a-zA-Z]+$/;
 
 const noTags: CommandTags = {

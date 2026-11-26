@@ -1,5 +1,5 @@
-// The notebook ref of 03-api §2 as a kernel needs it: refused unless it names a .jsnb file inside the workspace
-// (09-testing §5), and turned into the route name of /n/<name>/… (04-kernel §8) the same way the server maps it.
+// The notebook ref as a kernel needs it: refused unless it names a .jsnb file inside the workspace,
+// and turned into the route name of /n/<name>/… the same way the server maps it.
 import { InvalidParams, notebookName } from "@jsnb/core";
 
 type Rule = readonly [
@@ -7,7 +7,7 @@ type Rule = readonly [
   message: string,
 ];
 
-/** The refusals of 09-testing §5 (no `..`, only .jsnb files) and what keeps the route name well formed. */
+/** The refusals (no `..`, only .jsnb files) and what keeps the route name well formed. */
 const rules: readonly Rule[] = [
   [(ref) => ref === "", "must not be empty"],
   [

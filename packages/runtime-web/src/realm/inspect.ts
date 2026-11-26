@@ -1,4 +1,4 @@
-// The realm's inspector, Node `util.inspect` style (04-kernel §5.1, §5.2): one value to one line; it never throws.
+// The realm's inspector, Node `util.inspect` style: one value to one line; it never throws.
 // Own properties are read through their descriptors, so a getter shows as `[Getter]` and never runs.
 
 export type InspectOptions = {
@@ -24,7 +24,7 @@ export const consoleInspect: InspectOptions = {
   maxLength: Number.POSITIVE_INFINITY,
 };
 
-/** A value output's `repr` (04-kernel §5.2): depth 3, 50 items, 500-character strings, 4 KB in all. */
+/** A value output's `repr`: depth 3, 50 items, 500-character strings, 4 KB in all. */
 export const reprInspect: InspectOptions = {
   depth: 3,
   maxArrayLength: 50,
@@ -37,7 +37,7 @@ export function safe<T>(read: () => T, fallback: T): T {
   try {
     return read();
   } catch {
-    // Inspection never throws (04-kernel §5.2): whatever cannot be read is shown as the fallback.
+    // Inspection never throws: whatever cannot be read is shown as the fallback.
     return fallback;
   }
 }

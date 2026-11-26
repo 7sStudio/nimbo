@@ -1,4 +1,4 @@
-// The debug commands of 03-api §4.9: breakpoints, the kernel paused, stepped and resumed, the stack, scopes, variables
+// The debug commands: breakpoints, the kernel paused, stepped and resumed, the stack, scopes, variables
 // and evaluations of a paused server kernel, over the daemon's debugger (js-debug).
 import { z } from "zod";
 

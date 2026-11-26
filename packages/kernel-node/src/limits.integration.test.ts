@@ -1,4 +1,4 @@
-// Tests the output limits through the real child (04-kernel §5.1, §5.2; 09-testing §3, kernel-node row): a run's stream
+// Tests the output limits through the real child: a run's stream
 // text capped at maxStreamBytes, cut between code points and ended by "[output truncated]"; a value's json capped in
 // bytes, nodes and depth while the daemon gets the full form, itself bounded by retainMaxBytes and left out when
 // retainFullValue is off.

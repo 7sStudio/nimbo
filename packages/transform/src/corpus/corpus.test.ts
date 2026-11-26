@@ -1,4 +1,4 @@
-// Corpus cases 1 to 17 of 04 §12 in the Node realm: one transform and one cell per test, the record checked after the last.
+// Corpus cases 1 to 17 in the Node realm: one transform and one cell per test, the record checked after the last.
 import { JsnbError } from "@jsnb/core";
 import { beforeAll, describe, expect, it } from "vitest";
 
@@ -76,7 +76,7 @@ function checkRealm(realm: Realm, testCase: CorpusCase, builtinsBefore: unknown)
 
 beforeAll(async () => {
   transform("1", { filename: "jsnb:///corpus.jsnb/warm.ts" });
-  // The packages case 11 imports and the fetch stack case 7 uses are loaded here, so each cell stays a unit test (09 §2).
+  // The packages case 11 imports and the fetch stack case 7 uses are loaded here, so each cell stays a unit test.
   await Promise.all([import("fast-check"), import("typescript"), fetch("data:text/plain,warm")]);
 });
 

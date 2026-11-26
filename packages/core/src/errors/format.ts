@@ -1,4 +1,4 @@
-// The errors a .jsnb file can raise on load (07-file-format §2 and §4): version, duplicate ids, validation.
+// The errors a .jsnb file can raise on load: version, duplicate ids, validation.
 import { JsnbError } from "./jsnbError.js";
 
 type Cause = { readonly cause?: unknown };

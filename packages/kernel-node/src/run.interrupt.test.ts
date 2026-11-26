@@ -1,4 +1,4 @@
-// Tests a run the daemon ended as interrupted (04-kernel §6), with the kernel's real interrupt hook and its real stack
+// Tests a run the daemon ended as interrupted, with the kernel's real interrupt hook and its real stack
 // check; only the termination is a stub, since a real one would end the test's own code: taken from the inbox already
 // interrupted, the run sends nothing; interrupted while the kernel prepared it (the daemon's call arriving while the
 // cell's previous disposer ran), it sends `running`, then `interrupted` and the export table, without calling its cell.

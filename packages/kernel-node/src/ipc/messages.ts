@@ -1,4 +1,4 @@
-// The daemon ↔ kernel messages of 04-kernel §2.1 as Zod schemas, both directions, and the child's start config.
+// The daemon ↔ kernel messages as Zod schemas, both directions, and the child's start config.
 import {
   BridgeEvent,
   CellId,
@@ -15,7 +15,7 @@ import {
 } from "@jsnb/core";
 import { z } from "zod";
 
-/** The output limits of 03-api §4.10 the kernel applies (04-kernel §5). */
+/** The output limits the kernel applies. */
 export const KernelLimits = z
   .object({
     maxValueBytes: z.number().int().positive(),
@@ -39,19 +39,19 @@ export function defaultLimits(): KernelLimits {
   };
 }
 
-/** What the daemon passes to the child as `argv[2]` JSON (04-kernel §2). */
+/** What the daemon passes to the child as `argv[2]` JSON. */
 export const ChildConfig = z
   .object({ notebook: z.string().min(1), routeBase: z.string().min(1), limits: KernelLimits })
   .readonly();
 export type ChildConfig = z.infer<typeof ChildConfig>;
 
 const RequestId = z.number().int().nonnegative();
-/** A per-request byte limit for the bridge (05-bridge §2): bytes cross whole up to it. */
+/** A per-request byte limit for the bridge: bytes cross whole up to it. */
 const BytesLimit = z.number().int().positive();
 const Names = z.array(z.string()).readonly();
 
 /**
- * Daemon → kernel. `call.args` is the wire form of the whole argument array (05-bridge §9), itself an array: the
+ * Daemon → kernel. `call.args` is the wire form of the whole argument array, itself an array: the
  * kernel decodes its elements.
  */
 export const DaemonMessage = z.discriminatedUnion("type", [
@@ -79,9 +79,9 @@ export const DaemonMessage = z.discriminatedUnion("type", [
   RouteRequest.unwrap().extend({ type: z.literal("route"), id: RequestId }),
   /** The cell was deleted: its disposers run now (its routes, timers and listeners end), its scope stays. */
   z.object({ type: z.literal("dispose"), id: RequestId, cell: CellId }),
-  /** Whether a page holds the client realm: without one, `emit` counts and drops at once (05-bridge §6). */
+  /** Whether a page holds the client realm: without one, `emit` counts and drops at once. */
   z.object({ type: z.literal("page"), listening: z.boolean() }),
-  /** Requests whose signal aborted before their result: the kernel starts none of them (04-kernel §2.1). */
+  /** Requests whose signal aborted before their result: the kernel starts none of them. */
   z.object({ type: z.literal("cancel"), ids: z.array(RequestId).readonly() }),
   z.object({ type: z.literal("shutdown") }),
 ]);
@@ -95,7 +95,7 @@ export type RouteMessage = Extract<DaemonMessage, { type: "route" }>;
 export type DisposeMessage = Extract<DaemonMessage, { type: "dispose" }>;
 
 /**
- * `message` checked on the daemon side with the schema the kernel reads it with (04-kernel §11): a caller's bad
+ * `message` checked on the daemon side with the schema the kernel reads it with: a caller's bad
  * argument is InvalidParams at once, with Zod's issues, rather than a message the kernel ignores and a request that
  * never settles.
  */
@@ -129,8 +129,8 @@ export const DroppedEvents = z
   .readonly();
 export type DroppedEvents = z.infer<typeof DroppedEvents>;
 
-/** Kernel → daemon. `result.redacted` flags a call result that redaction changed (04-kernel §10); `result.refused` says
- * why the kernel refused a call before running anything (04-kernel §2.1). */
+/** Kernel → daemon. `result.redacted` flags a call result that redaction changed; `result.refused` says
+ * why the kernel refused a call before running anything. */
 export const KernelMessage = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("ready"),
@@ -160,7 +160,7 @@ export const KernelMessage = z.discriminatedUnion("type", [
   }),
   z.object({ type: z.literal("exports"), names: z.array(ExportEntry).readonly() }),
   z.object({ type: z.literal("routes"), routes: z.array(Route).readonly() }),
-  /** `emit(name, data)` calls since the last flush, and those the kernel dropped (05-bridge §6). */
+  /** `emit(name, data)` calls since the last flush, and those the kernel dropped. */
   z.object({
     type: z.literal("events"),
     events: z.array(BridgeEvent).readonly(),

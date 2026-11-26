@@ -1,7 +1,7 @@
-// The wrapped setTimeout, setInterval, setImmediate and queueMicrotask of 04-kernel §7: the real timers and handles, a
+// The wrapped setTimeout, setInterval, setImmediate and queueMicrotask: the real timers and handles, a
 // disposer that clears a timer when its cell re-runs, and the callback started in a promise job under the store of its
-// registration, where an interrupt can terminate it and the child lives on (§6), its throw or rejection reported on
-// that cell (§5.3), then the process hooks it may have replaced checked (§3.3).
+// registration, where an interrupt can terminate it and the child lives on, its throw or rejection reported on
+// that cell, then the process hooks it may have replaced checked.
 import type { CellId } from "@jsnb/core";
 
 import { callUserCode, onRejection, startUserCode } from "./userCode.js";
@@ -16,7 +16,7 @@ export type TimerOptions<S extends Store, H, I = H> = {
   readonly addDisposer: (cell: CellId, fn: () => void) => () => void;
   /** A timer callback threw or its promise rejected. */
   readonly onError: (store: S | undefined, error: unknown) => void;
-  /** A callback returned (04-kernel §3.3: the process hooks checked after every callback the kernel started). */
+  /** A callback returned (the process hooks checked after every callback the kernel started). */
   readonly afterCall: (store: S | undefined) => void;
   /** The realm's own timers, which packages keep using. */
   readonly real: {
@@ -113,7 +113,7 @@ function wrapImmediate<S extends Store, H, I>(options: TimerOptions<S, H, I>): W
   };
 }
 
-/** A cell's queueMicrotask: the callback in a promise job under the caller's store (04-kernel §6, §7). */
+/** A cell's queueMicrotask: the callback in a promise job under the caller's store. */
 function wrapMicrotask<S extends Store, H, I>(options: TimerOptions<S, H, I>): WrappedMicrotask {
   return (callback) => {
     // A call Node would refuse goes to Node unchanged, so the cell sees Node's own error.

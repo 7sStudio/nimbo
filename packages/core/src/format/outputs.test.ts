@@ -1,4 +1,4 @@
-// Tests the saved outputs of 07-file-format §2: a run per cell id written after the cells in cell order, read back
+// Tests the saved outputs: a run per cell id written after the cells in cell order, read back
 // whole, and a run of no cell or of the wrong shape dropped with a warning while the notebook still opens.
 import { describe, expect, it } from "vitest";
 

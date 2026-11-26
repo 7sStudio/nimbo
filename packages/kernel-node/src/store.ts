@@ -1,4 +1,4 @@
-// The store of 04-kernel §4 step 4: AsyncLocalStorage of { cell, execution }, so whatever a run causes later (a
+// The store: AsyncLocalStorage of { cell, execution }, so whatever a run causes later (a
 // timer, a route handler, a promise continuation, a late error) is attributed to its cell.
 import { AsyncLocalStorage } from "node:async_hooks";
 

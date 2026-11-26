@@ -1,4 +1,4 @@
-// The analysis errors a cell can raise (04-kernel §3.2, §3.3): transform throws them, core defines them.
+// The analysis errors a cell can raise: transform throws them, core defines them.
 import { JsnbError } from "./jsnbError.js";
 
 /** The 1-based line and column of the offending node's start. */
@@ -24,7 +24,7 @@ const defaultExportMessage = ({ line }: Position): string =>
   "`export default` is not supported: name your export (`export const result = …`) " +
   `so other cells and the bridge can refer to it (line ${String(line)}).`;
 
-/** `export default …` or `export =`: the bridge needs a name (04-kernel §3.2). */
+/** `export default …` or `export =`: the bridge needs a name. */
 export class DefaultExport extends JsnbError {
   declare readonly data: Position;
   constructor(data: Position, options: { readonly cause?: unknown } = {}) {
@@ -67,7 +67,7 @@ export type ReservedNameData = Position & { readonly name: string };
 const reservedNameMessage = ({ name, line }: ReservedNameData): string =>
   `\`${name}\` is reserved by the notebook; rename it (line ${String(line)}).`;
 
-/** A cell declares `__scope`, `__import`, `__export` or `$peek` (04-kernel §3.3). */
+/** A cell declares `__scope`, `__import`, `__export` or `$peek`. */
 export class ReservedName extends JsnbError {
   declare readonly data: ReservedNameData;
   constructor(data: ReservedNameData, options: { readonly cause?: unknown } = {}) {

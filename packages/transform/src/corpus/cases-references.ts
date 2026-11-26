@@ -1,4 +1,4 @@
-// Cases 7 to 9 of 04 §12: top-level await over fetch, shorthand and computed keys, shadowing at every depth.
+// Cases 7 to 9: top-level await over fetch, shorthand and computed keys, shadowing at every depth.
 import type { CorpusCase } from "./cases.js";
 
 const dataUrl = `data:application/json,${encodeURIComponent(JSON.stringify({ data: [1, 2, 3] }))}`;

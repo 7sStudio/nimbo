@@ -1,4 +1,4 @@
-// The settings schema of 03-api §4.10 and 07-file-format §6: every v1 key with its default, title and status.
+// The settings schema: every v1 key with its default, title and status.
 // Each key's title, description and status are in meta.ts.
 import { z } from "zod";
 

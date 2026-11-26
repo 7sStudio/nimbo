@@ -1,4 +1,4 @@
-// The command registry of 03-api §3: every descriptor in the order of the tables, with the lookups the surfaces use.
+// The command registry: every descriptor in a fixed order, with the lookups the surfaces use.
 import { bridgeCall, bridgeEvents } from "./bridge.js";
 import {
   cellAdd,
@@ -108,7 +108,7 @@ import {
   workspaceStop,
 } from "./workspace.js";
 
-/** Every command, in the order of 03-api §4.1 to §4.11 with bridge.call last. */
+/** Every command, by domain, with bridge.call last. */
 export const commands: readonly AnyCommand[] = [
   workspaceInfo,
   workspaceStop,

@@ -1,4 +1,4 @@
-// The client `display` builtin of a run (04-kernel §5.5): the cell's container, its HTML, or a sandboxed iframe.
+// The client `display` builtin of a run: the cell's container, its HTML, or a sandboxed iframe.
 import { createFrame } from "./iframe.js";
 
 export type Display = {

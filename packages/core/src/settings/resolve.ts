@@ -1,4 +1,4 @@
-// resolveSettings: defaults < user file < workspace file (07-file-format §6), plus per-key validation and writability.
+// resolveSettings: defaults < user file < workspace file, plus per-key validation and writability.
 import { z } from "zod";
 
 import { InvalidParams, NotAvailable } from "../errors/api.js";
@@ -6,8 +6,8 @@ import { resolvedValueSchema } from "../model/settings.js";
 import type { SettingsKey } from "./schema.js";
 import { isSettingsKey, settingsKeys, settingsMeta, settingsShape } from "./schema.js";
 
-/** The folder of a workspace that holds its settings file, as `.vscode/` holds VS Code's: `<workspace>/.jsnb/settings.json`
- * (07-file-format §6). One name for the daemon and the CLI. */
+/** The folder of a workspace that holds its settings file, as `.vscode/` holds VS Code's: `<workspace>/.jsnb/settings.json`.
+ * One name for the daemon and the CLI. */
 export const workspaceSettingsFolder = ".jsnb";
 /** The settings file's name, in the user's config folder and in the workspace's settings folder. */
 export const settingsFileName = "settings.json";
@@ -36,7 +36,7 @@ export type SettingsWarning = {
 export type ResolvedSettings = {
   readonly values: Readonly<Record<SettingsKey, ResolvedValue>>;
   readonly warnings: readonly SettingsWarning[];
-  /** Keys no schema knows, kept as they were (07-file-format §4) with the file they came from. */
+  /** Keys no schema knows, kept as they were with the file they came from. */
   readonly unknown: Readonly<
     Record<string, { readonly value: unknown; readonly file: SettingsFile }>
   >;
@@ -104,7 +104,7 @@ export function validateSetting(key: SettingsKey, value: unknown): ValidatedSett
 export type WritableSetting =
   { readonly ok: true } | { readonly ok: false; readonly error: NotAvailable };
 
-/** A planned key is accepted in files but refused by `settings.set` (03-api §4.10). */
+/** A planned key is accepted in files but refused by `settings.set`. */
 export function assertWritable(key: SettingsKey): WritableSetting {
   return settingsMeta[key].status === "planned"
     ? { ok: false, error: new NotAvailable({ feature: key, planned: true }) }

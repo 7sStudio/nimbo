@@ -1,8 +1,8 @@
-// The kernel runtime (04-kernel §2, §4, §6): daemon messages validated into an inbox that drains one message per
+// The kernel runtime: daemon messages validated into an inbox that drains one message per
 // event-loop turn, each dispatched to its flow in its own promise job; an interrupt that terminates a cell then clears
 // only that microtask queue and no other message is lost. A `cancel` is recorded as it arrives, never queued, so the
 // inbox drops a request the daemon abandoned before the kernel started it. Late errors are attributed by
-// AsyncLocalStorage (§5.3).
+// AsyncLocalStorage.
 import type { CellId } from "@jsnb/core";
 
 import { bindingsFlow } from "./bindingsQuery.js";
@@ -36,15 +36,15 @@ export type Runtime = {
   readonly lateError: (error: unknown) => void;
   /** Takes stdout or stderr text written under a store for the sink; false when no store is current (the log's). */
   readonly write: (stream: StreamName, text: string) => boolean;
-  /** The interval's process-hook check (04-kernel §3.3), blaming the cell whose code ran last. */
+  /** The interval's process-hook check, blaming the cell whose code ran last. */
   readonly checkHooks: () => void;
   /** The interrupt hook's: the same, and the replacements kept earlier probed again. */
   readonly recheckHooks: () => void;
   /** The store of the code running now (its execution, and the run or request it belongs to); undefined outside any. */
   readonly runningStore: () => Store | undefined;
-  /** The cell compiled under `url`, a cell frame's script name (04-kernel §4 step 3). */
+  /** The cell compiled under `url`, a cell frame's script name. */
   readonly cellOf: (url: string) => CellId | undefined;
-  /** The kernel log notice of an interrupt that leaves code outside the cells running, naming its `frames` (§6). */
+  /** The kernel log notice of an interrupt that leaves code outside the cells running, naming its `frames`. */
   readonly reportOutside: (frames: readonly string[]) => void;
 };
 
@@ -72,7 +72,7 @@ function keep(realm: Realm, type: string, flow: () => Promise<void> | void): voi
 
 type Request = Exclude<DaemonMessage, { type: "shutdown" | "cancel" | "page" }>;
 
-/** How many abandoned requests are remembered, as for interrupted executions (04-kernel §6). */
+/** How many abandoned requests are remembered, as for interrupted executions. */
 const abandonedKept = 1000;
 
 /** True for a request whose id the daemon abandoned: its caller was already answered, so it never starts. */
@@ -112,8 +112,7 @@ function dispatch(
 
 /**
  * A daemon message, validated; undefined for one that failed validation (logged and ignored) and for one whose reading
- * threw. That happens only when a cell broke a built-in the validation reads (Zod reads the global `Promise`, 04-kernel
- * §3.3): this kernel could then read no message again, so it ends, its log saying why, and the daemon reports its
+ * threw. That happens only when a cell broke a built-in the validation reads (Zod reads the global `Promise`): this kernel could then read no message again, so it ends, its log saying why, and the daemon reports its
  * death instead of a run that never answers.
  */
 function read(realm: Realm, raw: unknown, end: (code: number) => void): DaemonMessage | undefined {
@@ -151,7 +150,7 @@ function createInbox(realm: Realm, deps: RuntimeDeps): (raw: unknown) => void {
       return;
     }
     // The next turn is scheduled before this message's job exists: a termination there cannot cancel it. The flows
-    // call user code synchronously, so the dispatch starts as user code does, in a promise job (04-kernel §6).
+    // call user code synchronously, so the dispatch starts as user code does, in a promise job.
     deps.defer(turn);
     if (isAbandoned(message, abandoned)) return;
     startUserCode(() => {

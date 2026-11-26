@@ -1,4 +1,4 @@
-// What the interrupt hook reads of the stack (04-kernel §6): whether user code is on it (a cell's script, or the
+// What the interrupt hook reads of the stack: whether user code is on it (a cell's script, or the
 // user-code frame below which the kernel calls user functions) through Node's call sites and, beyond 200 frames, V8's
 // stack trace API; the frames of code outside the cells, the kernel and Node; the cell of the innermost cell frame.
 // Error's statics, which the deeper read sets for one capture, are read and put back through their descriptors with
@@ -14,7 +14,7 @@ import type { FramePosition } from "./builtins/userCode.js";
 import { samePosition } from "./builtins/userCode.js";
 import { bare, holdsValue, isAccessor, ownDescriptor } from "./descriptors.js";
 
-/** A cell's script is `jsnb:///<notebook>/<cell>.ts` (04-kernel §4, §9); no other script has this scheme. */
+/** A cell's script is `jsnb:///<notebook>/<cell>.ts`; no other script has this scheme. */
 const cellScheme = "jsnb:///";
 
 /** The most call sites Node's getCallSites returns. */

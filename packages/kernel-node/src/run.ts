@@ -1,8 +1,8 @@
-// One `execute` (04-kernel §4): .env re-read, the cell compiled once per code, its disposers run, its exports
+// One `execute`: .env re-read, the cell compiled once per code, its disposers run, its exports
 // cleared, `running` sent, the cell function awaited under its store, the names attributed, the process hooks
-// checked (§3.3), the streams flushed, the value output, the terminal status with its duration, then the export table.
+// checked, the streams flushed, the value output, the terminal status with its duration, then the export table.
 // Every run sends exactly one terminal status: whatever a step of the kernel's own throws, or an await of its own
-// rejects, ends the run as an error. A run the daemon ended as interrupted never calls its cell (04-kernel §6).
+// rejects, ends the run as an error. A run the daemon ended as interrupted never calls its cell.
 import { performance } from "node:perf_hooks";
 
 import type { ErrorInfo } from "@jsnb/core";
@@ -92,7 +92,7 @@ async function execute(
     const before = valuesBefore(record, defines);
     started = performance.now();
     // `running`, then the interrupted check, are the last things the kernel does before the cell's code: an interrupt
-    // the hook took while the kernel prepared the run is seen here, with nothing in between (04-kernel §6).
+    // the hook took while the kernel prepared the run is seen here, with nothing in between.
     const outcome = await settle(() =>
       realm.stores.run(store, () => {
         realm.send({
@@ -117,7 +117,7 @@ async function execute(
   }
 }
 
-/** Runs one cell to its terminal status (04-kernel §4 steps 3 to 6); an execution already interrupted is not run. */
+/** Runs one cell to its terminal status; an execution already interrupted is not run. */
 export async function runCell(realm: Realm, message: ExecuteMessage): Promise<void> {
   if (realm.interrupted(message.execution)) return;
   const store: Store = { cell: message.cell, execution: message.execution };
@@ -131,7 +131,7 @@ export async function runCell(realm: Realm, message: ExecuteMessage): Promise<vo
       ? await execute(realm, store, message, prepared.fn)
       : failed(realm, prepared.error, 0);
     // A process hook the cell replaced with one that does not deliver is put back before the run ends, so the
-    // daemon's next message is heard (04-kernel §3.3).
+    // daemon's next message is heard.
     const checked = realm.checkHooks(store);
     if (checked) await checked;
   } catch (error) {

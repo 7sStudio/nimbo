@@ -41,7 +41,7 @@ export type Harness = {
   readonly close: () => void;
 };
 
-/** A temp workspace with the loader the daemon writes at kernel start (04-kernel §8.1) and the given .env. */
+/** A temp workspace with the loader the daemon writes at kernel start and the given .env. */
 function prepareWorkspace(env: string | undefined): string {
   const workspace = mkdtempSync(join(tmpdir(), "nimbo-realm-"));
   if (env !== undefined) writeFileSync(join(workspace, ".env"), env);

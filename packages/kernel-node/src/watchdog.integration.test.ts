@@ -1,4 +1,4 @@
-// Tests the kernel's watchdog through the real child (04-kernel §2): a process of its own stands in for the daemon
+// Tests the kernel's watchdog through the real child: a process of its own stands in for the daemon
 // (fixtures/standInDaemon.ts), whose kernel's cell spawns a long `sleep` and then spins. The test kills the stand-in
 // with SIGKILL. The spinning kernel never runs its IPC disconnect handler, and its watchdog thread kills the kernel's
 // process group once its parent pid changed: the kernel and the sleep are gone within a few seconds, which a bounded

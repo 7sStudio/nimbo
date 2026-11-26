@@ -1,4 +1,4 @@
-// Editing a keybindings file (03-api §4.11): what keybindings.set and keybindings.reset change in one file, rule by
+// Editing a keybindings file: what keybindings.set and keybindings.reset change in one file, rule by
 // rule, so the comments around the other rules survive.
 import type { KeybindingRule } from "../model/keybinding.js";
 import type { Keybinding } from "./keybindingDefaults.js";

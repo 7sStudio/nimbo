@@ -1,4 +1,4 @@
-// Tests the workspace loader of 04-kernel §8.1: written when missing or different, left alone when current, and a
+// Tests the workspace loader: written when missing or different, left alone when current, and a
 // loader path that is no regular file (a directory, a FIFO (fixtures/fifo.ts)) refused at once as LoaderWriteFailed;
 // a loader or a .jsnb that is a symbolic link to something outside the workspace refused, the target left as it was.
 import {

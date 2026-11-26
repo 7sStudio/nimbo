@@ -1,4 +1,4 @@
-// settingsJsonSchema: the JSON Schema of the settings object with each key's title and status (07-file-format §6).
+// settingsJsonSchema: the JSON Schema of the settings object with each key's title and status.
 import { z } from "zod";
 
 import { settingsKeys, settingsMeta, settingsSchema } from "./schema.js";

@@ -1,4 +1,4 @@
-// The pre-flight of 04-kernel §4 step 1: the packages a cell imports that neither the workspace folder nor an
+// The pre-flight: the packages a cell imports that neither the workspace folder nor an
 // ancestor has in node_modules (Node's own resolution walk); the daemon then fails the run with MissingPackage.
 import { existsSync } from "node:fs";
 import { isBuiltin } from "node:module";

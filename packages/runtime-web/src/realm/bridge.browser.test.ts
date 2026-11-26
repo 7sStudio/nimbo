@@ -1,4 +1,4 @@
-// Tests the bridge client through runs (05-bridge §2 to §4, §7): stubs, copies, error bindings, failures, redaction.
+// Tests the bridge client through runs: stubs, copies, error bindings, failures, redaction.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { BridgeHandler } from "../fixtures/transport.js";
@@ -98,7 +98,7 @@ describe("a stub's failures and concurrency", () => {
     expect(valueOf(run)).toEqual([10, 20, 30]);
   });
 
-  it("warns on the calling cell's stderr when the kernel redacted the result (04-kernel §10)", async () => {
+  it("warns on the calling cell's stderr when the kernel redacted the result", async () => {
     answer = () => ({ result: "***", redacted: true });
     const run = await world.run("await createIntent()", { bindings: { createIntent: fn } });
     const warning = await world.transport.until(

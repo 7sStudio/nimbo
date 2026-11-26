@@ -1,4 +1,4 @@
-// Tests the daemon's interrupt sends over a real child and its real inspector session (04-kernel §6), through wrappers
+// Tests the daemon's interrupt sends over a real child and its real inspector session, through wrappers
 // around that session. Counting the evaluates: an interrupt that carries a live execution is followed by a second call
 // unless the kernel's hook refused it, so when a raw setImmediate callback of a cell that still runs spins (a context
 // Node entered from JavaScript, which the hook refuses to stop), the interrupt settles with the refusal after its one

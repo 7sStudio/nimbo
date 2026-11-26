@@ -1,4 +1,4 @@
-// A run's `window` and `document` views (04-kernel §7): its wrapped timers and listeners, the rest of the real objects.
+// A run's `window` and `document` views: its wrapped timers and listeners, the rest of the real objects.
 // Every self-reference answers a view (`window.self`, `window.top` in the top page, `document.defaultView`); objects
 // reached through a node or an event are the real ones, and packages keep the real globals.
 import type { Callable } from "./guard.js";

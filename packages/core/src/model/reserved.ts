@@ -1,4 +1,4 @@
-// The identifiers a cell may not declare at top level (04-kernel §3.3): the transform's own names.
+// The identifiers a cell may not declare at top level: the transform's own names.
 export const reservedNames = ["__scope", "__import", "__export", "$peek"] as const;
 export type ReservedIdentifier = (typeof reservedNames)[number];
 

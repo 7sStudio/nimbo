@@ -1,4 +1,4 @@
-// CellAnalysis: the static facts of one cell (00-overview §4.2) that transform's analyser produces and
+// CellAnalysis: the static facts of one cell that transform's analyser produces and
 // the graph, staleness and bridge consume.
 import { z } from "zod";
 

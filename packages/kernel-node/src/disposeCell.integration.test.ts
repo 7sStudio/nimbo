@@ -1,4 +1,4 @@
-// The `dispose` request through the real kernel (04-kernel §2.1, §7): a deleted cell's disposers run, so its routes
+// The `dispose` request through the real kernel: a deleted cell's disposers run, so its routes
 // leave the table (404, and a `routes` message without them), its timers stop and its own dispose(fn) runs, while its
 // scope stays and other cells' routes are left alone; a cleanup that throws is a notice in the kernel log; a cell that
 // never ran has nothing to dispose.

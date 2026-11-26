@@ -1,4 +1,4 @@
-// Tests the full reset of 03-api §4.5 (realm.restart, kernel.restart { all }): interrupted runs, a clean scope,
+// Tests the full reset (realm.restart, kernel.restart { all }): interrupted runs, a clean scope,
 // containers gone, the env and the attachment kept.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 

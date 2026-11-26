@@ -1,4 +1,4 @@
-// Tests the scope object of 04-kernel §3.3: lookup order, creation reports, unshadowable plumbing, clean globals.
+// Tests the scope object: lookup order, creation reports, unshadowable plumbing, clean globals.
 import vm from "node:vm";
 
 import { describe, expect, it } from "vitest";

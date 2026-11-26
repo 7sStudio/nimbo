@@ -1,4 +1,4 @@
-// Tests the wrapped timers and queueMicrotask of 04-kernel §7 with fake real timers (09-testing §1.4: the test fires
+// Tests the wrapped timers and queueMicrotask with fake real timers (the test fires
 // each handle, so nothing waits on time; Node's timers run under the wrappers in corpusDisposers and interruptBatches'
 // integration tests): the callback started in a promise job under the registering store and the process hooks checked
 // once it returned, disposal when the cell re-runs, removal once a timeout fires, errors reported on the cell, and calls

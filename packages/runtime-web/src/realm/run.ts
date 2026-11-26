@@ -1,4 +1,4 @@
-// One run of a client cell (04-kernel §4, 05-bridge §3.2): its scope view, bridge layer, builtins, streams, disposers.
+// One run of a client cell: its scope view, bridge layer, builtins, streams, disposers.
 // A run whose cell re-ran or whose realm reset is stale: its outputs are dropped, its timers were already disposed.
 import type { ErrorInfo, Output, SnapshotBinding } from "@jsnb/core";
 
@@ -19,16 +19,16 @@ import type { Streams } from "./streams.js";
 import { createStreams } from "./streams.js";
 import { createView } from "./view.js";
 
-/** What every run of a realm shares; each run has its own limits (realm.execute carries them, 03-api §4.10). */
+/** What every run of a realm shares; each run has its own limits (realm.execute carries them). */
 export type RunContext = {
   readonly notebook: string;
   readonly transport: RealmTransport;
   readonly record: Record<string, unknown>;
   readonly env: Readonly<Record<string, unknown>>;
   readonly containers: Containers;
-  /** The realm's one listener registry (04-kernel §7). */
+  /** The realm's one listener registry. */
   readonly listeners: ListenerRegistry;
-  /** The realm's `on` listeners (05-bridge §6). */
+  /** The realm's `on` listeners. */
   readonly events: EventListeners;
   readonly reports: Reports;
   readonly importModule: (specifier: string) => Promise<unknown>;
@@ -110,7 +110,7 @@ export function createRun(
     if (flags.inProgress) defines.add(name);
   };
   const view = createView({ ...context, bridge: bridge.values, builtins, onDefine });
-  // Stubs report `redacted a secret in the result of fn` on this run's stderr (04-kernel §10).
+  // Stubs report `redacted a secret in the result of fn` on this run's stderr.
   const stubs = {
     ...context,
     ...limits,

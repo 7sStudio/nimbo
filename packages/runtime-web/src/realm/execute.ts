@@ -1,4 +1,4 @@
-// realm.execute (04-kernel §4, 02-architecture §5): prepare the cell, evaluate the transform's output, run, settle.
+// realm.execute: prepare the cell, evaluate the transform's output, run, settle.
 import type { RealmExecute } from "@jsnb/core";
 import { InvalidParams, RealmNotAttached } from "@jsnb/core";
 
@@ -21,7 +21,7 @@ const notACell =
   "the compiled cell is not a function; realm.execute carries the transform's output";
 
 /**
- * The indirect eval of 04-kernel §4: the code is `(async (__scope) => { "use strict"; … })` and its
+ * The indirect eval: the code is `(async (__scope) => { "use strict"; … })` and its
  * sourceURL, so evaluating it only creates the cell function. Anything else is a fault of the request, not of the cell,
  * so realm.execute fails as a call (InvalidParams, -32602) before the realm changes.
  */
@@ -82,7 +82,7 @@ async function evaluate(run: Run, fn: CellFunction): Promise<Outcome> {
   }
 }
 
-/** Pending stream text, the value, the container's DOM, then the status (02-architecture §5 step 7). */
+/** Pending stream text, the value, the container's DOM, then the status. */
 async function settle(state: RealmState, run: Run, outcome: Outcome): Promise<void> {
   if (run.flags.stale) return;
   run.streams.flush();

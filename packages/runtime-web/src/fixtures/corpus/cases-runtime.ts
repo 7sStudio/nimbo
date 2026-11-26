@@ -1,4 +1,4 @@
-// The page corpus, cases 14 to 17 of 04-kernel §12: transform's src/corpus/cases-runtime.ts in the page. Case 15
+// The page corpus, cases 14 to 17: transform's src/corpus/cases-runtime.ts in the page. Case 15
 // shadows the client `env` builtin, whose PUBLIC_KEY comes with realm.execute.
 import type { PageCase } from "./cases.js";
 

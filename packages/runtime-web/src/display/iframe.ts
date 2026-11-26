@@ -1,4 +1,4 @@
-// display.iframe (04-kernel §5.5): a sandboxed frame inside the cell's container, and its tokens.
+// display.iframe: a sandboxed frame inside the cell's container, and its tokens.
 
 /** No src: the cell writes the frame's document, so it must stay readable; the frame isolates CSS. */
 const ownDocumentSandbox = "allow-same-origin allow-scripts allow-forms allow-modals allow-popups";
@@ -22,7 +22,7 @@ function isCrossOrigin(src: string): boolean {
   }
 }
 
-/** The sandbox tokens for a frame with this src (04-kernel §5.5). */
+/** The sandbox tokens for a frame with this src. */
 function sandboxFor(src: string | undefined): string {
   if (src === undefined) return ownDocumentSandbox;
   return isCrossOrigin(src) ? `${pageSandbox} allow-same-origin` : pageSandbox;

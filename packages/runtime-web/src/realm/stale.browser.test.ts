@@ -1,4 +1,4 @@
-// Tests a stale run that resumes (04-kernel §4, §7): after its cell ran again, a full reset or detach, it starts
+// Tests a stale run that resumes: after its cell ran again, a full reset or detach, it starts
 // no timer, frame or listener, its dispose(fn) runs at once, and its display never creates, mounts or writes the live container.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 

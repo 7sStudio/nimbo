@@ -1,4 +1,4 @@
-// notebook.summary's reading of a notebook (03-api §4.2): the title and intro of its first markdown
+// notebook.summary's reading of a notebook: the title and intro of its first markdown
 // cell, each cell with its name, its size and a peek at its first lines, the routes, exports, packages and env names
 // its code declares, each cell's last edit, and an open notebook's last result. Pure: the daemon gives each code
 // cell's analysis (transform's, the graph's), the package names of its imports (Node's resolution rule) and which of
@@ -75,7 +75,7 @@ function peekOf(type: CellType, source: string): readonly string[] {
   return lines.slice(start, start + peekLines).map((line) => cut(line.trimEnd(), lineLimit));
 }
 
-/** The names `source` reads through the kernel's env proxy (04-kernel §8), in order and each once. */
+/** The names `source` reads through the kernel's env proxy, in order and each once. */
 export function envReads(source: string): readonly string[] {
   const pattern =
     /(?<![\w$.])env\s*(?:\.\s*has\s*\(\s*(["'`])([^"'`]+)\1\s*\)|\??\.\s*([A-Za-z_$][\w$]*)|\??\.?\[\s*(["'`])([^"'`]+)\4\s*\])/gu;

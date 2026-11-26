@@ -1,4 +1,4 @@
-// Output, ErrorInfo and Frame of 03-api §5: what a run produces and how a user-code failure is reported.
+// Output, ErrorInfo and Frame: what a run produces and how a user-code failure is reported.
 import { z } from "zod";
 
 import { CellId } from "./ids.js";

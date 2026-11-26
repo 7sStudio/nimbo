@@ -1,4 +1,4 @@
-// The cell URL of 04-kernel §4 step 3 and §9: the one name a cell's code runs under in both realms (the transform's
+// The cell URL: the one name a cell's code runs under in both realms (the transform's
 // filename, its `//# sourceURL`, the map's file and source, every stack frame of the cell). Each `/`-separated segment
 // of the notebook ref is percent-encoded so that only RFC 3986 unreserved characters (A-Z a-z 0-9 - . _ ~) stay
 // literal: V8 ignores a `//# sourceURL` that holds whitespace, and a stack line cannot delimit a URL that holds a space

@@ -1,4 +1,4 @@
-// The workspace commands of 03-api §4.1.
+// The workspace commands.
 import { z } from "zod";
 
 import { NotebookList } from "../model/workspace.js";

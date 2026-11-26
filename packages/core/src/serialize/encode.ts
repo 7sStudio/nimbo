@@ -19,7 +19,7 @@ export type Encoded = { readonly json: unknown; readonly truncated: boolean };
 
 const identity = (text: string): string => text;
 
-/** The output form of 04-kernel §5.4: anything goes in, placeholders stand for what cannot cross. */
+/** The output form: anything goes in, placeholders stand for what cannot cross. */
 export function encode(value: unknown, options: EncodeOptions = {}): Encoded {
   const { json, state } = walk(value, {
     strict: false,
@@ -45,7 +45,7 @@ export type StrictResult =
   | { readonly ok: true; readonly json: unknown }
   | { readonly ok: false; readonly error: StrictFailure };
 
-/** The bridge form of 05-bridge §2: plain data only; the first non-plain value fails with its path and type. */
+/** The bridge form: plain data only; the first non-plain value fails with its path and type. */
 export function encodeStrict(value: unknown, options: StrictOptions = {}): StrictResult {
   const { json, state } = walk(value, {
     strict: true,

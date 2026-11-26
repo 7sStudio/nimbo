@@ -1,4 +1,4 @@
-// Keybindings as VS Code has them (03-api §4.11, 07-file-format §6): the default table, then the user's
+// Keybindings as VS Code has them: the default table, then the user's
 // keybindings.json, then the workspace's, each file a list of rules applied in order (a rule adds a binding; a rule whose
 // command starts with `-` removes the earlier bindings it matches). A binding acts where its when clause holds; where
 // several bindings of one key hold, the most specific clause wins (more terms), then the one defined last, so a

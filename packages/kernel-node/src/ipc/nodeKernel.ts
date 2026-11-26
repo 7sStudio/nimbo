@@ -1,4 +1,4 @@
-// The daemon's handle on a server-realm kernel (04-kernel §2, §6, §11): createNodeKernel starts the child once,
+// The daemon's handle on a server-realm kernel: createNodeKernel starts the child once,
 // feeds execute() iterations from its messages, answers requests by id, interrupts through the inspector, stops it.
 import type { Kernel, Route } from "@jsnb/core";
 import { InterruptRefused } from "@jsnb/core";
@@ -23,14 +23,14 @@ export type NodeKernel = Kernel &
     /** The child's pid while it runs. */
     readonly pid: () => number | undefined;
     readonly inspectorUrl: () => string | undefined;
-    /** True while the kernel is paused in the debugger (Debugger.paused, 04-kernel §9). */
+    /** True while the kernel is paused in the debugger (Debugger.paused). */
     readonly paused: () => boolean;
     /** Resumes a paused kernel through the daemon's own inspector session: the debugger that paused it is gone. */
     readonly resume: () => void;
     /** The current export table: each exported name and the cell that exported it. */
     readonly exports: () => readonly ExportEntry[];
     readonly routes: () => readonly Route[];
-    /** Whether a page holds the client realm: without one, `emit` drops at once (05-bridge §6). */
+    /** Whether a page holds the client realm: without one, `emit` drops at once. */
     readonly listening: (listening: boolean) => void;
     /** SIGKILL now; like stop(), idempotent and never reported to onExit. */
     readonly kill: () => Promise<void>;
@@ -67,7 +67,7 @@ async function begin(
 }
 
 /**
- * The interrupt of 04-kernel §6: every live execution ends `interrupted` now, the kernel's interrupt hook gets their
+ * The interrupt: every live execution ends `interrupted` now, the kernel's interrupt hook gets their
  * ids (later sends wait for its answer), then Debugger.resume when paused, where the hook's termination takes effect.
  * Settles once the hook answered: rejects InterruptRefused when it refused to stop the user code that runs, in a
  * context Node entered from JavaScript, which keeps running.

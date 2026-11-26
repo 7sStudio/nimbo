@@ -1,4 +1,4 @@
-// Node's IPC delivery as a cell can reach it (04-kernel §3.3): Node hands every daemon message to the kernel through
+// Node's IPC delivery as a cell can reach it: Node hands every daemon message to the kernel through
 // the process.nextTick and process.emit it looks up at that moment, and calls a send back through process.nextTick, so
 // a cell that replaces either with something that does not call Node's own (fake timers do, for nextTick; a getter
 // that throws) would make the kernel deaf. The kernel captures Node's own two at start. After user code, and on an
@@ -15,7 +15,7 @@
 // the user interrupts. One that does not deliver stays replaced by Node's own, and the caller reports it; a check leaves
 // to its probe the replacement one awaits, and only the latest probe of a hook decides. No user code runs inside the
 // kernel's checks or its interrupt hook: the probes read the replacement (its getter, its traps) and call it a turn
-// later, as user code, in a promise job of its own below the user-code frame (04-kernel §6), so an interrupt can stop a
+// later, as user code, in a promise job of its own below the user-code frame, so an interrupt can stop a
 // replacement that spins, and stops only it, never the decision a turn on.
 import { startUserCode } from "./builtins/userCode.js";
 import type { Found } from "./descriptors.js";

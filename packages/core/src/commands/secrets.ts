@@ -1,9 +1,9 @@
-// The secrets commands of 03-api §4.7; names follow 07-file-format §8.
+// The secrets commands; names are dotenv names.
 import { z } from "zod";
 
 import { defineCommand } from "./define.js";
 
-/** A dotenv name: uppercase, digits and underscores, starting with a letter (07-file-format §8). */
+/** A dotenv name: uppercase, digits and underscores, starting with a letter. */
 export const secretNamePattern = /^[A-Z][A-Z0-9_]*$/;
 
 export const secretsList = defineCommand({

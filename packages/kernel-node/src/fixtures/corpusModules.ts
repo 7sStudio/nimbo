@@ -1,4 +1,4 @@
-// Cases 7 to 10, 12 and 13 of the 04-kernel §12 corpus for the real child: top-level await over fetch of a data: URL,
+// Cases 7 to 10, 12 and 13 corpus for the real child: top-level await over fetch of a data: URL,
 // shorthand and computed keys, shadowing at every depth, typeof of an unknown name, every export form, the last value.
 import type { CorpusCase } from "./corpus.js";
 

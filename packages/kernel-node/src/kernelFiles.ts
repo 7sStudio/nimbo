@@ -1,4 +1,4 @@
-// The kernel's own files (04-kernel §5.3, §6). Frames in kernel-node's or @jsnb/core's package directory are the
+// The kernel's own files. Frames in kernel-node's or @jsnb/core's package directory are the
 // kernel's, not the user's (core's serializer reads the user's values: a getter that throws while a value is encoded).
 // The code the kernel runs as its own work also includes its one runtime dependency, Zod, which validates every daemon
 // message: the interrupt hook counts none of these as code outside the cells.

@@ -1,4 +1,4 @@
-// The one form a route path takes where routes are compared and printed (04-kernel §8): `/n/<name>/<path>` matched by
+// The one form a route path takes where routes are compared and printed: `/n/<name>/<path>` matched by
 // the daemon and the kernel, `routeUrl()` and `Route.url`. Each `/`-separated segment is percent-decoded and encoded
 // again with encodeURIComponent, the encoding notebookName gives a notebook's segments, so `/café`, `/caf%C3%A9` and
 // `/caf%c3%a9` are one path and a webhook sender's own escaping never decides whether a route answers.

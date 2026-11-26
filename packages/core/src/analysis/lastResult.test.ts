@@ -1,4 +1,4 @@
-// An open notebook's last result (03-api §4.2): the run that ended last with an output worth showing, its value before
+// An open notebook's last result: the run that ended last with an output worth showing, its value before
 // what it printed, what a page drew, a display output, and nothing for events, errors or runs that did not end ok.
 import { describe, expect, it } from "vitest";
 

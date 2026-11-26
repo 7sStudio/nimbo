@@ -1,4 +1,4 @@
-// Binding, BindingValue and Route of 03-api §5: what the scope and the route table report per name.
+// Binding, BindingValue and Route: what the scope and the route table report per name.
 import { z } from "zod";
 
 import { CellId } from "./ids.js";

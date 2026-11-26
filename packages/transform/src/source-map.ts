@@ -5,7 +5,7 @@ export type EmittedCell = {
   readonly map: string;
 };
 
-/** Base64 of the UTF-8 bytes of `text` without `Buffer`: the package runs in the browser too (02 §2). */
+/** Base64 of the UTF-8 bytes of `text` without `Buffer`: the package runs in the browser too. */
 function toBase64(text: string): string {
   const bytes = new TextEncoder().encode(text);
   const chunks: string[] = [];
@@ -42,7 +42,7 @@ function relocateMap(mapJson: string, filename: string): string {
   return JSON.stringify(map);
 }
 
-/** The code the kernel compiles (04 §4 step 3): the script, `//# sourceURL=<filename>` and the inline map. */
+/** The code the kernel compiles: the script, `//# sourceURL=<filename>` and the inline map. */
 export function assembleCell(js: string, mapJson: string, filename: string): EmittedCell {
   const map = relocateMap(mapJson, filename);
   const trailer = `//# sourceURL=${filename}\n//# sourceMappingURL=data:application/json;base64,${toBase64(map)}\n`;

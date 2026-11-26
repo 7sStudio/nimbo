@@ -1,4 +1,4 @@
-// Tests resolveSelection for every Selection mode of 03-api §4.2.
+// Tests resolveSelection for every Selection mode.
 import { describe, expect, it } from "vitest";
 
 import { emptyAnalysis } from "../model/analysis.js";

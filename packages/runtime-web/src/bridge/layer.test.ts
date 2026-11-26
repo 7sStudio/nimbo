@@ -1,4 +1,4 @@
-// Tests the bridge layer of 05-bridge §2, §3 and §8: what each binding kind installs, and the restart tombstones.
+// Tests the bridge layer: what each binding kind installs, and the restart tombstones.
 import { JsnbError, KernelRestarted } from "@jsnb/core";
 import { describe, expect, it } from "vitest";
 

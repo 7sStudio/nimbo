@@ -1,4 +1,4 @@
-// Tests the Cell schema of 03-api §5 and the meta key order of 07-file-format §2.
+// Tests the Cell schema and the meta key order.
 import { describe, expect, it } from "vitest";
 
 import { Cell, CellMeta, cellMetaKeys, cellMetaShape } from "./cell.js";
@@ -39,7 +39,7 @@ describe("Cell", () => {
 });
 
 describe("CellMeta", () => {
-  it("lists the keys 07-file-format §2 writes, in order", () => {
+  it("lists the keys the file writes, in order", () => {
     expect(cellMetaKeys).toEqual([
       "title",
       "showBindings",

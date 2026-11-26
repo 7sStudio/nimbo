@@ -1,4 +1,4 @@
-// The order of execution.autoRunDependents over the graph (04-kernel §4.1): the cells caught in a cycle, which it
+// The order of execution.autoRunDependents over the graph: the cells caught in a cycle, which it
 // refuses to run through, and the dependency order of the cells it still has to run, ties in notebook order.
 import type { CellId } from "../model/ids.js";
 import type { Graph, GraphCell } from "./graph.js";

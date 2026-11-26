@@ -1,4 +1,4 @@
-// The delivery probes of 04-kernel §3.3 (processHooks.ts puts a differing hook aside, then probes it): each reads the
+// The delivery probes (processHooks.ts puts a differing hook aside, then probes it): each reads the
 // replacement as Node would (its value, or what a cell's getter or Proxy gives back) and calls it as Node does, all as
 // user code below the user-code frame, so an interrupt can stop a replacement or a getter that spins. The emit probe
 // emits a private "message" that a listener of the kernel's, first in line, must hear; the nextTick probe queues a

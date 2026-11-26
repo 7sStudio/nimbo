@@ -1,4 +1,4 @@
-// The three-way merge of a notebook's cells by id (07-file-format §5, external edits): `base` is what the daemon last
+// The three-way merge of a notebook's cells by id (external edits): `base` is what the daemon last
 // wrote or read, `ours` the session with its unsaved edits, `theirs` the file as another program left it. Each field
 // of a cell (type, source, unknown keys, each meta key) takes the side that changed it; both sides changing one field
 // differently is a conflict, as is a cell one side removed and the other changed. `meta.lastEdit` is never a

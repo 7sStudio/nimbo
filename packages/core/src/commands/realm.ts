@@ -1,4 +1,4 @@
-// The realm commands of 03-api §4.5 (the client realm, the notebook page).
+// The realm commands (the client realm, the notebook page).
 import { z } from "zod";
 
 import { realmReportShape } from "../model/bridge.js";

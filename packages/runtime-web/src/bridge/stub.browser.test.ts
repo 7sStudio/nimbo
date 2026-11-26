@@ -1,4 +1,4 @@
-// Tests the stub's timeout of 05-bridge §4.1 against the real clock: RpcTimeout, and a late answer is ignored.
+// Tests the stub's timeout against the real clock: RpcTimeout, and a late answer is ignored.
 import { RpcTimeout } from "@jsnb/core";
 import { describe, expect, it } from "vitest";
 

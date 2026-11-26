@@ -1,4 +1,4 @@
-// The events command of 03-api §4.8: WebSocket only, so the CLI and the MCP server call it on their own sockets.
+// The events command: WebSocket only, so the CLI and the MCP server call it on their own sockets.
 import { z } from "zod";
 
 import { NotebookRef } from "../model/ids.js";

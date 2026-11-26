@@ -1,6 +1,6 @@
-// Case 18 of the 04-kernel §12 corpus through the real kernel: `while (true) {}` and a never-settling await both end
+// Case 18 corpus through the real kernel: `while (true) {}` and a never-settling await both end
 // interrupted once running was seen, with the scope intact; an interrupt with requests queued behind the terminated
-// cell, which the kernel still answers (its inbox dispatches one message per turn, 04-kernel §6), a call whose user
+// cell, which the kernel still answers (its inbox dispatches one message per turn), a call whose user
 // code runs when the daemon's second hook call comes included (that call stops only the interrupted cell's code); a
 // cell's own setImmediate spin, which the wrapped setImmediate makes interruptible; and cell code a raw Node callback
 // calls (globalThis.setImmediate), which cannot be stopped safely: the interrupt refuses with InterruptRefused, and the

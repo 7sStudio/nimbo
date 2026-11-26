@@ -1,4 +1,4 @@
-// realm.interrupt (02-architecture §5, 03-api §4.4): a kernel.interrupt while this page runs a client cell ends that run
+// realm.interrupt: a kernel.interrupt while this page runs a client cell ends that run
 // `interrupted` as a reset or a re-run does: its pending stream text and its status reported, realm.execute answered at
 // once, whatever it reports later dropped; the answer carries the names it defined, for the daemon's record, and the
 // DOM of the container it used, its `dom` output, so the container stays in its cell, whichever of the page's reports
