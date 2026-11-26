@@ -5,7 +5,7 @@ import { createLifecycle } from "./lifecycle.ts";
 
 /**
  * Creates the page's SQL engine. It holds one DuckDB instance, so the host creates one engine per page and calls
- * `dispose()` on notebook close (11-query §3); DuckDB downloads on the first `load()` or first use, never with the page.
+ * `dispose()` on notebook close; DuckDB downloads on the first `load()` or first use, never with the page.
  */
 export function createSqlEngine(options: SqlEngineOptions = {}): SqlEngine {
   const open: Opener = async (openOptions) => {

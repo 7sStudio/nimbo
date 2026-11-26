@@ -1,4 +1,4 @@
-// The package's exports follow 08 §10 "Workspace resolution": each entry resolves to its source under the
+// The package's exports, as every workspace package's: each entry resolves to its source under the
 // `development` condition (before `types` and `import`), and the published map, dist only, has no such condition.
 import { readFileSync } from "node:fs";
 

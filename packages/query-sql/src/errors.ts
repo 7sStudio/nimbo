@@ -4,13 +4,13 @@
 export type QueryErrorReason =
   "query" | "cancelled" | "timeout" | "load" | "crashed" | "input" | "closed" | "missing";
 
-/** The result of a step that is expected to fail sometimes (08 §5: return inside, throw at the boundary). */
+/** The result of a step that is expected to fail sometimes (return inside, throw at the boundary). */
 export type Outcome<T, E = QueryError> =
   { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: E };
 
 type QueryErrorOptions = { readonly position?: number | undefined; readonly cause?: unknown };
 
-/** The error of both SQL engines; `position` is a 0-based offset into the SQL for the bar's underline (11-query §2). */
+/** The error of both SQL engines; `position` is a 0-based offset into the SQL for the bar's underline. */
 export class QueryError extends Error {
   override readonly name = "QueryError";
   readonly position: number | undefined;
@@ -26,7 +26,7 @@ export class QueryError extends Error {
 const show = (value: unknown): string =>
   typeof value === "string" ? JSON.stringify(value) : String(value);
 
-/** One template per failure: each names the thing and says what to do (08 §5). */
+/** One template per failure: each names the thing and says what to do. */
 export const messages = {
   cancelled: () =>
     "The SQL query was cancelled before it finished. Run it again to see its result.",
@@ -77,7 +77,7 @@ export function loadError(cause: unknown): QueryError {
   return new QueryError("load", messages.load(detail), { cause });
 }
 
-/** Any failure as a QueryError, so every public method rejects with one class (08 §5, throw at the boundary). */
+/** Any failure as a QueryError, so every public method rejects with one class (throw at the boundary). */
 export function asQueryError(error: unknown): QueryError {
   if (error instanceof QueryError) return error;
   const message = error instanceof Error ? error.message : String(error);

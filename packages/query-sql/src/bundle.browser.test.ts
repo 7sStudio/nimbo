@@ -1,4 +1,4 @@
-// At run time the page holds no DuckDB and no Arrow until the engine loads (11-query §3): the resource timing
+// At run time the page holds no DuckDB and no Arrow until the engine loads: the resource timing
 // entries name neither after index.ts is imported and an engine created, and name both once it loaded.
 import { describe, expect, it } from "vitest";
 

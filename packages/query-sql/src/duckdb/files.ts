@@ -17,7 +17,7 @@ export const internalName = (kind: string): string => {
 
 /**
  * Registers rows or an Arrow table (as JSON text) or a Blob (read through a file handle, never copied into an array)
- * as `file`; returns the columns the load casts back to UBIGINT (11-query §3).
+ * as `file`; returns the columns the load casts back to UBIGINT.
  */
 export async function registerSource(
   instance: Instance,

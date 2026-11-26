@@ -1,4 +1,4 @@
-// Cancel and timeout in the page engine (11-query §3, 03-api §4.10): DuckDB's interrupt stops the query fast, the
+// Cancel and timeout in the page engine: DuckDB's interrupt stops the query fast, the
 // call says which stop fired, and the engine keeps answering afterwards.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 

@@ -1,4 +1,4 @@
-// An Arrow record batch stream as the grid's result (11-query §3): rows converted until the limit, the batches
+// An Arrow record batch stream as the grid's result: rows converted until the limit, the batches
 // after it only counted, so `total` is exact and `truncated` says whether rows were left out.
 import type { RecordBatch, Schema, Table } from "apache-arrow";
 

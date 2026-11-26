@@ -16,7 +16,7 @@ const must = <T>(outcome: Outcome<T>): T => {
   return outcome.value;
 };
 
-/** Every public method rejects with QueryError only (08 §5: throw at the boundary). */
+/** Every public method rejects with QueryError only (throw at the boundary). */
 const guard = async <T>(operation: () => Promise<T>): Promise<T> => {
   try {
     return await operation();

@@ -1,4 +1,4 @@
-// Worker crash recovery (11-query §5): work really in flight rejects `crashed`, the next call starts a new DuckDB and
+// Worker crash recovery: work really in flight rejects `crashed`, the next call starts a new DuckDB and
 // replays the registered tables and aliases; a reload aborted or disposed during its replay closes what it opened.
 import { afterEach, describe, expect, it } from "vitest";
 
