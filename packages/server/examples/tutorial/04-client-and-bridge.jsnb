@@ -41,7 +41,7 @@
         "",
         "Run it again: the container is emptied first, so you never get two copies. To add a client cell yourself, press **Escape** then **Shift+C**, or click **+ Client**.",
         "",
-        "Client cells run in the tab you have open. Reload the page and what they drew is gone until you run them again; the server cells keep their state in the kernel."
+        "Client cells run in the tab you have open. Reload the page and what they drew is gone until you run them again (the cell keeps only a **Page** output, a record of its text); the server cells keep their state in the kernel."
       ]
     },
     {

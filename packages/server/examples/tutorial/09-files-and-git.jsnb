@@ -52,7 +52,7 @@
       "source": [
         "## 2. Edits from outside are merged",
         "",
-        "nimbo watches the files of open notebooks. When another program changes one (your editor, `git pull`, a formatter, an agent's file tools), the change is merged into the open page, cell by cell, and your own unsaved edits are kept.",
+        "nimbo watches the files of open notebooks. When another program changes one (your editor, `git pull`, a formatter, an agent's file tools), the change is merged into the open page, cell by cell.",
         "",
         "The next cell plays the other program: it adds a line to the Markdown cell after it, by writing the file directly. Run it and watch the cell below change."
       ]
@@ -129,7 +129,7 @@
         "## Try it",
         "",
         "1. Open this file in your editor, change the text of a Markdown cell, save, and watch the page.",
-        "2. Turn on saved outputs for this workspace with `nimbo config set outputs.save always`, run a cell, and look at the file again: an `outputs` key appears. `nimbo config unset outputs.save` turns it back off.",
+        "2. Turn on saved outputs for this workspace with `nimbo config set outputs.save always`, run a cell, and look at the file again: an `outputs` key appears. To take them out again, `nimbo config set outputs.save never` (the next save drops them), then `nimbo config unset outputs.save` for the default.",
         "",
         "That is the end of the tutorial. The examples on the Home page (or `nimbo examples list`) show finished notebooks to learn from: data, interfaces, payments, an API and Vue."
       ]

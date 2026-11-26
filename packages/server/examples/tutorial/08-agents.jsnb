@@ -80,7 +80,7 @@
         "Now change an existing cell. Use the id of the `visits` cell:",
         "",
         "```sh",
-        "nimbo cell update --cell <id> --source 'const visits = [{ page: \"/\", seconds: 30, country: \"NL\" }];",
+        "nimbo cell update --cell <id> --source 'export const visits = [{ page: \"/\", seconds: 30, country: \"NL\" }];",
         "visits'",
         "```"
       ]
