@@ -68,7 +68,7 @@ export type SessionHooks = {
 };
 
 /** The debugger's hold on the headless page (debug/session.ts). */
-export type PageDebug = {
+type PageDebug = {
   /** The page's time paused in the debugger. */
   readonly clock: PauseClock;
   readonly paused: () => boolean;

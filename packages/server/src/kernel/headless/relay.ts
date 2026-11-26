@@ -36,11 +36,18 @@ const maxMessageBytes = 16 * 1024 * 1024;
 
 const relayed = /^(?:Runtime|Debugger|Profiler)\.[A-Za-z]+$/u;
 
+/** A CDP method's name, as the session takes it. */
+type Method = Extract<Parameters<CDPSession["send"]>[0], string>;
+
 /** Whether js-debug may call `method` on the page. */
-export const allowedMethod = (method: string): boolean =>
+const allowedMethod = (method: string): method is Method =>
   relayed.test(method) || method === "DOM.describeNode";
 
-const Request = z.object({ id: z.number(), method: z.string(), params: z.unknown().optional() });
+const Request = z.object({
+  id: z.number(),
+  method: z.string(),
+  params: z.record(z.string(), z.unknown()).optional(),
+});
 
 /** A new 0700 folder for the socket, and the socket's path in it. */
 function placeIn(dir: string): { readonly dir: string; readonly path: string } {
@@ -93,8 +100,7 @@ function pipe(ws: WebSocket, session: CDPSession, log: Log): void {
       return;
     }
     // the request goes to this session only: a sessionId of its own would address another target
-    const params = (request.params ?? {}) as Record<string, unknown>;
-    session.send(method as "Runtime.evaluate", params as never).then(
+    session.send(method, request.params ?? {}).then(
       (result) => {
         send({ id, result });
       },

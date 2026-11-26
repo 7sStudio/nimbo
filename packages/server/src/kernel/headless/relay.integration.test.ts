@@ -72,7 +72,8 @@ afterAll(async () => {
 
 suite(`the debugger's CDP relay${skipped}`, { timeout: 30_000 }, () => {
   it("takes one connection at its secret path, relays the page's Runtime and refuses the browser's methods", async () => {
-    const page = await launched!.browser.newPage();
+    if (!launched) return;
+    const page = await launched.browser.newPage();
     const relay = await openCdpRelay(page, { dir, log: quiet });
     const match = /^ws\+unix:(.+):\/([A-Za-z0-9_-]{32})$/u.exec(relay.url);
     expect(match).not.toBeNull();
@@ -102,7 +103,11 @@ suite(`the debugger's CDP relay${skipped}`, { timeout: 30_000 }, () => {
         error: { code: -32601 },
       });
 
-    const closed = new Promise<void>((resolve) => ws.once("close", () => resolve()));
+    const closed = new Promise<void>((resolve) => {
+      ws.once("close", () => {
+        resolve();
+      });
+    });
     relay.close();
     await closed;
     expect(relay.closed.aborted).toBe(true);
@@ -110,7 +115,8 @@ suite(`the debugger's CDP relay${skipped}`, { timeout: 30_000 }, () => {
   });
 
   it("closes once its page closes", async () => {
-    const page = await launched!.browser.newPage();
+    if (!launched) return;
+    const page = await launched.browser.newPage();
     const relay = await openCdpRelay(page, { dir, log: quiet });
     const ws = await connect(relay.url);
     expect(ws).toBeInstanceOf(WebSocket);
