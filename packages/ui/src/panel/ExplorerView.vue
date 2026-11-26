@@ -8,7 +8,6 @@ import FileTree from "../app/FileTree.vue";
 import { baseName } from "../app/models";
 import TypeIcon from "../cells/TypeIcon.vue";
 import { changedBy, pendingEdit, whenOf } from "../cells/agentEdit";
-import { editedSince } from "../cells/models";
 import { useCellNames } from "../cells/names";
 import { typeTone } from "../cells/tones";
 import { useDispatcher } from "../commands/dispatch";
@@ -46,7 +45,8 @@ const staleOf = (cell: Row): string | null => {
   if (!cell.stale) return null;
   const { graph } = store.mirror;
   const numberOf = (id: string) => store.cellsInOrder.findIndex((each) => each.id === id) + 1;
-  const why = staleReason(graph.get(cell.id), (id) => graph.get(id), editedSince(cell), numberOf);
+  const why =
+    cell.staleWhy ?? staleReason(graph.get(cell.id), (id) => graph.get(id), false, numberOf);
   return why === "" ? "Stale" : `Stale: ${why}`;
 };
 const all = computed(() => settings.valueOf("outline.showAllCells") === true);

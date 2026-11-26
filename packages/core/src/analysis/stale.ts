@@ -10,30 +10,24 @@ const mark = (stale: StaleMap, ids: readonly CellId[], value: boolean): StaleMap
   ...Object.fromEntries(ids.map((id) => [id, value])),
 });
 
+/** An edit leaves the cell's own flag alone (`withEdited` adds it) and marks its transitive dependents stale. */
+export function afterEdit(graph: Graph, stale: StaleMap, cell: CellId): StaleMap {
+  return mark(stale, dependentsOf(graph, cell), true);
+}
+
 /**
- * An edit marks the cell's transitive dependents stale, and the cell itself when `ran` says it has a result of other
- * code than it has now (its last run in its realm ran other code). A cell that never ran is left as it was.
+ * The flags as they are shown: the dependency flags the transitions keep, and stale too each cell in `edited`, whose
+ * last run in its realm ran other code than it has now (its result is of that code). A cell edited back to the code
+ * its last run ran leaves `edited`, so its own part goes; what its edit marked downstream stays.
  */
-export function afterEdit(graph: Graph, stale: StaleMap, cell: CellId, ran = false): StaleMap {
-  return mark(stale, [...dependentsOf(graph, cell), ...(ran ? [cell] : [])], true);
+export function withEdited(stale: StaleMap, edited: readonly CellId[]): StaleMap {
+  return edited.length === 0 ? stale : mark(stale, edited, true);
 }
 
 /** A delete marks the dependents stale and forgets the cell; `graph` is the graph before the delete. */
 export function afterDelete(graph: Graph, stale: StaleMap, cell: CellId): StaleMap {
   const marked = mark(stale, dependentsOf(graph, cell), true);
   return Object.fromEntries(Object.entries(marked).filter(([id]) => id !== cell));
-}
-
-/**
- * A run that started in its realm, whatever its end: a cell whose code changed while it ran is stale, its result being
- * of the code it ran; otherwise the flag stays as the run left it (an ok run cleared it, a failed one kept it).
- */
-export function afterRunEnded(
-  stale: StaleMap,
-  cell: CellId,
-  editedWhileRunning: boolean,
-): StaleMap {
-  return editedWhileRunning ? mark(stale, [cell], true) : stale;
 }
 
 /** A run clears the cell's own flag and marks its transitive dependents stale. */

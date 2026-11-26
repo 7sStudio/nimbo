@@ -6,6 +6,7 @@ import type { AutoRunReport, AutoRunSkip, CellId, Execution, Graph } from "@jsnb
 import { autoRunOrder, cyclicCells, dependentsOf, nextAutoRun } from "@jsnb/core";
 
 import type { SessionContext } from "../context.js";
+import { restale } from "../edits.js";
 import type { CellRecord, ExecutionRecord } from "../records.js";
 import { createExecution } from "./executions.js";
 import type { QueuedRun, RunQueue } from "./queue.js";
@@ -372,6 +373,8 @@ export function createAutoRun(
     },
     realmEnded: (realm) => {
       realmEnded(state, realm);
+      // the realm's code is gone: a cell stale only for an edit since its run there is not any more
+      restale(context, context.cells.stale());
     },
     state: () => ({
       running: state.running?.run.execution.cell ?? null,

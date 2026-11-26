@@ -150,7 +150,7 @@ export async function runNotebook(
 ): Promise<NotebookRunAnswer> {
   const { cells } = context;
   const selected = resolveSelection(
-    { order: cells.order(), graph: cells.graph(), stale: cells.stale() },
+    { order: cells.order(), graph: cells.graph(), stale: cells.staleNow() },
     input.select,
   );
   const batch: Batch = { stopped: false };

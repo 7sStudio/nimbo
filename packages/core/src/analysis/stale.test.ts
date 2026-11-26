@@ -9,8 +9,8 @@ import {
   afterEdit,
   afterKernelRestart,
   afterRun,
-  afterRunEnded,
   staleReason,
+  withEdited,
 } from "./stale.js";
 
 type Facts = { readonly defines: string[]; readonly uses: string[] };
@@ -41,11 +41,6 @@ describe("afterEdit", () => {
     expect(next).toEqual({ ...none, c_000002: true, c_000003: true, c_000004: true });
     expect(none.c_000002).toBe(false);
   });
-
-  it("marks the cell itself when it ran other code, never a cell that did not run", () => {
-    expect(afterEdit(graph, none, "c_000005", true)).toEqual({ ...none, c_000005: true });
-    expect(afterEdit(graph, none, "c_000005", false)).toEqual(none);
-  });
 });
 
 describe("afterDelete", () => {
@@ -66,11 +61,24 @@ describe("afterRun", () => {
   });
 });
 
-describe("afterRunEnded", () => {
-  it("marks the cell when its code changed while it ran, else leaves the flags as they are", () => {
-    const stale = { ...none, c_000003: true };
-    expect(afterRunEnded(stale, "c_000002", false)).toBe(stale);
-    expect(afterRunEnded(none, "c_000002", true)).toEqual({ ...none, c_000002: true });
+describe("withEdited", () => {
+  it("adds the cells whose last run ran other code, and drops one edited back to that code", () => {
+    const edited = afterEdit(graph, none, "c_000001");
+    expect(withEdited(edited, ["c_000001"])).toEqual({
+      ...none,
+      c_000001: true,
+      c_000002: true,
+      c_000003: true,
+      c_000004: true,
+    });
+    // edited back: the cell's own part goes, its dependents stay stale
+    expect(withEdited(edited, [])).toEqual({
+      ...none,
+      c_000002: true,
+      c_000003: true,
+      c_000004: true,
+    });
+    expect(withEdited(none, ["c_000005"])).toEqual({ ...none, c_000005: true });
   });
 });
 

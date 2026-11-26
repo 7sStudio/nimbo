@@ -1,7 +1,7 @@
 // The cells of an open notebook in order, with the dependency graph and the stale flags over them:
 // adds, moves and removals by id, the graph rebuilt from the analyses, staleness through core's rules.
 import type { CellId, Graph, GraphInput, StaleMap } from "@jsnb/core";
-import { buildGraph, CellNotFound, Conflict, staleReason } from "@jsnb/core";
+import { buildGraph, CellNotFound, Conflict, staleReason, withEdited } from "@jsnb/core";
 
 import type { CellRecord } from "./records.js";
 import { ranOther, toCell } from "./records.js";
@@ -25,15 +25,27 @@ type Ordering = {
 
 type Staleness = {
   readonly graph: () => Graph;
+  /** The dependency flags core's transitions keep (what an upstream edit, run, delete or restart marked). */
   readonly stale: () => StaleMap;
-  /** Sets the flags (of cells that exist); returns whether the set of stale cells changed. */
+  /** The flags as shown: the dependency flags, and each cell whose last run in its realm ran other code. */
+  readonly staleNow: () => StaleMap;
+  /** Sets the dependency flags (of cells that exist); returns whether the shown set of stale cells changed since it
+   * was last returned so (a cell edited to or back from the code it last ran counts). */
   readonly setStale: (next: StaleMap) => boolean;
+  /** The stale cells as shown, in order. */
   readonly staleCells: () => CellId[];
 };
 
 export type CellStore = Lookup & Ordering & Staleness;
 
-type State = { records: CellRecord[]; stale: StaleMap };
+type State = { records: CellRecord[]; stale: StaleMap; shown: string };
+
+/** The flags as shown: the dependency flags and the cells whose last run ran other code. */
+const staleNow = (state: State): StaleMap =>
+  withEdited(
+    state.stale,
+    state.records.filter(ranOther).map((record) => record.id),
+  );
 
 /** Why `record` is stale, from the graph and its last run. */
 function reasonOf(state: State, graph: Graph, record: CellRecord): string {
@@ -54,7 +66,7 @@ function lookup(state: State, graph: () => Graph): Lookup {
       return found;
     },
     api: (record) => {
-      const stale = state.stale[record.id] === true;
+      const stale = state.stale[record.id] === true || ranOther(record);
       const why = stale ? reasonOf(state, graph(), record) : "";
       return toCell(record, state.records.indexOf(record), stale, why);
     },
@@ -125,18 +137,23 @@ function graphOf(state: State): () => Graph {
 }
 
 function staleness(state: State, graph: () => Graph): Staleness {
-  const staleCells = () =>
-    state.records.filter((record) => state.stale[record.id] === true).map((record) => record.id);
+  const staleCells = () => {
+    const now = staleNow(state);
+    return state.records.filter((record) => now[record.id] === true).map((record) => record.id);
+  };
   return {
     graph,
     stale: () => state.stale,
+    staleNow: () => staleNow(state),
     setStale: (next) => {
-      const before = staleCells().join(",");
       const known = new Set(state.records.map((record) => record.id));
       state.stale = Object.fromEntries(
         Object.entries(next).filter(([id, flag]) => known.has(id) && flag),
       );
-      return staleCells().join(",") !== before;
+      const shown = staleCells().join(",");
+      if (shown === state.shown) return false;
+      state.shown = shown;
+      return true;
     },
     staleCells,
   };
@@ -144,7 +161,7 @@ function staleness(state: State, graph: () => Graph): Staleness {
 
 /** A store over `initial`, in its order, nothing stale. */
 export function createCellStore(initial: readonly CellRecord[]): CellStore {
-  const state: State = { records: [...initial], stale: {} };
+  const state: State = { records: [...initial], stale: {}, shown: "" };
   const graph = graphOf(state);
   const cells = lookup(state, graph);
   return { ...cells, ...ordering(state, cells), ...staleness(state, graph) };

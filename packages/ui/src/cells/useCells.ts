@@ -103,7 +103,8 @@ function useModels(stores: Stores, { numberOf, off }: Numbers) {
         name: nameOf(cell, entry, store.mirror.routes, nameOptionsOf(stores.settings)),
         about,
         staleWhy: cell.stale
-          ? staleReason(entry, (id) => store.mirror.graph.get(id), editedSince(cell), numberOf)
+          ? (cell.staleWhy ??
+            staleReason(entry, (id) => store.mirror.graph.get(id), false, numberOf))
           : null,
         editedSince: editedSince(cell),
         routes: routesOf(cell.id, store.mirror.routes),

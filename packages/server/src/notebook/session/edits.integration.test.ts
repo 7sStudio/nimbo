@@ -165,6 +165,15 @@ describe("an edited cell's own stale flag", () => {
       expect([(await get(a)).stale, (await get(b)).stale]).toEqual([false, false]);
       expect((await get(a)).staleWhy).toBeUndefined();
 
+      await daemon.client.cell.update({ notebook, cell: a, source: "let count = 7;" });
+      expect((await get(a)).stale).toBe(true);
+      await daemon.client.cell.update({ notebook, cell: a, source: "let count = 5;" });
+      // back to the code its last run ran: its own flag goes, what the edit marked downstream stays
+      const back = await get(a);
+      expect([back.stale, back.staleWhy]).toEqual([false, undefined]);
+      expect(await get(b)).toMatchObject({ stale: true, staleWhy: "count changed in cell 1" });
+      await daemon.client.cell.run({ notebook, cell: b });
+
       const fresh = await book.add("1");
       await daemon.client.cell.update({ notebook, cell: fresh, source: "2" });
       expect((await get(fresh)).stale).toBe(false);
