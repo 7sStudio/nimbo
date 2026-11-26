@@ -18,7 +18,7 @@ import { RealmExecute, realmAttach, realmDetach, realmReport } from "@jsnb/core"
 import type { Daemon } from "../../fixtures/daemon.js";
 import { withDaemon } from "../../fixtures/daemon.js";
 import type { RealmPages } from "@jsnb/test-tools/realm";
-import { buildRealmPage, startRealmPages } from "@jsnb/test-tools/realm";
+import { buildRealmPage, startRealmPages, teardownMs } from "@jsnb/test-tools/realm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
 import { createNotebook, valueOf } from "../../fixtures/notebook.js";
@@ -33,7 +33,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await pages.close();
   await rm(uiDir, { recursive: true, force: true });
-});
+}, teardownMs);
 
 const source =
   'setTimeout(() => console.log("later"))\nsetTimeout(() => {\n  throw new TypeError("late")\n})\n1'; // under test: timers after the run

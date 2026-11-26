@@ -6,7 +6,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { build } from "esbuild";
-import type { Browser, BrowserContext, Page } from "playwright";
+import type { BrowserContext, Page } from "playwright";
 import { chromium } from "playwright";
 import { z } from "zod";
 
@@ -137,6 +137,28 @@ function containers(page: Page): Pick<RealmPage, "containerText" | "dispatch" | 
   };
 }
 
+/** How long a polite close of a page or of the browser may take before it is left behind (a page) or killed (the
+ * browser): Chromium on a loaded machine can sit on a close for good. */
+const politeMs = 5_000;
+
+/** The hang guard for a hook that closes a file's pages and browser: room for the polite closes and the kill. */
+export const teardownMs = 30_000;
+
+const noop = (): undefined => undefined;
+
+/** Waits for `work` at most `ms`; its failure counts as settled, the close is over either way. */
+const bounded = async (work: Promise<unknown>, ms: number): Promise<void> => {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<void>((resolve) => {
+    timer = setTimeout(resolve, ms);
+  });
+  try {
+    await Promise.race([work.then(noop, noop), late]);
+  } finally {
+    clearTimeout(timer);
+  }
+};
+
 /** A page in `context`; closing it closes the context too when the page owns it. */
 async function openPage(
   where: { readonly context: BrowserContext; readonly owned: boolean },
@@ -160,13 +182,15 @@ async function openPage(
     reattach: async () => z.string().parse(await page.evaluate("window.jsnbRealm.reattach()")),
     takeOver: async () => z.string().parse(await page.evaluate("window.jsnbRealm.takeOver()")),
     takenOver: async () => z.boolean().parse(await page.evaluate("window.jsnbRealm.takenOver()")),
-    close: () => (owned ? context.close() : page.close()),
+    close: () => bounded(owned ? context.close() : page.close(), politeMs),
   };
 }
 
-/** One Chromium for a test file's pages; each page gets a context of its own unless one is given. */
+/** One Chromium for a test file's pages; each page gets a context of its own unless one is given. Launched as a server
+ * so that a close that does not end can kill its process. */
 export async function startRealmPages(): Promise<RealmPages> {
-  const browser: Browser = await chromium.launch();
+  const server = await chromium.launchServer();
+  const browser = await chromium.connect(server.wsEndpoint());
   return {
     open: async (daemon, notebook, context) =>
       openPage(
@@ -175,6 +199,10 @@ export async function startRealmPages(): Promise<RealmPages> {
         notebook,
       ),
     newContext: () => browser.newContext(),
-    close: () => browser.close(),
+    close: async () => {
+      await bounded(browser.close(), politeMs);
+      await bounded(server.close(), politeMs);
+      await server.kill(); // a no-op once the process is gone
+    },
   };
 }

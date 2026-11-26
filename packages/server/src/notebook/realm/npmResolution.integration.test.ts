@@ -8,7 +8,7 @@ import { join } from "node:path";
 
 import { withDaemon } from "../../fixtures/daemon.js";
 import type { RealmPages } from "@jsnb/test-tools/realm";
-import { buildRealmPage, startRealmPages } from "@jsnb/test-tools/realm";
+import { buildRealmPage, startRealmPages, teardownMs } from "@jsnb/test-tools/realm";
 import { afterAll, beforeAll, describe, expect, it, onTestFinished } from "vitest";
 
 import { createNotebook, valueOf } from "../../fixtures/notebook.js";
@@ -52,7 +52,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await pages.close();
   await rm(uiDir, { recursive: true, force: true });
-});
+}, teardownMs);
 
 describe("packages pnpm installs with a dependency of their own", () => {
   it("load in the page, their dependency under one resolved URL the daemon serves", async () => {

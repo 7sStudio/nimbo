@@ -9,7 +9,7 @@ import type { Execution } from "@jsnb/core";
 import type { Daemon, DaemonOptions } from "./daemon.js";
 import { withDaemon } from "./daemon.js";
 import type { RealmPage, RealmPages } from "@jsnb/test-tools/realm";
-import { buildRealmPage, startRealmPages } from "@jsnb/test-tools/realm";
+import { buildRealmPage, startRealmPages, teardownMs } from "@jsnb/test-tools/realm";
 import type { Workspace, WorkspaceOptions } from "@jsnb/test-tools/workspace";
 import { afterAll, beforeAll } from "vitest";
 
@@ -75,7 +75,7 @@ export function bridgeSuite(): BridgeSuite {
   afterAll(async () => {
     await pages?.close();
     await rm(uiDir, { recursive: true, force: true });
-  });
+  }, teardownMs);
   const inWorld =
     (test: (world: BridgeWorld) => Promise<void>) =>
     async (daemon: Daemon, workspace: Workspace) => {
