@@ -1,4 +1,4 @@
-// Stylelint for packages/**/*.{css,vue} per 08-code-standards §7: literal colors only in the token sheets, no !important.
+// Stylelint for packages/**/*.{css,vue}: literal colors only in the token sheets, no !important.
 export default {
   extends: ["stylelint-config-standard"],
   ignoreFiles: ["**/dist/**", "**/node_modules/**", "**/coverage/**", "**/vendor/**"],
@@ -6,7 +6,7 @@ export default {
     { files: ["**/*.vue"], customSyntax: "postcss-html" },
     // The shared palette is written once, as data, in packages/tokens, whose generated sheets carry it (their :root and.
     // jsnb-ov blocks, bare oklch hues); ui's tokens.css adds the page's own (a translucent red, the floating shadow) and
-    // output-view's theme.css the ANSI colors of streams. These are the only places a color may be literal (08 §7).
+    // output-view's theme.css the ANSI colors of streams. These are the only places a color may be literal.
     // output-view and ui size everything in relative units: px only for strokes,
     // the 1 px hairlines, outlines and shadows (focus rings, the active row's bar). Lengths a spec gives in px, as
     // outputs.maxHeightPx, become CSS at the TypeScript boundary, never as a number here.
@@ -66,7 +66,7 @@ export default {
     "at-rule-prelude-no-invalid": null,
     "at-rule-descriptor-no-unknown": null,
     "font-family-name-quotes": "always-where-recommended",
-    // Prettier owns blank lines (08 §1).
+    // Prettier owns blank lines.
     "at-rule-empty-line-before": null,
     // Tailwind's @custom-variant and @utility bodies are nested rules whose & is the utility itself, so they have no
     // scoping root here (the ui prose utility, theme/prose.css).

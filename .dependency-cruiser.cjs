@@ -1,4 +1,4 @@
-// dependency-cruiser: the package graph of 02-architecture §2 (08 §4), cycles, orphans and cross-package relative imports.
+// dependency-cruiser: the package graph, cycles, orphans and cross-package relative imports.
 const graph = {
   core: [],
   tokens: [],
@@ -16,7 +16,7 @@ const graph = {
   mcp: ["client"],
 };
 
-// The tools/ workspaces a package's tests may use (09 §8's shared test helpers, the 08 §7 style gate): not package
+// The tools/ workspaces a package's tests may use (the shared test helpers, the style gate): not package
 // edges, so every package rule allows them, and tools-in-tests-only keeps them out of the sources.
 const tools = ["test-tools", "test-daemon", "style-gate"];
 
@@ -26,7 +26,7 @@ const packageRules = Object.entries(graph).map(([name, allowed]) => {
   return {
     name: `${name}-imports`,
     severity: "error",
-    comment: `02-architecture §2: ${name} → ${["core", ...allowed].join(", ")}`,
+    comment: `the package graph: ${name} → ${["core", ...allowed].join(", ")}`,
     from: { path: `^packages/${name}/` },
     to: { path: `^(packages|@jsnb)/(?!(${ok})(/|$))` },
   };
@@ -37,7 +37,7 @@ module.exports = {
     {
       name: "no-circular",
       severity: "error",
-      comment: "08 §4: dependencies point one way",
+      comment: "dependencies point one way",
       from: {},
       to: { circular: true },
     },
@@ -45,7 +45,7 @@ module.exports = {
       name: "no-orphans",
       severity: "error",
       comment:
-        "08 §2: every file is reached from an index or a test; index files and declarations are exempt",
+        "every file is reached from an index or a test; index files and declarations are exempt",
       from: {
         orphan: true,
         pathNot: ["(^|/)index\\.ts$", "\\.d\\.ts$", "\\.(test|spec)\\.ts$", "(^|/)main\\.ts$"],
@@ -56,7 +56,7 @@ module.exports = {
       name: "no-cross-package-relative",
       severity: "error",
       comment:
-        "08 §4: a relative import that leaves its packages/<x>/src is an error; packages import each other by name",
+        "a relative import that leaves its packages/<x>/src is an error; packages import each other by name",
       from: { path: "^packages/([^/]+)/" },
       to: { path: "^packages/", pathNot: "^packages/$1/", dependencyTypes: ["local"] },
     },
@@ -64,7 +64,7 @@ module.exports = {
       name: "tools-in-tests-only",
       severity: "error",
       comment:
-        "09 §8: a tools/ workspace is imported by test files and fixtures/ folders, never by sources; a " +
+        "a tools/ workspace is imported by test files and fixtures/ folders, never by sources; a " +
         "package's vite.config.ts may take the build half of the style gate (the Tailwind scope plugin)",
       from: {
         path: "^packages/[^/]+/",
@@ -74,7 +74,7 @@ module.exports = {
     },
     ...packageRules,
     // A test host under tests/ (tests/output-view: the viewer with the real query engines) sits outside the package
-    // graph of 02 §2: it may import the packages it composes, and no package may import it.
+    // graph: it may import the packages it composes, and no package may import it.
     {
       name: "output-view-tests-imports",
       severity: "error",

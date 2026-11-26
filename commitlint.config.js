@@ -1,4 +1,4 @@
-// Conventional Commits (08-code-standards §10) with the package names and the repository areas as the only scopes.
+// Conventional Commits with the package names and the repository areas as the only scopes.
 export default {
   extends: ["@commitlint/config-conventional"],
   rules: {

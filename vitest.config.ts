@@ -1,6 +1,6 @@
-// Vitest: one project per package and tool (09-testing §2), happy-dom for the Vue packages, browser mode for runtime-web
+// Vitest: one project per package and tool, happy-dom for the Vue packages, browser mode for runtime-web
 // and the packages' *.browser.test.ts files (with the Vue plugin where a project mounts components),
-// v8 coverage, with a 90 % lines floor only on the kernel and the backend data logic (09-testing §3); no floor elsewhere.
+// v8 coverage, with a 90 % lines floor only on the kernel and the backend data logic; no floor elsewhere.
 import { fileURLToPath } from "node:url";
 
 import tailwindcss from "@tailwindcss/vite";
@@ -23,8 +23,8 @@ const thresholds = Object.fromEntries(
   floored.map((name) => [`packages/${name}/**`, { lines }] as const),
 );
 
-// runtime-web's corpus plays the daemon (02-architecture §5): the transform runs here in Node and the page evaluates
-// its output, the production split. runtime-web never depends on transform (02 §2), so the page reaches it only through
+// runtime-web's corpus plays the daemon: the transform runs here in Node and the page evaluates
+// its output, the production split. runtime-web never depends on transform, so the page reaches it only through
 // this command, which loads transform's public entry in Vite's module runner (@jsnb/core resolves to its source).
 const transformEntry = fileURLToPath(new URL("packages/transform/src/index.ts", import.meta.url));
 
