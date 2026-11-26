@@ -46,6 +46,8 @@ export const DebugPause = z
     line: z.number().int().positive().optional(),
     /** An exception's text, when it paused on one. */
     text: z.string().optional(),
+    /** The cell was edited since this code ran: `line` is in its code from before the edit, not in its source now. */
+    stale: z.boolean().optional(),
   })
   .readonly();
 export type DebugPause = z.infer<typeof DebugPause>;
@@ -67,7 +69,14 @@ export const DebugState = z.object(debugStateShape).readonly();
 export type DebugState = z.infer<typeof DebugState>;
 
 /** A stack frame with the id `debug.scope` and `debug.evaluate` address it by. */
-export const DebugFrame = z.object({ ...frameShape, frameId: z.string() }).readonly();
+export const DebugFrame = z
+  .object({
+    ...frameShape,
+    frameId: z.string(),
+    /** Its cell was edited since this code ran: `line` is in the code from before the edit. */
+    stale: z.boolean().optional(),
+  })
+  .readonly();
 export type DebugFrame = z.infer<typeof DebugFrame>;
 
 /** A variable or property; `ref` > 0 names its children for `debug.variables`, valid while the kernel stays paused. */
