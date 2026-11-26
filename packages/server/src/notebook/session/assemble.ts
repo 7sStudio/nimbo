@@ -150,7 +150,7 @@ const defaultHooks = (): SessionHooks => ({
     clock: createPauseClock(),
     paused: () => false,
     held: () => false,
-    release: () => Promise.resolve(),
+    release: () => Promise.resolve(undefined),
     closing: () => undefined,
   },
   debugResumed: () => Promise.resolve(),

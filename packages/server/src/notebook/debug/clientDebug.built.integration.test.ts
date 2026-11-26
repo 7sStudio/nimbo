@@ -257,6 +257,53 @@ suite(`a paused page's end${skipped}`, { timeout: 90_000 }, () => {
     );
   });
 
+  it("keeps a paused page past its idle time; a kernel restart, a realm restart and a close while paused end the run", async () => {
+    let workspace = "";
+    await withDaemon(
+      async (daemon) => {
+        workspace = daemon.server.workspace;
+        const book = await headlessBook(daemon);
+        const { notebook } = book;
+        await daemon.client.settings.set({ key: "realm.headlessIdleMs", value: 1000 });
+        const cell = await book.add(["let n = 1;", "n += 1;", "n;"].join("\n"), "client");
+        await daemon.client.debug.setBreakpoint({ notebook, cell, line: 2 });
+
+        const idle = await runToPause(daemon, book, cell, { line: 2 });
+        await new Promise((resolve) => setTimeout(resolve, 2500)); // past realm.headlessIdleMs
+        expect((await daemon.client.debug.state({ notebook })).realms.client).toBe("paused");
+        expect((await daemon.client.realm.status({ notebook })).kind).toBe("headless");
+        await daemon.client.debug.resume({ notebook });
+        expect((await idle.ended).status).toBe("ok");
+
+        const restarted = await runToPause(daemon, book, cell, { line: 2 });
+        await daemon.client.kernel.restart({ notebook });
+        expect((await restarted.ended).status).toBe("interrupted");
+        expect((await daemon.client.debug.state({ notebook })).realms.client).not.toBe("paused");
+
+        // a realm restart leaves every client cell idle with no outputs: the paused run goes with them, and the queue
+        // goes on
+        await runToPause(daemon, book, cell, { line: 2 });
+        const before = mark(daemon);
+        await daemon.client.realm.restart({ notebook });
+        await daemon.events.until(
+          "cell.updated",
+          (e) => e.seq > before && e.data.cell.id === cell && e.data.cell.status === "idle",
+        );
+        expect((await daemon.client.debug.state({ notebook })).realms.client).not.toBe("paused");
+        await daemon.client.debug.removeBreakpoint({ notebook, cell });
+        const again = await daemon.client.cell.run({ notebook, cell });
+        expect(valueOf(again.execution)).toBe(2);
+        await daemon.client.debug.setBreakpoint({ notebook, cell, line: 2 });
+
+        const closing = await runToPause(daemon, book, cell, { line: 2 });
+        await daemon.client.notebook.close({ notebook });
+        expect((await closing.ended).status).toBe("interrupted");
+        await expect.poll(() => browsersOf(workspace), { timeout: 10_000 }).toEqual([]);
+      },
+      { uiDir },
+    );
+  });
+
   it("leaves no browser when the daemon stops while the page is paused", async () => {
     let workspace = "";
     await withDaemon(

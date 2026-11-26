@@ -342,14 +342,17 @@ export class DebugSession {
   }
 
   /** A request the page must answer (a reset, an interrupt) is about to go to it: a page paused in the debugger ends
-   * what it paused in (as an interrupt ends a paused kernel's run) and resumes, so it can answer. */
-  async releasePage(): Promise<void> {
+   * what it paused in (as an interrupt ends a paused kernel's run) and resumes, so it can answer; the cell it was paused
+   * in, whose run then never answers. */
+  async releasePage(): Promise<CellId | undefined> {
     const client = this.#links.client;
-    if (!client.paused) return;
+    const paused = client.paused;
+    if (!paused) return undefined;
     this.#realm.page()?.terminate();
     await client
       .step((child, threadId) => dap.continue(child, { threadId }), "debug.resume")
       .catch(() => undefined);
+    return paused.pause.cell;
   }
 
   /** The headless page is about to close: js-debug leaves it first, so a paused page resumes and can close. */

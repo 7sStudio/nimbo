@@ -74,8 +74,9 @@ export type PageDebug = {
   readonly paused: () => boolean;
   /** Paused, or js-debug holds it for client cells' breakpoints: its idle close waits. */
   readonly held: () => boolean;
-  /** A request the page must answer is about to go to it: a paused page ends what it paused in and resumes. */
-  readonly release: () => Promise<void>;
+  /** A request the page must answer is about to go to it: a paused page ends what it paused in and resumes; the cell
+   * it was paused in, when it was. */
+  readonly release: () => Promise<CellId | undefined>;
   /** The page is about to close: js-debug leaves it. */
   readonly closing: () => void;
 };
