@@ -475,8 +475,9 @@ The specification lives in [docs/](docs/00-overview.md): [architecture](docs/02-
 - Routes under `/n/<notebook>/…` answer without a token, so that webhook senders can reach them. They are still on
   127.0.0.1 unless you forward them yourself (for example with `stripe listen`).
 - Secrets stay in `.env`, out of the notebook file, and are redacted from outputs, logs and bridge results.
-- No telemetry and no account. nimbo goes online only when you ask it to: installing a package, `nimbo upgrade`,
-  `nimbo sql install`. Your cells, of course, do whatever their code does.
+- No telemetry and no account: nimbo sends nothing about you or your notebooks anywhere. It uses the network where
+  a feature needs it (installing and finding packages, the SQL engine's parts, `nimbo upgrade`), and your cells do
+  whatever their code does.
 - A notebook runs code with your permissions. Open only notebooks you trust, and review what an agent changed.
 
 ## Status and roadmap
