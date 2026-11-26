@@ -53,7 +53,8 @@ async function waited(
   // a pause the debugger resumes on its own (a step left over from an ended run) is not one to answer on
   const paused = new Promise<Waited>((resolve) => {
     const heard = async (): Promise<void> => {
-      const pause = await context.hooks.debugPause();
+      const realm = context.kernel.pauses.paused() ? "server" : "client";
+      const pause = await context.hooks.debugPause(realm);
       if (pauses.paused()) resolve({ late: true, paused: pause });
     };
     stopListening = pauses.onPause(() => void heard());

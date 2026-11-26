@@ -51,6 +51,9 @@ export type LinkDeps = {
   readonly onPaused?: (paused: boolean) => void;
 };
 
+/** How long debug.pause waits to see where the realm paused. */
+const pauseAnswerMs = 1500;
+
 const lostNotice = (realm: DebugRealm, resumed: boolean): string =>
   realm === "client"
     ? "js-debug exited; the page was resumed."
@@ -78,6 +81,8 @@ export class JsDebugLink {
   /** A step sent and not stopped yet; once its run ended, the stop it still owes is not the user's. */
   #stepping = false;
   #staleStep = false;
+  /** Settles a debug.pause under way: undefined once it paused in the cells' code, else why it went on. */
+  #pauseRequest: ((dropped: string | undefined) => void) | undefined;
 
   constructor(context: SessionContext, deps: LinkDeps) {
     this.#context = context;
@@ -144,6 +149,26 @@ export class JsDebugLink {
     if (this.#stops === sent) this.#resumed();
   }
 
+  /** Asks the realm to pause at its next statement; NotAvailable when that statement was none of the cells' code (the
+   * realm idle, or awaiting the other one), as the pause then went on at once. Answers once it paused, went on, or a
+   * second passed with no code run (the pause stays asked for). */
+  async pause(child: DapConnection): Promise<void> {
+    if (this.#paused) return;
+    const { threads } = await dap.threads(child, {});
+    const settled = new Promise<string | undefined>((resolve) => {
+      this.#pauseRequest = resolve;
+      setTimeout(resolve, pauseAnswerMs, undefined).unref();
+    });
+    await dap.pause(child, { threadId: threads[0]?.id ?? 0 });
+    const dropped = await settled;
+    this.#pauseRequest = undefined;
+    if (dropped !== undefined)
+      throw new NotAvailable({
+        feature: "debug.pause",
+        reason: `${this.#target.name} ${dropped} when it paused (it is idle, or awaiting the other realm), so it went on. Pause while a cell's code runs, or set a breakpoint.`,
+      });
+  }
+
   /** js-debug attached to the realm's current target, attaching once whoever asks. */
   ensure(): Promise<Link> {
     const id = this.#target.current();
@@ -189,7 +214,9 @@ export class JsDebugLink {
     }
   }
 
-  /** A run ended: a step it left armed (an exception took the frame away) would stop the next run on its first line. */
+  /** A run ended: a step it left armed (an exception took the frame away) stops the next user code the realm runs,
+   * the next run's first statement (V8 keeps it across the run's end, and js-debug carries it through the skipped code
+   * between): that stop is let go, unless that statement is one that stops anyway. */
   runEnded(): void {
     if (this.#stepping && !this.#paused) this.#staleStep = true;
     this.#stepping = false;
@@ -294,8 +321,10 @@ export class JsDebugLink {
   async #stopped(child: DapConnection, body: StoppedEvent): Promise<void> {
     if (this.#staleStep && body.reason === "step") {
       this.#staleStep = false;
-      await dap.continue(child, { threadId: body.threadId ?? 0 }).catch(() => undefined);
-      return;
+      if (!(await this.#stopsAnyway(child, body.threadId ?? 0))) {
+        await dap.continue(child, { threadId: body.threadId ?? 0 }).catch(() => undefined);
+        return;
+      }
     }
     this.#staleStep = false;
     this.#stepping = false;
@@ -311,10 +340,32 @@ export class JsDebugLink {
     );
     if (stop !== this.#stops) return; // resumed, or paused again, meanwhile
     const top = framesOf(frames, (path) => this.cellOf(path))[0];
-    const pause = pauseOf(this.realm, body, top);
+    // a pause asked for that landed in the realm's own code (idle, or awaiting the other realm): it goes on
+    if (body.reason === "pause" && top === undefined) {
+      this.#pauseRequest?.("ran none of the cells' code");
+      await dap.continue(child, { threadId }).catch(() => undefined);
+      return;
+    }
+    this.#pauseRequest?.(undefined);
+    const pause = pauseOf(this.realm, body, top, this.#deps.follows);
     this.#setPaused({ threadId, pause, frames, order: this.#deps.nextPause() });
     this.notebookRefs.clear();
     this.#context.emit("debug.paused", cleanPause(this.#deps.redact, pause));
+  }
+
+  /** Whether the statement a leftover step stopped on stops anyway: a `debugger;` statement, or a breakpoint's line
+   * (which the step's stop takes the place of, so letting it go would skip it). */
+  async #stopsAnyway(child: DapConnection, threadId: number): Promise<boolean> {
+    const trace = await dap
+      .stackTrace(child, { threadId, startFrame: 0, levels: 1 })
+      .catch(() => undefined);
+    const top = trace?.stackFrames[0];
+    const path = top?.source?.path;
+    const cell = path === undefined ? undefined : this.cellOf(path);
+    if (top === undefined || cell === undefined) return false;
+    if (this.#deps.breakpoints.ofCell(cell).some((each) => each.line === top.line)) return true;
+    const text = this.#context.cells.get(cell)?.source.split("\n")[top.line - 1] ?? "";
+    return /^\s*debugger\b/u.test(text.slice(Math.max(0, top.column - 1)));
   }
 
   /** js-debug's news of a breakpoint, known by its id within its source's path (its ids repeat across sources, and

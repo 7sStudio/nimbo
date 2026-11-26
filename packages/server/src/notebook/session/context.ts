@@ -3,6 +3,7 @@
 import type {
   CellId,
   DebugPause,
+  DebugRealm,
   EventType,
   Graph,
   IdGenerator,
@@ -43,14 +44,14 @@ export type SessionHooks = {
   disposeClient: (cell: CellId) => void;
   /** The kernel died or a restart killed it: the exports it had are gone. */
   kernelEnded: () => void;
-  /** Awaited before a server cell's code goes to the kernel: the debugger attaches first when the notebook debugs. */
-  beforeServerRun: () => Promise<void>;
+  /** Awaited before a server cell's code goes to the kernel: the debugger attaches first when the run may stop. */
+  beforeServerRun: (cell: CellId) => Promise<void>;
   /** Awaited before a client cell's code goes to the headless page: the debugger attaches to it first when it may stop. */
   beforeClientRun: (cell: CellId) => Promise<void>;
   /** A client cell's breakpoint lines, compiled as `debugger;` statements (for a tab's DevTools). */
   debuggerLines: (cell: CellId) => readonly number[];
   /** Where and why a realm is paused in the debugger, once one is (a run's wait answers with it). */
-  debugPause: () => Promise<DebugPause>;
+  debugPause: (realm: DebugRealm) => Promise<DebugPause>;
   /** The headless page as the debugger holds it. */
   pageDebug: PageDebug;
   /** Settles once the debugger saw the kernel resume (a second at most): an interrupt resumes a paused kernel itself. */

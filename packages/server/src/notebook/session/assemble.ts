@@ -145,7 +145,7 @@ const defaultHooks = (): SessionHooks => ({
   beforeServerRun: () => Promise.resolve(),
   beforeClientRun: () => Promise.resolve(),
   debuggerLines: () => [],
-  debugPause: () => Promise.resolve({ realm: "server", reason: "pause" }),
+  debugPause: (realm) => Promise.resolve({ realm, reason: "pause" }),
   pageDebug: {
     clock: createPauseClock(),
     paused: () => false,

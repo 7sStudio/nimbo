@@ -204,10 +204,10 @@ function debuggerOf(
       headlessOn: () => context.settings()["realm.headless"],
     },
   });
-  context.hooks.beforeServerRun = () => debug.beforeRun();
+  context.hooks.beforeServerRun = (cell) => debug.beforeRun(cell);
   context.hooks.beforeClientRun = (cell) => debug.beforeClientRun(cell);
   context.hooks.debuggerLines = (cell) => debug.clientLines(cell);
-  context.hooks.debugPause = () => debug.pauseDetails();
+  context.hooks.debugPause = (realm) => debug.pauseDetails(realm);
   context.hooks.debugResumed = () => debug.resumed();
   context.hooks.pageDebug = {
     clock: debug.pagePauses,

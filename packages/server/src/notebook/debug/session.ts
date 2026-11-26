@@ -89,7 +89,15 @@ const reasons = {
   tab: "A tab holds the client realm: nimbo stops in client cells only in its headless page (the line is a debugger; statement for the tab's DevTools).",
   noHeadless:
     "realm.headless is off: client cells stop only in the daemon's headless page (realm.headless on, no tab holding the notebook).",
+  noPage: "Binds when the headless page starts, at the next client run.",
+  notAttached: "Binds at the next client run in the headless page.",
 } as const;
+
+/** A client breakpoint's message when its expression threw in the page. */
+const pageThrew = (record: BreakpointRecord): string =>
+  record.logMessage === undefined
+    ? "The condition threw in the page; it counts as false. Evaluate it with debug.evaluate (realm client) while paused there to read the error."
+    : "A part of the log message threw in the page; it printed the error in the cell's output instead. Evaluate it with debug.evaluate (realm client) while paused there to read the error.";
 
 const notFrame = (frameId: string): InvalidParams =>
   new InvalidParams({
@@ -132,8 +140,8 @@ export class DebugSession {
   #wanted = false;
   #closed = false;
   #pauses = 0;
-  /** Cells edited since their last run: js-debug still holds their code from before. */
-  readonly #edited = new Set<CellId>();
+  /** Each cell's code when its last run started: the code its realm holds. */
+  readonly #ran = new Map<CellId, string>();
 
   constructor(context: SessionContext, deps: DebugDeps) {
     this.#context = context;
@@ -148,7 +156,7 @@ export class DebugSession {
         this.#emitBreakpoints();
       },
       nextPause: () => (this.#pauses += 1),
-      follows: (cell: CellId) => !this.#edited.has(cell),
+      follows: (cell: CellId) => this.#follows(cell),
     };
     this.#links = {
       server: new JsDebugLink(context, { ...shared, target: kernelTarget(context) }),
@@ -233,17 +241,15 @@ export class DebugSession {
     }
     const target = realm ?? "server";
     const { child } = await this.#ensure(target);
-    if (this.#links[target].paused) return;
-    const { threads } = await dap.threads(child, {});
-    await dap.pause(child, { threadId: threads[0]?.id ?? 0 });
+    await this.#links[target].pause(child);
   }
 
   stack(realm?: DebugRealm): { realm: DebugRealm; frames: DebugFrame[] } {
     const link = this.#pausedLink("debug.stack", realm);
-    return {
-      realm: link.realm,
-      frames: this.#frames(link, "debug.stack").map(cleanFrame(this.#redact)),
-    };
+    const frames = this.#frames(link, "debug.stack").map((frame) =>
+      frame.cell !== undefined && !this.#follows(frame.cell) ? { ...frame, stale: true } : frame,
+    );
+    return { realm: link.realm, frames: frames.map(cleanFrame(this.#redact)) };
   }
 
   /** The scopes of frame `frameId`, the innermost by default. */
@@ -290,9 +296,11 @@ export class DebugSession {
     return { realm: target, ...cleanEvaluated(this.#redact, answer) };
   }
 
-  /** Before a server cell runs: js-debug attached first when the notebook debugs, so its breakpoints are bound. */
-  async beforeRun(): Promise<void> {
-    if (!this.#wanted && this.#breakpoints.size() === 0) return;
+  /** Before a server cell runs: js-debug attached first when the run may stop (a breakpoint, a debug command used, a
+   * `debugger` in the cell), so its breakpoints are bound and the pause is shown where it is. */
+  async beforeRun(cell: CellId): Promise<void> {
+    const source = this.#context.cells.get(cell)?.source ?? "";
+    if (!this.#wanted && this.#breakpoints.size() === 0 && !/\bdebugger\b/u.test(source)) return;
     await bounded(this.#ensure("server"), attachWaitMs, (error) => {
       this.#links.server.warn(error, "the debugger did not attach");
     });
@@ -312,15 +320,15 @@ export class DebugSession {
     });
   }
 
-  /** Where and why a realm is paused: the debugger's latest stop once it read the stack (a second at most), else what
-   * the kernel's inspector said (a `debugger;` statement with no debugger attached). */
-  async pauseDetails(): Promise<DebugPause> {
+  /** Where and why `realm` is paused: its debugger's stop once it read the stack (a second at most), else what the
+   * realm's own pause report said (a kernel's `debugger;` statement with no debugger attached). */
+  async pauseDetails(realm: DebugRealm): Promise<DebugPause> {
     for (let waited = 0; waited < pauseWaitMs; waited += pausePollMs) {
-      const latest = this.#paused()[0];
-      if (latest) return cleanPause(this.#redact, latest.pause);
+      const paused = this.#links[realm].paused;
+      if (paused) return cleanPause(this.#redact, paused.pause);
       await wait(pausePollMs);
     }
-    return { realm: "server", reason: "pause", description: "Paused" };
+    return { realm, reason: "pause", description: "Paused" };
   }
 
   /** Settles once the debugger no longer shows the kernel paused, a second at most. */
@@ -379,6 +387,12 @@ export class DebugSession {
     await Promise.all([this.#links.server.close(), this.#links.client.close()]);
   }
 
+  /** Whether the code `cell`'s realm holds is its source now: not edited since its last run started. */
+  #follows(cell: CellId): boolean {
+    const ran = this.#ran.get(cell);
+    return ran === undefined || ran === this.#context.cells.get(cell)?.source;
+  }
+
   #headless(): boolean {
     return this.#realm.kind() === "headless" && this.#realm.page() !== undefined;
   }
@@ -390,8 +404,12 @@ export class DebugSession {
     if (record.verified) return { realm: "client" };
     const kind = this.#realm.kind();
     if (kind === "tab") return { realm: "client", reason: reasons.tab };
-    if (kind === undefined && !this.#realm.headlessOn())
-      return { realm: "client", reason: reasons.noHeadless };
+    if (kind === undefined)
+      return {
+        realm: "client",
+        reason: this.#realm.headlessOn() ? reasons.noPage : reasons.noHeadless,
+      };
+    if (!this.#links.client.attached) return { realm: "client", reason: reasons.notAttached };
     return { realm: "client" };
   }
 
@@ -469,9 +487,10 @@ export class DebugSession {
       this.#editedCell(event.data.cell.id, event.data.cell.source);
     else if (event.type === "cell.deleted") this.#deleted(event.data.cell);
     else if (event.type === "notebook.moved") this.#moved();
-    else if (event.type === "cell.status" && event.data.status === "running")
-      this.#edited.delete(event.data.cell);
-    else if (event.type === "cell.status" && ended.has(event.data.status)) {
+    else if (event.type === "cell.status" && event.data.status === "running") {
+      const source = this.#context.cells.get(event.data.cell)?.source;
+      if (source !== undefined) this.#ran.set(event.data.cell, source);
+    } else if (event.type === "cell.status" && ended.has(event.data.status)) {
       const type = this.#context.cells.get(event.data.cell)?.type;
       const link = this.#links[type === "client" ? "client" : "server"];
       link.runEnded();
@@ -501,7 +520,6 @@ export class DebugSession {
     const { sources } = this.#links.server;
     const before = sources.get(cell);
     if (before === undefined) return;
-    if (before !== source) this.#edited.add(cell);
     this.#breakpoints.edited(cell, before, source);
     sources.set(cell, source);
     this.#emitBreakpoints();
@@ -511,11 +529,11 @@ export class DebugSession {
   }
 
   #deleted(cell: CellId): void {
+    this.#ran.delete(cell);
     const gone = this.#breakpoints.ofCell(cell);
     if (gone.length === 0) return;
     this.#breakpoints.remove(gone);
     this.#links.server.sources.delete(cell);
-    this.#edited.delete(cell);
     void this.#sendCell(cell);
     this.#emitBreakpoints();
   }
@@ -535,7 +553,9 @@ export class DebugSession {
     }
   }
 
-  /** The first error each condition or logpoint kept in the realm since the last read, as its breakpoint's message. */
+  /** The first error each condition or logpoint of this link's breakpoints kept in the realm since the last read, as
+   * its breakpoint's message. What the page keeps is the page's to write: a client breakpoint's message says that its
+   * expression threw and how to read the error, never the page's text. */
   async #collectErrors(link: JsDebugLink): Promise<void> {
     const child = link.attached?.child;
     const checked = this.#breakpoints
@@ -544,11 +564,19 @@ export class DebugSession {
     if (!child || !checked || link.paused) return;
     try {
       const kept = Object.entries(await keptErrors(child, link.dialect));
+      let changed = false;
       for (const [id, message] of kept) {
         const record = this.#breakpoints.byId(id);
-        if (record) record.message = message;
+        if (
+          !record ||
+          !link.owns(record.cell) ||
+          (record.condition ?? record.logMessage) === undefined
+        )
+          continue;
+        record.message = link.realm === "client" ? pageThrew(record) : message;
+        changed = true;
       }
-      if (kept.length > 0) this.#emitBreakpoints();
+      if (changed) this.#emitBreakpoints();
     } catch (error) {
       link.warn(error, "the debugger could not read its conditions' errors");
     }

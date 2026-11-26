@@ -115,7 +115,7 @@ export async function runServerCell(
   execution.defines = prepared.compiled.analysis.defines;
   try {
     const kernel = await context.kernel.ready();
-    await context.hooks.beforeServerRun();
+    await context.hooks.beforeServerRun(record.id);
     if (terminalStatuses.has(execution.status)) return; // interrupted while the kernel started
     context.kernel.executing(execution.cell);
     await stream(context, kernel, execution, prepared.compiled);

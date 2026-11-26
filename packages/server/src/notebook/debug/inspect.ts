@@ -63,14 +63,17 @@ function isUserFrame(frame: StackFrame, cellOf: CellOfPath): boolean {
   return isAbsolute(path) && !isKernelFile(path);
 }
 
-/** Where and why the realm stopped: the innermost user frame, when it is a cell's. */
+/** Where and why the realm stopped: the innermost user frame, when it is a cell's; `stale` when that cell was edited
+ * since it last ran, so the line is in its code from before the edit. */
 export function pauseOf(
   realm: DebugRealm,
   body: StoppedEvent,
   top: DebugFrame | undefined,
+  follows: (cell: CellId) => boolean,
 ): DebugPause {
   return {
     realm,
+    ...(top?.cell !== undefined && !follows(top.cell) ? { stale: true } : {}),
     reason: body.reason,
     ...(body.description === undefined ? {} : { description: body.description }),
     ...(top?.cell === undefined ? {} : { cell: top.cell, line: top.line }),
