@@ -1,4 +1,4 @@
-// The start folder of 03-api §8's start, the CLI's format written once more here (02 §2: no cli ↔ mcp edge):
+// The start folder of a daemon start, the CLI's format written once more here (no cli ↔ mcp edge):
 // `<workspace>/.jsnb/start-<the starter's pid>-<random>/` (0700, its files 0600), or `<tmp>/nimbo-start-<pid>-<random>/`
 // when `.jsnb` cannot be made there. It holds the daemon's stderr until the daemon listens (then moved into
 // `.jsnb/logs/stderr.log`, never across devices in the normal case) and `start.json`. A starter (a CLI or an MCP
@@ -57,7 +57,7 @@ export async function stderrFile(workspace: string) {
   };
   record();
   const path = join(dir, "stderr.log");
-  const handle = await open(path, "w", 0o600); // the daemon's raw stderr, beside its 0600 logs (02 §8)
+  const handle = await open(path, "w", 0o600); // the daemon's raw stderr, beside its 0600 logs
   const removeDir = async (): Promise<void> => {
     try {
       await rm(dir, { recursive: true, force: true });

@@ -1,4 +1,4 @@
-// The MCP server's failures to reach its workspace's daemon (03-api §9, as the CLI's of §8): none runs, its server.json
+// The MCP server's failures to reach its workspace's daemon (as the CLI's): none runs, its server.json
 // cannot be read, it would not start, or the daemon server.json names serves another folder (a copied or moved
 // workspace). Each reaches the agent as the tool's error result; the words name tools, not CLI commands.
 import { JsnbError } from "@jsnb/core";
@@ -9,7 +9,7 @@ import type { Cause } from "./mcp.js";
 export const nothingToStop = (workspace: string): string =>
   `No daemon runs for ${workspace}; nothing to stop.`;
 
-/** A tool that does not start one found no daemon for the workspace (03-api §8, §9). */
+/** A tool that does not start one found no daemon for the workspace. */
 export class DaemonNotRunning extends JsnbError {
   declare readonly data: { readonly workspace: string };
   constructor(data: { readonly workspace: string }, options: Cause = {}) {

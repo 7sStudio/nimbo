@@ -1,5 +1,5 @@
-// The daemon's discovery file `<workspace>/.jsnb/server.json` (03-api §7.1), read with core's schema (`ServerFile`),
-// and whether the process it names is still alive (process.kill, which core, being pure, may not call; 08 §4).
+// The daemon's discovery file `<workspace>/.jsnb/server.json`, read with core's schema (`ServerFile`),
+// and whether the process it names is still alive (process.kill, which core, being pure, may not call).
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 

@@ -51,12 +51,12 @@ const goneCodes = new Set([
 export const readerGone = (error: unknown): boolean =>
   error instanceof Error && goneCodes.has(String(Reflect.get(error, "code") ?? ""));
 
-/** What each request the MCP server answers reads: its world, the MCP client's name (03-api §9) and its signal. */
+/** What each request the MCP server answers reads: its world, the MCP client's name and its signal. */
 export type RequestContext = {
   readonly world: World;
   /** The MCP client's name from its `initialize`, once it said it; none before or when it gave none. */
   readonly agent: () => string | undefined;
-  /** Aborted when the MCP client cancels the request (or goes): the call to the daemon stops waiting (08 §5). */
+  /** Aborted when the MCP client cancels the request (or goes): the call to the daemon stops waiting. */
   readonly signal: AbortSignal;
   /** The most bytes a result's whole frame may carry. */
   readonly resultLimit: number;

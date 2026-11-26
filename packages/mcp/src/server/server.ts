@@ -1,8 +1,8 @@
-// The MCP server of 03-api §9: tools/list from the registry, tools/call through the daemon, the two resources and their
+// The MCP server: tools/list from the registry, tools/call through the daemon, the two resources and their
 // templates, as request handlers on the SDK's underlying server (the SDK's way for handlers of one's own: McpServer
-// would make each tool's JSON Schema from Zod itself, and 09 §4.1 wants core's); the agent's name is the MCP client's
+// would make each tool's JSON Schema from Zod itself, and the registry contract wants core's); the agent's name is the MCP client's
 // `clientInfo.name` from its `initialize` (claude-code, …), declared on every call so the cells it touches carry it in
-// `meta.lastEdit` (09 §4.7).
+// `meta.lastEdit`.
 import { productName } from "@jsnb/core";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
@@ -58,7 +58,7 @@ const instructions =
   "its session by cell id, but the cell tools keep outputs and need no reload; pass cell_get's textHash as base to " +
   "cell_update.";
 
-/** Rejects with the JSON-RPC error of 03-api §7.4 for a request that is no tool call. */
+/** Rejects with the JSON-RPC error for a request that is no tool call. */
 const answering = async <T>(work: Promise<T>): Promise<T> => {
   try {
     return await work;
