@@ -103,7 +103,7 @@ export function visibility(cells: readonly ScannedCell[], index: number): Visibi
   return { imports, bridge, builtins };
 }
 
-/** The names a cell of the other realm declares that `cell` cannot see: §3.4's cross-realm messages. */
+/** The names a cell of the other realm declares that `cell` cannot see: the cross-realm messages. */
 export function otherRealmNames(cells: readonly ScannedCell[], realm: Realm): ReadonlySet<string> {
   const others = cells.filter((cell) => cell.realm !== realm);
   return new Set(unique(others.map((cell) => cell.declarations.names.keys())));

@@ -1,4 +1,4 @@
-// The package's result types: plain shapes the daemon turns into LSP's (§5.3).
+// The package's result types: plain shapes the daemon turns into LSP's.
 import type { CellId, CellRange } from "@jsnb/core";
 
 export type LanguageCell = {
