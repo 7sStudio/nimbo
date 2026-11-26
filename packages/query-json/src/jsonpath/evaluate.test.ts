@@ -70,7 +70,7 @@ describe("compileJsonPath on long queries", () => {
   });
 });
 
-describe("compileJsonPath cost classification (11-query §2)", () => {
+describe("compileJsonPath cost classification", () => {
   it.each([
     "$",
     "$.a.b",

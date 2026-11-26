@@ -8,7 +8,7 @@ import { format, resolveConfig } from "prettier";
 import type { NamedCommand } from "./render.js";
 import { renderClient } from "./render.js";
 
-/** The one committed generated file (08-code-standards §2). */
+/** The one committed generated file. */
 export const generatedPath = fileURLToPath(new URL("../src/generated.ts", import.meta.url));
 
 /** Every registry command with the name @jsnb/core exports it under, so generated.ts can import it. */

@@ -1,4 +1,4 @@
-// knip: unused files, exports and dependencies per workspace (08-code-standards §1).
+// knip: unused files, exports and dependencies per workspace.
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "ignore": [".worktrees/**", ".agents/**", ".claude/**", ".opencode/**"],
@@ -83,7 +83,7 @@
       "entry": [],
       "project": ["*.js"],
     },
-    // The 08 §7 gate on compiled stylesheets (its entry is package.json's export).
+    // The style gate on compiled stylesheets (its entry is package.json's export).
     "tools/style-gate": {
       "project": ["src/**/*.ts"],
     },

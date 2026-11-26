@@ -1,4 +1,4 @@
-// Runs the query bar through the injected engines (11-query §4): loads an engine only when its mode is first used and
+// Runs the query bar through the injected engines: loads an engine only when its mode is first used and
 // turns every engine answer, rejection included, into the bar's result or error; nothing here throws.
 import type { Path, QueryMode } from "@jsnb/core";
 
@@ -58,7 +58,7 @@ export function rejected(cause: unknown): { ok: false; error: QueryFailure } {
   );
 }
 
-/** Loads the engine behind a mode, the first time the user picks it (11-query §4); SQL reports download progress. */
+/** Loads the engine behind a mode, the first time the user picks it; SQL reports download progress. */
 export async function loadMode(
   engines: QueryEngines,
   mode: QueryMode,
@@ -136,7 +136,7 @@ export async function runQuery(engines: QueryEngines, run: QueryRun): Promise<Ru
   return select(engines, engines.chips.toJsonPath(run.chips ?? [], run.at), run);
 }
 
-/** Registers the full rows as table `t` (and the binding name as an alias) before SQL queries run on them (11-query §3). */
+/** Registers the full rows as table `t` (and the binding name as an alias) before SQL queries run on them. */
 export async function registerRows(
   engines: QueryEngines,
   source: readonly unknown[] | Blob,

@@ -1,4 +1,4 @@
-// The property tests' oracle: chips evaluated directly on one record with RFC 9535's comparison rules (§2.3.5.2.2),
+// The property tests' oracle: chips evaluated directly on one record with RFC 9535's comparison rules,
 // written without JSONPath so the engine's answer can be checked against it.
 import type { PathSegment } from "../../paths.ts";
 import { keySegments } from "../key.ts";

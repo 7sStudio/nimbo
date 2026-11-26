@@ -6,10 +6,10 @@ packages/server/vendor/
 coverage/
 *.tsbuildinfo
 
-# parallel threads work in worktrees under this folder (CONTRIBUTING.md)
+# parallel threads work in worktrees under this folder
 .worktrees/
 
-# a nimbo workspace directory: ignored except the shared settings (07-file-format §7)
+# a nimbo workspace directory: ignored except the shared settings
 .jsnb/*
 !.jsnb/.gitignore
 !.jsnb/settings.json

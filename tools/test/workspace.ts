@@ -1,4 +1,4 @@
-// withWorkspace (09-testing §8): a temporary workspace folder with an optional package.json and .env, deleted afterwards,
+// withWorkspace: a temporary workspace folder with an optional package.json and .env, deleted afterwards,
 // once what still writes into it has ended (beforeRemoval: a daemon started over it or over a folder inside it).
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";

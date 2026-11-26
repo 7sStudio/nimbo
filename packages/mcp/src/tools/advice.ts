@@ -43,7 +43,7 @@ function flagOf(key: string, value: unknown): string[] {
   return value === undefined ? [] : [flag, JSON.stringify(value)];
 }
 
-/** A call's arguments as the CLI's generated flags (03-api §8). */
+/** A call's arguments as the CLI's generated flags. */
 const flagsOf = (input: Args): string[] =>
   Object.entries(input).flatMap(([key, value]) => flagOf(key, value));
 

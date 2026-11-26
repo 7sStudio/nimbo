@@ -1,4 +1,4 @@
-<!-- One row of the tree (gallery card 1): chevron, key, value or container label, count, hints, the long-string fold,
+<!-- One row of the tree: chevron, key, value or container label, count, hints, the long-string fold,
 "Load next 2,000" on a cut array, and copy value / copy path (and copy base64 for bytes) on the hovered or active
 row, whose buttons Tab reaches from the tree. -->
 <script setup lang="ts">

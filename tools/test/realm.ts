@@ -1,4 +1,4 @@
-// A real page as a notebook's client realm (05-bridge §11, 09-testing §8): the test page (fixtures/realmPage/page.ts:
+// A real page as a notebook's client realm: the test page (fixtures/realmPage/page.ts:
 // runtime-web's Realm over @jsnb/client's socket) bundled into a UI folder the daemon serves at /ui/, and Chromium
 // through Playwright to load it, so client cells run in a real browser against the real daemon and kernel.
 import { mkdir, writeFile } from "node:fs/promises";

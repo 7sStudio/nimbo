@@ -1,4 +1,4 @@
-// The HTTP transport of 03-api §7.3: one JSON-RPC call per POST /rpc with the bearer token and the client headers.
+// The HTTP transport: one JSON-RPC call per POST /rpc with the bearer token and the client headers.
 import { Unauthorized } from "@jsnb/core";
 
 import type { Transport } from "../call/caller.js";

@@ -1,4 +1,4 @@
-<!-- SwitchPrompt: in the error block of a server run that ended with DefinedInClient (05-bridge §7), in the message's place, so the advice is said once: the client cell that defines the name, a "Switch this cell to client" button (Enter in command mode does the same), and the other way, moving the name to a server cell and exporting it. Its hook is data-testid="switch-to-client". -->
+<!-- SwitchPrompt: in the error block of a server run that ended with DefinedInClient, in the message's place, so the advice is said once: the client cell that defines the name, a "Switch this cell to client" button (Enter in command mode does the same), and the other way, moving the name to a server cell and exporting it. Its hook is data-testid="switch-to-client". -->
 <script setup lang="ts">
 import Button from "../primitives/button/Button.vue";
 

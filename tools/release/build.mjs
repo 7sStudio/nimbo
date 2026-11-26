@@ -1,4 +1,4 @@
-// The release build (02-architecture §10): for each target, one tarball nimbo-<version>-<target>.tar.gz holding a
+// The release build: for each target, one tarball nimbo-<version>-<target>.tar.gz holding a
 // private Node (the official build, pinned by SHA-256, downloaded once into the cache), the app as a production install
 // of the CLI package with a flat node_modules of real package folders (pnpm deploy, hoisted, with only that target's
 // platform packages), the UI built for the release, the server's vendor/ folder when there is one, LICENSE, NOTICE,

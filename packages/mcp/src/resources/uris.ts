@@ -1,4 +1,4 @@
-// The resource URIs of 03-api §9: `nimbo://notebook/<path>` and `nimbo://cell/<path>/<id>`, the path from the workspace
+// The resource URIs: `nimbo://notebook/<path>` and `nimbo://cell/<path>/<id>`, the path from the workspace
 // root with each segment percent-encoded (a space, a `#` or a `%` in a name survives), read back segment by segment.
 import { CellId } from "@jsnb/core";
 

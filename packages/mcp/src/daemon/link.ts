@@ -1,4 +1,4 @@
-// One tool call's link to the workspace's daemon (03-api §7.1, §7.3, §9), found as the CLI finds it, the code written once more here since cli ↔ mcp is no edge (02 §2): server.json read with core's schema, its
+// One tool call's link to the workspace's daemon, found as the CLI finds it, the code written once more here since cli ↔ mcp is no edge: server.json read with core's schema, its
 // pid alive, the daemon asked once for workspace.info answering with the file's startedAt (a dead pid, a refused port
 // or another daemon there is no daemon), and its root the workspace's real path; one whose root is another folder (a
 // workspace copied or moved with its .jsnb/) is not this workspace's: a mutating tool starts the
@@ -20,7 +20,7 @@ export type Link = {
   readonly workspace: string;
   /** True when this call started the daemon. */
   readonly started: boolean;
-  /** A call over HTTP (03-api §7.3), with the client's retries. */
+  /** A call over HTTP, with the client's retries. */
   readonly call: Caller;
 };
 
@@ -29,12 +29,12 @@ export type LinkOptions = {
   readonly start: boolean;
   /** The tool's name, for the errors. */
   readonly command: string;
-  /** The MCP client's name from its `initialize` (03-api §9), stamped in `meta.lastEdit.agent`; none when unknown. */
+  /** The MCP client's name from its `initialize`, stamped in `meta.lastEdit.agent`; none when unknown. */
   readonly agent?: string | undefined;
 };
 
 /**
- * Whether finding no daemon starts one: mutating commands (03-api §8); a destructive one has nothing to act on, and a
+ * Whether finding no daemon starts one: mutating commands; a destructive one has nothing to act on, and a
  * planned one (v1.x) is answered NOT_AVAILABLE before any daemon is sought.
  */
 export const startsDaemon = (command: AnyCommand): boolean =>

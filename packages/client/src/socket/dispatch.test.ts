@@ -1,4 +1,4 @@
-// Tests routing frames from the daemon (03-api §7.2) with an in-memory socket that records what is sent back.
+// Tests routing frames from the daemon with an in-memory socket that records what is sent back.
 import { CellNotFound } from "@jsnb/core";
 import { describe, expect, it } from "vitest";
 

@@ -1,5 +1,5 @@
-// The help of the generated surface (03-api §8): a domain's verbs, and a command's description (the registry's), its
-// flags with type, default and whether each is required, and its tags. Golden snapshots hold every one (09-testing §3).
+// The help of the generated surface: a domain's verbs, and a command's description (the registry's), its
+// flags with type, default and whether each is required, and its tags. Golden snapshots hold every one.
 import type { AnyCommand } from "@jsnb/core";
 
 import type { Flag } from "./flags.js";

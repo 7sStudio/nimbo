@@ -1,4 +1,4 @@
-// output-view's choice of query modes (model/engines.ts, 11-query §1 and §4) over the real engines: which modes they
+// output-view's choice of query modes (model/engines.ts) over the real engines: which modes they
 // allow, and which one the bar opens in.
 import { availableModes, defaultMode, queryModes } from "@jsnb/output-view/model";
 import { afterAll, describe, expect, it } from "vitest";

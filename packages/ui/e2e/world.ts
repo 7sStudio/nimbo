@@ -1,4 +1,4 @@
-// Each journey's own world (09-testing §1.6): a temporary workspace named `experiments`, the real daemon
+// Each journey's own world: a temporary workspace named `experiments`, the real daemon
 // started by the built `nimbo` CLI (`nimbo open demo.jsnb --no-browser --background`, which finds the built UI and passes
 // it with --ui), the user's page in Chromium, and the CLI as the agent beside it. The daemon is stopped (`nimbo stop`) and
 // the folder removed after the test. User settings go to a config folder inside the workspace, never the user's home.

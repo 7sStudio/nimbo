@@ -1,5 +1,5 @@
 // `nimbo config get [key] [--user|--workspace] | set <key> <value> [--user|--workspace] | unset <key> [--user|--workspace]
-// | path | schema` (03-api §4.10, 07-file-format §6): settings.get (the effective values, or what one file sets),
+// | path | schema`: settings.get (the effective values, or what one file sets),
 // settings.set (the value as JSON when it is JSON, else as text; unset is its reset), the two settings files' paths,
 // settings.schema. As in VS Code, the workspace file outranks the user's.
 import { homedir } from "node:os";
@@ -27,7 +27,7 @@ import type { ShortcutArgs } from "./shortcut.js";
 import { readShortcut, withSession } from "./shortcut.js";
 import type { Shortcut } from "./shortcut.js";
 
-const help = `nimbo config get|set|unset|path|schema: the settings (03-api §4.10)
+const help = `nimbo config get|set|unset|path|schema: the settings
 
 Defaults < the user file < the workspace file (.jsnb/settings.json), as VS Code's user and workspace settings.
 
@@ -45,7 +45,7 @@ Flags:
   --json        print the command's output as JSON
 `;
 
-/** The user settings file of 07-file-format §6, as the environment places it. */
+/** The user settings file, as the environment places it. */
 function userSettingsPath(io: Io): string {
   const folder = productConfigDir(io.env, io.env.HOME ?? homedir(), io.platform);
   if (io.platform === "win32") return win32.join(folder, settingsFileName);

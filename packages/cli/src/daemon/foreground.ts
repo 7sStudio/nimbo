@@ -1,4 +1,4 @@
-// The daemon in the terminal's foreground (03-api §8, 02-architecture §7), for `nimbo open` and `nimbo serve`: its entry
+// The daemon in the terminal's foreground, for `nimbo open` and `nimbo serve`: its entry
 // forked in its own process group, SIGINT, SIGTERM and SIGHUP (a closed terminal) passed on to it as they come, so
 // Ctrl-C stops it cleanly (notebooks saved) and a second Ctrl-C ends it at once; the CLI exits with its code (0 after a
 // clean stop, 1 when it could not start, 2 for arguments it could not use). Its stderr comes through the CLI line by
@@ -37,8 +37,8 @@ type Relayed = { failed: boolean };
 
 /**
  * One line of the daemon's stderr as the CLI prints it: a log line as one readable line (as it is under --json), a
- * failure as the CLI prints its own (`Name: message`, or under --json the `{ code, name, message, data }` line of
- * 03-api §8), anything else (a stack) as it is.
+ * failure as the CLI prints its own (`Name: message`, or under --json the `{ code, name, message, data }` line),
+ * anything else (a stack) as it is.
  */
 function lineText(line: string, asJson: boolean, relayed: Relayed, style: LineStyle): string {
   const value = parsed(line);

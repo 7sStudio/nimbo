@@ -1,4 +1,4 @@
-// The four formats of `nimbo outputs` (03-api §8): pretty, the tree the page shows (output-view's model); json, the
+// The four formats of `nimbo outputs`: pretty, the tree the page shows (output-view's model); json, the
 // plain JSON of the value; ndjson, one line per item of an array (one line for anything else); csv, for tables only
 // (outputsCsv.ts: SQL answers, non-empty arrays of records or of arrays of one length), any other value NotTabular.
 import { toJSON, toNDJSON } from "@jsnb/output-view/model";

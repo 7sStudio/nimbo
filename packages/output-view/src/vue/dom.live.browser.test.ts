@@ -1,5 +1,5 @@
 // A DOM output's live container in Chromium (a client cell's container inherits color-scheme and nothing
-// else; 08 §7: a component may slot it, never style it). Varied user elements in OutputView's dom slot, their ::marker
+// else; a component may slot it, never style it). Varied user elements in OutputView's dom slot, their ::marker
 // and ::placeholder included, have every computed property a bare page with the same color-scheme gives them, in both
 // themes and under an ancestor that sets inherited properties, custom properties aside (CSS cannot stop them) and
 // the sizes that follow the container; each focusable one keeps the browser's own keyboard focus ring. A control shows

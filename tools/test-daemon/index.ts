@@ -1,4 +1,4 @@
-// The daemon harness of @jsnb/test-tools/daemon (09-testing §8) bound to @jsnb/server's startServer, for the tests of
+// The daemon harness of @jsnb/test-tools/daemon bound to @jsnb/server's startServer, for the tests of
 // the packages that drive a real daemon (ui, cli, mcp). The server's own tests bind it in its src/fixtures/daemon.ts:
 // this package depends on the server, so the server cannot depend on it.
 import type { RunningServer, ServerOptions } from "@jsnb/server";

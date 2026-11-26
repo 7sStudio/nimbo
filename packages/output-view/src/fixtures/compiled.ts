@@ -1,4 +1,4 @@
-// A template class compiled as the build compiles it, for the 08 §7 gate's plants (style.plants.contract.test.ts):
+// A template class compiled as the build compiles it, for the style gate's plants (style.plants.contract.test.ts):
 // Tailwind on the views' utilities.css (its prefix, theme and hover variant) with a fresh compiler, since a compiler
 // keeps every class it has built; then the build's scope plugin (tailwindScope.ts); then Tailwind's lightningcss pass,
 // flattened and minified as dist/style.css is.

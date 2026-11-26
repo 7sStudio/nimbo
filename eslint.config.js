@@ -1,5 +1,5 @@
 // @ts-check
-// The ESLint 9 flat config of 08-code-standards §1, §4, §6, §7 and §8: every rule is "error", none is "warn".
+// The ESLint 9 flat config: every rule is "error", none is "warn".
 import { builtinModules } from "node:module";
 
 import js from "@eslint/js";
@@ -17,9 +17,7 @@ import { boundariesRules, boundariesSettings, outputViewModel } from "./tools/bo
 
 const nodeModules = ["node:*", ...builtinModules];
 const noNode = {
-  patterns: [
-    { group: nodeModules, message: "This package runs anywhere; no Node modules (08 §4)." },
-  ],
+  patterns: [{ group: nodeModules, message: "This package runs anywhere; no Node modules." }],
 };
 // The Node-module rule anchored to whole specifiers, for a package whose own folders share a builtin's name (client's
 // `http/` and `events/`), which a gitignore-style group would match inside a relative path.
@@ -27,7 +25,7 @@ const noNodeSpecifier = {
   patterns: [
     {
       regex: `^(node:|(${builtinModules.join("|")})(/|$))`,
-      message: "This package runs anywhere; no Node modules (08 §4).",
+      message: "This package runs anywhere; no Node modules.",
     },
   ],
 };
@@ -47,7 +45,7 @@ export default defineConfig([
     ".opencode/**",
   ]),
 
-  // 08 §1: typescript-eslint strict and stylistic type-checked rules over the project service.
+  // typescript-eslint strict and stylistic type-checked rules over the project service.
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
@@ -61,9 +59,9 @@ export default defineConfig([
     },
   },
 
-  // 08 §7: Vue SFCs through vue-eslint-parser with the TypeScript parser inside <script>.
+  // Vue SFCs through vue-eslint-parser with the TypeScript parser inside <script>.
   ...vue.configs["flat/recommended"],
-  // 08 §1: no formatting rules in ESLint; Prettier owns layout, so its config turns the Vue layout rules off.
+  // No formatting rules in ESLint; Prettier owns layout, so its config turns the Vue layout rules off.
   prettier,
   {
     files: ["**/*.vue"],
@@ -79,13 +77,12 @@ export default defineConfig([
       "vue/block-lang": ["error", { script: { lang: "ts" } }],
       "vue/no-unused-properties": "error",
       "vue/require-typed-ref": "error",
-      // 08 §6 for template expressions, where no-restricted-syntax does not reach: no `as` except `as const`.
+      // For template expressions, where no-restricted-syntax does not reach: no `as` except `as const`.
       "vue/no-restricted-syntax": [
         "error",
         {
           selector: 'TSAsExpression:not([typeAnnotation.typeName.name="const"])',
-          message:
-            "No `as` casts except `as const`; narrow with a type guard instead (08-code-standards §6).",
+          message: "No `as` casts except `as const`; narrow with a type guard instead.",
         },
       ],
       // The ui names single-word components (Shell, Rail, Panel, Toasts); shadcn copies are Button, Input.
@@ -101,7 +98,7 @@ export default defineConfig([
     rules: { "vue/no-unused-properties": "off" },
   },
 
-  // 08 §5 errors, §6 TypeScript, §8 registry rules: the rules every TS and Vue file follows.
+  // Errors, TypeScript and the registry rules: the rules every TS and Vue file follows.
   {
     files: ["**/*.{ts,mts,cts,vue}"],
     plugins: { "import-x": importX, boundaries, jsnb },
@@ -116,16 +113,16 @@ export default defineConfig([
       },
     },
     rules: {
-      // 08 §5 errors
+      // errors
       "no-empty": "error",
       "@typescript-eslint/only-throw-error": "error",
       "@typescript-eslint/no-floating-promises": "error",
       "no-console": "error",
-      // 08 §6 TypeScript
+      // TypeScript
       "@typescript-eslint/no-explicit-any": "error",
       "@typescript-eslint/no-non-null-assertion": "error",
       "@typescript-eslint/consistent-type-definitions": ["error", "type"],
-      // 08 §6: no `as` casts except `as const` (and in tests); the selector is the usual way to spare `as const`.
+      // No `as` casts except `as const` (and in tests); the selector is the usual way to spare `as const`.
       "@typescript-eslint/consistent-type-assertions": [
         "error",
         { assertionStyle: "as", objectLiteralTypeAssertions: "never" },
@@ -134,8 +131,7 @@ export default defineConfig([
         "error",
         {
           selector: 'TSAsExpression:not([typeAnnotation.typeName.name="const"])',
-          message:
-            "No `as` casts except `as const`; narrow with a type guard instead (08-code-standards §6).",
+          message: "No `as` casts except `as const`; narrow with a type guard instead.",
         },
       ],
       "@typescript-eslint/consistent-type-imports": [
@@ -144,7 +140,7 @@ export default defineConfig([
       ],
       "import-x/no-default-export": "error",
       "import-x/no-relative-packages": "error",
-      // 08 §4 layers inside a package (tools/boundaries.config.js) and §8 the registry rules
+      // Layers inside a package (tools/boundaries.config.js) and the registry rules
       ...boundariesRules,
       "jsnb/no-client-in-components": "error",
       "jsnb/no-globalthis-writes": "error",
@@ -152,7 +148,7 @@ export default defineConfig([
     },
   },
 
-  // 08 §6: `as` casts are allowed in tests.
+  // `as` casts are allowed in tests.
   {
     files: ["**/*.{test,spec}.ts"],
     rules: {
@@ -161,13 +157,13 @@ export default defineConfig([
     },
   },
 
-  // 08 §6: default exports exist for Vue SFCs and config files, nowhere else.
+  // Default exports exist for Vue SFCs and config files, nowhere else.
   {
     files: ["**/*.vue", "**/*.d.ts", "**/*.config.{ts,js,mjs,cjs}", "eslint.config.js"],
     rules: { "import-x/no-default-export": "off" },
   },
 
-  // 08 §4: core runs anywhere and is pure; no Node modules, no browser or network globals.
+  // core runs anywhere and is pure; no Node modules, no browser or network globals.
   {
     files: ["packages/core/src/**"],
     rules: {
@@ -175,7 +171,7 @@ export default defineConfig([
       "no-restricted-globals": ["error", "process", "window", "document", "fetch"],
     },
   },
-  // 02 §2: tokens runs anywhere and is pure data (the page and the viewer, Node and the browser), as core; its tests and
+  // tokens runs anywhere and is pure data (the page and the viewer, Node and the browser), as core; its tests and
   // their fixtures read the sheets from disk.
   {
     files: ["packages/tokens/src/**"],
@@ -185,21 +181,21 @@ export default defineConfig([
       "no-restricted-globals": ["error", "process", "window", "document", "fetch"],
     },
   },
-  // 08 §4: runtime-web is browser only; never imports node:*.
+  // runtime-web is browser only; never imports node:*.
   {
     files: ["packages/runtime-web/src/**"],
     languageOptions: { globals: globals.browser },
     rules: { "no-restricted-imports": ["error", noNode] },
   },
-  // 08 §4: output-view's model has no DOM, no Vue and no Node (tools/boundaries.config.js).
+  // output-view's model has no DOM, no Vue and no Node (tools/boundaries.config.js).
   outputViewModel,
-  // 08 §4: query-sql runs in the page and on the daemon; only its daemon engine (src/node/) imports node:*.
+  // query-sql runs in the page and on the daemon; only its daemon engine (src/node/) imports node:*.
   {
     files: ["packages/query-sql/src/**"],
     ignores: ["packages/query-sql/src/node/**"],
     rules: { "no-restricted-imports": ["error", noNode] },
   },
-  // 02 §2: client runs anywhere (the page, the CLI, the MCP server); its sources use the platform fetch and
+  // client runs anywhere (the page, the CLI, the MCP server); its sources use the platform fetch and
   // WebSocket, never a Node module or Node-only global. Its tests and fixtures stand up a peer on node:http and ws, and
   // its `./node` export (src/node/, the CLI's and the MCP server's shared daemon start) runs in Node only.
   {
@@ -214,12 +210,12 @@ export default defineConfig([
       "no-restricted-globals": ["error", "process", "Buffer", "window", "document"],
     },
   },
-  // 08 §5: no console.log outside cli and the kernel's user-facing stream.
+  // No console.log outside cli and the kernel's user-facing stream.
   {
     files: ["packages/cli/**", "packages/kernel-node/src/outputs/**"],
     rules: { "no-console": "off" },
   },
-  // Browser and Node globals per package (02-architecture §2 "runs in").
+  // Browser and Node globals per package.
   {
     files: ["packages/{ui,output-view,query-json,query-sql}/src/**"],
     languageOptions: { globals: globals.browser },

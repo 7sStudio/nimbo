@@ -1,4 +1,4 @@
-// Tests createIds: shapes from 03-api §2 and determinism per seed.
+// Tests createIds: shapes and determinism per seed.
 import { describe, expect, it } from "vitest";
 
 import { createIds } from "./ids.js";

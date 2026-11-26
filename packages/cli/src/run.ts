@@ -1,4 +1,4 @@
-// `run(argv, io)`, the whole CLI (03-api §8): --help and --version, a shortcut, or `<domain> <verb>` generated from the
+// `run(argv, io)`, the whole CLI: --help and --version, a shortcut, or `<domain> <verb>` generated from the
 // registry, and bare `nimbo` on a terminal the Home page; every failure printed (as JSON under --json) and turned
 // into its exit code. It never throws.
 import { runGenerated } from "./commands/invoke.js";
@@ -112,7 +112,7 @@ async function report(io: Io, error: unknown, asJson: boolean): Promise<void> {
   }
 }
 
-/** Runs the CLI over `io`; resolves to the exit code of 03-api §8 and never rejects. */
+/** Runs the CLI over `io`; resolves to the exit code and never rejects. */
 export async function run(argv: readonly string[], io: Io): Promise<ExitCode> {
   guard(io.stdout);
   guard(io.stderr);

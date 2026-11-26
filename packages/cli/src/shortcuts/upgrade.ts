@@ -1,4 +1,4 @@
-// `upgrade` (03-api §8, 02-architecture §10): asked for, never in the background. It reads the release's manifest,
+// `upgrade`: asked for, never in the background. It reads the release's manifest,
 // installs the newer version beside the running one, points the launcher at it and removes the versions nothing runs
 // from; a version a daemon still runs from stays until that daemon stops, and the workspaces it serves are named.
 // Only the installer's installs upgrade this way: Homebrew's and a checkout get the command that updates them.

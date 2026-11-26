@@ -88,7 +88,7 @@ export const projects: readonly Project[] = [
     kind: "node",
     include: ["src/node/**/*.test.ts"],
   },
-  // query-json runs in Node and in the page (02-architecture §2): its Web Worker path runs in Chromium.
+  // query-json runs in Node and in the page: its Web Worker path runs in Chromium.
   {
     name: "query-json-browser",
     root: "packages/query-json",
@@ -167,7 +167,7 @@ export const projects: readonly Project[] = [
     kind: "node",
     include: ["src/**/*.contract.test.ts"],
   },
-  // The page's built stylesheet, checked after `pnpm build` in the contract stage (08 §7).
+  // The page's built stylesheet, checked after `pnpm build` in the contract stage.
   {
     name: "ui:contract",
     root: "packages/ui",
@@ -202,7 +202,7 @@ export const projects: readonly Project[] = [
     ],
   },
   { name: "test-tools", root: "tools/test", kind: "node", include: ["*.test.ts"] },
-  // The 08 §7 gate on compiled stylesheets (@jsnb/style-gate): its rules on fixture CSS, in the unit stage; a package's
+  // The style gate on compiled stylesheets (@jsnb/style-gate): its rules on fixture CSS, in the unit stage; a package's
   // contract test runs it on that package's dist after the build.
   { name: "style-gate", root: "tools/style-gate", kind: "node" },
   { name: "eslint-rules", root: "tools/eslint-rules", kind: "js" },

@@ -44,7 +44,7 @@ export function useFrame(props: Readonly<OutputViewProps>, out: ReturnType<typeo
       () => shown.input.value && rendererFor(registry, shown.input.value, shown.shown.value),
     ),
     capped,
-    // The px of `outputs.maxHeightPx` (03 §4.10) become CSS lengths here, at the boundary: the cap when one applies,
+    // The px of `outputs.maxHeightPx` become CSS lengths here, at the boundary: the cap when one applies,
     // and the default cap, which an iframe output takes as its height (HtmlRenderer).
     caps: computed(() => ({
       "--default-cap": `${String(defaultMaxHeight)}px`,

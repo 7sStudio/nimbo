@@ -1,4 +1,4 @@
-// `nimbo errors` (03-api §8): notebook.errors, each failed cell with its run and its error's name, message and frames.
+// `nimbo errors`: notebook.errors, each failed cell with its run and its error's name, message and frames.
 import { notebookErrors } from "@jsnb/core";
 
 import type { ExitCode } from "../errors/exit.js";

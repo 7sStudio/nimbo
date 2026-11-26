@@ -1,4 +1,4 @@
-// Where this CLI was installed from and how (02-architecture §10): a release build carries `release.json` in the CLI's
+// Where this CLI was installed from and how: a release build carries `release.json` in the CLI's
 // own package folder (the app folder of a version), and the version folder above it says the rest: under
 // `<data>/versions/` beside the installer's `install.json` is an installer install, an `install-method` file naming
 // Homebrew is a formula's, anything else unpacked by hand is a tarball; no release.json is a checkout run from source.

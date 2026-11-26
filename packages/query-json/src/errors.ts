@@ -1,4 +1,4 @@
-// The query error and result types every engine returns, so the query bar can underline the mistake (11-query §2).
+// The query error and result types every engine returns, so the query bar can underline the mistake.
 
 /** What went wrong, so a host can tell a typo from a timeout. */
 export type QueryErrorKind =
@@ -11,7 +11,7 @@ export type QueryError = {
   readonly position?: number;
 };
 
-/** The discriminated union of 08-code-standards §5: engines return it and never throw. */
+/** The discriminated union: engines return it and never throw. */
 export type Result<T> =
   { readonly ok: true; readonly value: T } | { readonly ok: false; readonly error: QueryError };
 

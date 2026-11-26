@@ -1,4 +1,4 @@
-// Property tests of path.ts: any path survives format → parse, in both forms (08 §9).
+// Property tests of path.ts: any path survives format → parse, in both forms.
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 

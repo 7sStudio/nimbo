@@ -1,4 +1,4 @@
-// The query bar's cheat sheet (11-query §4: `?` opens ten examples for the mode), written against Stripe-like events.
+// The query bar's cheat sheet (`?` opens ten examples for the mode), written against Stripe-like events.
 import type { QueryMode } from "@jsnb/core";
 
 /** One example: the query and what it does, in a few words. */

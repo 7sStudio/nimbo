@@ -1,4 +1,4 @@
-<!-- A primitive or bytes value (gallery cards 4 and 6): its tokens with hints, a URL as a link, "View as tree" for a
+<!-- A primitive or bytes value: its tokens with hints, a URL as a link, "View as tree" for a
 JSON string, a long string folded behind "Show all", and "Copy base64" for bytes. Its end keeps room for the toolbar
 where it floats over a bare primitive (OutputToolbar.vue, data-bare). -->
 <script setup lang="ts">

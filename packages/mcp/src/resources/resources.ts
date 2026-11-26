@@ -1,4 +1,4 @@
-// The resources of 03-api §9, for agents that prefer reading over calling: `nimbo://notebook/<path>`, the NotebookState
+// The resources, for agents that prefer reading over calling: `nimbo://notebook/<path>`, the NotebookState
 // JSON of notebook.get, and `nimbo://cell/<path>/<id>`, the cell's source from cell.get. Reading starts no daemon (it
 // changes nothing, as a read-only tool); the list names every notebook workspace.info knows and the cells of the open
 // ones, and is empty while no daemon of the workspace's own runs, since then no notebook can be read.
@@ -37,7 +37,7 @@ export const resourceTemplates: readonly ResourceTemplate[] = [
   },
 ];
 
-/** A cell's source as its media type: markdown, else the TypeScript a code cell is written in (04-kernel). */
+/** A cell's source as its media type: markdown, else the TypeScript a code cell is written in. */
 const mimeOf = (cell: Cell): string =>
   cell.type === "markdown" ? "text/markdown" : "text/typescript";
 

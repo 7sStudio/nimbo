@@ -96,7 +96,7 @@ async function realTempFolder(directory: string): Promise<void> {
 }
 
 /**
- * The settings that keep the daemon's DuckDB inside `directory` (09 §5: the daemon writes only inside the
+ * The settings that keep the daemon's DuckDB inside `directory` (the daemon writes only inside the
  * workspace): files there and nowhere else, temporary files there too (a real folder, made so before each open), no
  * extension installed or loaded, and the configuration locked so no SQL can undo it.
  */

@@ -6,13 +6,13 @@ import type { Word } from "../editor/completion.js";
 import type { Caret } from "../store/ui.js";
 import type { OutputHost } from "./outputHost.js";
 
-/** output-view's load-more request and its answer (cell.outputValue of 03-api §4.3), as the
+/** output-view's load-more request and its answer (cell.outputValue), as the
  * viewer's LoadMoreRequest and ValueSlice are shaped; ui's .ts files take no type from output-view, whose declarations
  * are built after ui's build-order project. */
 type LoadMoreRequest = { readonly path: string; readonly offset: number; readonly limit: number };
 type ValueSlice = { readonly json: unknown; readonly total: number; readonly truncated: boolean };
 
-/** A change to a cell's own meta: a key set to null is removed (cell.update, 03-api §4.3). */
+/** A change to a cell's own meta: a key set to null is removed (cell.update). */
 export type MetaPatch = {
   readonly [
     K in

@@ -1,4 +1,4 @@
-// Where an error goes that no caller is waiting for, such as a throwing status listener or onError (03-api §7.6): to
+// Where an error goes that no caller is waiting for, such as a throwing status listener or onError: to
 // the connection's reportError, by default thrown to the host on a fresh microtask, so it is never swallowed and
 // never stalls the client.
 

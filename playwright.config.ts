@@ -1,6 +1,6 @@
-// Playwright (09-testing §2): Chromium only. The "browser" stage is the ui's user journeys, one project per
+// Playwright: Chromium only. The "browser" stage is the ui's user journeys, one project per
 // target screen (MacBook Pro 14 inch and a large display; no phone or tablet), each journey starting
-// its own daemon through the built CLI, so no web server is shared. "acceptance" is for the demos of 09 §6.
+// its own daemon through the built CLI, so no web server is shared. "acceptance" is for the demos.
 import { defineConfig, devices } from "@playwright/test";
 
 /** The supported screens at their logical sizes; every journey runs at each. */

@@ -1,5 +1,5 @@
-// What a tool call returns (03-api §9): the command's output as `structuredContent` with its JSON as the text, the
-// identical JSON `nimbo … --json` prints (03 §10); a failure as the tool's error result, `isError` with
+// What a tool call returns: the command's output as `structuredContent` with its JSON as the text, the
+// identical JSON `nimbo … --json` prints; a failure as the tool's error result, `isError` with
 // `{ code, name, message, data }` as JSON text, never a thrown exception that would end the MCP server.
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 

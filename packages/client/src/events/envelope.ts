@@ -1,4 +1,4 @@
-// Reads an `event` notification (03-api §6, §7.2): first the part ordering needs, then core's EventEnvelope. An
+// Reads an `event` notification: first the part ordering needs, then core's EventEnvelope. An
 // event of a type this client does not know keeps its seq, so it never fakes a gap, but is not delivered.
 import type { ApiIssue } from "@jsnb/core";
 import { EventEnvelope, eventTypes } from "@jsnb/core";

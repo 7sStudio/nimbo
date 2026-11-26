@@ -1,4 +1,4 @@
-// The error a subscription ends with when its subscriber's own callback throws (03-api §7.6): a JsnbError whose cause
+// The error a subscription ends with when its subscriber's own callback throws: a JsnbError whose cause
 // is what the callback threw, so the subscriber learns of it through the start promise or onError.
 import { JsnbError } from "@jsnb/core";
 

@@ -1,4 +1,4 @@
-// 08 §7 on the stylesheet the viewer ships (dist/style.css, after `pnpm build`), whose rules are mostly the views'
+// The style rules on the stylesheet the viewer ships (dist/style.css, after `pnpm build`), whose rules are mostly the views'
 // Tailwind utilities, which Stylelint never sees in the CSS files it lints: the gate (@jsnb/style-gate) runs
 // Stylelint itself on the compiled sheet. Its own tests show each rule biting on fixture CSS, and
 // style.plants.contract.test.ts on the viewer's real classes.
@@ -21,12 +21,12 @@ const sources = (dir: string): string[] =>
     return /\.(?:vue|ts)$/u.test(entry.name) && !entry.name.includes(".test.") ? [path] : [];
   });
 
-describe("dist/style.css under 08 §7", () => {
+describe("dist/style.css", () => {
   it("exists: the contract stage runs after the build", () => {
     expect(existsSync(style), "run `pnpm build` first").toBe(true);
   });
 
-  it("keeps every rule inside the viewer and within 08 §7", async () => {
+  it("keeps every rule inside the viewer and within the style rules", async () => {
     expect(await faults(readFileSync(style, "utf8"))).toEqual([]);
   });
 

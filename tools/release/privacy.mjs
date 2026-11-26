@@ -1,4 +1,4 @@
-// The release build's privacy check (build.mjs, 02-architecture §10): the staged tree must not name the build machine.
+// The release build's privacy check (build.mjs): the staged tree must not name the build machine.
 import { lstatSync, readFileSync } from "node:fs";
 import { homedir, userInfo } from "node:os";
 import { relative } from "node:path";

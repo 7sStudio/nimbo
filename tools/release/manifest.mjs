@@ -1,4 +1,4 @@
-// A release folder's index (02-architecture §10): manifest.json (version, commit, and per target its tarball's name,
+// A release folder's index: manifest.json (version, commit, and per target its tarball's name,
 // size and SHA-256), SHA256SUMS for every file published (the MCP bundle and server.json too, which mcpb.mjs wrote),
 // install.sh, and the Homebrew formula. build.mjs calls it for
 // the targets it built; the release workflow calls it once more over the tarballs every runner built.

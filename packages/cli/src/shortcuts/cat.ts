@@ -1,4 +1,4 @@
-// `nimbo cat <cell>` (03-api §8): a cell's source from cell.get, exactly as it is (no newline added).
+// `nimbo cat <cell>`: a cell's source from cell.get, exactly as it is (no newline added).
 import { cellGet } from "@jsnb/core";
 
 import type { ExitCode } from "../errors/exit.js";

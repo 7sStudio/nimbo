@@ -1,6 +1,6 @@
 // The one client-side undo: the last ten deletes from this page, this session. Restoring adds the
 // last delete's cells back (all of a range deleted at once, as Jupyter's Z does) under their old ids where they were
-// (cell.add { id }, 03-api §4.3), then puts their meta back; lastEdit is the server's and is not sent.
+// (cell.add { id }), then puts their meta back; lastEdit is the server's and is not sent.
 import type { Cell, CellId, CellMeta } from "@jsnb/core";
 import { defineStore } from "pinia";
 import { ref } from "vue";

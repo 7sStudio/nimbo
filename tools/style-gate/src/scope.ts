@@ -1,5 +1,5 @@
 // What a package's compiled stylesheet may style: its root, its prefixed utilities and, inside them, a live slot that
-// holds the user's elements (08 §7). output-view's is .jsnb-ov, ov: and [data-live]; the ui's .jsnb-ui, ui: and [data-live], with the page's own
+// holds the user's elements. output-view's is .jsnb-ov, ov: and [data-live]; the ui's .jsnb-ui, ui: and [data-live], with the page's own
 // tokens, fonts and keyframes (PageScope).
 
 /** What a page's own sheet (the ui's) may set outside its root (rules/pageLevel.ts). */
@@ -13,7 +13,7 @@ export type PageScope = {
 export type GateScope = {
   /** The root's class, without its dot: `jsnb-ov`. */
   readonly root: string;
-  /** The utilities' prefix, without its colon: `ov`. Two utilities under it carry what 08 §7 allows in one place only:
+  /** The utilities' prefix, without its colon: `ov`. Two utilities under it carry what the style rules allow in one place only:
    * `<prefix>:fixed` (position: fixed, a full-screen dialog's) and `<prefix>:live-slot` (all: initial, the live slot's
    * reset). */
   readonly prefix: string;

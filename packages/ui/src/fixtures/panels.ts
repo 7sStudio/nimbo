@@ -1,4 +1,4 @@
-// A panel mounted for a component test (09-testing §1.3): a fresh Pinia whose stores a test fills by hand, the page's
+// A panel mounted for a component test: a fresh Pinia whose stores a test fills by hand, the page's
 // .jsnb-ui root, and a dispatcher that records what the panel asks for and answers `answer` (the dispatcher's own
 // contract: a command's answer, or undefined when it was refused). Writes are on unless `off`.
 import type { Cell, Execution } from "@jsnb/core";

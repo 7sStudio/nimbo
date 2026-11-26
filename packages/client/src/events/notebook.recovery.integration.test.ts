@@ -1,4 +1,4 @@
-// A notebook subscription's recovery and end against the peer (02-architecture §4.2, 03-api §7.6): a resync after
+// A notebook subscription's recovery and end against the peer: a resync after
 // every reconnect, a drop during the first hydrate, failures, and closing with the connection or by its owner.
 import { NotebookNotFound } from "@jsnb/core";
 import { describe, expect, it } from "vitest";

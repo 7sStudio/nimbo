@@ -1,4 +1,4 @@
-// The keybindings store (03-api §4.11): the two keybindings files' rules (keybindings.rules), kept current
+// The keybindings store: the two keybindings files' rules (keybindings.rules), kept current
 // by keybindings.changed, so a binding saved anywhere (the Keyboard Shortcuts editor, its JSON view, the CLI, an
 // agent, a hand edit) arrives at once; app/useKeybindings.ts hands them to the live registry (keyboard/keymap.ts).
 // Writes go through keybindings.set, keybindings.reset and the JSON view's file commands.

@@ -1,4 +1,4 @@
-<!-- The viewer: an Output of 03-api §5 checked with toOutput, under its header (summary, tools,
+<!-- The viewer: an Output checked with toOutput, under its header (summary, tools,
 query bar), the body detect() chose, the height cap with its expand control, and full screen: this same component
 again, nested in the dialog. -->
 <script setup lang="ts">

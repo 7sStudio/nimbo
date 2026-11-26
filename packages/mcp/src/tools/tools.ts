@@ -1,6 +1,6 @@
-// The MCP tools of 03-api §9, generated from core's registry: one per command not tagged internal, named with `_` for
+// The MCP tools, generated from core's registry: one per command not tagged internal, named with `_` for
 // `.` (MCP tool names are `[A-Za-z0-9_-]`), its description the registry's, its inputSchema and outputSchema core's
-// JSON Schema of the command (the contract golden's, 09 §4.1), and annotations from the tags.
+// JSON Schema of the command (the contract golden's), and annotations from the tags.
 import type { AnyCommand } from "@jsnb/core";
 import { commandJsonSchema, publicCommands } from "@jsnb/core";
 import type { Tool, ToolAnnotations } from "@modelcontextprotocol/sdk/types.js";
@@ -10,7 +10,7 @@ import { ToolSchema } from "@modelcontextprotocol/sdk/types.js";
 export const toolName = (command: AnyCommand): string => command.name.replace(".", "_");
 
 /**
- * The hints of 03-api §9: read-only only for a command neither mutating nor destructive (core does not tag destructive
+ * The hints: read-only only for a command neither mutating nor destructive (core does not tag destructive
  * commands such as cell.delete as mutating), destructive from its tag or a confirm input, idempotent from its tag. Each is given,
  * false too, since MCP's defaults (destructive and not idempotent) are no tag of ours; openWorldHint, which no tag
  * says, is left to the client.

@@ -1,6 +1,6 @@
 // The engine contract (closes O11): query-json's and query-sql's real engines are output-view's injected engine types,
 // checked by the compiler with `satisfies`, and each answers one query through the viewer's interface in Node. Disposing
-// the host's Node engines leaves no temporary folder behind (09 §1.6).
+// the host's Node engines leaves no temporary folder behind.
 import { existsSync } from "node:fs";
 
 import { createSqlEngine } from "@jsnb/query-sql";

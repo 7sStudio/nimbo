@@ -1,4 +1,4 @@
-// The WebSocket connection of 03-api §7.2: concurrent calls matched by id, event notifications, the daemon's requests
+// The WebSocket connection: concurrent calls matched by id, event notifications, the daemon's requests
 // to the page, reconnects with backoff, calls held while reconnecting, and the status the UI mirrors.
 import type { JsnbError } from "@jsnb/core";
 import { Unauthorized } from "@jsnb/core";

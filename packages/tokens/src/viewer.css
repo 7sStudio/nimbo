@@ -98,7 +98,7 @@
     --dur: 150ms;
     --dur-fade: 200ms;
 
-    /* the four z-index layers of 08 §7 */
+    /* the four z-index layers */
     --z-toolbar: 10;
     --z-panel: 20;
     --z-overlay: 30;

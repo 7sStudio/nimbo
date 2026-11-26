@@ -1,4 +1,4 @@
-// The install logic `upgrade` and `uninstall` stand on (02-architecture §10): which release an upgrade takes, which
+// The install logic `upgrade` and `uninstall` stand on: which release an upgrade takes, which
 // old versions stay because a real process runs from them (found with the real `ps`), and the manifest and checksum
 // checks over bytes read from disk and from a real local HTTP server.
 import type { ChildProcess } from "node:child_process";

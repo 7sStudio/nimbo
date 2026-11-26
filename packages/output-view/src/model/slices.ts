@@ -1,11 +1,11 @@
 // "Load next 2,000": where more of a truncated container can be loaded, and the children that
-// cell.outputValue returns (03-api §4.3) spliced into the wire form in place of the kernel's truncated marker.
+// cell.outputValue returns spliced into the wire form in place of the kernel's truncated marker.
 import type { Path } from "@jsnb/core";
 import { truncatedMarker } from "@jsnb/core";
 
 import { isJsonObject, kindOf, resolve } from "./wire.js";
 
-/** How many children one "load more" asks for (03-api §4.3 `limit`). */
+/** How many children one "load more" asks for (`limit`). */
 export const loadLimit = 2000;
 
 /** cell.outputValue's answer: the children of the path from the offset, the total there and whether more remain. */

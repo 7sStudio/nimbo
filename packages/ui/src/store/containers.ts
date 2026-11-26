@@ -1,4 +1,4 @@
-// Client cell containers as the views see them (08 §7): DOM nodes owned by runtime-web, keyed by cell id,
+// Client cell containers as the views see them: DOM nodes owned by runtime-web, keyed by cell id,
 // which a view slots into its own element and never re-renders, clones or styles. realm/containers.ts provides the
 // host; this store tells the views which cells have one, reactively.
 import type { CellId } from "@jsnb/core";

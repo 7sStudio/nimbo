@@ -1,4 +1,4 @@
-// The HTTP transport's answers against a JSON-RPC peer on a real port (03-api §7.1, §7.3): the token and the
+// The HTTP transport's answers against a JSON-RPC peer on a real port: the token and the
 // declaration, results, the daemon's errors, 401 and answers that are not JSON-RPC.
 import { CellNotFound, Unauthorized } from "@jsnb/core";
 import { describe, expect, it } from "vitest";

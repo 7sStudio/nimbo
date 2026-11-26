@@ -1,4 +1,4 @@
-// Local state that starts over when what it was set against changes (08 §7: no watch that copies one ref into
+// Local state that starts over when what it was set against changes (no watch that copies one ref into
 // another). What is set is kept with the turn of the source it was set in, and a new turn wins: a writable computed.
 import type { WritableComputedRef } from "vue";
 import { computed, shallowRef } from "vue";

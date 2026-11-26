@@ -1,5 +1,5 @@
-// The hand-written shortcuts of 03-api §8, in its order: `nimbo mcp`, then the install's own upgrade, uninstall and
-// doctor, as the table ends.
+// The hand-written shortcuts in order: `nimbo mcp`, then the install's own upgrade, uninstall and
+// doctor at the end.
 import { addShortcut } from "./add.js";
 import { catShortcut } from "./cat.js";
 import { checkShortcut } from "./check.js";

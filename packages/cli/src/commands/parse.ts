@@ -1,4 +1,4 @@
-// Reads a generated subcommand's arguments with node:util's parseArgs into its input (03-api §8): the flags of
+// Reads a generated subcommand's arguments with node:util's parseArgs into its input: the flags of
 // flags.ts, the global --json, --yes / -y and --help / -h, `source` from --source, --file or stdin (`--source -`),
 // then the command's own Zod schema, so a bad flag is exit 2 with its issues before any daemon is contacted.
 import { readFile } from "node:fs/promises";

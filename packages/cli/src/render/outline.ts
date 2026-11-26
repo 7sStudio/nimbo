@@ -1,4 +1,4 @@
-// The human rendering of any command's output when none more specific exists (03-api §8): an indented outline,
+// The human rendering of any command's output when none more specific exists: an indented outline,
 // `key: value` per scalar, short lists of scalars on one line, lists of objects as `-` items, multi-line text as a block.
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === "object" && value !== null && !Array.isArray(value);

@@ -1,4 +1,4 @@
-// The optional DuckDB binding (binding.ts, 11-query §3) against the real engine, in plain Node as the daemon runs it:
+// The optional DuckDB binding (binding.ts) against the real engine, in plain Node as the daemon runs it:
 // the package's sources copied to a folder with no @duckdb/node-api in reach, so the binding is truly absent; every
 // call then fails `missing` and no engine module is loaded. The real binding is then put in a folder named with
 // useDuckdbFolder after that failure, as an install on demand does, and the same process answers a query.

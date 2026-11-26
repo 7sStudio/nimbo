@@ -1,4 +1,4 @@
-// The failures of a query's answer that is not whole (03-api §8): one past its limit, SQL's cap
+// The failures of a query's answer that is not whole: one past its limit, SQL's cap
 // (`query.sqlMaxRows`) or the size budget (`outputs.maxValueBytes`, which cuts what came and marks each cut entry with
 // core's truncated marker), and one past `query.timeoutMs`. A machine format is never written from part of an answer
 // (QueryTruncated, QueryTimedOut, exit 4); pretty shows what came with the note that says what gives the rest.

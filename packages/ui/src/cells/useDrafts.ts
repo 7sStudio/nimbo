@@ -1,4 +1,4 @@
-// The editor's text on its way to the store (02-architecture §5): every keystroke is a draft at once,
+// The editor's text on its way to the store: every keystroke is a draft at once,
 // cell.update goes out 300 ms after the last one and on blur (a run sends the draft itself, commands/cells.ts), and the
 // draft is dropped once the cell's source equals it, so the editor never shows the old text in between; an update
 // refused or failed keeps its draft, sent again once the page may write again.

@@ -1,4 +1,4 @@
-// Reads the wire form of 04-kernel §5.4 (core's serialize/form.ts) one node at a time: its kind, children and counts.
+// Reads the wire form (core's serialize/form.ts) one node at a time: its kind, children and counts.
 import type { Path } from "@jsnb/core";
 import { markerType, unescapeKey } from "@jsnb/core";
 

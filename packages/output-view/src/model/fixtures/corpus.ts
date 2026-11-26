@@ -1,4 +1,4 @@
-// The cases of fixtures/values/output-view.json (09-testing §8): each a server-cell expression, or (kernel: false) one built with encode options no kernel uses, whose `source` stays out of the JSON.
+// The cases of fixtures/values/output-view.json: each a server-cell expression, or (kernel: false) one built with encode options no kernel uses, whose `source` stays out of the JSON.
 import type { EncodeOptions } from "@jsnb/core";
 
 export type CorpusCase = {
@@ -8,7 +8,7 @@ export type CorpusCase = {
   readonly options?: EncodeOptions;
 };
 
-/** util.inspect options of 04-kernel §5.2 (depth 3, 50 array items, 500-character strings; the 4 KB cap never bites). */
+/** util.inspect options (depth 3, 50 array items, 500-character strings; the 4 KB cap never bites). */
 export const inspectOptions = { depth: 3, maxArrayLength: 50, maxStringLength: 500 } as const;
 
 const event = (id: string, type: string, created: number, object: string): string =>
@@ -142,7 +142,7 @@ const kernelCases: readonly (readonly [string, string])[] = [
   ],
 ];
 
-/** Cases no cell produces exactly: `undefined` (no value output, 04-kernel §5.2) and encode budgets below the kernel's. */
+/** Cases no cell produces exactly: `undefined` (no value output) and encode budgets below the kernel's. */
 const builtCases: readonly CorpusCase[] = [
   { name: "undefined", source: "undefined", kernel: false },
   {

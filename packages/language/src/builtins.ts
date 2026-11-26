@@ -26,7 +26,7 @@ function envType(names: readonly string[]): string {
   return `{ readonly [name: string]: string } & { ${known} has(name: string): boolean }`;
 }
 
-/** The server realm's display built-in (04-kernel §5.5). */
+/** The server realm's display built-in. */
 const serverDisplay = `  export const display: {
     /** Shows HTML under the cell. */
     html(html: unknown): void;

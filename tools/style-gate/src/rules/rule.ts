@@ -1,5 +1,5 @@
 // A custom rule of the gate (../config.ts), built as Stylelint builds its own, so its faults come out of Stylelint with
-// theirs. The gate keeps one only where no Stylelint rule can say what 08 §7 says.
+// theirs. The gate keeps one only where no Stylelint rule can say what the style rules say.
 import type { Node, Root } from "postcss";
 import stylelint from "stylelint";
 

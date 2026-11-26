@@ -1,4 +1,4 @@
-// What read_json_auto infers from rows (11-query §5): nested objects, arrays, nulls, mixed types, dates, wide
+// What read_json_auto infers from rows: nested objects, arrays, nulls, mixed types, dates, wide
 // numbers; and its edge cases: no rows, one row, 100 000 rows.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 

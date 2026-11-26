@@ -1,5 +1,5 @@
-/* The reset, scoped to .jsnb-ui and never reaching a live slot ([data-live], a client cell's container,
-   04 §5.5) or what it holds, so nothing of ours styles user output. */
+/* The reset, scoped to .jsnb-ui and never reaching a live slot ([data-live], a client cell's container)
+   or what it holds, so nothing of ours styles user output. */
 @layer base {
   .jsnb-ui,
   .jsnb-ui :not([data-live], [data-live] *),

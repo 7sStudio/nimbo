@@ -1,5 +1,5 @@
-// SQL's table from a value cut or not, on the real SQL engine: the daemon streams the full value in the wire form
-// (03-api §7.5, 04-kernel §5.2), so t holds the same plain rows either way, for a value with dates, Sets, a `$`-key and
+// SQL's table from a value cut or not, on the real SQL engine: the daemon streams the full value in the wire form,
+// so t holds the same plain rows either way, for a value with dates, Sets, a `$`-key and
 // a repeated reference; and a full value that does not load is the bar's error.
 import { encode, truncatedMarker } from "@jsnb/core";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";

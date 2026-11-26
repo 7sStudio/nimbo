@@ -1,4 +1,4 @@
-// Rule 3 of 08-code-standards §8: every keymap row and every palette item resolves to a registry or UI command id,
+// Every keymap row and every palette item resolves to a registry or UI command id,
 // and every registry command that is not internal is in the palette; plus the key labels the Shortcuts panel shows.
 import { defaultKeybindings, publicCommands } from "@jsnb/core";
 import { createPinia, setActivePinia } from "pinia";

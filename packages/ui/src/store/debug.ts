@@ -1,4 +1,4 @@
-// The page's side of the debugger (03-api §4.9): the state the mirror keeps from notebook.get and the debug.* events,
+// The page's side of the debugger: the state the mirror keeps from notebook.get and the debug.* events,
 // the frame the user chose on the paused stack, the watch expressions (per notebook, in this browser), and the debug
 // commands sent through the daemon. Reads of a paused kernel (stack, scopes, variables, evaluations) go through here.
 import type {

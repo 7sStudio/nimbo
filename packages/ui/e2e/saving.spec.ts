@@ -1,4 +1,4 @@
-// Journeys: the file on disk (07-file-format §5, the banners). A folder the daemon cannot write: the "could not
+// Journeys: the file on disk (the banners). A folder the daemon cannot write: the "could not
 // save" banner, the top bar's save state reading "not saved", ⌘S answered with an error toast, Retry once it can write again. A file changed behind the daemon: merged
 // in place with its toast; the same cell changed here too: the "changed on disk" banner, Compare, and Reload from disk
 // takes the file's version. Typing while the daemon is stalled: the drafts in flight chain, so no conflict.

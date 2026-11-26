@@ -1,4 +1,4 @@
-// The CLI's failures to reach its workspace's daemon (03-api §8, 07-file-format §6), each exit 3 but nothingToStop's
+// The CLI's failures to reach its workspace's daemon, each exit 3 but nothingToStop's
 // line: none runs, its server.json cannot be read, it would not start, or the one server.json names serves another
 // folder (a copied workspace).
 import { JsnbError } from "@jsnb/core";
@@ -9,7 +9,7 @@ import type { Cause } from "./cli.js";
 export const nothingToStop = (workspace: string): string =>
   `No daemon runs for ${workspace}; nothing to stop.\n`;
 
-/** A command that does not start one found no daemon for the workspace (03-api §8; exit 3). */
+/** A command that does not start one found no daemon for the workspace (exit 3). */
 export class DaemonNotRunning extends JsnbError {
   declare readonly data: { readonly workspace: string };
   constructor(data: { readonly workspace: string }, options: Cause = {}) {

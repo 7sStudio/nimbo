@@ -1,4 +1,4 @@
-// One value output of `nimbo outputs` past the output limit (03-api §7.5): --full streams the full-value download to
+// One value output of `nimbo outputs` past the output limit: --full streams the full-value download to
 // stdout chunk by chunk and cancels it once stdout's reader is gone (`| head`); a format reads the whole value when
 // the kept one was cut. When the daemon does not hold it whole, pretty shows the kept part and says so on stderr,
 // and json, ndjson and csv refuse (ValueCut): a cut value exported as data would read as a shorter one.

@@ -1,4 +1,4 @@
-// The workspace (03-api §8, 02-architecture §7): the nearest ancestor of the working folder that holds a `.jsnb/`
+// The workspace: the nearest ancestor of the working folder that holds a `.jsnb/`
 // folder, else the working folder itself; and a notebook path typed on the command line as the ref the API takes.
 import { lstat, readlink, realpath, stat } from "node:fs/promises";
 import { dirname, isAbsolute, join, parse, posix, relative, resolve, sep } from "node:path";
@@ -78,7 +78,7 @@ async function throughLinks(realWorkspace: string, path: string): Promise<Place>
 }
 
 /**
- * A notebook path as typed, as the ref the API takes (03-api §2): relative to the workspace root, as -n is, whatever
+ * A notebook path as typed, as the ref the API takes: relative to the workspace root, as -n is, whatever
  * the working folder; an absolute path is taken inside the workspace. One that reads as outside is read again through
  * the links on its way (macOS's /var is /private/var, a project folder linked elsewhere): its real path, against the
  * workspace's. A path that reads as inside keeps its lexical ref, so a link inside the workspace stays as typed.
@@ -96,7 +96,7 @@ export async function notebookPlace(workspace: string, path: string): Promise<Pl
 
 /**
  * Whether `ref` really is in the workspace: the real path of its longest existing prefix there, as the daemon reads
- * it (07-file-format §5), is the workspace or a folder in it, not a place a link inside leads to outside.
+ * it, is the workspace or a folder in it, not a place a link inside leads to outside.
  */
 async function staysInside(realWorkspace: string, ref: string): Promise<boolean> {
   const steps = ref.split("/");

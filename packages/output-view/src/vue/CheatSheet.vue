@@ -1,4 +1,4 @@
-<!-- The `?` help of the query bar (11-query §4): ten examples for the current mode; picking one puts it in the input. -->
+<!-- The `?` help of the query bar: ten examples for the current mode; picking one puts it in the input. -->
 <script setup lang="ts">
 import type { QueryMode } from "@jsnb/core";
 import { PopoverContent, PopoverPortal, PopoverRoot, PopoverTrigger } from "reka-ui";

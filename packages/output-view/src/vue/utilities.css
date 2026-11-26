@@ -1,7 +1,7 @@
-/* Tailwind v4 for the views' templates (08 §3: inside .jsnb-ov, Tailwind utilities and data- attributes), compiled
+/* Tailwind v4 for the views' templates (inside .jsnb-ov, Tailwind utilities and data- attributes), compiled
    into dist/style.css, so a host without Tailwind gets every rule. No Preflight, and no default theme: the
    theme below is the viewer's whole scale, every value inlined into its utilities (so nothing lands on :root), colors,
-   type and shape read from .jsnb-ov's tokens (08 §7). The prefix ov: keeps the viewer's utilities apart from a host's
+   type and shape read from .jsnb-ov's tokens. The prefix ov: keeps the viewer's utilities apart from a host's
    own Tailwind build. The layer order comes first, so it holds whichever of theme.css and style.css a host loads first. */
 @layer properties, tokens, base, components, utilities;
 
@@ -9,10 +9,10 @@
 
 @source "../";
 
-/* The 08 §7 gate's planted classes (src/fixtures) are test data the build must never compile. */
+/* The style gate's planted classes (src/fixtures) are test data the build must never compile. */
 @source not "../fixtures";
 
-/* A pointer's hover only where a mouse or trackpad gives one (08 §7): Tailwind's own variant asks (hover: hover) alone,
+/* A pointer's hover only where a mouse or trackpad gives one: Tailwind's own variant asks (hover: hover) alone,
    which a touch screen with a stylus or an emulated hover also answers. group-hover and every hover after another
    variant are built on this one. */
 @custom-variant hover {
@@ -86,7 +86,7 @@
   --shadow-soft: var(--shadow);
 }
 
-/* A DOM output's live container (DomView.vue) takes the style 04 §5.5 gives a client cell's container: every property
+/* A DOM output's live container (DomView.vue) takes the style of a client cell's container: every property
    back to its initial value, so nothing .jsnb-ov or the page above it passes down by inheritance reaches the user's
    elements, then a block that inherits color-scheme and the page's language, which Chromium and WebKit carry
    in -webkit-locale and `all` resets too. Custom properties still inherit; CSS has no way to stop them. */

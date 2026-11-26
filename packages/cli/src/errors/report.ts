@@ -1,9 +1,9 @@
-// How a failure reads on stderr (03-api §8): `{ code, name, message, data }` under --json, else its name, the
+// How a failure reads on stderr: `{ code, name, message, data }` under --json, else its name, the
 // daemon's message (which names the thing and says what to do) and the issues of INVALID_PARAMS, one per line.
 import { ApiError, isJsnbError } from "@jsnb/core";
 
 type ErrorJson = {
-  /** The JSON-RPC code of a daemon error (03-api §7.4); null for the CLI's and the client's own errors. */
+  /** The JSON-RPC code of a daemon error; null for the CLI's and the client's own errors. */
   readonly code: number | null;
   readonly name: string;
   readonly message: string;
@@ -13,7 +13,7 @@ type ErrorJson = {
 const isRecord = (value: unknown): value is Readonly<Record<string, unknown>> =>
   typeof value === "object" && value !== null && !Array.isArray(value);
 
-/** -32603 carrying a named JsnbError (`data: { name, data }`): that name and its data (03-api §7.4). */
+/** -32603 carrying a named JsnbError (`data: { name, data }`): that name and its data. */
 function namedInternal(error: ApiError): { name: string; data: unknown } | undefined {
   if (error.code !== -32603 || typeof error.data.name !== "string") return undefined;
   return { name: error.data.name, data: error.data.data ?? {} };

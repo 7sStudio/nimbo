@@ -1,4 +1,4 @@
-// What a generated command prints (03-api §8): its output verbatim as one JSON document under --json, else a reading
+// What a generated command prints: its output verbatim as one JSON document under --json, else a reading
 // of it: runs as the page shows them, a cell as a line, a notice after them, anything else as an outline; and exit 1
 // when a run failed.
 import { randomBytes } from "node:crypto";
@@ -112,7 +112,7 @@ function noticeLine(output: unknown): string {
   return typeof notice === "string" ? `notice: ${notice}\n` : "";
 }
 
-/** The commands that run cells (03-api §8: exit 1 is for them): cell.add runs only with `run`, else it has no run. */
+/** The commands that run cells (exit 1 is for them): cell.add runs only with `run`, else it has no run. */
 const runCommands = new Set(["cell.run", "notebook.run", "cell.add"]);
 
 const snapshotSchema = z.object({
@@ -173,7 +173,7 @@ export const resultText = (name: string, output: unknown, asJson: boolean): stri
   return (name === "cell.snapshot" ? snapshotText(output) : undefined) ?? readable(name, output);
 };
 
-/** 1 when a run the command made (a dependent it started included) ended in error (03-api §8), else 0; reading a failed run (cell.outputs) is 0. */
+/** 1 when a run the command made (a dependent it started included) ended in error, else 0; reading a failed run (cell.outputs) is 0. */
 export const resultExit = (name: string, output: unknown): ExitCode =>
   runCommands.has(name) &&
   [...executionsOf(output), ...autoRunsOf(output)].some((execution) => execution.status === "error")

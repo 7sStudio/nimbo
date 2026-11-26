@@ -1,5 +1,5 @@
-// The kernel helpers of 09-testing §8: compileCell turns cell source into the execute request the daemon sends
-// (04-kernel §2.1) through @jsnb/transform, and kernelEntry runs the kernel child from source.
+// The kernel helpers: compileCell turns cell source into the execute request the daemon sends
+// through @jsnb/transform, and kernelEntry runs the kernel child from source.
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -25,7 +25,7 @@ export type CompiledCell = {
   readonly kinds: CellAnalysis["kinds"];
 };
 
-/** Transforms `source` as `cell` of `notebook`, the way the daemon does before it sends `execute` (04-kernel §4). */
+/** Transforms `source` as `cell` of `notebook`, the way the daemon does before it sends `execute`. */
 export function compileCell(source: string, options: CompileOptions): CompiledCell {
   const filename = cellUrl(options.notebook ?? "test.jsnb", options.cell);
   const { code, map, analysis } = transform(source, { filename });

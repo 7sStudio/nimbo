@@ -1,4 +1,4 @@
-// Tests rule 1 of 08 §8 with ESLint's RuleTester: components may not import the client transport.
+// Tests jsnb/no-client-in-components with ESLint's RuleTester: components may not import the client transport.
 import { RuleTester } from "eslint";
 import { describe, it } from "vitest";
 

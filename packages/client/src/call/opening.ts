@@ -1,6 +1,6 @@
 // A caller for an agent or a script (the CLI, the MCP server): a call that names a notebook the daemon has on disk but
 // not open (NotebookNotFound with `closed`) opens it with notebook.open and is made once more, so an agent does not
-// have to know which notebooks the page or an earlier command left open (03-api §4.2). The refusal comes before the
+// have to know which notebooks the page or an earlier command left open. The refusal comes before the
 // command does anything, so the second call is the only one that acts. notebook.close is never retried (opening a
 // notebook only to close it would start its kernel for nothing), nor the commands that do not address an open one.
 import type { AnyCommand } from "@jsnb/core";

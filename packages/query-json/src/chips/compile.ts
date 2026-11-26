@@ -1,4 +1,4 @@
-// Filter mode: chips compiled to one JSONPath filter query, shown under the chips (11-query §2, gallery card 9).
+// Filter mode: chips compiled to one JSONPath filter query, shown under the chips.
 import { keySegments, shorthand, shorthandPath } from "./key.ts";
 import { escapeLiteral } from "./regex.ts";
 import type { Chip } from "./types.ts";

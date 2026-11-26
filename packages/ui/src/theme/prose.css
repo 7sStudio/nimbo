@@ -3,7 +3,7 @@
    tone with no outline (a JavaScript or TypeScript fence in the editor's colours, its language at its corner), links in
    --client. A
    utility, so its selectors are ui:-prefixed like every other rule of the page, and each element it styles excludes a
-   live slot and what it holds, as the gate asks of every element selector (08 §7). */
+   live slot and what it holds, as the gate asks of every element selector. */
 @utility prose {
   font-size: 0.8125rem;
   line-height: 1.5;

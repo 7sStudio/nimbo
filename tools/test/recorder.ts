@@ -1,4 +1,4 @@
-// The daemon fixture's event recorder (09-testing §1: no sleeps): every event a client received, and a wait for the
+// The daemon fixture's event recorder (no sleeps): every event a client received, and a wait for the
 // first one of a type that a predicate accepts, received before the wait or after it.
 import type { EventEnvelope, EventOf, EventType } from "@jsnb/core";
 

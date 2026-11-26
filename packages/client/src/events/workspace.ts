@@ -1,4 +1,4 @@
-// A workspace subscription (03-api §4.8 without `notebook`, §7.6): every event of every notebook as it arrives,
+// A workspace subscription (events.subscribe without `notebook`): every event of every notebook as it arrives,
 // duplicates dropped per notebook, a gap reported to onGap with delivery going on; a reconnect subscribes again.
 import type { ApiIssue, EventEnvelope, JsnbError } from "@jsnb/core";
 import { eventsSubscribe, isJsnbError } from "@jsnb/core";

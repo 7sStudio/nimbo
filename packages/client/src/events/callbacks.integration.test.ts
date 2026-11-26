@@ -1,4 +1,4 @@
-// Subscriber callbacks that throw (03-api §7.6): the subscription ends with SubscriberFailed through its start or
+// Subscriber callbacks that throw: the subscription ends with SubscriberFailed through its start or
 // onError, and what onError itself throws reaches the connection's reportError; nothing is left unsettled.
 import type { JsnbError } from "@jsnb/core";
 import { describe, expect, it } from "vitest";

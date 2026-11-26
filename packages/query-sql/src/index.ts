@@ -1,4 +1,4 @@
-// Public API of @jsnb/query-sql: SQL over records with DuckDB behind SqlEngine (11-query §3); the page's engine.
+// Public API of @jsnb/query-sql: SQL over records with DuckDB behind SqlEngine; the page's engine.
 export type {
   Column,
   ExportFormat,

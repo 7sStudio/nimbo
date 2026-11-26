@@ -1,5 +1,5 @@
 // The page's Database on DuckDB-WASM, the entry of the lazy chunk the lifecycle imports on first use (never part
-// of the page bundle, 11-query §3).
+// of the page bundle).
 import type { Deadline } from "../abort.ts";
 import type { Database, OpenOptions } from "../database.ts";
 import type { ExportFormat, Result } from "../engine.ts";

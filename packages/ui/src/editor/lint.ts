@@ -56,7 +56,7 @@ let lint: Promise<typeof Lint> | undefined;
 
 /** The one owner of a cell's underlines: the language service's list when it gave the cell one, else the
  * syntax error of the last run. @codemirror/lint is a chunk of its own, loaded the first time something is underlined
- * (08 §10's first-load budget); before that there is nothing to clear. A view gone meanwhile, or a chunk that would
+ * (the first-load budget); before that there is nothing to clear. A view gone meanwhile, or a chunk that would
  * not load (the error block and Problems still say it all), is left alone. */
 export async function markDiagnostics(
   target: () => EditorView | undefined,

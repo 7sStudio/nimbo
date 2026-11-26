@@ -60,7 +60,7 @@ describe("createJsonPathEngine above the main-thread node limit", () => {
 /** 20 000 numbers: 20 001 nodes, well under the default node limit. */
 const numbers = Array.from({ length: 20_000 }, (_, index) => index);
 
-describe("createJsonPathEngine on a query whose cost is not linear (11-query §2)", () => {
+describe("createJsonPathEngine on a query whose cost is not linear", () => {
   it("stops an absolute query inside a filter at its timeout, on a value under the node limit", async () => {
     const start = performance.now();
     const result = await compiled(inThread, "$[?count($[*]) > 0]").select(numbers, {
@@ -101,7 +101,7 @@ describe("createJsonPathEngine on a query whose cost is not linear (11-query §2
   });
 });
 
-describe("createJsonPathEngine's default node limit of 100 000 (11-query §2)", () => {
+describe("createJsonPathEngine's default node limit of 100 000", () => {
   const withFiller = (filler: readonly number[]) => ({
     ...chargeList(9090),
     filler,

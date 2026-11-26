@@ -1,4 +1,4 @@
-// The generated client's contract (08-code-standards §2, 09-testing §4.1): the committed file is exactly what the
+// The generated client's contract: the committed file is exactly what the
 // generator renders from the registry, and it has one method per command not tagged internal, calling that command.
 import { readFile } from "node:fs/promises";
 

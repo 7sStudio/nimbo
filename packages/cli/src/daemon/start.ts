@@ -1,4 +1,4 @@
-// Starting the daemon for a mutating command (03-api §8, 02-architecture §7): `<node> <entry> --workspace <ws>`
+// Starting the daemon for a mutating command: `<node> <entry> --workspace <ws>`
 // detached, its stdout read until the `{"event":"listening"}` line, then let go; its stderr goes to a file of its own
 // (then `.jsnb/logs/stderr.log`, startFolder.ts), so no later write of the daemon meets a pipe the CLI closed, and none
 // is lost. An entry that exits first reports the JSON line it wrote there, and `DaemonRunning` (another CLI won the

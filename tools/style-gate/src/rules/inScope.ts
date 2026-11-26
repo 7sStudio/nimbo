@@ -1,4 +1,4 @@
-// jsnb/in-scope: every rule styles the package's own elements (08 §7), never the page and never a live slot or the
+// jsnb/in-scope: every rule styles the package's own elements, never the page and never a live slot or the
 // user's elements in it, which the package leaves unstyled. A selector's subject (its last compound) passes
 // when it carries a prefixed class or is the root, or when it excludes the live slot and all it holds,:
 // not([data-live], [data-live] *), and sits under the root through descendant or child combinators. Excluding only

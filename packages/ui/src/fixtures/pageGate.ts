@@ -1,4 +1,4 @@
-// The 08 §7 gate (@jsnb/style-gate, tools/style-gate) as the ui runs it on its built stylesheet: the page's scope
+// The style gate (@jsnb/style-gate, tools/style-gate) as the ui runs it on its built stylesheet: the page's scope
 // (.jsnb-ui, its ui: utilities, a client cell's live slot, the scope plugin's defaults rule), what a page alone may set
 // (its tokens on :root, its two bundled font families, its jsnb-ui-* keyframes), and the rules the repository's
 // stylelint.config.js gives the package's CSS files.

@@ -1,4 +1,4 @@
-<!-- InstallPrompt: under a run that ended with MissingPackage (03-api §4.3.1), the packages it found missing and one Install button per name; the install goes through packages.add and the shell's installing banner shows its progress. There is no silent install: the user clicks. A name installed since (here or by an agent) leaves the list; once none is left, the line says to run the cell again. -->
+<!-- InstallPrompt: under a run that ended with MissingPackage, the packages it found missing and one Install button per name; the install goes through packages.add and the shell's installing banner shows its progress. There is no silent install: the user clicks. A name installed since (here or by an agent) leaves the list; once none is left, the line says to run the cell again. -->
 <script setup lang="ts">
 import { Download } from "@lucide/vue";
 import { computed } from "vue";

@@ -1,4 +1,4 @@
-// A workspace subscription against the peer (03-api §4.8, §7.6): every notebook's events, duplicates dropped per
+// A workspace subscription against the peer: every notebook's events, duplicates dropped per
 // notebook, gaps reported while delivery goes on, unknown types skipped, a new events.subscribe after a reconnect.
 import type { JsnbError } from "@jsnb/core";
 import { describe, expect, it } from "vitest";

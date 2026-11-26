@@ -22,7 +22,7 @@ const marked = computed(() =>
     : undefined,
 );
 const kind = computed(() => props.tokens[0]?.kind ?? "text");
-// Keyed by their offsets in the text, stable ids for the v-fors (08 §7).
+// Keyed by their offsets in the text, stable ids for the v-fors.
 const placed = computed(() => withStarts(props.tokens));
 const rest = computed(() => placed.value.slice(1));
 </script>

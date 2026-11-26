@@ -1,4 +1,4 @@
-// Rule 2 of 08 §8: mutating registry commands from store/ and commands/ only; elsewhere in ui, a dispatched id.
+// jsnb/mutations-through-commands: mutating registry commands from store/ and commands/ only; elsewhere in ui, a dispatched id.
 import { RuleTester } from "eslint";
 import { describe, it } from "vitest";
 

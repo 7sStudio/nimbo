@@ -1,4 +1,4 @@
-// `uninstall` (03-api §8, 02-architecture §10): removes what the installer put on this machine, after a yes. It lists
+// `uninstall`: removes what the installer put on this machine, after a yes. It lists
 // what goes and what stays, names every process running from an installed version (daemons, their kernels, agents'
 // MCP servers) and stops them with SIGTERM so notebooks are saved; then the versions, the DuckDB binding, the
 // launcher link, the PATH line and the MCP registrations it made go. The user config stays unless --purge; no

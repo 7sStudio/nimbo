@@ -1,4 +1,4 @@
-// The MCP bundle's entry (02-architecture §10): the MCP client runs it with its own Node. It finds the nimbo installed
+// The MCP bundle's entry: the MCP client runs it with its own Node. It finds the nimbo installed
 // on this machine and runs `nimbo mcp` in the workspace folder the user chose, on the client's stdin and stdout. When
 // nimbo is not installed, or the folder is not there, it serves a small MCP server of its own whose one tool says what
 // is missing and how to install nimbo; it never downloads or installs anything. No dependencies: the bundle is this

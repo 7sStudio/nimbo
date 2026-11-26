@@ -1,5 +1,5 @@
 <!-- One grid cell: a leaf's tokens with find's matches marked, a container's one-line preview, nothing when absent. Dates
-stay compact (gallery card 2): a unix time shows as its date, and every date has both forms in the cell's title; links,
+stay compact: a unix time shows as its date, and every date has both forms in the cell's title; links,
 "View as tree" for JSON and add-on hints show as in the tree, hooks given the cell's path. -->
 <script setup lang="ts">
 import type { Path } from "@jsnb/core";

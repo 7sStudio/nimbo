@@ -1,4 +1,4 @@
-<!-- An error (gallery card 5): name and message first, the source excerpt with its caret when the error has one,
+<!-- An error: name and message first, the source excerpt with its caret when the error has one,
 frames mapped to the cell with "Jump", package frames named, Node-internal frames folded, the cause chain, `data` as a
 tree, and the raw stack on demand. -->
 <script setup lang="ts">

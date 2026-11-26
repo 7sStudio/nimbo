@@ -1,4 +1,4 @@
-// The generated surface's words (03-api §8): `nimbo <domain> <verb>` for every registry command not tagged internal,
+// The generated surface's words: `nimbo <domain> <verb>` for every registry command not tagged internal,
 // the verb in kebab-case (`cell.outputQuery` → `nimbo cell output-query`); internal commands have no words at all.
 import type { AnyCommand } from "@jsnb/core";
 import { publicCommands } from "@jsnb/core";

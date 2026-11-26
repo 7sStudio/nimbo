@@ -8,7 +8,7 @@ type Segment<V extends string> = {
   readonly value: V;
   readonly label: string;
   readonly note?: string | undefined;
-  /** Shown in the option, greyed with it: what first use downloads (11-query §4), never only in the tooltip. */
+  /** Shown in the option, greyed with it: what first use downloads, never only in the tooltip. */
   readonly size?: string | undefined;
 };
 

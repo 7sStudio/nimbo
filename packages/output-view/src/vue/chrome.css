@@ -1,4 +1,4 @@
-/* What the views' Tailwind utilities do not say well, loaded unscoped by OutputView (08 §7). Everything else of the
+/* What the views' Tailwind utilities do not say well, loaded unscoped by OutputView. Everything else of the
    viewer's chrome is written in its templates. No rule here matches a DOM output's live container ([data-live]) or
    what it holds: that is the user's DOM, which the viewer may slot but never style. */
 @layer components {

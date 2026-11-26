@@ -1,4 +1,4 @@
-// How a tree row reads (gallery card 1): its key, the label and bracket of a container, the text of a leaf, and the
+// How a tree row reads: its key, the label and bracket of a container, the text of a leaf, and the
 // part of a long string shown folded.
 import type { Path } from "@jsnb/core";
 

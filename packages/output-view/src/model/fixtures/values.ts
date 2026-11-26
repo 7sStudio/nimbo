@@ -1,4 +1,4 @@
-// Reads fixtures/values/output-view.json, output-view's file of the shared wire-form corpus (09-testing §8).
+// Reads fixtures/values/output-view.json, output-view's file of the shared wire-form corpus.
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 

@@ -1,4 +1,4 @@
-// The page bundle carries no DuckDB and no Arrow (11-query §3, 08 §10): from index.ts, the static imports reach
+// The page bundle carries no DuckDB and no Arrow: from index.ts, the static imports reach
 // neither package nor any ?url asset, and duckdb/ and node/ are reached only through import().
 import { describe, expect, it } from "vitest";
 

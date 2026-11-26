@@ -1,4 +1,4 @@
-// `nimbo open [path] [--no-browser] [--background]` (03-api §8, §7.1): the notebook opened (created first when there is
+// `nimbo open [path] [--no-browser] [--background]`: the notebook opened (created first when there is
 // no such file) and its page `/ui/<name>?token=…` handed to the browser opener; with no path and no notebook the -n
 // default settles on, the Home page `/ui/?token=…` instead. With no daemon running, the daemon runs in the
 // terminal's foreground until Ctrl-C (daemon/foreground.ts), as a Jupyter server does; one already running is used
@@ -218,7 +218,7 @@ async function run(argv: readonly string[], io: Io): Promise<ExitCode> {
 }
 
 /**
- * Bare `nimbo` typed on a terminal (03-api §8): the Home page in the browser, the daemon started when none runs,
+ * Bare `nimbo` typed on a terminal: the Home page in the browser, the daemon started when none runs,
  * whatever notebook `nimbo open` would default to; a person at a prompt means "show me my notebooks".
  */
 export const openHome = (io: Io): Promise<ExitCode> =>

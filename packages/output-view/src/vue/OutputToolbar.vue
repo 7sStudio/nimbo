@@ -72,7 +72,7 @@ const labels: Readonly<Record<SwitchView, string>> = {
       >
     </span>
     <slot />
-    <!-- the tools show on hover or a keyboard focus inside the output (focus-visible, 08 §7) and stay in the
+    <!-- the tools show on hover or a keyboard focus inside the output (focus-visible) and stay in the
     tab order; always in full screen, on a screen without hover, and in an output under 34rem, where they
     wrap under the summary and hidden would leave its row blank -->
     <span

@@ -1,4 +1,4 @@
-<!-- The query bar's one-line code field (11-query §4): CodeMirror with the mode's grammar and colors, completion from
+<!-- The query bar's one-line code field: CodeMirror with the mode's grammar and colors, completion from
 the SQL schema or the value's keys, ↩ runs, ⌘↩ runs and pins, Esc closes, ↑ ↓ walk the history, `?` opens help. -->
 <script setup lang="ts">
 import type { QueryMode } from "@jsnb/core";

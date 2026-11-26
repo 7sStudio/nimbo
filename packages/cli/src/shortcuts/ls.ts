@@ -1,6 +1,6 @@
-// `nimbo ls` (03-api §8): a notebook's cells from notebook.get, one line each: id, type, status, stale, who
+// `nimbo ls`: a notebook's cells from notebook.get, one line each: id, type, status, stale, who
 // edited it last (`you` for the page, `agent` for the CLI and MCP with the agent's name, `disk` for an edit of the file
-// outside nimbo that the daemon merged, 07-file-format §5), its title
+// outside nimbo that the daemon merged), its title
 // (meta.title, set with `nimbo cell update --meta`) and the first line of its source.
 import type { Cell } from "@jsnb/core";
 import { notebookGet } from "@jsnb/core";
@@ -56,7 +56,7 @@ const rowOf = (cell: Cell) => ({
   firstLine: firstLine(cell.source, 72),
 });
 
-/** The open conflict in one line (07-file-format §5): its cells, and the recovery copy it came from. */
+/** The open conflict in one line: its cells, and the recovery copy it came from. */
 const conflictLine = (cells: readonly string[], recovered: string | undefined): string => {
   const what =
     recovered === undefined ? "Conflict with the file" : `Recovered unsaved text (${recovered})`;

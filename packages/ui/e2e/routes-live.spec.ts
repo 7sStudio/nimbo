@@ -1,4 +1,4 @@
-// Journey: routes on the page as they happen (04-kernel §5.6, §8): a server cell's routes show as
+// Journey: routes on the page as they happen: a server cell's routes show as
 // "listening" in its header's State column, in the status bar's count and as rows of the inspector's Routes at once;
 // requests a webhook sender makes without the token raise the requests in the open inspector and in the cell's state,
 // and fill the cell's result, one block per route with its count, address and Copy URL and one row per request (time,

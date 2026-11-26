@@ -1,4 +1,4 @@
-// The daemon's DuckDB stays inside its directory (09 §5: the daemon writes only inside the workspace): user SQL can
+// The daemon's DuckDB stays inside its directory (the daemon writes only inside the workspace): user SQL can
 // neither read nor write a file elsewhere, install an extension, nor turn the confinement off.
 import { existsSync } from "node:fs";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";

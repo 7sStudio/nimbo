@@ -51,7 +51,7 @@ function withOpen(state: HomeState, path: string, open: boolean): HomeState {
   return withList(state, notebooks);
 }
 
-/** An open notebook whose file moved (07 §5): it is open under `to`, with its kernel, before the list says so. */
+/** An open notebook whose file moved: it is open under `to`, with its kernel, before the list says so. */
 function movedTo(state: HomeState, from: string, to: string): HomeState {
   const kernel = state.kernels[from];
   const next = withOpen(withOpen(state, from, false), to, true);
