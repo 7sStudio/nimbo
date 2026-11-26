@@ -9,8 +9,8 @@ import type { CDPSession, CookieData, Page } from "puppeteer-core";
 import { z } from "zod";
 
 import type { Log } from "../../events/log.js";
-import type { CdpRelay } from "./relay.js";
-import { openCdpRelay } from "./relay.js";
+import type { CdpRelay } from "../debug/relay.js";
+import { openPageRelay } from "./relay.js";
 
 export type PageTarget = {
   /** `http://127.0.0.1:<port>`: the only origin the page's top frame may load. */
@@ -233,7 +233,7 @@ export async function guardPage(
       close,
       lost: ended,
       startRealm: (start) => startRealm(page, start),
-      relay: () => openCdpRelay(page, { dir: options.dir, log }),
+      relay: () => openPageRelay(page, { dir: options.dir, log }),
       terminate: () => {
         cdp.send("Runtime.terminateExecution").catch((error: unknown) => {
           log.debug({ err: error }, "the headless page did not take Runtime.terminateExecution");

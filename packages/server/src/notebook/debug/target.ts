@@ -1,10 +1,11 @@
-// Where a notebook's js-debug attaches, per realm: the kernel's inspector (the daemon's Node kernel, whose own code and
-// Node's are skipped when stepping), or the headless page holding the client realm, through a CDP relay of its own
-// (kernel/headless/relay.ts), the page's own code skipped. A page is known by its object: a new page is a new target.
+// Where a notebook's js-debug attaches, per realm, each through a CDP relay of its own (kernel/debug/relay.ts): the
+// kernel's inspector (the daemon's Node kernel, whose own code and Node's are skipped when stepping), or the headless
+// page holding the client realm, the page's own code skipped. A page is known by its object: a new page is a new target.
 import type { DebugRealm } from "@jsnb/core";
 import { NotAvailable } from "@jsnb/core";
 import { ownCodeDirectories } from "@jsnb/kernel-node";
 
+import { openInspectorRelay } from "../../kernel/debug/inspectorRelay.js";
 import type { GuardedPage } from "../../kernel/headless/page.js";
 import type { SessionContext } from "../session/context.js";
 import type { Dialect } from "./conditions.js";
@@ -49,7 +50,8 @@ export function kernelTarget(context: SessionContext): DebugTarget {
       const url = kernel.inspectorUrl();
       if (url === undefined) throw unavailable("the kernel has no inspector.");
       const skipFiles = [...ownCodeDirectories.map((dir) => `${dir}**`), "<node_internals>/**"];
-      return { id: url, url, skipFiles };
+      const relay = await openInspectorRelay(url, context.log);
+      return { id: url, url: relay.url, skipFiles, close: relay.close, gone: relay.closed };
     },
     resumeLost: () => {
       const kernel = context.kernel.live();

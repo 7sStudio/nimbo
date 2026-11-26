@@ -14,7 +14,7 @@ import type { Log } from "../../events/log.js";
 import { findBrowser } from "./executable.js";
 import type { Launched } from "./launch.js";
 import { end, launch } from "./launch.js";
-import { openCdpRelay } from "./relay.js";
+import { openPageRelay } from "./relay.js";
 
 const browser = findBrowser(null);
 const suite = browser.found ? describe : describe.skip;
@@ -74,7 +74,7 @@ suite(`the debugger's CDP relay${skipped}`, { timeout: 30_000 }, () => {
   it("takes one connection at its secret path, relays the page's Runtime and refuses the browser's methods", async () => {
     if (!launched) return;
     const page = await launched.browser.newPage();
-    const relay = await openCdpRelay(page, { dir, log: quiet });
+    const relay = await openPageRelay(page, { dir, log: quiet });
     const match = /^ws\+unix:(.+):\/([A-Za-z0-9_-]{32})$/u.exec(relay.url);
     expect(match).not.toBeNull();
     const socket = match?.[1] ?? "";
@@ -117,7 +117,7 @@ suite(`the debugger's CDP relay${skipped}`, { timeout: 30_000 }, () => {
   it("closes once its page closes", async () => {
     if (!launched) return;
     const page = await launched.browser.newPage();
-    const relay = await openCdpRelay(page, { dir, log: quiet });
+    const relay = await openPageRelay(page, { dir, log: quiet });
     const ws = await connect(relay.url);
     expect(ws).toBeInstanceOf(WebSocket);
     await page.close();
