@@ -253,12 +253,12 @@ Files: user `$XDG_CONFIG_HOME/nimbo/settings.json` (default `~/.config/nimbo/`, 
 CLI: `nimbo config get [key]`, `set <key> <value>`, `unset <key>` (each `[--user|--workspace]`, writes default to the workspace file), `path`, `schema` (07-file-format §6). MCP: `settings_get`, `settings_set`, `settings_schema`.
 
 ### 4.11 examples
-The `.jsnb` files of `packages/server/examples/`, read-only; Home's Examples copies one and opens the copy.
+The `.jsnb` files of `packages/server/examples/`, read-only: the tutorial's lessons in its `tutorial/` folder and the examples beside it. An empty workspace's Home offers Start Tutorial first (`ui.home.tutorial`: the workspace's copy of the first lesson when there is one, else every lesson copied), then the lessons and the examples, each copied and its copy opened; Help > Start Tutorial, File > New from Tutorial and New from Example reach them later.
 
 | Command | Input | Output | Notes |
 |---|---|---|---|
-| `examples.list` | `{}` | `{ examples: { name, title, purpose, cells }[] }` | `name` without `.jsnb`; `title` the first heading; `purpose` the intro's first sentence. |
-| `examples.copy` | `{ name }` | `{ path }` | mutating. Copies into the workspace as `<name>.jsnb`, else `<name>-2.jsnb`, … (never overwriting); unknown name `INVALID_PARAMS`. |
+| `examples.list` | `{}` | `{ examples: { name, kind, title, purpose, cells }[] }` | the lessons first (`kind: "tutorial"`, `name` `tutorial/<lesson>`), then the examples (`kind: "example"`); `name` without `.jsnb`; `title` the first heading; `purpose` the intro's first sentence. |
+| `examples.copy` | `{ name }` | `{ path, paths }` | mutating. Copies into the workspace at the name's path, `<name>.jsnb` (a lesson under `tutorial/`), else `<name>-2.jsnb`, … (never overwriting); `name: "tutorial"` copies every lesson. `path` is the first copy, `paths` every copy in order. Unknown name, or a workspace `tutorial` that is not a folder (a file, a link), `INVALID_PARAMS`. |
 
 ### 4.12 feedback
 The feedback-mode notes (Cmd Alt F) in `.jsnb/feedback/`.

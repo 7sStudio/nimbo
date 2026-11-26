@@ -382,7 +382,7 @@ The security suite (09 §5) checks the network rules, the route surface and reda
 | Query engines | implement `QueryEngine` or `SqlEngine` and inject it into the viewer; output-view sees them only as structural types (11 §2) | JSONPath, jq, DuckDB |
 | Settings | add a key to `core/src/settings/` (schema, default, metadata); the Settings page, `nimbo config`, the MCP tools and `/schema/settings.json` follow | every option |
 | Keybindings | add a default rule in `core/src/settings/keybindingDefaults.ts`; users override it in `keybindings.json` | the page's keys |
-| Examples | add a notebook to `packages/server/examples/` | Home's examples, `examples.copy` |
+| Examples | add a notebook to `packages/server/examples/` (a lesson to its `tutorial/`, with its expected failures in `tutorial.integration.test.ts`) | Home's examples and tutorial, `examples.copy` |
 | Add-ons | not built: see 12 §4 | |
 
 ## 10. Build and distribution
@@ -420,7 +420,7 @@ The security suite (09 §5) checks the network rules, the route surface and reda
 | HTML export | `server/src/notebook/session/exported.ts`, output-view's `notebookToHTML` | File > Export as HTML | `notebook.export` | 07 §9 |
 | Headless client realm | `server/src/notebook/realm/headless.ts`, `headlessService.ts`, `server/src/kernel/headless/` | `ui/headless.html`, `ui/src/realm/headless.ts` | `realm.status`, `cell.snapshot { image }`, the `realm.headless*` settings, `debug.*` on client cells | 03 §4.5, §4.9, 05 §6 |
 | Feedback mode | `server/src/files/feedback/`, `server/src/http/feedback.ts` | `ui/src/feedback/` | `feedback.list`, `feedback.update` | 03 §4.12 |
-| Examples | `server/src/files/examples/`, `packages/server/examples/` | Home | `examples.*` | 03 §4.11 |
+| Examples and tutorial | `server/src/files/examples/`, `packages/server/examples/` (lessons in `tutorial/`) | Home | `examples.*` | 03 §4.11 |
 
 ### 11.1 Language service
 

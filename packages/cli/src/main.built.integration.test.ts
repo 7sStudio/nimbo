@@ -67,6 +67,22 @@ describe("dist/main.js", () => {
       expect((await jsnbBin(ws, ["notebook", "close", "-n", "a.jsnb"])).code).toBe(4);
     });
   });
+
+  it("lists the tutorial's lessons before the examples and copies every lesson into tutorial/", async () => {
+    await withDaemon(async (_daemon, ws) => {
+      const list = await jsnbBin(ws, ["examples", "list"]);
+      expect(list.code).toBe(0);
+      expect(list.out).toMatch(
+        /^examples:\n {2}- name: tutorial\/01-first-steps\n {4}kind: tutorial\n/u,
+      );
+      const copy = await jsnbBin(ws, ["examples", "copy", "--name", "tutorial", "--json"]);
+      expect(copy.code).toBe(0);
+      const { path, paths } = JSON.parse(copy.out) as { path: string; paths: string[] };
+      expect(path).toBe("tutorial/01-first-steps.jsnb");
+      expect(paths).toHaveLength(9);
+      expect(existsSync(ws.path("tutorial/09-files-and-git.jsnb"))).toBe(true);
+    });
+  });
 });
 
 describe("dist/main.js", () => {

@@ -170,7 +170,7 @@ A workspace is a folder containing `.jsnb/` (03-api §2); the daemon creates it 
 | File | When | Notes |
 |---|---|---|
 | `untitled.jsnb`, `untitled-2.jsnb`, ... | `notebook.create` with no name (`nimbo open` without a path, the UI's New notebook) | workspace root |
-| `<example>.jsnb` (or the next free numbered name) | `examples.copy` (Home's Examples, 03-api §4.11) | copied from `packages/server/examples/`, created exclusively, never over an existing file |
+| `<example>.jsnb`, `tutorial/<lesson>.jsnb` (or the next free numbered name) | `examples.copy` (Home's Tutorial and Examples, 03-api §4.11) | copied from `packages/server/examples/`, created exclusively, never over an existing file; `tutorial/` made when missing, never through a link |
 | `<name>.jsnb.tmp-<pid>-<random>` | every save | gone after the rename; leftovers deleted at the next daemon start (a link at such a name removed, never its target) |
 | `<user config>/recent.json` | each daemon start and `workspace.open` | `{ folders: { path, openedAt }[] }`, latest first, at most ten, atomic, 0600; unreadable reads as none (03-api §4.1 `workspace.recentFolders`) |
 | `<name>.html` | `notebook.export { path }`, `nimbo export <file>`, File > Export as HTML (a browser download) | the HTML export, below; `path` is relative, ends `.html`, stays inside the workspace and never goes through a link or onto a folder; folders made, written atomically. The CLI writes its file itself, relative to the working folder |
