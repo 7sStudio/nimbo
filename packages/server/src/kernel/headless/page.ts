@@ -53,8 +53,8 @@ export type GuardedPage = {
   /** A new CDP relay to this page for js-debug (relay.ts). */
   readonly relay: () => Promise<CdpRelay>;
   /** Ends the JavaScript the page runs now, or the next it runs: a page paused in the debugger ends what it paused in
-   * once it resumes. */
-  readonly terminate: () => Promise<void>;
+   * once it resumes (the page answers only then, so this does not wait for it). */
+  readonly terminate: () => void;
   /** A PNG of the cell's container, scaled down until it fits `maxBytes`; undefined when it has no box; "timeout" when
    * the page did not let itself be taken within `timeoutMs`. */
   readonly shoot: (
@@ -234,8 +234,10 @@ export async function guardPage(
       lost: ended,
       startRealm: (start) => startRealm(page, start),
       relay: () => openCdpRelay(page, { dir: options.dir, log }),
-      terminate: async () => {
-        await cdp.send("Runtime.terminateExecution");
+      terminate: () => {
+        cdp.send("Runtime.terminateExecution").catch((error: unknown) => {
+          log.debug({ err: error }, "the headless page did not take Runtime.terminateExecution");
+        });
       },
       shoot: (cell, limits) => shoot(page, cell, limits),
     };

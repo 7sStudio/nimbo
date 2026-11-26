@@ -346,12 +346,7 @@ export class DebugSession {
   async releasePage(): Promise<void> {
     const client = this.#links.client;
     if (!client.paused) return;
-    await this.#realm
-      .page()
-      ?.terminate()
-      .catch((error: unknown) => {
-        client.warn(error, "the page did not take the end of its paused run");
-      });
+    this.#realm.page()?.terminate();
     await client
       .step((child, threadId) => dap.continue(child, { threadId }), "debug.resume")
       .catch(() => undefined);
