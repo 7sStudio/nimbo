@@ -152,7 +152,7 @@ function run(state: QueryState, action: QueryAction): QueryState {
   }
 }
 
-/** The bar's next state; `reset` is Esc and "Back to source": the result goes, the query stays. */
+/** The bar's next state; `reset` is Esc and "Show all": the result goes, the query stays. */
 export const reduceQuery = (state: QueryState, action: QueryAction): QueryState =>
   run(state, action);
 

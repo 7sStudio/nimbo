@@ -94,7 +94,7 @@ Rules:
 Output-view owns the bar; engines are injected.
 
 - Under the toolbar: segmented **Filter · JSONPath · jq · SQL** (jq and SQL say "loads 1.5 MB / 6 MB on first use" until loaded); a one-line CodeMirror input with per-mode highlighting, ↑/↓ history, `?` for a cheat sheet.
-- Right side: count (`12 nodes`, `12 items`, `6 rows · 41 ms`), Only matches / All (select), **Back to source** (transform; Back to rows for SQL).
+- Right side: count (`12 nodes`, `12 items`, `6 rows · 41 ms`), Only matches / All (select), **Show all** (transform and SQL: the whole value back).
 - Errors inline, position underlined. ↩ runs; Esc closes and restores; ⌘↩ pins to `meta.outputQuery`.
 - A grid's column filter adds a chip, so the bar always shows the whole filter.
 - Agents: `cell.outputQuery { mode, query }` (03-api §4.3), all four modes on the daemon; CLI `nimbo outputs --where|--query|--jq|--sql`.

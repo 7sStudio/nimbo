@@ -1,5 +1,5 @@
-// What the body shows once a query has run: a jq result replaces the value ("Back to source"), SQL rows
-// replace the grid ("Back to rows"), a JSONPath selection focuses the tree or grid; otherwise find's matches do.
+// What the body shows once a query has run: a jq result replaces the value, SQL rows replace the grid (both until
+// "Show all"), a JSONPath selection focuses the tree or grid; otherwise find's matches do.
 import type { Ref } from "vue";
 import { computed } from "vue";
 
