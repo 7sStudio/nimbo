@@ -1,0 +1,167 @@
+{
+  "version": 1,
+  "cells": [
+    {
+      "id": "c_t60001",
+      "type": "markdown",
+      "source": [
+        "# Routes: a cell that answers HTTP",
+        "",
+        "Turn a server cell into an HTTP endpoint, call it from a terminal, from a server cell and from the page, and follow every request.",
+        "",
+        "You will define routes with `route()`, find their address with `routeUrl()`, read the requests under the cell and in the Activity log, and see what a failing handler gives you. About 8 minutes. Nothing here needs the network: the routes listen on this computer only.",
+        "",
+        "Click **Run All** to start."
+      ]
+    },
+    {
+      "id": "c_t60002",
+      "type": "markdown",
+      "source": [
+        "## 1. Two routes",
+        "",
+        "`route(\"METHOD /path\", handler)` registers a route. The handler gets a standard `Request` and returns a plain object (sent as JSON), a string, or a `Response` for full control over the status and headers."
+      ]
+    },
+    {
+      "id": "c_t60003",
+      "type": "server",
+      "source": [
+        "const notes = [{ id: 1, text: \"buy oat milk\" }];",
+        "",
+        "route(\"GET /notes\", () => notes);",
+        "",
+        "route(\"POST /notes\", async (request) => {",
+        "  const body = await request.json().catch(() => null);",
+        "  if (typeof body?.text !== \"string\")",
+        "    return Response.json({ error: 'Send JSON such as {\"text\": \"call mum\"}' }, { status: 400 });",
+        "  const note = { id: notes.length + 1, text: body.text };",
+        "  notes.push(note);",
+        "  return Response.json(note, { status: 201 });",
+        "});",
+        "",
+        "export const notesUrl = routeUrl(\"/notes\");",
+        "notesUrl"
+      ]
+    },
+    {
+      "id": "c_t60004",
+      "type": "markdown",
+      "source": [
+        "The result is the full address of `/notes`: `http://127.0.0.1:<port>/n/<notebook>/notes`. The port is the one nimbo picked when it started, and the part after `/n/` is this notebook's path without `.jsnb`.",
+        "",
+        "Under the cell, each route has a row with **Copy URL**; each request it answers adds a row with its status and its time."
+      ]
+    },
+    {
+      "id": "c_t60005",
+      "type": "markdown",
+      "source": [
+        "## 2. Call it from a terminal",
+        "",
+        "Click **Copy URL** on the `GET /notes` row, then in a terminal:",
+        "",
+        "```sh",
+        "curl <the address>",
+        "curl -X POST <the address> -H 'content-type: application/json' -d '{\"text\": \"call mum\"}'",
+        "curl -X POST <the address> -d 'not json'",
+        "```",
+        "",
+        "The first lists the notes, the second adds one and answers it with status 201, the third answers 400 with the handler's message. Watch the rows appear under the route cell as you go.",
+        "",
+        "Routes answer without nimbo's token, so that webhook senders can reach them; they still listen on `127.0.0.1` only, so nothing outside this computer can call them."
+      ]
+    },
+    {
+      "id": "c_t60006",
+      "type": "markdown",
+      "source": [
+        "## 3. Call it from cells",
+        "",
+        "A server cell can call the route with `fetch`, like any HTTP server:"
+      ]
+    },
+    {
+      "id": "c_t60007",
+      "type": "server",
+      "source": [
+        "const created = await fetch(notesUrl, {",
+        "  method: \"POST\",",
+        "  headers: { \"content-type\": \"application/json\" },",
+        "  body: JSON.stringify({ text: \"water the fern\" }),",
+        "});",
+        "const listed = await fetch(notesUrl);",
+        "({ created: created.status, notes: await listed.json() })"
+      ]
+    },
+    {
+      "id": "c_t60008",
+      "type": "markdown",
+      "source": [
+        "The page can too. `notesUrl` is exported by the route cell, so the client cell below gets it over the bridge, as in the previous lesson."
+      ]
+    },
+    {
+      "id": "c_t60009",
+      "type": "client",
+      "source": [
+        "const reply = await fetch(notesUrl);",
+        "const all: { id: number; text: string }[] = await reply.json();",
+        "const list = document.createElement(\"ul\");",
+        "for (const note of all) list.append(Object.assign(document.createElement(\"li\"), { textContent: note.text }));",
+        "display.div().append(list);",
+        "all.length"
+      ]
+    },
+    {
+      "id": "c_t60010",
+      "type": "markdown",
+      "source": [
+        "## 4. The Activity log",
+        "",
+        "Press **Cmd+J** (Ctrl+J on Linux) to open the bottom panel and pick **Activity**: it lists what happened in the notebook, newest last, each cell run and each request, with who sent it (`curl`, `node` for a server cell, `Mozilla` for the page), the cell that answered, the status and the time. **Console** in the same panel gathers what every cell printed."
+      ]
+    },
+    {
+      "id": "c_t60011",
+      "type": "markdown",
+      "source": [
+        "## 5. A handler that fails",
+        "",
+        "If a handler throws, the caller gets status 500, and the error shows under the cell that registered the route, with its stack, as a run's error would. The cell's own run is still a success: the error came later, from a request. The next cell registers a route that always fails and calls it once."
+      ]
+    },
+    {
+      "id": "c_t60012",
+      "type": "server",
+      "source": [
+        "route(\"GET /broken\", () => {",
+        "  throw new Error(\"the kettle is cold\");",
+        "});",
+        "",
+        "const broken = await fetch(routeUrl(\"/broken\"));",
+        "broken.status"
+      ]
+    },
+    {
+      "id": "c_t60013",
+      "type": "markdown",
+      "source": [
+        "Run a route cell again and its routes are replaced, not doubled. Delete the cell and its routes stop answering."
+      ]
+    },
+    {
+      "id": "c_t60014",
+      "type": "markdown",
+      "source": [
+        "## Try it",
+        "",
+        "1. Add `route(\"DELETE /notes\", () => { notes.length = 0; })` to the first cell and call it with `curl -X DELETE`. What status does an empty answer get? (204: no content.)",
+        "2. Make `GET /notes` read a query such as `?q=milk`: `new URL(request.url).searchParams.get(\"q\")`.",
+        "3. Open the **Inspector**: its **Routes** section lists every route of the notebook with its cell and its count of requests.",
+        "",
+        "Next: `07-debugging`, breakpoints and steps in server cells."
+      ]
+    }
+  ]
+}
