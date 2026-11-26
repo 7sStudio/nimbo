@@ -1,0 +1,160 @@
+{
+  "version": 1,
+  "cells": [
+    {
+      "id": "c_t10001",
+      "type": "markdown",
+      "source": [
+        "# First steps: cells and the kernel",
+        "",
+        "Run your first cells and see how a notebook keeps its state from one cell to the next.",
+        "",
+        "You will learn to run a cell with the keyboard, read its result, keep values in the kernel, spot a stale cell, write Markdown and name a cell. About 8 minutes. If you have used Jupyter, most of it will feel familiar.",
+        "",
+        "This text is a **Markdown cell**. The cells with code are **server cells**: they run in Node.js, in a process called the kernel, one per notebook."
+      ]
+    },
+    {
+      "id": "c_t10002",
+      "type": "markdown",
+      "source": [
+        "## 1. Run a cell",
+        "",
+        "Click into the code of the cell below and press **Shift+Enter**. The cell runs, and the selection moves to the next cell."
+      ]
+    },
+    {
+      "id": "c_t10003",
+      "type": "server",
+      "source": [
+        "const greeting = \"Hello from Node\";",
+        "greeting.toUpperCase()"
+      ]
+    },
+    {
+      "id": "c_t10004",
+      "type": "markdown",
+      "source": [
+        "The value of the **last expression** is the cell's result, shown under it. The cell's header shows a tick, how long the run took and `[1]`: this was the kernel's first run.",
+        "",
+        "The constant `greeting` now lives in the kernel. Every later server cell can use it: run the next one."
+      ]
+    },
+    {
+      "id": "c_t10005",
+      "type": "server",
+      "source": [
+        "`${greeting}, the time is ${new Date().toLocaleTimeString()}`"
+      ]
+    },
+    {
+      "id": "c_t10006",
+      "type": "markdown",
+      "source": [
+        "Run the same cell again: the time changes, the count in the header goes up.",
+        "",
+        "The keys that run a cell:",
+        "",
+        "| Keys | What it does |",
+        "| --- | --- |",
+        "| Shift+Enter | run, then select the next cell |",
+        "| Cmd+Enter (Ctrl+Enter on Linux) | run, and stay on the cell |",
+        "| Alt+Enter | run, then add a new cell below |",
+        "| Cmd+Shift+Enter | run every cell, as **Run All** in the toolbar does |",
+        "",
+        "Each cell also has a run button (the triangle) on the left of its header."
+      ]
+    },
+    {
+      "id": "c_t10007",
+      "type": "markdown",
+      "source": [
+        "## 2. State stays in the kernel",
+        "",
+        "The next two cells make a counter. Run the first once, then run the second three or four times with **Cmd+Enter**."
+      ]
+    },
+    {
+      "id": "c_t10008",
+      "type": "server",
+      "source": [
+        "let count = 0;"
+      ]
+    },
+    {
+      "id": "c_t10009",
+      "type": "server",
+      "source": [
+        "count += 1;",
+        "count"
+      ]
+    },
+    {
+      "id": "c_t10010",
+      "type": "markdown",
+      "source": [
+        "The second cell adds one each time because `count` stays in the kernel between runs. Nothing runs again by itself: running the second cell does not run the first.",
+        "",
+        "Run the first cell again and `count` is back to `0`. Look at the **Inspector** on the right: its **Variables** list shows `count`, its value and the number of the cell that last set it."
+      ]
+    },
+    {
+      "id": "c_t10011",
+      "type": "markdown",
+      "source": [
+        "## 3. Stale cells",
+        "",
+        "Change the `0` in `let count = 0;` to `100` and press **Cmd+Enter** to run that cell. The counter cell below it still shows its old number: it read `count` before the change, so its result is now **stale**. The toolbar says so: **Run Stale** appears, with the number of stale cells. Click it: the counter cell runs again and shows `101`.",
+        "",
+        "Faster: **Alt+Shift+Enter** runs a cell, then every cell that depends on it. Change `100` to `5` and press **Alt+Shift+Enter**: both cells run, and the counter shows `6`.",
+        "",
+        "A notebook never runs a cell behind your back. A stale cell keeps its old result until you run it."
+      ]
+    },
+    {
+      "id": "c_t10012",
+      "type": "markdown",
+      "source": [
+        "## 4. Markdown cells",
+        "",
+        "Double-click this text to edit it. Markdown cells take headings, lists, `code`, tables and links. Press **Shift+Enter** to show it rendered again.",
+        "",
+        "To add a Markdown cell, press **Escape** to leave the editor, then **Shift+M**: a new Markdown cell appears below the selected one. **Shift+S** adds a server cell the same way. The **+ Server**, **+ Client** and **+ Markdown** buttons in the toolbar do the same."
+      ]
+    },
+    {
+      "id": "c_t10013",
+      "type": "markdown",
+      "source": [
+        "## 5. Name a cell",
+        "",
+        "A code cell's header shows a name: the name it defines (`greeting`, `count`), else nothing. To give it a title of your own, select the cell, press **Escape**, then **F2**, type a title and press **Enter**. The title shows in the header and in the **Outline** on the left.",
+        "",
+        "Try it on the counter cell: call it `Counter`."
+      ]
+    },
+    {
+      "id": "c_t10014",
+      "type": "markdown",
+      "source": [
+        "## 6. Saving",
+        "",
+        "You never need to save: the notebook is saved a moment after each change. The title bar says **saved**, or shows a dot while a change is not written yet; **Cmd+S** saves at once.",
+        "",
+        "This notebook is the file `tutorial/01-first-steps.jsnb` in your workspace. Outputs are not saved in it: when you open it again, run the cells to see them."
+      ]
+    },
+    {
+      "id": "c_t10015",
+      "type": "markdown",
+      "source": [
+        "## Try it",
+        "",
+        "1. Add a server cell below (select this cell, **Escape**, **Shift+S**) with `const doubled = count * 2;` and `doubled` on the next line. Run it. Then change the counter's start value again: which cells become stale?",
+        "2. Click **Restart** in the toolbar, then run only the cell with `count += 1`. It fails: the restart emptied the kernel, and `count` is not defined until the cell that declares it runs. **Run All** puts everything back.",
+        "",
+        "Next: `02-outputs`, how to look at a result and ask it questions."
+      ]
+    }
+  ]
+}
