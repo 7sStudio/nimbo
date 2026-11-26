@@ -19,7 +19,8 @@ const notConnected: NewToast = {
   text: "Creating, opening, renaming and deleting notebooks wait for the daemon.",
 };
 
-/** Each recent folder that is still there and is not this one, and each shipped example, as the palette offers them. */
+/** Each recent folder that is still there and is not this one, and each shipped lesson and example, as the palette
+ * offers them. */
 const paletteEntries = (home: ReturnType<typeof useHomeStore>) => [
   ...home.recentFolders
     .filter((folder) => folder.exists && !folder.current)
@@ -31,6 +32,11 @@ const paletteEntries = (home: ReturnType<typeof useHomeStore>) => [
       )}`,
       args: { path: folder.path },
     })),
+  ...home.lessons.map((lesson) => ({
+    command: "ui.home.example",
+    title: `Open a copy of the lesson: ${lesson.title}`,
+    args: { name: lesson.name },
+  })),
   ...home.examples.map((example) => ({
     command: "ui.home.example",
     title: `Open a copy of the example: ${example.title}`,
