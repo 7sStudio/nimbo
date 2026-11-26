@@ -1,4 +1,4 @@
-// transform(): one cell → the Program, the syntax check, the emit with the rewrite, and the assembled result (04 §3, §4).
+// transform(): one cell → the Program, the syntax check, the emit with the rewrite, and the assembled result.
 import type { CellAnalysis } from "@jsnb/core";
 import type ts from "typescript";
 
@@ -9,7 +9,7 @@ import { assembleCell } from "./source-map.js";
 import { rewriteStatements } from "./statements.js";
 
 export type TransformOptions = {
-  /** The cell's virtual URL, `jsnb:///<notebook>.jsnb/<cellId>.ts` (04 §9): the sourceURL and the map's file; its `file:` form is the map's only source. */
+  /** The cell's virtual URL, `jsnb:///<notebook>.jsnb/<cellId>.ts`: the sourceURL and the map's file; its `file:` form is the map's only source. */
   readonly filename: string;
 };
 
@@ -27,7 +27,7 @@ function output(outputs: ReadonlyMap<string, string>, suffix: string): string {
 }
 
 /**
- * Compiles one cell (04 §3). A bad cell throws one of core's analysis errors (`InvalidSyntax`,
+ * Compiles one cell. A bad cell throws one of core's analysis errors (`InvalidSyntax`,
  * `DefaultExport`, `UnsupportedSyntax`, `ReservedName`), a `JsnbError`; never returns a partial result.
  */
 export function transform(source: string, options: TransformOptions): TransformResult {

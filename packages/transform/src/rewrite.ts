@@ -11,7 +11,7 @@ import { createClassify } from "./classify.js";
 import { isAtTopLevel } from "./containers.js";
 import type { Access } from "./references.js";
 
-/** The transform's own calls on the scope, resolved before any cell name (04 §3.3). */
+/** The transform's own calls on the scope, resolved before any cell name. */
 type Plumbing = "__export" | "__import" | "$peek";
 
 export type Rewrite = {
@@ -28,7 +28,7 @@ export type Rewrite = {
   at(node: ts.Node): Position;
 };
 
-/** The shared state of one cell's rewrite (a closure over the recorder, not a class: 08 §6). */
+/** The shared state of one cell's rewrite (a closure over the recorder, not a class). */
 export function createRewrite(
   file: ts.SourceFile,
   context: ts.TransformationContext,

@@ -1,4 +1,4 @@
-// transform(): the result shape and the top-level rules of 04 §3.2 (declarations, hoisting, classes, the last value).
+// transform(): the result shape and the top-level rules (declarations, hoisting, classes, the last value).
 import type { SourceMapPayload } from "node:module";
 import { SourceMap } from "node:module";
 
@@ -70,7 +70,7 @@ describe("source map of scoped names", () => {
   });
 });
 
-describe("variable declarations (rules 1 and 2)", () => {
+describe("variable declarations", () => {
   it("assigns const, let and var onto __scope, one statement per declarator", () => {
     expect(code("const a = 1, b = 2\nlet c = 3\nvar d = 4")).toContain(
       "__scope.a = 1;\n    __scope.b = 2;\n    __scope.c = 3;\n    __scope.d = 4;",
@@ -96,7 +96,7 @@ describe("variable declarations (rules 1 and 2)", () => {
   });
 });
 
-describe("functions (rule 3)", () => {
+describe("functions", () => {
   it("hoists function declarations above everything else in source order", () => {
     const out = code(
       "const r = h()\nfunction h() { return g() }\nconst s = 2\nfunction g() { return 1 }",
@@ -131,7 +131,7 @@ describe("functions (rule 3)", () => {
   });
 });
 
-describe("classes (rule 4)", () => {
+describe("classes", () => {
   it("assigns a class in place, not hoisted", () => {
     const out = code("const before = 1\nclass C {}\nconst after = 2");
     expect(out).toContain(
@@ -152,7 +152,7 @@ describe("classes (rule 4)", () => {
   });
 });
 
-describe("the last statement (rule 13)", () => {
+describe("the last statement", () => {
   it("returns the value of a trailing expression statement, parenthesized", () => {
     expect(code("const a = 1\na + 1")).toContain("return (__scope.a + 1);");
   });
@@ -174,7 +174,7 @@ describe("the last statement (rule 13)", () => {
   });
 });
 
-describe("this at top level (rule 14)", () => {
+describe("this at top level", () => {
   it("becomes void 0 at top level and inside top-level arrows", () => {
     expect(code("const t = this\nconst f = () => this")).toContain(
       "__scope.t = void 0;\n    __scope.f = { f: () => void 0 }.f;",

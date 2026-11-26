@@ -1,4 +1,4 @@
-// Cases 10 to 13 of 04 §12: typeof of an unknown name, every import form, every export form, the last value.
+// Cases 10 to 13: typeof of an unknown name, every import form, every export form, the last value.
 import { answer } from "../fixtures/answer.js";
 import type { CorpusCase } from "./cases.js";
 

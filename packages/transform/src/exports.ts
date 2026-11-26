@@ -1,4 +1,4 @@
-// `export { a, b as c }` → `__scope.__export(...)` calls (04 §3.2 rule 8); `export … from` and `export *` are rejected.
+// `export { a, b as c }` → `__scope.__export(...)` calls; `export … from` and `export *` are rejected.
 import { UnsupportedSyntax } from "@jsnb/core";
 import ts from "typescript";
 

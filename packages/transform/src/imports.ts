@@ -1,4 +1,4 @@
-// `import` declarations → `await __scope.__import("p")` with its bindings assigned on `__scope` (04 §3.2 rule 6).
+// `import` declarations → `await __scope.__import("p")` with its bindings assigned on `__scope`.
 import ts from "typescript";
 
 import type { Rewrite } from "./rewrite.js";

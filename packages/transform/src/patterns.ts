@@ -22,8 +22,8 @@ export function bindingIdentifiers(name: ts.BindingName): ts.Identifier[] {
 }
 
 /**
- * `const { a, b: [c, d = 4], ...rest } = e` → the target `{ a: __scope.a, b: [__scope.c, __scope.d = 4], ...__scope.rest }`
- * (04 §3.2): defaults, rest, holes, nesting and computed keys are kept.
+ * `const { a, b: [c, d = 4], ...rest } = e` → the target `{ a: __scope.a, b: [__scope.c, __scope.d = 4], ...__scope.rest }`:
+ * defaults, rest, holes, nesting and computed keys are kept.
  */
 export function toAssignmentPattern(
   pattern: ts.BindingPattern,

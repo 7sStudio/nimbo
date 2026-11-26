@@ -66,7 +66,7 @@ export function isAtTopLevel(node: ts.Node): boolean {
   return container !== undefined && ts.isSourceFile(container);
 }
 
-/** True when a `var` list belongs to the cell's top-level function scope (04 §3.2: treated as top level). */
+/** True when a `var` list belongs to the cell's top-level function scope (treated as top level). */
 export function isTopLevelVarList(list: ts.VariableDeclarationList): boolean {
   if (list.flags & ts.NodeFlags.BlockScoped) return false;
   return isAtTopLevel(list);

@@ -1,4 +1,4 @@
-// The test realm of 04 §3.3: the scope Proxy over a record, running a cell by indirect eval, and mapping its frames back.
+// The test realm: the scope Proxy over a record, running a cell by indirect eval, and mapping its frames back.
 import {
   GREATEST_LOWER_BOUND,
   LEAST_UPPER_BOUND,
@@ -16,7 +16,7 @@ export type Realm = {
   readonly exports: Map<string, string>;
 };
 
-/** A 1-based line and column, as 03 §5 `Frame` reports them. */
+/** A 1-based line and column, as a `Frame` reports them. */
 export type FramePosition = {
   readonly line: number;
   readonly col: number;
@@ -26,12 +26,12 @@ type CellFunction = (scope: Record<string, unknown>) => unknown;
 
 const isCellFunction = (value: unknown): value is CellFunction => typeof value === "function";
 
-/** The realm's loader: a relative specifier resolves against this module, a bare one through Node (04 §8.1 is the kernel's). */
+/** The realm's loader: a relative specifier resolves against this module, a bare one through Node (the kernel resolves its own way). */
 const load = (specifier: string): Promise<unknown> =>
   import(specifier.startsWith(".") ? new URL(specifier, import.meta.url).href : specifier);
 
 /**
- * The scope of 04 §3.3: plumbing first (never shadowed), then the record, the builtins, the realm's globals,
+ * The scope: plumbing first (never shadowed), then the record, the builtins, the realm's globals,
  * else `ReferenceError`; every write lands in the record, so `globalThis` stays clean.
  */
 export function createRealm(builtins: Record<string, unknown>): Realm {

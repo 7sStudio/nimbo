@@ -1,4 +1,4 @@
-// The corpus cell and case shapes, and cases 1 to 6 of 04 §12: declarations, hoisting, classes, destructuring.
+// The corpus cell and case shapes, and cases 1 to 6: declarations, hoisting, classes, destructuring.
 
 export type CorpusCell = {
   readonly source: string;
@@ -18,7 +18,7 @@ export type CorpusCase = {
   readonly id: number;
   readonly title: string;
   readonly cells: readonly CorpusCell[];
-  /** The realm's builtins layer (04 §3.3), empty by default. */
+  /** The realm's builtins layer, empty by default. */
   readonly builtins?: Readonly<Record<string, unknown>>;
   /** Expected entries of the scope record after the last cell. */
   readonly record?: Readonly<Record<string, unknown>>;
