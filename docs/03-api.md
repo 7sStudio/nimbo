@@ -410,7 +410,7 @@ type Output =
   | { kind: "display"; mime: string; data: string }
   | { kind: "dom"; html: string; text: string }                          // client cell container
   | { kind: "event"; name: string; data: unknown; at: string }           // route()/on() activity
-  | { kind: "error"; error: ErrorInfo };                                 // raised after the run (handler, timer)
+  | { kind: "error"; error: ErrorInfo; when?: "run" | "during" | "after" }; // a callback's (handler, timer), during or after its run; "run": the run's own error as a host shows it
 
 type ErrorInfo = { name: string; message: string; frames: Frame[]; raw: string; data?: Record<string, unknown> };
 type Frame = { cell?: CellId; line: number; col: number; fn?: string; file?: string };

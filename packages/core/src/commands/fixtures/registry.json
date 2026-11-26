@@ -3772,6 +3772,10 @@
                           },
                           "required": ["name", "message", "frames", "raw"],
                           "additionalProperties": false
+                        },
+                        "when": {
+                          "type": "string",
+                          "enum": ["run", "during", "after"]
                         }
                       },
                       "required": ["kind", "error"],
@@ -5000,6 +5004,10 @@
                         },
                         "required": ["name", "message", "frames", "raw"],
                         "additionalProperties": false
+                      },
+                      "when": {
+                        "type": "string",
+                        "enum": ["run", "during", "after"]
                       }
                     },
                     "required": ["kind", "error"],
@@ -6572,6 +6580,10 @@
                         },
                         "required": ["name", "message", "frames", "raw"],
                         "additionalProperties": false
+                      },
+                      "when": {
+                        "type": "string",
+                        "enum": ["run", "during", "after"]
                       }
                     },
                     "required": ["kind", "error"],
@@ -6907,6 +6919,10 @@
                               },
                               "required": ["name", "message", "frames", "raw"],
                               "additionalProperties": false
+                            },
+                            "when": {
+                              "type": "string",
+                              "enum": ["run", "during", "after"]
                             }
                           },
                           "required": ["kind", "error"],
@@ -7322,6 +7338,10 @@
                             },
                             "required": ["name", "message", "frames", "raw"],
                             "additionalProperties": false
+                          },
+                          "when": {
+                            "type": "string",
+                            "enum": ["run", "during", "after"]
                           }
                         },
                         "required": ["kind", "error"],
@@ -7892,6 +7912,10 @@
                             },
                             "required": ["name", "message", "frames", "raw"],
                             "additionalProperties": false
+                          },
+                          "when": {
+                            "type": "string",
+                            "enum": ["run", "during", "after"]
                           }
                         },
                         "required": ["kind", "error"],
@@ -8227,6 +8251,10 @@
                             },
                             "required": ["name", "message", "frames", "raw"],
                             "additionalProperties": false
+                          },
+                          "when": {
+                            "type": "string",
+                            "enum": ["run", "during", "after"]
                           }
                         },
                         "required": ["kind", "error"],
@@ -9379,6 +9407,10 @@
                     }
                   },
                   "required": ["name", "message", "frames", "raw"]
+                },
+                "when": {
+                  "type": "string",
+                  "enum": ["run", "during", "after"]
                 }
               },
               "required": ["kind", "error"]

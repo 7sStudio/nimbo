@@ -47,7 +47,11 @@ const quoted = computed(() => {
   };
 });
 const details = ref(false);
-const output = computed(() => ({ kind: "error" as const, error: props.error }));
+const output = computed(() => ({
+  kind: "error" as const,
+  error: props.error,
+  when: "run" as const,
+}));
 const action = `${wordButton} ui:text-small`;
 </script>
 

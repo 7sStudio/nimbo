@@ -20,6 +20,13 @@ export type Summary = {
 
 const count = thousands;
 
+/** When an error was raised, after its name: the run's own, or a callback's during or after the run. */
+const errorWhen = {
+  run: "ended the run",
+  during: "during the run",
+  after: "after the run",
+} as const;
+
 /** `312 B`, `2.4 KB`, `4.1 MB` (1 KB = 1024 B). */
 export function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${count(bytes)} B`;
@@ -119,7 +126,10 @@ function named(input: ViewInput): Named {
         parts: [plural(streamLines(input.text).length, "line", "lines")],
       };
     case "error":
-      return { name: input.error.name, parts: ["after the run"] };
+      return {
+        name: input.error.name,
+        parts: input.when === undefined ? [] : [errorWhen[input.when]],
+      };
     case "display":
       return displayNamed(input);
     case "dom":

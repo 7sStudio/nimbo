@@ -58,9 +58,11 @@ describe("summarize other outputs", () => {
       "Error output, 2 lines",
     );
     expect(line({ kind: "stream", stream: "stdout", text: "ready\n" })).toBe("Output, 1 line");
-    expect(
-      line({ kind: "error", error: { name: "TypeError", message: "", frames: [], raw: "" } }),
-    ).toBe("TypeError, after the run");
+    const error = { name: "TypeError", message: "", frames: [], raw: "" };
+    expect(line({ kind: "error", error, when: "run" })).toBe("TypeError, ended the run");
+    expect(line({ kind: "error", error, when: "during" })).toBe("TypeError, during the run");
+    expect(line({ kind: "error", error, when: "after" })).toBe("TypeError, after the run");
+    expect(line({ kind: "error", error })).toBe("TypeError");
     expect(line({ kind: "display", mime: "text/html", data: "<b>" })).toBe("text/html");
     expect(line({ kind: "display", mime: "application/json", data: "[1]" })).toBe(
       "application/json, Array, 1 item, 3 B",
