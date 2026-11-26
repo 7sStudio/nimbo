@@ -1,4 +1,4 @@
-// Errors that escaped every wrapper (04-kernel §5.3 for the page): a listener on an element, a bare promise chain.
+// Errors that escaped every wrapper in the page: a listener on an element, a bare promise chain.
 // The realm listens to the page's `error` and `unhandledrejection` from attach to detach.
 import { stackOf } from "./errors.js";
 import { cellOfStack } from "./frames.js";

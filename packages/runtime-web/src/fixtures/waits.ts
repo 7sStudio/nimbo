@@ -1,4 +1,4 @@
-// Waits on the page's own event order, never for a duration (09-testing §1.4): the next frame, the timers queued before.
+// Waits on the page's own event order, never for a duration: the next frame, the timers queued before.
 
 /** Resolves in the next frame, after the frame callbacks registered before it. */
 export const nextFrame = (): Promise<number> =>

@@ -1,4 +1,4 @@
-// The realm's window and document listeners (04-kernel §7): each wrapped for late errors and removed with its run's
+// The realm's window and document listeners: each wrapped for late errors and removed with its run's
 // disposers; one registry for the realm, so the DOM's own bookkeeping holds across runs (once, signal, remove).
 import type { Disposers } from "./disposers.js";
 import type { Callable } from "./guard.js";

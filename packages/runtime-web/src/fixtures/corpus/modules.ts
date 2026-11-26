@@ -10,6 +10,6 @@ const modules: Readonly<Record<string, string>> = {
   "./answer.ts": new URL("../modules/answer.ts", here).href,
 };
 
-/** The realm's `importUrl` for the corpus: the fixtures for the case 11 specifiers, the 04-kernel §8.1 rule otherwise. */
+/** The realm's `importUrl` for the corpus: the fixtures for the case 11 specifiers, the client import rule otherwise. */
 export const corpusImportUrl = (specifier: string): string =>
   modules[specifier] ?? importUrl(specifier);

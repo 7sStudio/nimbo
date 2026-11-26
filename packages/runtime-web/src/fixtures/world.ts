@@ -1,4 +1,4 @@
-// A test's own world (09-testing §1.6): a fresh transport, a mount root, an attached Realm, and a daemon-like `run`.
+// A test's own world: a fresh transport, a mount root, an attached Realm, and a daemon-like `run`.
 import type { Output, RealmReport, SnapshotBinding } from "@jsnb/core";
 import { decode } from "@jsnb/core";
 
@@ -35,7 +35,7 @@ export type World = {
 let executions = 0;
 let cells = 0;
 
-/** Stable ids per test file (03-api §2 shapes): `x_` and eight base36 characters, `c_` and six. */
+/** Stable ids per test file (the API's id shapes): `x_` and eight base36 characters, `c_` and six. */
 export const nextExecution = (): string => `x_${(executions += 1).toString(36).padStart(8, "0")}`;
 export const nextCell = (): string => `c_${(cells += 1).toString(36).padStart(6, "0")}`;
 

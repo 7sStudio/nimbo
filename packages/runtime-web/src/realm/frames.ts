@@ -1,4 +1,4 @@
-// Stack frames (04-kernel §5.3): Chromium's `error.stack` parsed, cell frames mapped to the TypeScript source,
+// Stack frames: Chromium's `error.stack` parsed, cell frames mapped to the TypeScript source,
 // runtime-web's own frames dropped (from the frames and from the raw stack), package frames kept with their URL.
 import type { Frame } from "@jsnb/core";
 import type { TraceMap } from "@jridgewell/trace-mapping";
@@ -37,7 +37,7 @@ const withoutQuery = (url: string): string => url.replace(/[?#].*$/, "");
 /**
  * Whether a frame belongs to runtime-web's own modules, given the URL of one of them: under the parent of its
  * directory (`src/` here, the app's own root once bundled, which may be the origin root), except the daemon's `/npm/`
- * packages and workspace files, which 04-kernel §5.3 keeps as package frames wherever the app is served from.
+ * packages and workspace files, which are kept as package frames wherever the app is served from.
  */
 function internalTo(moduleUrl: string): (url: string) => boolean {
   const own = new URL("..", withoutQuery(moduleUrl)).href;
@@ -65,7 +65,7 @@ function original(tracer: TraceMap | undefined, frame: RawFrame): Position | und
 
 /** A frame in a cell: mapped to the TypeScript source, or kept at its generated position when it cannot be. */
 function cellFrame(file: CellFile, frame: RawFrame): Frame {
-  // The cell function itself shows as `eval` (the indirect eval of 04-kernel §4): no name of the user's.
+  // The cell function itself shows as `eval` (the indirect eval): no name of the user's.
   const fn = frame.fn === undefined || frame.fn === "eval" ? {} : { fn: frame.fn };
   const position = original(file.tracer(), frame) ?? { line: frame.line, col: frame.col };
   return { cell: file.cell, ...position, ...fn };
@@ -89,7 +89,7 @@ export function framesOf(stack: string, files: CellFiles): Frame[] {
   return frames;
 }
 
-/** The cell of the first frame in a known cell file, for an error that escaped every wrapper (04-kernel §5.3). */
+/** The cell of the first frame in a known cell file, for an error that escaped every wrapper. */
 export function cellOfStack(stack: string, files: CellFiles): string | undefined {
   for (const frame of parseStack(stack)) {
     const file = files.find(frame.url);

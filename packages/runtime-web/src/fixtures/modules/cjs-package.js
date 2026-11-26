@@ -1,4 +1,4 @@
-// Stands for what the daemon serves at /npm/<a CommonJS package> (04-kernel §8.1): the shape of esbuild's interop
+// Stands for what the daemon serves at /npm/<a CommonJS package>: the shape of esbuild's interop
 // bundle of a package that sets module.exports, which becomes the default export, with no named exports.
 const commonJs = (factory) => {
   const module = { exports: {} };

@@ -1,4 +1,4 @@
-// A run's `value` output (04-kernel §5.2, §5.4): core's encode for `json`, the realm's inspector for `repr`.
+// A run's `value` output: core's encode for `json`, the realm's inspector for `repr`.
 import type { Output } from "@jsnb/core";
 import { encode, truncatedMarker } from "@jsnb/core";
 

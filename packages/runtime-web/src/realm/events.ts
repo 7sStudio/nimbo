@@ -1,4 +1,4 @@
-// Push events (05-bridge §6): `on(name, callback, { latest? })` in a client cell listens to a server cell's
+// Push events: `on(name, callback, { latest? })` in a client cell listens to a server cell's
 // `emit(name, data)`. The listener belongs to its run: a re-run, a reset, a detach or the cell's deletion disposes it
 // with the run's other cleanups. realm.event delivers each event, in order, to every listener of its name in the order
 // they were added, yielding to the page between slices so a slow listener never freezes it; a `latest` listener gets

@@ -7,7 +7,7 @@ export const isCallable = (value: unknown): value is Callable => typeof value ==
 const isThenable = (value: unknown): value is PromiseLike<unknown> =>
   typeof value === "object" && value !== null && isCallable(Reflect.get(value, "then"));
 
-/** A synchronous throw or a rejected returned promise goes to `onError` (04-kernel §5.3) and is not rethrown. */
+/** A synchronous throw or a rejected returned promise goes to `onError` and is not rethrown. */
 export function guard(callback: Callable, onError: (error: unknown) => void): Callable {
   return function guarded(this: unknown, ...args: unknown[]): undefined {
     try {

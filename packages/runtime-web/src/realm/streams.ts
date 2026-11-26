@@ -1,4 +1,4 @@
-// A run's stdout and stderr (04-kernel §5.1): chunks coalesced per 16 ms, a cap per execution, `[output truncated]`.
+// A run's stdout and stderr: chunks coalesced per 16 ms, a cap per execution, `[output truncated]`.
 
 export type StreamName = "stdout" | "stderr";
 

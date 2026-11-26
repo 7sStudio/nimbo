@@ -1,4 +1,4 @@
-// The page's socket as runtime-web sees it: one JSON-RPC request at a time, provided by the host (03-api §7.2).
+// The page's socket as runtime-web sees it: one JSON-RPC request at a time, provided by the host.
 
 /** The host's socket (ui's `realm/mount.ts`); runtime-web never opens a WebSocket itself. */
 export type RealmTransport = {

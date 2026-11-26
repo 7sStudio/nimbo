@@ -1,4 +1,4 @@
-// realm.reset (03-api §4.5, 05-bridge §8): the full reset, the bridge-only reset of a kernel restart, and detach's.
+// realm.reset: the full reset, the bridge-only reset of a kernel restart, and detach's.
 import type { RealmReset } from "@jsnb/core";
 
 import { tombstone } from "../bridge/layer.js";

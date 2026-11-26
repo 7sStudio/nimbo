@@ -1,4 +1,4 @@
-// Tests the client scope end to end (04-kernel §3.3, §4; 05-bridge §3.1, §3.2): lookup order, defines, per-run views.
+// Tests the client scope end to end: lookup order, defines, per-run views.
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import type { World } from "../fixtures/world.js";
@@ -51,7 +51,7 @@ describe("defines", () => {
 });
 
 describe("per-run views", () => {
-  it("keep the snapshot the defining run installed (05-bridge §3.2)", async () => {
+  it("keep the snapshot the defining run installed", async () => {
     await world.run("function total() { return prices.length }", {
       bindings: { prices: value([1, 2]) },
     });

@@ -1,10 +1,10 @@
-// A run's scope view (04-kernel §3.3, 05-bridge §3.1, §3.2): the Proxy a cell receives as `__scope`.
+// A run's scope view: the Proxy a cell receives as `__scope`.
 // Lookup: plumbing → record → this run's bridge layer → this run's builtins → window → ReferenceError.
 
 export type ViewParts = {
   /** The realm's one record of names cells define (null prototype). */
   readonly record: Record<string, unknown>;
-  /** This run's bridge layer: stubs, snapshots and error getters (05-bridge §3). */
+  /** This run's bridge layer: stubs, snapshots and error getters. */
   readonly bridge: Readonly<Record<string, unknown>>;
   readonly builtins: Readonly<Record<string, unknown>>;
   readonly importModule: (specifier: string) => Promise<unknown>;
@@ -14,7 +14,7 @@ export type ViewParts = {
 
 type Found = { readonly value: unknown } | undefined;
 
-/** Exports cross from the server to the page only (05-bridge §1): a client cell's `export` has no reader. */
+/** Exports cross from the server to the page only: a client cell's `export` has no reader. */
 const ignoreExport = (): undefined => undefined;
 
 function find(parts: ViewParts, plumbing: Readonly<Record<string, unknown>>, name: string): Found {
@@ -31,7 +31,7 @@ export function createView(parts: ViewParts): Record<string, unknown> {
   const plumbing: Record<string, unknown> = {
     __import: parts.importModule,
     __export: ignoreExport,
-    // `typeof x` of an unknown name must not throw (04-kernel §3.2).
+    // `typeof x` of an unknown name must not throw.
     $peek: (name: unknown) =>
       typeof name === "string" ? find(parts, plumbing, name)?.value : undefined,
   };

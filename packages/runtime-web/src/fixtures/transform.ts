@@ -1,5 +1,5 @@
-// The daemon's transform for the tests (02-architecture §5): the `transformCell` browser command of vitest.config.ts,
-// which runs @jsnb/transform in Node; runtime-web never imports it (02 §2).
+// The daemon's transform for the tests: the `transformCell` browser command of vitest.config.ts,
+// which runs @jsnb/transform in Node; runtime-web never imports it.
 import { commands } from "vitest/browser";
 import { z } from "zod";
 

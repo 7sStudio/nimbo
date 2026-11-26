@@ -1,4 +1,4 @@
-// The Realm's options and the limits it takes from settings (03-api §4.10), with the defaults of 04-kernel and 05-bridge;
+// The Realm's options and the limits it takes from settings, with their defaults;
 // the daemon sends a run's own limits with realm.execute, read from the notebook's settings like the env.
 import type { RealmLimits } from "@jsnb/core";
 
@@ -32,7 +32,7 @@ export type RealmOptions = {
   readonly mount?: Mount;
   /** What the realm cannot report: a failed `realm.report`, a disposer that throws after detach. */
   readonly onError?: (error: unknown) => void;
-  /** The URL an import specifier loads from; default the 04-kernel §8.1 rule. */
+  /** The URL an import specifier loads from; default the client import rule. */
   readonly importUrl?: (specifier: string) => string;
   /** The limits of a run whose realm.execute carries none. */
   readonly limits?: Partial<RealmLimits>;
@@ -52,7 +52,7 @@ export type ResolvedOptions = {
   readonly pauses: PauseClock;
 };
 
-/** Nothing is swallowed (08-code-standards §5): without a sink, the page's own error reporting shows it. */
+/** Nothing is swallowed: without a sink, the page's own error reporting shows it. */
 const reportToPage = (error: unknown): void => {
   reportError(error);
 };

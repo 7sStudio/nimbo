@@ -1,4 +1,4 @@
-// A container as an agent reads it (cell.snapshot, 03-api §4.3). `text` is the accessible text in reading order (form
+// A container as an agent reads it (cell.snapshot). `text` is the accessible text in reading order (form
 // controls as their values, images as their alt text, hidden parts, scripts and styles left out, a block per line).
 // `html`, only when asked for, is serialised here from an allowlist: allowlisted HTML and SVG elements with
 // allowlisted attributes, URLs only http, https, mailto or relative, text and values escaped, so parsing it again runs

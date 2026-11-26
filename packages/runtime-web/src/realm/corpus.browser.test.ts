@@ -1,4 +1,4 @@
-// Corpus cases 1 to 17 of 04-kernel §12 in the page (09-testing §3): each cell is transformed by the transformCell
+// Corpus cases 1 to 17 in the page: each cell is transformed by the transformCell
 // command in Node and run through realm.handle("realm.execute") as the daemon sends it, one cell id per case.
 // Page variants: case 7 fetches a data: URL (Chromium does); case 11 imports through the realm's loader with an
 // importUrl mapping fast-check (ESM), a CommonJS package (a fixture shaped like the daemon's esbuild interop bundle,

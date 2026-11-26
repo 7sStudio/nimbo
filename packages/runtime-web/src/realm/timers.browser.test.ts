@@ -1,4 +1,4 @@
-// Tests a run's timers against the real clock (04-kernel §7): they fire, report failures and stop with the run.
+// Tests a run's timers against the real clock: they fire, report failures and stop with the run.
 import { describe, expect, it } from "vitest";
 
 import { afterTimers, nextFrame } from "../fixtures/waits.js";
