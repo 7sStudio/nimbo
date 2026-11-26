@@ -1,5 +1,5 @@
-// Tests engines.ts without an engine: no modes and no default then, and what jq and SQL download on first use (11-query
-// §1, §4). Which modes the real engines allow is tested with them in tests/output-view (modes.integration.test.ts).
+// Tests engines.ts without an engine: no modes and no default then, and what jq and SQL download on first use.
+// Which modes the real engines allow is tested with them in tests/output-view (modes.integration.test.ts).
 import { describe, expect, it } from "vitest";
 
 import {

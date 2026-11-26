@@ -11,7 +11,7 @@ const html = computed(() => frameDoc(props.output.kind === "display" ? props.out
 </script>
 
 <template>
-  <!-- the cap when one applies, never more than the default cap (03 §4.10), both set by OutputView -->
+  <!-- the cap when one applies, never more than the default cap, both set by OutputView -->
   <iframe
     data-part="html"
     class="ov:block ov:block-[min(var(--max-height,var(--default-cap)),var(--default-cap))] ov:inline-full ov:border-0 ov:bg-transparent"

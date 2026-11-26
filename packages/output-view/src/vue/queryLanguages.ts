@@ -1,4 +1,4 @@
-// The query input's four small grammars (11-query §4: "syntax highlighting per mode"), as CodeMirror stream parsers,
+// The query input's four small grammars ("syntax highlighting per mode"), as CodeMirror stream parsers,
 // and the highlight style that paints their tokens with the viewer's colors (does the same for the editor).
 import type { QueryMode } from "@jsnb/core";
 import type { StreamParser, StringStream } from "@codemirror/language";

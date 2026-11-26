@@ -1,4 +1,4 @@
-// How a stream reads (gallery card 3): its lines as a terminal shows them (\r rewrites a line), each in styled runs
+// How a stream reads: its lines as a terminal shows them (\r rewrites a line), each in styled runs
 // from its ANSI escapes, with the attributes and color properties a run needs and its OSC 8 link.
 import type { AnsiColor, AnsiStyle, Span } from "../model/ansi.js";
 import { ansiRgb, parseAnsi, streamLines } from "../model/ansi.js";
@@ -12,7 +12,7 @@ const css = (color: AnsiColor): string =>
     ? `var(--ansi-${String(color.index)})`
     : `rgb(${ansiRgb(color).join(" ")})`;
 
-/** The flags a run carries as data- attributes, which StreamView's stylesheet draws (08 §7: no inline styles). */
+/** The flags a run carries as data- attributes, which StreamView's stylesheet draws (no inline styles). */
 const flags: readonly (keyof AnsiStyle &
   ("bold" | "dim" | "italic" | "underline" | "strike" | "hidden"))[] = [
   "bold",
@@ -36,7 +36,7 @@ const paint = (
 
 /**
  * A run's attributes: `data-fg` and `data-bg` with their colors in the custom properties `--run-fg` and `--run-bg`
- * (computed at runtime, the only inline style 08 §7 allows), swapped when inverse, and one data- attribute per flag.
+ * (computed at runtime, the only inline style allowed), swapped when inverse, and one data- attribute per flag.
  */
 export function runAttrs(span: Span): Record<string, unknown> {
   const { style } = span;

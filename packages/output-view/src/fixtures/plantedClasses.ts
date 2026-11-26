@@ -1,8 +1,8 @@
-// Template classes the 08 §7 gate must refuse, each with the rule that refuses it once the class is compiled as the
+// Template classes the style gate must refuse, each with the rule that refuses it once the class is compiled as the
 // build compiles it (compiled.ts; style.plants.contract.test.ts), and classes it must pass. The minifier writes a literal color it can name by its name (#ff0000 and rgb(255 0 0) as
 // red), so color-named refuses those.
 export const refusedClasses: readonly (readonly [string, string])[] = [
-  // colors outside the tokens, Tailwind's --tw-* internals included (08 §7)
+  // colors outside the tokens, Tailwind's --tw-* internals included
   ["ov:shadow-[#ff0000]", "color-named"],
   ["ov:shadow-[#123456]", "color-no-hex"],
   ["ov:shadow-[0_0_0_4px_red]", "color-named"],
@@ -58,7 +58,7 @@ export const refusedClasses: readonly (readonly [string, string])[] = [
   ["ov:shadow-[0_0_0_1px_var(--accent)]!", "declaration-no-important"],
 ];
 
-/** Classes 08 §7 allows: tokens, a token at an opacity (color-mix() of tokens), logical and physical utilities, motion
+/** Classes the style rules allow: tokens, a token at an opacity (color-mix() of tokens), logical and physical utilities, motion
  * and hover in their media queries, relative container queries, px on a border. */
 export const allowedClasses: readonly string[] = [
   "ov:text-fg",

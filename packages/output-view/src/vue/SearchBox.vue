@@ -1,4 +1,4 @@
-<!-- The find box (⌘F, gallery card 1): the text, the counter, previous and next, the keys / values / both scope in full
+<!-- The find box (⌘F): the text, the counter, previous and next, the keys / values / both scope in full
 screen, and close. ↩ and ⇧↩ step through the matches, Esc closes. -->
 <script setup lang="ts">
 import { onMounted, ref } from "vue";

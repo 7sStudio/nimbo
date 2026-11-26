@@ -1,4 +1,4 @@
-<!-- The grid view (gallery card 2): records or a matrix under role="grid", sortable and filterable headers, virtual
+<!-- The grid view: records or a matrix under role="grid", sortable and filterable headers, virtual
 rows (TanStack Table + Virtual), find's marks, row click → the row as a tree, copy row, selection for export. -->
 <script setup lang="ts">
 import { computed, ref, toRef, useId } from "vue";
@@ -30,7 +30,7 @@ const props = defineProps<{
   readonly matches?: ReadonlyMap<string, readonly SearchMatch[]> | undefined;
   readonly focus?: Focus | undefined;
   readonly maxHeight?: number | undefined;
-  /** Given when Filter mode is available: a column filter becomes this chip (11-query §4). */
+  /** Given when Filter mode is available: a column filter becomes this chip. */
   readonly onChip?: ((chip: Chip) => void) | undefined;
   /** The columns as the user arranged them; absent, the grid's own order, every column shown. */
   readonly layout?: ColumnLayout | undefined;

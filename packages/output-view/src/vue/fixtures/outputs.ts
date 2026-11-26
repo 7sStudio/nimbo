@@ -1,4 +1,4 @@
-// Outputs for the viewer's tests: each kind of 03-api §5 with the corpus values, and a mount of the exported
+// Outputs for the viewer's tests: each kind with the corpus values, and a mount of the exported
 // OutputView (built-in renderers included) attached to the page, with props a test can change.
 import { mount } from "@vue/test-utils";
 import type { Component } from "vue";

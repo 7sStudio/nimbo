@@ -1,4 +1,4 @@
-// Property tests of search.ts: find never throws on random wire forms and queries, and every match is a real node (08 §9).
+// Property tests of search.ts: find never throws on random wire forms and queries, and every match is a real node.
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 

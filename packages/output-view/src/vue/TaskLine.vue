@@ -1,5 +1,5 @@
 <!-- The line under the header that shows the viewer's long work (loading more, downloading, exporting the full value)
-with its Cancel, what was cancelled, and what failed, as an alert; both can be dismissed (08 §5: nothing is
+with its Cancel, what was cancelled, and what failed, as an alert; both can be dismissed (nothing is
 swallowed). -->
 <script setup lang="ts">
 import type { Tasks } from "./useTasks.js";

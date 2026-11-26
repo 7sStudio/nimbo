@@ -1,5 +1,5 @@
 // Paths into the wire form: the copy-path form `$.data[3].metadata` and RFC 9535 normalized paths `$['data'][3]`.
-// It repeats the singular-path part of query-json's paths.ts on purpose: output-view may import core only (02 §2).
+// It repeats the singular-path part of query-json's paths.ts on purpose: output-view may import core only.
 import type { Path } from "@jsnb/core";
 
 export type PathError = { readonly message: string; readonly position: number };

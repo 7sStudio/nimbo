@@ -1,4 +1,4 @@
-<!-- The lines under the query bar (11-query §4): jq's or the SQL engine's first download with its size and progress,
+<!-- The lines under the query bar: jq's or the SQL engine's first download with its size and progress,
 the elapsed time of a running query, the error with its position underlined, "download all" past the row cap, and a
 JSONPath selection copied or exported as a list. -->
 <script setup lang="ts">
@@ -26,7 +26,7 @@ const progress = computed(() => props.bar.progress.value);
 const error = computed(() => state.value.error);
 const result = computed(() => state.value.result);
 const query = computed(() => (state.value.mode === "filter" ? "" : state.value.text));
-/** jq's or SQL's first download, named with its size until the engine is loaded (11-query §4). */
+/** jq's or SQL's first download, named with its size until the engine is loaded. */
 const download = computed(() => {
   const { mode, loaded } = state.value;
   if (loaded.has(mode)) return undefined;

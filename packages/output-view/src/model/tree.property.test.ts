@@ -1,4 +1,4 @@
-// Property tests of tree.ts: flatten never throws on random wire forms and its rows stay well formed (08 §9).
+// Property tests of tree.ts: flatten never throws on random wire forms and its rows stay well formed.
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 

@@ -1,4 +1,4 @@
-// The query bar inside the viewer on the real engines (11-query §1 and §4): opening it in the view's mode, the mode
+// The query bar inside the viewer on the real engines: opening it in the view's mode, the mode
 // each view opens in again, JSONPath with its count, Only matches / All and the selection as a list, and an error
 // with its position underlined, as the real JSONPath engine reports it.
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -61,7 +61,7 @@ function views() {
   return { query, on, pick, reopen };
 }
 
-describe("the mode each view opens in (11-query §1)", () => {
+describe("the mode each view opens in", () => {
   it("opens a grid in SQL, and a tree in its own mode after Filter was picked on the grid", async () => {
     const bar = views();
     await bar.query();

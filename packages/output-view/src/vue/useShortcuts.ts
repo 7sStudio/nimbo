@@ -1,4 +1,4 @@
-// The toolbar's actions and the viewer's shortcuts (11-query §4): ⌘F find, ⌘⇧F the query bar,
+// The toolbar's actions and the viewer's shortcuts: ⌘F find, ⌘⇧F the query bar,
 // ⌘⇧O full screen, expand / collapse all, fit; find's ↩ revealing each match in the tree; and the keys the query
 // bar completes and offers as chip keys.
 import type { Path } from "@jsnb/core";

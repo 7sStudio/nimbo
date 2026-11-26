@@ -1,6 +1,6 @@
-// The 08 §7 gate (@jsnb/style-gate) in the viewer's scope on planted faults: each template class compiled as the build
-// compiles it and each sheet of the viewer's own forms must be refused by the rule named beside it, and what 08 §7
-// allows must pass. The gate's own tests (tools/style-gate) plant a fault for each rule on fixture CSS.
+// The style gate (@jsnb/style-gate) in the viewer's scope on planted faults: each template class compiled as the build
+// compiles it and each sheet of the viewer's own forms must be refused by the rule named beside it, and what the
+// style rules allow must pass. The gate's own tests (tools/style-gate) plant a fault for each rule on fixture CSS.
 import { describe, expect, it } from "vitest";
 
 import { compiled } from "./fixtures/compiled.js";
@@ -29,7 +29,7 @@ describe("the gate on hand-written sheets", () => {
     expect(await rulesFor(css)).toContain(rule);
   });
 
-  it("passes what 08 §7 allows", async () => {
+  it("passes what the style rules allow", async () => {
     expect(await faults(allowedSheet)).toEqual([]);
   });
 });

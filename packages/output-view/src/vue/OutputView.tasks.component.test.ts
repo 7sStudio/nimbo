@@ -1,4 +1,4 @@
-// Tests the viewer's long work and its failures (08 §5): "Load next 2,000" rejected by the host and a refused
+// Tests the viewer's long work and its failures: "Load next 2,000" rejected by the host and a refused
 // clipboard show as alerts, a load passes the host a signal, and a task the next one cancels is said so. A table that
 // would not drop is reported with the real SQL engine in tests/output-view (notes.integration.test.ts).
 import { truncatedMarker } from "@jsnb/core";

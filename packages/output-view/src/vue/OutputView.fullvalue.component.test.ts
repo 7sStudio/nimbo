@@ -1,5 +1,5 @@
 // Tests that a cut value reads its full value exactly as the same value uncut reads itself: the daemon streams the wire
-// form (03-api §7.5, 04-kernel §5.2), so the JSON export, the other exports and SQL's table are the same either way, for
+// form, so the JSON export, the other exports and SQL's table are the same either way, for
 // a value with dates, Sets, a `$`-key and a repeated reference. Each export is checked cut and uncut against one
 // expected result; SQL's table, on the real engine, in tests/output-view (fullvalue.integration.test.ts).
 import { encode, truncatedMarker } from "@jsnb/core";

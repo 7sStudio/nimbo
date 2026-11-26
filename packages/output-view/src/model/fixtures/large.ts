@@ -1,4 +1,4 @@
-// Large wire forms for the tests on large values: the seeded Stripe events of 09-testing §8, encoded without budgets
+// Large wire forms for the tests on large values: the seeded Stripe events, encoded without budgets
 // (the daemon keeps the full value, so the viewer meets values past the 256 KB slice), and a node counter.
 import { encode } from "@jsnb/core";
 

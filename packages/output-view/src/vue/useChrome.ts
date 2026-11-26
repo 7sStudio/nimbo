@@ -20,7 +20,7 @@ export type ToolbarState = {
   readonly shown: ShownView;
   readonly views: readonly SwitchView[];
   readonly find: boolean;
-  /** Undefined when no engine was injected (11-query §4: the Query button is then hidden). */
+  /** Undefined when no engine was injected (the Query button is then hidden). */
   readonly query: boolean | undefined;
   readonly fit: boolean;
   readonly notTransferable: boolean;

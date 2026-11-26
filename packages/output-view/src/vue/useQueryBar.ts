@@ -1,4 +1,4 @@
-// The query bar's state for OutputQueryBar (11-query §4) over the model's reducer, with its actions (queryActions.ts),
+// The query bar's state for OutputQueryBar over the model's reducer, with its actions (queryActions.ts),
 // the elapsed time of a running query, and a pinned query run again when the view mounts.
 import type { QueryMode } from "@jsnb/core";
 import { computed, onMounted } from "vue";
