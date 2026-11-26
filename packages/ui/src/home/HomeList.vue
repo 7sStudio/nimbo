@@ -1,14 +1,18 @@
-<!-- HomeList: the middle of the Home page: a toolbar with the search field (HomeSearch), the folder the Explorer narrowed the list to (a chip that clears it) and New Notebook; then one table of notebooks under its column header (Name, Folder, Kernel, Cells, Routes, Modified). With words typed, the matches, then the row that creates the typed name. A click selects a row, a double click opens it, a right click shows its menu; with the list focused Home's keys act on the selected row. An empty workspace shows Start Tutorial first, New Notebook and Open Folder, then the tutorial's lessons and the shipped examples. -->
+<!-- HomeList: the middle of the Home page: a toolbar with the search field (HomeSearch), the folder the Explorer narrowed the list to (a chip that clears it) and New Notebook; then one table of notebooks under its column header (Name, Folder, Kernel, Cells, Routes, Modified). With words typed, the matches, then the row that creates the typed name. A click selects a row, a double click opens it, a right click shows its menu; with the list focused Home's keys act on the selected row. An empty workspace shows the welcome (HomeLearn) once the shipped notebooks are read, so nothing moves in after it; a workspace with notebooks shows the row that continues the tutorial above them while it is under way. -->
 <script setup lang="ts">
-import { FilePlus, FolderOpen, GraduationCap, Plus, X } from "@lucide/vue";
-import { computed, nextTick, toRef, watch } from "vue";
+import { Plus, X } from "@lucide/vue";
+import { computed, nextTick, ref, toRef, watch } from "vue";
 
 import { keysShown, keyWords } from "../keyboard/keymap";
 import Button from "../primitives/button/Button.vue";
 import { useHomeStore } from "../store/home";
+import { useSettingsStore } from "../store/settings";
 import HomeContextMenu from "./HomeContextMenu.vue";
+import HomeLearn from "./HomeLearn.vue";
 import HomeRow from "./HomeRow.vue";
 import HomeSearch from "./HomeSearch.vue";
+import TutorialRow from "./TutorialRow.vue";
+import { primaryAction, tutorialProgress } from "../store/lessons";
 import { useHomeRows } from "./useHomeRows";
 
 const props = defineProps<{ now: number; mac: boolean }>();
@@ -39,13 +43,20 @@ watch(
 const command = (id: string, args?: Record<string, unknown>) => {
   emit("command", id, args);
 };
-/** The shipped notebooks an empty workspace offers: the tutorial's lessons, numbered, then the examples. */
-const shippedGroups = computed(() =>
-  [
-    { id: "tutorial", title: "Tutorial", items: home.lessons, numbered: true },
-    { id: "examples", title: "Examples", items: home.examples, numbered: false },
-  ].filter((group) => group.items.length > 0),
+const settings = useSettingsStore();
+const shownOnHome = computed(
+  () => home.lessons.length > 0 && settings.valueOf("tutorial.showOnHome") !== false,
 );
+/** The tutorial under way: the row that continues it stands above the notebooks. */
+const continuing = computed(() => {
+  const progress = tutorialProgress(home.lessons);
+  return shownOnHome.value && progress.begun && !progress.finished;
+});
+/** What Enter runs from the search field of an empty workspace once its welcome shows. */
+const primary = computed(() =>
+  home.shippedRead ? primaryAction(home.lessons, shownOnHome.value).command : undefined,
+);
+const learn = ref<InstanceType<typeof HomeLearn> | null>(null);
 const grid =
   "ui:grid ui:grid-cols-[2.25rem_minmax(0,2fr)_minmax(0,1.2fr)_minmax(0,1fr)_3.5rem_minmax(0,1.6fr)_7rem] ui:items-center ui:gap-x-3 ui:pe-4";
 </script>
@@ -56,7 +67,9 @@ const grid =
       :mac="props.mac"
       :active="home.selected === null ? undefined : rowId(home.selected)"
       :empty="empty"
+      :primary="primary"
       @command="command"
+      @leave="learn?.focus()"
     />
     <button
       v-if="home.folder !== ''"
@@ -77,57 +90,17 @@ const grid =
       ><Plus class="ui:block-3.5 ui:inline-3.5" aria-hidden="true" />New Notebook</Button
     >
   </div>
-  <div v-if="empty" data-testid="empty" class="ui:flex ui:flex-col ui:gap-4 ui:ps-12 ui:pbs-10">
-    <p class="ui:m-0 ui:text-title ui:font-semibold ui:text-fg">No notebooks</p>
-    <div class="ui:flex ui:gap-2">
-      <Button
-        v-if="home.lessons.length > 0"
-        variant="go"
-        data-testid="start-tutorial"
-        @click="command('ui.home.tutorial')"
-        ><GraduationCap class="ui:block-3.5 ui:inline-3.5" aria-hidden="true" />Start
-        Tutorial</Button
-      >
-      <Button
-        :variant="home.lessons.length > 0 ? undefined : 'go'"
-        @click="command('ui.notebook.new')"
-        ><FilePlus class="ui:block-3.5 ui:inline-3.5" aria-hidden="true" />New Notebook</Button
-      >
-      <Button @click="command('ui.home.openFolder')"
-        ><FolderOpen class="ui:block-3.5 ui:inline-3.5" aria-hidden="true" />Open Folder…</Button
-      >
-    </div>
-    <section
-      v-for="group in shippedGroups"
-      :key="group.id"
-      :aria-labelledby="`${group.id}-title`"
-      :data-testid="group.id"
-    >
-      <h2
-        :id="`${group.id}-title`"
-        class="ui:tracking-wide ui:m-0 ui:mbe-1.5 ui:text-tiny ui:font-semibold ui:text-fg-2 ui:uppercase"
-      >
-        {{ group.title }}
-      </h2>
-      <ul class="ui:m-0 ui:flex ui:list-none ui:flex-col ui:gap-0.5 ui:p-0">
-        <li v-for="(each, at) in group.items" :key="each.name" class="ui:flex ui:gap-2">
-          <span v-if="group.numbered" class="ui:text-end ui:text-muted ui:inline-[1.5ch]">{{
-            at + 1
-          }}</span>
-          <button
-            type="button"
-            :data-example="each.name"
-            :title="each.purpose"
-            class="ui:cursor-pointer ui:border-0 ui:bg-transparent ui:p-0 ui:font-inherit ui:text-accent-text ui:hover:underline"
-            @click="command('ui.home.example', { name: each.name })"
-          >
-            {{ each.title }}
-          </button>
-        </li>
-      </ul>
-    </section>
-  </div>
+  <template v-if="empty">
+    <HomeLearn
+      v-if="home.shippedRead"
+      ref="learn"
+      :page="false"
+      :mac="props.mac"
+      @command="command"
+    />
+  </template>
   <template v-else>
+    <TutorialRow v-if="continuing" :lessons="home.lessons" @command="command" />
     <div
       data-part="home-columns"
       aria-hidden="true"

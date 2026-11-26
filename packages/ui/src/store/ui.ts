@@ -83,8 +83,8 @@ export const useUiStore = defineStore("ui", () => {
     writeLayout(storage(), state);
   });
   /** What the main area shows instead of the notebook or Home's list: the Settings editor, as VS Code opens it in an
-   * editor tab, or null. */
-  const page = ref<"settings" | "keybindings" | "diff" | null>(null);
+   * editor tab, Keyboard Shortcuts, a diff, Home's Tutorial, or null. */
+  const page = ref<"settings" | "keybindings" | "diff" | "learn" | null>(null);
   /** The inspector section last asked for by name (a link, the palette, the hidden inspector's icons, a value at a
    * line's end): the inspector brings it into view. */
   const revealed = ref<Revealed | null>(null);

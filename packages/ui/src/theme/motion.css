@@ -12,3 +12,10 @@
     rotate: 1turn;
   }
 }
+
+/* the caret's blink, as an editor's: on half the time, off half the time */
+@keyframes jsnb-ui-blink {
+  50% {
+    opacity: 0;
+  }
+}

@@ -244,6 +244,7 @@ Files: user `$XDG_CONFIG_HOME/nimbo/settings.json` (default `~/.config/nimbo/`, 
 | `editor.keymap` | `"default"` | **planned** (`default`, `vim`) |
 | `editor.syntaxTheme` | `"vscode"` | `vscode`, `github`, `cursor`, `jetbrains`, `one`, `catppuccin`, `tokyo-night`, `nimbo` |
 | `ui.theme` | `"system"` | `system` / `light` / `dark` |
+| `tutorial.showOnHome` | `true` | the tutorial on Home: the lessons on an empty workspace, the row that continues it and the activity bar's icon; Help > Tutorial turns it on again (§4.11) |
 | `git.enabled` | `true` | the Source Control view and the branch |
 | `diffEditor.renderSideBySide` | `true` | diffs side by side; off, inline |
 | `notebookDiff.hideOutputs` / `notebookDiff.showEntireNotebook` / `notebookDiff.rawMarkdown` / `notebookDiff.showMetadata` | `false` | the notebook diff's gear |
@@ -253,11 +254,13 @@ Files: user `$XDG_CONFIG_HOME/nimbo/settings.json` (default `~/.config/nimbo/`, 
 CLI: `nimbo config get [key]`, `set <key> <value>`, `unset <key>` (each `[--user|--workspace]`, writes default to the workspace file), `path`, `schema` (07-file-format §6). MCP: `settings_get`, `settings_set`, `settings_schema`.
 
 ### 4.11 examples
-The `.jsnb` files of `packages/server/examples/`, read-only: the tutorial's lessons in its `tutorial/` folder and the examples beside it. An empty workspace's Home offers Start Tutorial first (`ui.home.tutorial`: the workspace's copy of the first lesson when there is one, else every lesson copied), then the lessons and the examples, each copied and its copy opened; Help > Start Tutorial, File > New from Tutorial and New from Example reach them later.
+The `.jsnb` files of `packages/server/examples/`, read-only: the tutorial's lessons in its `tutorial/` folder and the examples beside it. An empty workspace's Home is a welcome: what nimbo is, Start Tutorial first (then Continue with the lesson the tutorial goes on with; Enter runs it from the search field), New Notebook and Open Folder, the lessons on a path with their duration and progress, and the examples beside them. `ui.home.tutorial { name? }` opens the workspace's copy of the lesson `name`, else of the lesson last opened while it is not done (after a done one, the next lesson not done), copying every lesson when none has a copy, or only that lesson when its copy is gone. Once the workspace has notebooks, a row above them continues the tutorial while it is under way, the activity bar's Tutorial icon and Help > Tutorial show the same lessons as an editor tab (`ui.home.tutorial.show`), and a lesson's copy ends with its place in the tutorial and the next lesson. Hiding the tutorial from Home (`ui.home.tutorial.hide`, the setting `tutorial.showOnHome`) removes the lessons from the empty Home, the row and the icon; Help > Tutorial puts them back. File > New from Tutorial and New from Example copy one notebook.
+
+**Progress** is the daemon's, in `.jsnb/tutorial.json` (07-file-format §7), heard from the event stream so the page, the CLI and an agent move it alike: a lesson is `started` once its copy at `tutorial/<lesson>.jsnb` is opened or a cell runs in it, `done` once every code cell of the shipped lesson finished a run there (any status: some fail on purpose). A copy at another path, a cell the learner added and a run that never ended count for nothing; nothing is ever reset by the app (deleting the file starts over).
 
 | Command | Input | Output | Notes |
 |---|---|---|---|
-| `examples.list` | `{}` | `{ examples: { name, kind, title, purpose, cells }[] }` | the lessons first (`kind: "tutorial"`, `name` `tutorial/<lesson>`), then the examples (`kind: "example"`); `name` without `.jsnb`; `title` the first heading; `purpose` the intro's first sentence. |
+| `examples.list` | `{}` | `{ examples: { name, kind, title, purpose, cells, minutes, progress? }[] }` | the lessons first (`kind: "tutorial"`, `name` `tutorial/<lesson>`), then the examples (`kind: "example"`); `name` without `.jsnb`; `title` the first heading; `purpose` the intro's first sentence; `minutes` the intro's "About N minutes", else null; a lesson's `progress` `{ state: "new" \| "started" \| "done", ran, of, lastActive }`: `ran` of its `of` code cells finished a run in the copy, `lastActive` the last open or run there (null before). |
 | `examples.copy` | `{ name }` | `{ path, paths }` | mutating. Copies into the workspace at the name's path, `<name>.jsnb` (a lesson under `tutorial/`), else `<name>-2.jsnb`, … (never overwriting); `name: "tutorial"` copies every lesson. `path` is the first copy, `paths` every copy in order. Unknown name, or a workspace `tutorial` that is not a folder (a file, a link), `INVALID_PARAMS`. |
 
 ### 4.12 feedback

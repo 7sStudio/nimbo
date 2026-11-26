@@ -10,7 +10,7 @@ Install:
 curl -fsSL https://github.com/7sStudio/nimbo/releases/latest/download/install.sh | sh
 ```
 
-Then `nimbo open` in a folder (an empty one offers Start Tutorial: nine runnable lessons, also copied with `nimbo examples copy --name tutorial`), `nimbo mcp install` to register the MCP server with coding agents, `nimbo upgrade` and `nimbo uninstall`.
+Then `nimbo open` in a folder (an empty one offers Start Tutorial: nine runnable lessons, also copied with `nimbo examples copy --name tutorial`; `nimbo examples list` says how far the workspace went in each), `nimbo mcp install` to register the MCP server with coding agents, `nimbo upgrade` and `nimbo uninstall`.
 
 nimbo is not affiliated with Project Jupyter.
 

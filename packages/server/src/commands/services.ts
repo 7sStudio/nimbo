@@ -3,6 +3,7 @@
 import type { EventOf } from "@jsnb/core";
 
 import type { EventBus } from "../events/bus.js";
+import type { TutorialProgress } from "../notebook/workspace/examples.js";
 import type { FeedbackNotes } from "../notebook/workspace/feedbackNotes.js";
 import type { FolderService } from "../notebook/workspace/folders.js";
 import type { Workspace } from "../notebook/workspace/workspace.js";
@@ -20,6 +21,8 @@ export type Services = {
   readonly bus: EventBus;
   /** Open folder: the listing, the recent folders and workspace.open. */
   readonly folders: FolderService;
+  /** How far the workspace went in the tutorial's lessons (examples.list). */
+  readonly tutorial: TutorialProgress;
   /** The page's feedback notes in `.jsnb/feedback/`, over the store /feedback/ serves too. */
   readonly feedback: FeedbackNotes;
   /** The DuckDB binding of SQL output queries (sql.status, sql.install), from files/duckdb. */

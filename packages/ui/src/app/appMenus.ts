@@ -14,10 +14,11 @@ export const menuRow =
 
 const line: MenuItem = { kind: "separator" };
 
-const help = (tutorial = false): AppMenuSpec => ({
+/** Help, Tutorial first: the Tutorial on Home (from a notebook, Home opened on it). */
+const help = (tutorial: MenuItem | null): AppMenuSpec => ({
   label: "Help",
   items: [
-    ...(tutorial ? [item("Start Tutorial", "ui.home.tutorial"), line] : []),
+    ...(tutorial === null ? [] : [tutorial, line]),
     item("Show All Commands", "ui.palette.open"),
     line,
     item("Feedback Mode", "ui.feedback.toggle"),
@@ -75,7 +76,7 @@ const preferences = (theme: string, syntax: string): MenuItem => ({
 type Shipped = readonly { readonly name: string; readonly title: string }[];
 
 /** Home's menus; `lessons` and `examples` are the notebooks shipped with the app (File > New from Tutorial and New
- * from Example, Help > Start Tutorial). */
+ * from Example, Help > Tutorial). */
 export function homeMenus(
   shipped: { readonly lessons: Shipped; readonly examples: Shipped },
   theme: string,
@@ -113,7 +114,7 @@ export function homeMenus(
         item("Explorer", "ui.home.side.toggle"),
       ],
     },
-    help(shipped.lessons.length > 0),
+    help(shipped.lessons.length > 0 ? item("Tutorial", "ui.home.tutorial.show") : null),
   ];
 }
 
@@ -199,7 +200,13 @@ const notebookRun = (): AppMenuSpec => ({
 
 /** The notebook page's menus. */
 export function notebookMenus(theme: string, syntax = "vscode"): readonly AppMenuSpec[] {
-  return [notebookFile(theme, syntax), notebookEdit(), notebookView(), notebookRun(), help()];
+  return [
+    notebookFile(theme, syntax),
+    notebookEdit(),
+    notebookView(),
+    notebookRun(),
+    help(item("Tutorial", "ui.home.open", { learn: true })),
+  ];
 }
 
 /** The ui.theme setting's value as the menus read it: "system" unless it is a string. */

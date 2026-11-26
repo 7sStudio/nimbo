@@ -10584,6 +10584,7 @@
             "editor.lineValues",
             "editor.syntaxTheme",
             "ui.theme",
+            "tutorial.showOnHome",
             "git.enabled",
             "diffEditor.renderSideBySide",
             "notebookDiff.showEntireNotebook",
@@ -10678,6 +10679,7 @@
             "editor.lineValues",
             "editor.syntaxTheme",
             "ui.theme",
+            "tutorial.showOnHome",
             "git.enabled",
             "diffEditor.renderSideBySide",
             "notebookDiff.showEntireNotebook",
@@ -11287,7 +11289,7 @@
   },
   {
     "name": "examples.list",
-    "description": "The notebooks shipped with the app, the tutorial's lessons first (kind \"tutorial\", named tutorial/<lesson>), then the examples (kind \"example\"): each one's name, kind, title, what it is for in one line and how many cells it has. Read-only; examples.copy puts one, or the whole tutorial, in the workspace.",
+    "description": "The notebooks shipped with the app, the tutorial's lessons first (kind \"tutorial\", named tutorial/<lesson>), then the examples (kind \"example\"): each one's name, kind, title, what it is for in one line, how many cells it has and the minutes its introduction says it takes. A lesson also says how far this workspace went in it (progress: new, started once its copy at tutorial/<lesson>.jsnb is opened or run in, done once every code cell of the lesson ran there). Read-only; examples.copy puts one, or the whole tutorial, in the workspace.",
     "tags": {
       "mutating": false,
       "destructive": false,
@@ -11329,9 +11331,46 @@
                 "type": "integer",
                 "minimum": 0,
                 "maximum": 9007199254740991
+              },
+              "minutes": {
+                "anyOf": [
+                  {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "progress": {
+                "readOnly": true,
+                "type": "object",
+                "properties": {
+                  "state": {
+                    "type": "string",
+                    "enum": ["new", "started", "done"]
+                  },
+                  "ran": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "of": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "lastActive": {
+                    "type": ["string", "null"]
+                  }
+                },
+                "required": ["state", "ran", "of", "lastActive"],
+                "additionalProperties": false
               }
             },
-            "required": ["name", "kind", "title", "purpose", "cells"],
+            "required": ["name", "kind", "title", "purpose", "cells", "minutes"],
             "additionalProperties": false
           }
         }

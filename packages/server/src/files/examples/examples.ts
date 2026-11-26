@@ -22,12 +22,21 @@ export type Example = {
   readonly title: string;
   readonly purpose: string;
   readonly cells: number;
+  readonly minutes: number | null;
+  /** The ids of its server and client cells, in order. */
+  readonly code: readonly string[];
 };
 
 /** The first sentence of a text: up to its first colon or full stop, ending with a full stop. */
 const sentence = (text: string): string => {
   const end = text.search(/[:.](?:\s|$)/u);
   return `${(end < 0 ? text : text.slice(0, end)).trim()}.`;
+};
+
+/** The minutes "About N minutes" in an introduction says; null when it says none. */
+const minutesIn = (text: string): number | null => {
+  const found = /\bAbout (\d+) minutes?\b/u.exec(text)?.[1];
+  return found === undefined ? null : Number(found);
 };
 
 const notebooksIn = async (dir: string): Promise<readonly string[]> => {
@@ -57,7 +66,8 @@ async function readExample(dir: string, name: string): Promise<Example> {
   const text = await readFile(join(dir, file), "utf8");
   const parsed = parse(text, { ids: randomIds(), path: file, appVersion: serverVersion });
   if (!parsed.ok) throw parsed.error;
-  const cells = parsed.value.doc.cells.map(({ type, source }) => ({
+  const { doc } = parsed.value;
+  const cells = doc.cells.map(({ type, source }) => ({
     type,
     source,
     lastEdit: undefined,
@@ -70,6 +80,8 @@ async function readExample(dir: string, name: string): Promise<Example> {
     title: summary.title || name,
     purpose: sentence(summary.text),
     cells: cells.length,
+    minutes: minutesIn(doc.cells.find((cell) => cell.type === "markdown")?.source ?? ""),
+    code: doc.cells.filter((cell) => cell.type !== "markdown").map((cell) => cell.id),
   };
 }
 

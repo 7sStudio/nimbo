@@ -74,6 +74,7 @@ export const settingsShape = {
       .default("vscode"),
   ),
   "ui.theme": describe("ui.theme", z.enum(["system", "light", "dark"]).default("system")),
+  "tutorial.showOnHome": flag("tutorial.showOnHome", true),
   "git.enabled": flag("git.enabled", true),
   "diffEditor.renderSideBySide": flag("diffEditor.renderSideBySide", true),
   "notebookDiff.showEntireNotebook": flag("notebookDiff.showEntireNotebook", false),

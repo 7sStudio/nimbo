@@ -27,6 +27,7 @@ import { bounds } from "../store/layout";
 import { useSettingsStore } from "../store/settings";
 import { useSessionStore } from "../store/socket";
 import { useUiStore } from "../store/ui";
+import HomeLearn from "./HomeLearn.vue";
 import HomeList from "./HomeList.vue";
 import HomeRail from "./HomeRail.vue";
 import HomeSide from "./HomeSide.vue";
@@ -88,6 +89,14 @@ const scmBranch = computed(() => {
   return `${name}${git.dirty ? "*" : ""}`;
 });
 
+/** The Tutorial's icon in the activity bar: pressed while its page shows; null hides it (no lessons, or the tutorial
+ * hidden from Home). */
+const tutorialIcon = computed(() =>
+  home.lessons.length === 0 || settings.valueOf("tutorial.showOnHome") === false
+    ? null
+    : ui.page === "learn",
+);
+
 // Side effect: the window's title names the workspace's folder, as VS Code's does
 watchEffect(() => {
   const folder = baseName(daemon.value?.root ?? "");
@@ -108,6 +117,11 @@ onMounted(() => {
   if (location.hash === "#new") {
     history.replaceState(history.state, "", `${location.pathname}${location.search}`);
     void dispatcher.dispatch("ui.notebook.new");
+  }
+  // Help > Tutorial on a notebook page lands here with #learn: the Tutorial shows once the lessons are read
+  if (location.hash === "#learn") {
+    history.replaceState(history.state, "", `${location.pathname}${location.search}`);
+    ui.page = "learn";
   }
 });
 onBeforeUnmount(() => {
@@ -141,6 +155,7 @@ onBeforeUnmount(() => {
             <HomeRail
               :open="home.layout.side.open ? home.layout.side.view : null"
               :changes="scmChanges"
+              :tutorial="tutorialIcon"
               :theme="theme"
               :mac="mac"
               @command="run"
@@ -179,6 +194,7 @@ onBeforeUnmount(() => {
             <SettingsPage v-if="ui.page === 'settings'" :off="false" @command="run" />
             <DiffPage v-else-if="ui.page === 'diff'" @command="run" />
             <KeybindingsPage v-else-if="ui.page === 'keybindings'" :off="false" @command="run" />
+            <HomeLearn v-else-if="ui.page === 'learn'" :page="true" :mac="mac" @command="run" />
             <HomeList v-else :now="now" :mac="mac" @command="run" />
           </main>
         </div>

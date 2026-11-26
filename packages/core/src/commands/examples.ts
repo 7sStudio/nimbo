@@ -7,10 +7,24 @@ import { defineCommand } from "./define.js";
 /** The name examples.copy takes for every lesson of the tutorial at once. */
 export const tutorialName = "tutorial";
 
+/** How far this workspace went in one lesson: its copy at tutorial/<lesson>.jsnb opened or run in ("started"), every
+ * code cell of the lesson run there at least once, whatever the run ended with ("done"). */
+export const LessonProgress = z
+  .object({
+    state: z.enum(["new", "started", "done"]),
+    /** The lesson's code cells that finished a run in the copy, of `of`. */
+    ran: z.number().int().nonnegative(),
+    of: z.number().int().nonnegative(),
+    /** When the copy was last opened or run in; null before that. */
+    lastActive: z.string().nullable(),
+  })
+  .readonly();
+export type LessonProgress = z.infer<typeof LessonProgress>;
+
 export const examplesList = defineCommand({
   name: "examples.list",
   description:
-    'The notebooks shipped with the app, the tutorial\'s lessons first (kind "tutorial", named tutorial/<lesson>), then the examples (kind "example"): each one\'s name, kind, title, what it is for in one line and how many cells it has. Read-only; examples.copy puts one, or the whole tutorial, in the workspace.',
+    'The notebooks shipped with the app, the tutorial\'s lessons first (kind "tutorial", named tutorial/<lesson>), then the examples (kind "example"): each one\'s name, kind, title, what it is for in one line, how many cells it has and the minutes its introduction says it takes. A lesson also says how far this workspace went in it (progress: new, started once its copy at tutorial/<lesson>.jsnb is opened or run in, done once every code cell of the lesson ran there). Read-only; examples.copy puts one, or the whole tutorial, in the workspace.',
   input: z.object({}),
   output: z.object({
     examples: z
@@ -24,6 +38,10 @@ export const examplesList = defineCommand({
             /** The first sentence of its introduction. */
             purpose: z.string(),
             cells: z.number().int().nonnegative(),
+            /** "About N minutes" in its introduction; null when it says none. */
+            minutes: z.number().int().positive().nullable(),
+            /** A lesson's, in this workspace. */
+            progress: LessonProgress.optional(),
           })
           .readonly(),
       )
