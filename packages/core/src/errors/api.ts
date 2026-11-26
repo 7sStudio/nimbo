@@ -222,7 +222,7 @@ export class NotPaused extends ApiError {
   constructor(data: { readonly command: string }, options: Cause = {}) {
     super(1014, {
       name: "NotPaused",
-      message: `The kernel is not paused: ${data.command} needs a paused kernel.`,
+      message: `Nothing is paused there: ${data.command} needs a paused realm (the kernel, or the headless page with realm client).`,
       data,
       ...options,
     });
