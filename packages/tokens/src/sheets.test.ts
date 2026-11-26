@@ -1,4 +1,4 @@
-// Tests the two committed stylesheets (08-code-standards §2): each is byte for byte what scripts/generate.ts renders
+// Tests the two committed stylesheets: each is byte for byte what scripts/generate.ts renders
 // from the palette and the values, declares every token once under its own selector in the tokens layer, and the
 // viewer's never reaches a host page's :root.
 import { readFile } from "node:fs/promises";
