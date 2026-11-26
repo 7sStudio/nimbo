@@ -1,10 +1,10 @@
-// What the page shows for a failed call (03-api §7.4): a toast with a plain title and the error's name and message, with the one action that helps where
+// What the page shows for a failed call: a toast with a plain title and the error's name and message, with the one action that helps where
 // there is one. Banner states (kernel exited, could not save, changed on disk, view only) come from events instead.
 import { isJsnbError } from "@jsnb/core";
 
 import type { NewToast, ToastAction } from "./toasts.js";
 
-/** The way out the page offers per error name (03-api §7.4). */
+/** The way out the page offers per error name. */
 const actions: Readonly<Record<string, ToastAction>> = {
   // 1010: the kernel would not stop; restarting it is the way out
   InterruptRefused: { label: "Restart kernel", command: "kernel.restart" },

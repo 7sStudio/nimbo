@@ -31,13 +31,13 @@ export type PageAttach =
   | { readonly state: "viewOnly"; readonly takenOver?: boolean }
   | { readonly state: "failed"; readonly message: string };
 
-/** What cell.update may change from the page; meta.lastEdit is the server's (03-api §4.3). */
+/** What cell.update may change from the page; meta.lastEdit is the server's. */
 type CellPatch = Pick<
   Parameters<SocketClient["cell"]["update"]>[0],
   "source" | "type" | "meta" | "base"
 >;
 
-/** A RenameRefused the daemon answered: -32603 with the error's name in its data (03-api §7.4). */
+/** A RenameRefused the daemon answered: -32603 with the error's name in its data. */
 function isRefusal(error: unknown): error is Error {
   if (!isJsnbError(error)) return false;
   const data: unknown = error.data;
@@ -201,7 +201,7 @@ export const useNotebookStore = defineStore("notebook", () => {
     markedCells: computed(() => markedOf(cells.value, ui.selected, ui.anchor)),
     runningCell: computed(() => mirror.value.notebook?.kernel.executing ?? null),
     staleCount: computed(() => cells.value.filter((cell) => cell.stale).length),
-    /** The cells with an agent edit no one reviewed yet (03-api §5 `EditInfo.review`). */
+    /** The cells with an agent edit no one reviewed yet (`EditInfo.review`). */
     agentEditCount: computed(
       () => cells.value.filter((cell) => cell.meta.lastEdit?.review !== undefined).length,
     ),
@@ -219,7 +219,7 @@ export const useNotebookStore = defineStore("notebook", () => {
     ),
     lastExecutionOf: (cell: CellId): Execution | undefined => mirror.value.executions.get(cell),
 
-    /** Runs `cell`; `source`, the editor's text not yet sent, is saved and run at once (03-api §4.3), `base` the
+    /** Runs `cell`; `source`, the editor's text not yet sent, is saved and run at once, `base` the
      * textHash of the text it was typed on. */
     run: (cell: CellId, source?: string, base?: string) =>
       attempt(() =>
@@ -294,7 +294,7 @@ export const useNotebookStore = defineStore("notebook", () => {
 
     update: (cell: CellId, patch: CellPatch) =>
       attempt(() => client().cell.update({ notebook: notebook(), cell, ...patch })),
-    /** cell.revert: the code from before an agent's edits no one reviewed, put back by the server (03-api §4.3). */
+    /** cell.revert: the code from before an agent's edits no one reviewed, put back by the server. */
     revert: (cell: CellId) => attempt(() => client().cell.revert({ notebook: notebook(), cell })),
     /** Adds a cell after `after` (null: at the top; undefined: at the end); resolves the new cell. */
     add: async (type: CellType, after?: CellId | null, source = "") =>

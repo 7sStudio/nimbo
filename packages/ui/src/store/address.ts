@@ -1,4 +1,4 @@
-// The page's address (03-api §7.1): the daemon serves the notebook's page at /ui/<name>?token=… and its
+// The page's address: the daemon serves the notebook's page at /ui/<name>?token=… and its
 // output tab at /ui/<name>/out/<execution>/<index>, where <name> is core's notebookPageName (the ref without `.jsnb`, each
 // `/`-separated segment URI-encoded, a segment named out written `%6Fut` so it never reads as the tab's marker); the
 // token authenticates the socket's upgrade. /ui/ with no name is the Home page:

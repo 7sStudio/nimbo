@@ -76,7 +76,7 @@ const routes: Flow = async ({ client }) => {
 };
 
 const saves: Flow = async ({ client, events }, ws) => {
-  // the conflict a save finds: an external edit is merged instead unless merging is off (07-file-format §5)
+  // the conflict a save finds: an external edit is merged instead unless merging is off
   await client.settings.set({ key: "files.mergeExternalChanges", value: false });
   await client.cell.add({ ...server, source: "1" });
   await client.notebook.save({ notebook });

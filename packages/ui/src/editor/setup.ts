@@ -81,7 +81,7 @@ export type Compartments = {
 
 let grammars: Promise<typeof Grammars> | undefined;
 
-/** The grammar of `language`, from its chunk (loaded once, 08-code-standards §10: the page's first load stays small). */
+/** The grammar of `language`, from its chunk (loaded once: the page's first load stays small). */
 export async function grammarOf(language: EditorLanguage): Promise<Extension> {
   grammars ??= import("./grammars.js").then((module) => module.grammars);
   return (await grammars)[language];

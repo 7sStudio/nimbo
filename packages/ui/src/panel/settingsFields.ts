@@ -1,4 +1,4 @@
-// The Settings panel's fields, generated from settings.schema (07-file-format §6): one field per key,
+// The Settings panel's fields, generated from settings.schema: one field per key,
 // grouped by the key's prefix in the schema's order, its control read from the JSON Schema (an enum is a select, a
 // boolean a switch, an integer a number field, a string a text field, null when it may be and is left empty). A
 // `planned` key is left out until it ships. Nothing here knows a key by name.

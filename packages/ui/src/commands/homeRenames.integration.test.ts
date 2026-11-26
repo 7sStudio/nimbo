@@ -1,7 +1,7 @@
 // @vitest-environment node
 // The Home page's creates and renames on a real daemon: a create and a rename guarded each on
 // their own, a rename into a folded folder unfolding it, the renamed row selected and the search field focused, and an
-// open notebook (an agent opened it under the rename field) renamed as it is, open under the new name (07 §5).
+// open notebook (an agent opened it under the rename field) renamed as it is, open under the new name.
 import { withDaemon } from "@jsnb/test-daemon";
 import { describe, expect, it } from "vitest";
 
@@ -46,7 +46,7 @@ describe("a create and a rename", () => {
 });
 
 describe("a rename field over a notebook an agent opens", () => {
-  it("renames the open notebook, which stays open under the new name with its kernel (07 §5)", async () => {
+  it("renames the open notebook, which stays open under the new name with its kernel", async () => {
     await withDaemon(async (daemon) => {
       await agentCreates(daemon, "a.jsnb");
       const { home, ui, dispatcher } = await startHomePage(daemon);

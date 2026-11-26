@@ -1,6 +1,6 @@
 // @vitest-environment node
 // The workspace and settings stores on a real daemon: workspace.info, secret names after secrets.set,
-// an install's progress and done events from the real package manager against a stub registry (09-testing §1.3: the
+// an install's progress and done events from the real package manager against a stub registry (the
 // npm registry is an external service), workspace.info read again when kernel.nodePath changes, and settings
 // followed through settings.changed.
 import { startRegistry } from "@jsnb/test-tools/registry";

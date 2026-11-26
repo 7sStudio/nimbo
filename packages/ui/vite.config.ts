@@ -1,5 +1,5 @@
 // Vite build of the notebook page: Vue SFCs, Tailwind v4 (no Preflight, ui:-prefixed) with its --tw-* internals kept
-// inside .jsnb-ui, the "@" alias to src, and base /ui/, where the daemon serves the build (02-architecture §7).
+// inside .jsnb-ui, the "@" alias to src, and base /ui/, where the daemon serves the build.
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath, URL } from "node:url";
@@ -86,13 +86,13 @@ export default defineConfig({
     __JSNB_VERSION__: JSON.stringify(version),
   },
   plugins: [vue(), tailwindcss(), layerOrder()],
-  // Tailwind's --tw-* internals stay inside .jsnb-ui, never on a user's element (08 §7; @jsnb/style-gate/tailwind-scope)
+  // Tailwind's --tw-* internals stay inside .jsnb-ui, never on a user's element (@jsnb/style-gate/tailwind-scope)
   css: { postcss: { plugins: [scopeTailwindProperties(pageScope)] } },
   // The first load splits into five chunks along stable lines, each well under Vite's 500 kB warning: the editor
   // (CodeMirror and Lezer), the Vue framework and its component libraries, the workspace packages' dist (with zod, which a
   // group pulls in as their dependency), the other dependencies, and the page's own code. Lazy panels and overlays keep
   // their own chunks; without the groups Rolldown splits the modules the first load shares with them into a dozen small
-  // chunks, each gzipped alone (08 §10's budget counts them all).
+  // chunks, each gzipped alone (the budget counts them all).
   build:
     process.env.NIMBO_UI_PAGE === "headless"
       ? headlessBuild

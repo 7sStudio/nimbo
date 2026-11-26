@@ -1,4 +1,4 @@
-// What a page whose start stopped tells the user (banners, §9.1.5 the output tab): the
+// What a page whose start stopped tells the user (a banner, or the output tab): the
 // error's name read from the session's failure, and the words for it, the notebook named and what to do next.
 
 export type FailureWords = { readonly title: string; readonly text: string };

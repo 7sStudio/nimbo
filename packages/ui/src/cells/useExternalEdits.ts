@@ -1,5 +1,5 @@
 // "Updated from disk: 3 cells": a short toast when the daemon merged an edit made to the notebook's file outside
-// nimbo (notebook.reconciled, 07-file-format §5); the cells themselves change in place and carry their review marks.
+// nimbo (notebook.reconciled); the cells themselves change in place and carry their review marks.
 // A file that does not parse says so; a conflict has its banner instead. A cell changed on disk while its text is
 // still a draft here sends the draft at once, typed on the old text: the daemon holds the cell in conflict.
 import { watch } from "vue";

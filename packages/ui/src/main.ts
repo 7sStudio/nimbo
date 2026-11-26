@@ -71,7 +71,7 @@ if (address === undefined) {
   const host = {
     engines: createPageEngines(),
     fetchFullValue: fullValueFetcher(address),
-    // the output's own tab carries the token like the page's address, for its socket's upgrade (03-api §7.1)
+    // the output's own tab carries the token like the page's address, for its socket's upgrade
     tabUrl: (execution: string, index: number) =>
       `${location.pathname.replace(/\/$/u, "")}/out/${encodeURIComponent(execution)}/${String(index)}${location.search}`,
   };

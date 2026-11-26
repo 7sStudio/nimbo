@@ -1,4 +1,4 @@
-// The command palette's catalogue (08 §8 rule 3): every registry command that is not internal and every
+// The command palette's catalogue: every registry command that is not internal and every
 // UI command a user can choose, plus the bound variants with fixed arguments (Run all, Run stale, Restart all, a cell
 // type, a panel), each with its keymap shortcut. The palette shows the ones whose when() holds for their arguments,
 // recently used first.

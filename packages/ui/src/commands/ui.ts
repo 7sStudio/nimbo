@@ -119,7 +119,7 @@ function switches(notebook: ReturnType<typeof useNotebookStore>, cell: string): 
   return inClientOf(error) !== null && writable;
 }
 
-/** ↩ on a server cell whose last run failed DefinedInClient switches it to client (05-bridge §7), when
+/** ↩ on a server cell whose last run failed DefinedInClient switches it to client, when
  * this tab may write; on any other cell it edits. */
 function enter(store: Ui, notebook: ReturnType<typeof useNotebookStore>): unknown {
   const cell = notebook.selectedCell;

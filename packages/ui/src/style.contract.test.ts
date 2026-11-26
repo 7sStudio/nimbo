@@ -1,4 +1,4 @@
-// 08 §7 on the stylesheet the page ships (dist/assets/index-*.css, after `pnpm build`), whose rules are mostly the
+// The style rules on the stylesheet the page ships (dist/assets/index-*.css, after `pnpm build`), whose rules are mostly the
 // components' ui: utilities, which Stylelint never sees in the CSS files it lints: the gate (@jsnb/style-gate) runs
 // Stylelint itself on the built sheet, with what a page alone may set (GateScope.page). Its own tests show each rule
 // biting on fixture CSS.
@@ -29,12 +29,12 @@ const css = existsSync(assets) ? readdirSync(assets).filter((name) => name.endsW
 // output-view's scope.
 const sheets = css.filter((name) => name.startsWith("index-"));
 
-describe("the built page's stylesheet under 08 §7", () => {
+describe("the built page's stylesheet", () => {
   it("exists, one sheet: the contract stage runs after the build", () => {
     expect(sheets, "run `pnpm build` first").toHaveLength(1);
   });
 
-  it("keeps every rule inside .jsnb-ui and within 08 §7", async () => {
+  it("keeps every rule inside .jsnb-ui and within the style rules", async () => {
     const css = readFileSync(join(assets, sheets[0] ?? ""), "utf8");
     expect(await faults(css)).toEqual([]);
   });
@@ -61,7 +61,7 @@ describe("the built page's stylesheet under 08 §7", () => {
 });
 
 describe("output-view's sheets beside the page's", () => {
-  it("ships output-view's sheets apart from ours, its views within 08 §7 and its theme under .jsnb-ov", async () => {
+  it("ships output-view's sheets apart from ours, its views within the style rules and its theme under .jsnb-ov", async () => {
     const others = css.filter((name) => !sheets.includes(name));
     expect(others.map((name) => name.split("-")[0]).sort()).toEqual(["style", "theme"]);
     const views = others.find((name) => name.startsWith("style-")) ?? "";

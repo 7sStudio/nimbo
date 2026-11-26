@@ -1,4 +1,4 @@
-<!-- OutputsDiff: a cell's saved run changed (the file's outputs, 07-file-format §2), drawn under its source as GitNotebooks draws an output diff: the run's status when it changed, the value's changed paths (old on the red band, new on the green, as Compare with Previous Run lists them), the printed lines that changed and the error. Hide Outputs leaves it out. -->
+<!-- OutputsDiff: a cell's saved run changed (the file's outputs), drawn under its source as GitNotebooks draws an output diff: the run's status when it changed, the value's changed paths (old on the red band, new on the green, as Compare with Previous Run lists them), the printed lines that changed and the error. Hide Outputs leaves it out. -->
 <script setup lang="ts">
 import type { OutputsChange } from "@jsnb/core";
 import { computed } from "vue";

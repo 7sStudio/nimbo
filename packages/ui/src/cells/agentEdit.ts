@@ -1,4 +1,4 @@
-// An agent's edit waiting for review (03-api §5 `EditInfo.review`) in the words the page says it with: who
+// An agent's edit waiting for review (`EditInfo.review`) in the words the page says it with: who
 // made it, over which client and when, which lines it changed; the card, the outline, the Agent view and a folded
 // cell's name column all read it from here.
 import type { CellMeta, EditInfo, EditReview, LineRange } from "@jsnb/core";

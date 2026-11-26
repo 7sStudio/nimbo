@@ -1,7 +1,7 @@
 // The page's one socket and the session around it: the typed client connected as `ui` to the daemon the
 // page came from, the notebook it shows, its connection status from the moment it opens, the failure that stopped the
 // start (a stale token, a daemon gone), and the workspace event stream fanned out to the stores that read it
-// (settings.changed, packages.*) with its gaps. Only store/ and commands/ import this file (08-code-standards §8 rule 1).
+// (settings.changed, packages.*) with its gaps. Only store/ and commands/ import this file.
 import type { EventEnvelope, JsnbError } from "@jsnb/core";
 import { isJsnbError } from "@jsnb/core";
 import type { ConnectionStatus, SocketClient, Subscription } from "@jsnb/client";
@@ -23,7 +23,7 @@ export type Session = {
   readonly onWorkspaceGap: (listener: () => void) => () => void;
 };
 
-/** Opens the page's socket to the daemon at `address`, declared as the UI (03-api §7.1). */
+/** Opens the page's socket to the daemon at `address`, declared as the UI. */
 export const openSocket = (address: PageAddress): SocketClient =>
   connectSocket({ url: address.url, token: address.token, client: "ui" });
 

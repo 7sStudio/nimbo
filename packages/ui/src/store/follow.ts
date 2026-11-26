@@ -64,7 +64,7 @@ function movedAddress(where: Pick<Location, "pathname" | "search">, from: string
 }
 
 /** An ended subscription asks again when the workspace stream says the notebook opened, or after a reconnect; a
- * notebook whose file moved (notebook.moved, 07 §5) reloads the page at its new address, its kernel running on. */
+ * notebook whose file moved (notebook.moved) reloads the page at its new address, its kernel running on. */
 function watchOpens(context: Context, ended: () => boolean, again: () => void): void {
   const session = context.session();
   session.onWorkspaceEvent((event) => {

@@ -1,4 +1,4 @@
-// The page's query engines (11-query §3, §4) as main.ts builds them for the output viewers, in Chromium with
+// The page's query engines as main.ts builds them for the output viewers, in Chromium with
 // the real engines: query-json's JSONPath and jq in their Web Workers, query-sql's DuckDB-WASM, and the Filter chips
 // compiler; each is output-view's injected type and answers one query.
 import type { QueryEngines } from "@jsnb/output-view/model";

@@ -1,5 +1,5 @@
 // @vitest-environment node
-// The realm's mount on a real daemon (03-api §4.5): the first page attaches and runs a client cell into a container
+// The realm's mount on a real daemon: the first page attaches and runs a client cell into a container
 // the views can slot; a second page is refused with REALM_ATTACHED and turns view-only; a reconnect attaches again.
 import type { Daemon } from "@jsnb/test-daemon";
 import { droppableSocket, withDaemon } from "@jsnb/test-daemon";

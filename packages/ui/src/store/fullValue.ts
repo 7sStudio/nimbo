@@ -1,4 +1,4 @@
-// The full value of a retained output (03-api §7.5) for the output viewer's "load the whole value": the download goes
+// The full value of a retained output for the output viewer's "load the whole value": the download goes
 // through the client with the page's token as the bearer header, the one way /outputs/ accepts.
 import { downloadValue } from "@jsnb/client";
 import { JsnbError } from "@jsnb/core";

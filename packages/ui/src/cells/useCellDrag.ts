@@ -9,7 +9,7 @@ import { onBeforeUnmount, ref } from "vue";
 import type { useNotebookStore } from "../store/notebook.js";
 import { dropAfter } from "../store/sections.js";
 
-/** The page's .jsnb-ui root, which carries data-dragging: our styles stay inside it (08 §7). */
+/** The page's .jsnb-ui root, which carries data-dragging: our styles stay inside it. */
 const pageRoot = (): Element | null => document.querySelector(".jsnb-ui");
 
 /** How far, in CSS pixels, a press moves before it becomes a drag. */

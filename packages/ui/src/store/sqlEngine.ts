@@ -1,4 +1,4 @@
-// The daemon's DuckDB binding as the Settings page shows it (03-api §4.16): its status read once the row mounts,
+// The daemon's DuckDB binding as the Settings page shows it: its status read once the row mounts,
 // sql.install on a click, the step under way from the sql.progress events of any install (the page's or an agent's).
 import type { EventEnvelope } from "@jsnb/core";
 import { defineStore } from "pinia";

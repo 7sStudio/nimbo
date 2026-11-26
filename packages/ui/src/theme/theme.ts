@@ -3,7 +3,7 @@
 // top bar's toggle, which always lands on the side the page is not showing; and the last theme shown,
 // remembered in this browser so the next load paints in it before the setting arrives.
 
-/** The values of the ui.theme setting (03-api §4.10). */
+/** The values of the ui.theme setting. */
 export type ThemeChoice = "light" | "dark" | "system";
 export type Scheme = "light" | "dark";
 

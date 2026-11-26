@@ -1,4 +1,4 @@
-// The cell-scoped UI commands and the cell menu (§9.1.5): run and advance, run and insert, run above,
+// The cell-scoped UI commands and the cell menu: run and advance, run and insert, run above,
 // add above and below, type, values, collapse, hidden outputs, move, copy, cut and paste cells, copy the id, full screen
 // and the output's find and query bar, on the selected cell (run, type, copy and cut on a marked range). Each sends its
 // registry command through the store.

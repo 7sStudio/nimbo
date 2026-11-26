@@ -14,7 +14,7 @@ describe("errorToast", () => {
   });
 
   it("names an internal failure by the JsnbError it carries, with its action", () => {
-    // as the client reads a -32603 answer: the protocol's name, the daemon's JsnbError named in data (03-api §7.6)
+    // as the client reads a -32603 answer: the protocol's name, the daemon's JsnbError named in data
     const failed = (data: Record<string, unknown>) =>
       new ApiError(-32603, {
         name: protocolErrorNames[-32603] ?? "",

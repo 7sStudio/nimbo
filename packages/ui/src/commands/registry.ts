@@ -1,7 +1,7 @@
 // The registry's commands as page commands: every command that is not internal, its `notebook` and `cell`
 // filled from the page (the open notebook, the selected cell), runs sent without waiting, a failure reported as the
 // stores report theirs (store/attempt.ts), a restart while a cell runs confirmed first. Mutating and destructive
-// commands are called only here and in store/ (08-code-standards §8 rule 2); a delete goes through the store so it can
+// commands are called only here and in store/; a delete goes through the store so it can
 // be undone.
 import type { AnyCommand } from "@jsnb/core";
 import { publicCommands } from "@jsnb/core";
