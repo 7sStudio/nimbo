@@ -1,4 +1,4 @@
-// The daemon's DuckDB binding on demand (03-api §4.16, 11-query §3): `@duckdb/node-api` is not part of the app; it is
+// The daemon's DuckDB binding on demand: `@duckdb/node-api` is not part of the app; it is
 // loaded from the package's own dependency when there is one (a checkout), else from
 // `<data>/duckdb/<version>/node_modules`, outside any app version so an upgrade keeps it. `sql.install` puts it there:
 // the three npm tarballs (the API, the bindings and this platform's native package) fetched from the registry, each

@@ -1,4 +1,4 @@
-// cell.outputQuery on a session (03-api §4.3): the full value of the queried run's `value` output (the cell's last run,
+// cell.outputQuery on a session: the full value of the queried run's `value` output (the cell's last run,
 // or `execution` when it names it), then the mode's engine; SQL on the session's own DuckDB tables, the rest on the
 // daemon's JSON engines, where a retained value is held under its key (sent to their worker once). The
 // answer carries the mode and how long the whole query took.

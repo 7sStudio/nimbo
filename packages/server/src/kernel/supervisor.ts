@@ -1,10 +1,10 @@
-// One notebook's kernel (02-architecture §7, 04-kernel §2, §6, §9): a NodeKernel created and started on open, stopped on
+// One notebook's kernel: a NodeKernel created and started on open, stopped on
 // close, killed and replaced by a restart (a run asking for the kernel meanwhile gets the new one), replaced by the next
 // run after it died on its own, never by a read; its kernel.status (starting, idle, busy, paused, dead with the exit)
 // emitted on every change. Each kernel takes its options from the supervisor's and the settings of the moment
 // (`kernel.nodePath`, the output limits), and its callbacks are passed on only while it is the supervisor's current
-// kernel, so a replaced kernel's late messages reach nobody. The daemon's long-lived handle on the notebook's Kernel
-// (08-code-standards §6 keeps classes for those).
+// kernel, so a replaced kernel's late messages reach nobody. The daemon's long-lived handle on the notebook's Kernel,
+// hence a class.
 import type { CellId, KernelState, KernelStatus, Route } from "@jsnb/core";
 import { KernelDead } from "@jsnb/core";
 import type {

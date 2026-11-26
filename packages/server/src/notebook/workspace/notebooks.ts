@@ -1,12 +1,12 @@
-// The open notebooks of the workspace (03-api §4.2, 02-architecture §7): notebook.create writes an empty file only when
+// The open notebooks of the workspace: notebook.create writes an empty file only when
 // none exists and opens it (the file removed again when its session cannot start); notebook.open loads the file and
 // starts its kernel once (a second open is the same session); one file is open under one ref only (identity.ts: a case
 // variant or a path through a linked folder is NotebookAlreadyOpen, before and after saves); once stopping, nothing
 // opens or is created. Two closes of one notebook make one, and an open of a notebook that closes waits for its close,
 // also under another ref naming its file (a closing session keeps its identity until its close ends).
 // Every other command addresses an open notebook and fails NOTEBOOK_NOT_FOUND otherwise ("is not open" when the file
-// exists), but notebook.delete, which acts on closed notebooks only, and notebook.rename (fileMoves.ts, 07 §5); an
-// open notebook whose file moves is followed to its new ref (moves.ts, 07 §5). Each
+// exists), but notebook.delete, which acts on closed notebooks only, and notebook.rename (fileMoves.ts); an
+// open notebook whose file moves is followed to its new ref (moves.ts). Each
 // command that changes the list (a create, a first open, a close, a delete, a rename) announces it once done.
 import type { NotebookSummary } from "@jsnb/core";
 import { InvalidParams, NotebookExists } from "@jsnb/core";
@@ -45,7 +45,7 @@ export type Notebooks = {
   readonly sessions: () => Promise<readonly Session[]>;
   /** The open notebook whose attached page `realmId` names (realm.detach and realm.report carry no notebook). */
   readonly byRealm: (realmId: string) => Promise<Session | undefined>;
-  /** The full value of output `index` of `execution`, whichever open notebook ran it (03-api §7.5). */
+  /** The full value of output `index` of `execution`, whichever open notebook ran it. */
   readonly fullValue: (execution: string, index: number) => Promise<{ readonly json: unknown }>;
 };
 
@@ -67,7 +67,7 @@ async function fullValueAmong(
 
 async function openNew(options: NotebooksOptions, table: Table, ref: string, follower: Follower) {
   refuseStopping(table, ref);
-  await follower.all(); // an open notebook whose file moved to `ref` takes that ref first (07 §5)
+  await follower.all(); // an open notebook whose file moved to `ref` takes that ref first
   const entered = table.entries.get(ref);
   if (entered) return { opening: entered.opening, fresh: false }; // opened while this waited its turn
   const path = await notebookPath(options.root, ref, "path"); // notebook.open's argument
@@ -121,7 +121,7 @@ function listChanges(options: NotebooksOptions, table: Table) {
   };
 }
 
-/** The options the sessions open with, their saves calling the follower of `table` (moves.ts, 07 §5). */
+/** The options the sessions open with, their saves calling the follower of `table` (moves.ts). */
 function following(given: NotebooksOptions, table: Table) {
   const options: NotebooksOptions = { ...given, follow: (session) => follower.one(session) };
   const follower = createFollower(options, table, given.moveCheckMs ?? 2000);

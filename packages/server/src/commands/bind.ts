@@ -1,4 +1,4 @@
-// registry.bind of 03-api §3: a handler per command, its input parsed with the command's Zod schema (INVALID_PARAMS with
+// registry.bind: a handler per command, its input parsed with the command's Zod schema (INVALID_PARAMS with
 // the issues) and its result checked against the output schema before it is sent (a wrong shape is a daemon bug).
 import type { AnyCommand, CommandDescriptor } from "@jsnb/core";
 import { InvalidParams, JsnbError, NotAvailable } from "@jsnb/core";

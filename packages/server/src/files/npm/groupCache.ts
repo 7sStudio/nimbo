@@ -1,4 +1,4 @@
-// The cache of a package's split bundle (04-kernel §8.1, 07-file-format §7), in the package's entry folder beside its
+// The cache of a package's split bundle, in the package's entry folder beside its
 // standalone bundles: each entry's bundle under the standalone name of its subpath, each chunk as `chunks/<hash>.js`,
 // `group.json` (the entries and chunks the build made, with their sizes), `group.imports.json` (importsRecord.ts) and, for a linked
 // package, `group.inputs.json` (inputs.ts, its package.json included), then meta.json last, each written under a temp

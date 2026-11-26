@@ -1,4 +1,4 @@
-// startServer (02-architecture §7): one daemon for a workspace folder, in this process. It prepares `.jsnb/`, refuses
+// startServer: one daemon for a workspace folder, in this process. It prepares `.jsnb/`, refuses
 // to start beside a live daemon (a stale server.json is removed), listens on 127.0.0.1, writes server.json (0600) once
 // the socket listens, and stops cleanly: notebooks closed, sockets and the listener closed, server.json removed.
 import { randomBytes } from "node:crypto";

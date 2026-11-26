@@ -1,4 +1,4 @@
-// The watch on an open notebook's file (07-file-format §5, external edits): `fs.watch` on the file's folder, not on
+// The watch on an open notebook's file (external edits): `fs.watch` on the file's folder, not on
 // the file, since an editor's atomic save (a temp file renamed over it) and `git checkout` replace the file and its
 // inode; events are debounced, so a burst (an editor writing twice, a branch switch) is one check; and a stat of the
 // file every `everyMs` catches what the events miss (network and synced folders, a watch the system refused). A check

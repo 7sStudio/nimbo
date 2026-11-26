@@ -1,5 +1,5 @@
-// What of a request below /n/ reaches user code, and what of its answer reaches the sender (03-api §7.1, 02-architecture
-// §8): the daemon's own credentials never pass to a handler (a nimbo page cookie, and the token wherever the request
+// What of a request below /n/ reaches user code, and what of its answer reaches the sender:
+// the daemon's own credentials never pass to a handler (a nimbo page cookie, and the token wherever the request
 // carries it: a cookie pair, the Authorization header, a Referer from a page whose URL still held `?token=`, a query
 // parameter), and an answer carries no CORS header, no hop-by-hop header and no nimbo page cookie.
 import type { IncomingHttpHeaders } from "node:http";

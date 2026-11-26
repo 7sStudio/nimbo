@@ -1,4 +1,4 @@
-// secrets.set's rewrite of .env (07-file-format §8): one key's line, every other line kept, values that round-trip.
+// secrets.set's rewrite of .env: one key's line, every other line kept, values that round-trip.
 import { parseDotenv } from "@jsnb/kernel-node";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";

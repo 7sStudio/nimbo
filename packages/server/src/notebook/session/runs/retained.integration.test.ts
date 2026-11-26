@@ -1,4 +1,4 @@
-// The full values the daemon retains (03-api §4.10, 02-architecture §6): bounded per notebook by
+// The full values the daemon retains: bounded per notebook by
 // outputs.retainMaxBytes with the oldest dropped first, kept across a kernel restart, not kept at all with
 // outputs.retainFullValue off (a value that was never cut is still served from its own json).
 import type { Daemon } from "../../../fixtures/daemon.js";

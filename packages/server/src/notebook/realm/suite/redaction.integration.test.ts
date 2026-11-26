@@ -1,4 +1,4 @@
-// The bridge suite, 05-bridge §11 item 7 with 09-testing §4.3's bridge rows (real kernel, daemon and page): a secret in
+// The bridge suite, redaction (real kernel, daemon and page): a secret in
 // a call's result arrives as *** and the calling client cell gets the stderr warning; a secret in a snapshot, in what
 // the server function logs of an argument, and in a thrown error's message is redacted too; no output carries it (the
 // client cell's source does, as the user wrote it).

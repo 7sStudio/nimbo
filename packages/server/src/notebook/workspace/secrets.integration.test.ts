@@ -1,4 +1,4 @@
-// Secrets through the daemon (03-api §4.7, 07-file-format §8): .env created 0600, an existing file's lines, comments,
+// Secrets through the daemon: .env created 0600, an existing file's lines, comments,
 // order and mode kept, names only (never values, never process.env), a FIFO in place of .env refused without blocking;
 // packages.list from the workspace package.json, a broken one refused with the reason.
 import { chmod, readFile, stat, writeFile } from "node:fs/promises";

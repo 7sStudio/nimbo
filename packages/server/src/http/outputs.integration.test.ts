@@ -1,4 +1,4 @@
-// The full-value endpoint's own rules (03-api §7.5): the bearer header only (the page downloads through
+// The full-value endpoint's own rules: the bearer header only (the page downloads through
 // the client, which sends it; the page cookie is no credential here), GET and HEAD only, 404 for a path that names no
 // output; the value itself is proven through the client in notebook/session/runs/outputs.integration.test.ts. A caller
 // that goes away mid-download is noted at debug, never as a failed request.

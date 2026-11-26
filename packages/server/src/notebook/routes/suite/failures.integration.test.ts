@@ -1,4 +1,4 @@
-// The routes suite, a handler that fails (04-kernel §8, 03-api §7.1): a throw answers 500
+// The routes suite, a handler that fails: a throw answers 500
 // and is an error output on the route's cell later, its own status staying ok; a result with no JSON form is 500 too;
 // a slow handler is waited for, up to the route timeout (504, the kernel answering the next request); requests run side
 // by side; a kernel that dies leaves no route (502 for the request under way, 404 after, routes.changed with none). A

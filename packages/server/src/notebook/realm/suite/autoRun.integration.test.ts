@@ -1,4 +1,4 @@
-// The bridge suite with execution.autoRunDependents (04-kernel §4.1, 05-bridge §5; real kernel, daemon and page): a
+// The bridge suite with execution.autoRunDependents (real kernel, daemon and page): a
 // client cell using a server export re-runs in the page after the server cell runs, and with no page attached it is
 // left stale and named, not failed.
 import { describe, expect, it } from "vitest";

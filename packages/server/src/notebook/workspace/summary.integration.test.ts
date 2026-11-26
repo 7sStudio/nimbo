@@ -1,4 +1,4 @@
-// notebook.summary (03-api §4.2) on a real daemon: a closed notebook is read from its file without opening it (no
+// notebook.summary on a real daemon: a closed notebook is read from its file without opening it (no
 // kernel, no session, the file untouched), named and summed up by transform's real analysis; an open one from its
 // session, so an edit shows at once; and the path rules every command follows refuse a ref outside the workspace, a
 // file that is not there and a file the app cannot load.

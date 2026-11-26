@@ -1,4 +1,4 @@
-// The event stream of 03-api §6: envelopes with a seq that counts per notebook for the daemon's life (the
+// The event stream: envelopes with a seq that counts per notebook for the daemon's life (the
 // workspace-level stream, notebook "", has its own), validated with core's schemas, each delivered once per subscriber.
 import type { EventType, eventData } from "@jsnb/core";
 import { EventEnvelope } from "@jsnb/core";
@@ -28,7 +28,7 @@ export type EventBus = {
   /** Adds a notebook (or, with undefined, the whole workspace) to what a subscriber receives; returns the seq. */
   readonly subscribe: (subscriber: Subscriber, notebook?: string) => number;
   /**
-   * A notebook's stream goes on under a new ref (its file moved, 07 §5): each subscriber of `from` also receives `to`,
+   * A notebook's stream goes on under a new ref (its file moved): each subscriber of `from` also receives `to`,
    * whose seq goes on from the higher of the two, so a follower sees no step back.
    */
   readonly moveStream: (from: string, to: string) => void;

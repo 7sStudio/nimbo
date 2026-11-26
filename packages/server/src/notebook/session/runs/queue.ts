@@ -1,4 +1,4 @@
-// The run queue of 03-api §4.3.1: one per notebook, first in first out, one run at a time (server, client and
+// The run queue: one per notebook, first in first out, one run at a time (server, client and
 // markdown cells alike: the notebook runs in order); a queued run can be taken off before it starts.
 import type { CellId } from "@jsnb/core";
 
@@ -14,7 +14,7 @@ export type QueuedRun = {
   readonly done: Promise<void>;
   readonly settle: () => void;
   readonly batch?: Batch;
-  /** A cell.run's run: ending well, it may start execution.autoRunDependents (04-kernel §4.1). */
+  /** A cell.run's run: ending well, it may start execution.autoRunDependents. */
   readonly trigger?: true;
 };
 

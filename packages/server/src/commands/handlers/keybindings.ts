@@ -1,4 +1,4 @@
-// The keybindings commands of 03-api §4.11: the bindings in effect, set and reset in a file, the files as text.
+// The keybindings commands: the bindings in effect, set and reset in a file, the files as text.
 import {
   keybindingsFile,
   keybindingsList,

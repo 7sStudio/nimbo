@@ -1,4 +1,4 @@
-// A session's recovery copy (07-file-format §7, files/notebooks/recovery.ts): kept while the session holds text the
+// A session's recovery copy (files/notebooks/recovery.ts): kept while the session holds text the
 // file does not and cannot write it (an open conflict, a failing save, a close that could not write), so neither a
 // close, a stop nor a crash drops it; and taken back at the next open as a conflict with that text as the session's.
 import type { CellId, DocumentCell } from "@jsnb/core";

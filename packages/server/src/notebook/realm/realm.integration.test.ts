@@ -1,4 +1,4 @@
-// The daemon's side of the client realm through a real page (05-bridge §3, §4; 03-api §4.5): Chromium loads the test
+// The daemon's side of the client realm through a real page: Chromium loads the test
 // page from the daemon's /ui/, runtime-web's Realm attaches over the page's socket, and client cells run there with
 // the server's exports as stubs and copies; the daemon proves NotExported, the page's names, the public env.
 import { mkdtemp, rm } from "node:fs/promises";

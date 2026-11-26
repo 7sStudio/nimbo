@@ -1,4 +1,4 @@
-// What the daemon's page endpoints serve (02-architecture §7), from the workspace and the options: the settings'
+// What the daemon's page endpoints serve, from the workspace and the options: the settings'
 // JSON Schema, retained full values, the built UI, the UI feedback, the notebooks' routes and the page's modules at /npm/.
 import { settingsJsonSchema } from "@jsnb/core";
 

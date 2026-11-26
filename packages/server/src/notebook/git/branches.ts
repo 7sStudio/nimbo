@@ -1,4 +1,4 @@
-// The branches (03-api §4.15): read with for-each-ref, created, switched, renamed and deleted with git's own commands,
+// The branches: read with for-each-ref, created, switched, renamed and deleted with git's own commands,
 // every name checked and placed after --end-of-options. A switch runs under treeChange: open notebooks' writes held,
 // and their files merged into them after, edits not on disk kept.
 import type { GitLocalBranch, GitRemote, GitRemoteBranch } from "@jsnb/core";

@@ -1,7 +1,7 @@
-// The cell edits of 03-api §4.3 on a session: add (an explicit id must be unused), update (source, type, meta merged;
+// The cell edits on a session: add (an explicit id must be unused), update (source, type, meta merged;
 // `meta.lastEdit` stamped from the connection when the code changed; a null key removed), revert and mark
 // reviewed (an agent's edits no one reviewed yet), move and delete; each emits its event, recomputes the stale flags
-// (cells.stale when they changed, 02-architecture §5 step 2) and schedules the autosave.
+// (cells.stale when they changed) and schedules the autosave.
 import type { CellId, CellType, StaleMap } from "@jsnb/core";
 import { afterDelete, afterEdit, FileCellMeta } from "@jsnb/core";
 
@@ -25,7 +25,7 @@ export type AddCell = {
 export type UpdateCell = {
   readonly cell: CellId;
   readonly source?: string | undefined;
-  /** The textHash of the source the edit was made on (07 §5). */
+  /** The textHash of the source the edit was made on. */
   readonly base?: string | undefined;
   readonly type?: CellType | undefined;
   readonly meta?: Readonly<Record<string, unknown>> | undefined;

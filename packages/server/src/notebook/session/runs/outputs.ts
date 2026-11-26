@@ -1,4 +1,4 @@
-// What a session answers about its runs' outputs (03-api §4.3, §7.5): a cell's last execution, a value's full form
+// What a session answers about its runs' outputs: a cell's last execution, a value's full form
 // (retained, or the output's own json when it was not cut) and its slices; only each cell's last run is kept, so any
 // other execution or an index that is no value output is INVALID_PARAMS naming it.
 import type { CellId, ExecutionId, Output } from "@jsnb/core";

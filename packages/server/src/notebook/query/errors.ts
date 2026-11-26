@@ -1,4 +1,4 @@
-// How a query's failure reaches the caller of cell.outputQuery (03-api §4.3, 08 §5): a query the engine refuses (a
+// How a query's failure reaches the caller of cell.outputQuery: a query the engine refuses (a
 // syntax error, a runtime error of the query on this value, DuckDB rejecting the SQL) is INVALID_PARAMS on `query`
 // with the engine's message and the offset of the mistake; a timeout is a result (`timedOut`), not an error; an engine
 // that could not run (it did not load, ran out of memory, or the notebook closed) is OutputQueryFailed.
@@ -30,7 +30,7 @@ export const invalidQuery = (message: string, position: number | undefined): Inv
     ],
   });
 
-/** The daemon's DuckDB binding is not installed (03-api §4.16): sql.install, `<product> sql install`, puts it in place. */
+/** The daemon's DuckDB binding is not installed: sql.install, `<product> sql install`, puts it in place. */
 export class SqlEngineMissing extends JsnbError {
   declare readonly data: { readonly version: string; readonly folder: string };
   constructor(data: { readonly version: string; readonly folder: string }) {

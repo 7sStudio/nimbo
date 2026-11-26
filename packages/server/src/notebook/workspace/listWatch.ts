@@ -1,4 +1,4 @@
-// The watch on the workspace's notebook list (03-api §6 notebooks.changed, 07-file-format §5): a notebook created,
+// The watch on the workspace's notebook list (notebooks.changed): a notebook created,
 // deleted, renamed or changed outside nimbo (an editor, `git checkout`, an agent's file tools) updates Home and the
 // Explorer. Where the system watches a tree in one handle (macOS, Windows), the folder's events ask for a check, a
 // branch switch's hundreds of them batched by the debounce; everywhere, the list is read again every `everyMs`, which

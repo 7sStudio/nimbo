@@ -1,4 +1,4 @@
-// The queue of /npm/'s builds (04-kernel §8.1): its bound, the requests of one key sharing a build, a build no one
+// The queue of /npm/'s builds: its bound, the requests of one key sharing a build, a build no one
 // waits for leaving the line or cancelled, and the limit measured from a build's start, not from the request.
 import { describe, expect, it } from "vitest";
 

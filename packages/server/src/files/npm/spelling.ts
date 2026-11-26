@@ -1,4 +1,4 @@
-// Names as their folders and files are spelled on disk (04-kernel §8.1): a file system that ignores case finds
+// Names as their folders and files are spelled on disk: a file system that ignores case finds
 // `Date-fns`, `lodash-es/Debounce.js` or `three/addons/controls/orbitControls.js` too, which would load one module
 // under two URLs; such a spelling is refused.
 import { readdir } from "node:fs/promises";

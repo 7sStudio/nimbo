@@ -1,4 +1,4 @@
-// The outputs of runs through the daemon (03-api §4.3, §7.5): cell.outputValue slices from the retained full
+// The outputs of runs through the daemon: cell.outputValue slices from the retained full
 // value, its refusals (INVALID_PARAMS), children capped by outputs.maxValueBytes, and the full-value download streamed
 // at /outputs/, 404 with INVALID_PARAMS once the value is not retained.
 import { truncatedMarker } from "@jsnb/core";

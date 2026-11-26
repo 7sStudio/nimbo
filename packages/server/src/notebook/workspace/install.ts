@@ -1,4 +1,4 @@
-// packages.add and packages.remove (03-api §4.6, 07-file-format §7): the names checked (specs to add; declared package
+// packages.add and packages.remove: the names checked (specs to add; declared package
 // names to remove), package.json created when there is none, the manager of the packages.manager setting run in
 // the workspace (no shell), its output lines as packages.progress events (redacted), packages.done at the end; one run
 // at a time per workspace (packages.ts), stopped with the daemon or by packages.cancel. A manager that fails is

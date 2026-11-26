@@ -1,4 +1,4 @@
-// A git operation rewriting an open notebook's file goes through the merge of external edits (07-file-format §5),
+// A git operation rewriting an open notebook's file goes through the merge of external edits,
 // once: a pull changing another cell than the one typed in keeps both with no conflict; one changing the typed cell is
 // one conflict holding the typing, the pulled text on disk, a recovery copy kept; a discard with unsaved typing ends
 // as the index's version; a stash saves the typing first, so it takes and its pop brings back what the page showed;

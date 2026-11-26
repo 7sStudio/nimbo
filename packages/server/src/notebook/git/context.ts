@@ -51,14 +51,14 @@ export async function sessionOf(context: GitContext, path: string): Promise<Sess
 /** The working tree's side of `path`: an open notebook's state as its file would hold it, else the file. */
 export async function workingSide(context: GitContext, path: string): Promise<Side> {
   const session = await sessionOf(context, path);
-  // a session with nothing unsaved is its file, whose stamps of external edits (07 §5) are not written yet
+  // a session with nothing unsaved is its file, whose stamps of external edits are not written yet
   if (session?.context.autosave.state().dirty !== true) return worktree(context.root, path);
   const { header, cells } = session.context;
   return { kind: "bytes", bytes: Buffer.from(textOf(header, cells.list())) };
 }
 
 /** The status with each tracked open notebook whose unsaved state differs from its file added as modified, since
- * git.diff compares that state (§2.4): `nimbo diff --stat` and the view list what the diff of the file shows. */
+ * git.diff compares that state: `nimbo diff --stat` and the view list what the diff of the file shows. */
 export async function withOpenEdits(
   context: GitContext,
   found: RepoLocation,

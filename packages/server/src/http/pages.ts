@@ -1,4 +1,4 @@
-// The daemon's endpoints besides /rpc (02-architecture §7): the notebooks' routes below /n/, the one surface without a
+// The daemon's endpoints besides /rpc: the notebooks' routes below /n/, the one surface without a
 // token; `/ui/` and `/npm/` take the bearer header or the page cookie, `/outputs/`, `/feedback/` and `/schema/settings.json`
 // the bearer header only; `/` sends a browser to the Home page `/ui/`, keeping only its `?token=`;
 // anything else is 404.
@@ -20,7 +20,7 @@ import { answerUi, isUiPath } from "./ui.js";
 import { isRead, sendJson, sendReadOnly, sendStatus, sendUnauthorized } from "./respond.js";
 
 export type PageEndpoints = {
-  /** The JSON Schema of the settings (07-file-format §6). */
+  /** The JSON Schema of the settings. */
   readonly settingsSchema: () => unknown;
   readonly fullValue: FullValue;
   readonly ui: UiFiles;

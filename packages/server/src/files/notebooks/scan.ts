@@ -1,5 +1,5 @@
-// The notebooks of a workspace (03-api §4.1 `workspace.info`, 07-file-format §7: anywhere under the workspace) and the
-// `<name>.jsnb.tmp-<pid>-<random>` files a crashed save left beside them (07-file-format §9), found by one bounded walk that skips node_modules and hidden folders and follows no symbolic
+// The notebooks of a workspace (`workspace.info`: anywhere under the workspace) and the
+// `<name>.jsnb.tmp-<pid>-<random>` files a crashed save left beside them, found by one bounded walk that skips node_modules and hidden folders and follows no symbolic
 // link. A symbolic link at such a name (a cloned workspace may carry one) is a leftover too, removed itself, never
 // followed.
 import type { Dirent } from "node:fs";

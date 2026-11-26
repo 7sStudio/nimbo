@@ -1,6 +1,6 @@
-// cell.outputValue's slice (03-api §4.3, "load more"): the children of a path in a value's wire form
+// cell.outputValue's slice ("load more"): the children of a path in a value's wire form
 // from an offset, at most `limit`, each child itself capped so the answer stays within the byte budget; a cut child
-// carries core's truncated marker where it was cut, as the kernel's own encoder marks it (04-kernel §5.4).
+// carries core's truncated marker where it was cut, as the kernel's own encoder marks it.
 import { truncatedMarker } from "@jsnb/core";
 
 export type Slice = { readonly json: unknown; readonly total: number; readonly truncated: boolean };

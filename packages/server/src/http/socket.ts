@@ -1,4 +1,4 @@
-// One WebSocket connection of 03-api §7.2: concurrent calls answered by id, a notification carried out unanswered,
+// One WebSocket connection: concurrent calls answered by id, a notification carried out unanswered,
 // event notifications sent, the page's answers to the daemon's own requests matched (pageRequests.ts), a frame that is
 // no message answered -32700 or -32600; when the socket closes its pending requests fail.
 import type { WebSocket } from "ws";

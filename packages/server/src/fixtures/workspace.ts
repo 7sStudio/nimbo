@@ -1,4 +1,4 @@
-// The daemon's own workspace services over a temporary folder (09-testing §8), for the tests that drive the workspace
+// The daemon's own workspace services over a temporary folder, for the tests that drive the workspace
 // below the RPC layer (its notebooks table, its query engines): the built kernel, real files, a log that says nothing.
 import { createIds } from "@jsnb/test-tools/ids";
 import { kernelEntry } from "@jsnb/test-tools/kernel";

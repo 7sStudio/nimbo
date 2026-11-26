@@ -1,4 +1,4 @@
-// What a /npm/ path names (04-kernel §8.1), read once its segments are percent-decoded: one segment that decodes to
+// What a /npm/ path names, read once its segments are percent-decoded: one segment that decodes to
 // `./…` is a workspace module, anything else a package spec, a name (scoped or not) and an optional subpath
 // (`lodash-es/debounce`, `@stripe/stripe-js`). The path rule: an empty segment, a `.` or `..` segment, a
 // backslash or a NUL is refused anywhere; a workspace module's path below the workspace holds no segment that starts
@@ -170,13 +170,13 @@ const isHidden = (below: string): boolean =>
 
 /**
  * Whether a package whose real folder is `folder` is linked: outside every node_modules, as a workspace manager (pnpm,
- * npm or yarn workspaces) links a monorepo's own packages, inside the nimbo workspace or beside it (rounds 3 and 4).
+ * npm or yarn workspaces) links a monorepo's own packages, inside the nimbo workspace or beside it.
  */
 export const isLinkedPackage = (folder: string): boolean =>
   !folder.split(sep).includes("node_modules");
 
 /**
- * Whether a package's bundle may hold the file at the real path `path` (rounds 3 and 4): nothing hidden below the
+ * Whether a package's bundle may hold the file at the real path `path`: nothing hidden below the
  * package's real folder (pnpm's `.pnpm` sits above it), and for a linked package the module rule, module source only,
  * checked against the package's own folder.
  */

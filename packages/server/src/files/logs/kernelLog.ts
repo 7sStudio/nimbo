@@ -1,5 +1,5 @@
-// Each kernel's log of 07-file-format §7: `.jsnb/logs/kernel-<notebook>.log`, the lines kernel-node hands to onLog
-// (already redacted on its side of the pipes, 04-kernel §10), rotated like the daemon log. The name is the ref encoded
+// Each kernel's log: `.jsnb/logs/kernel-<notebook>.log`, the lines kernel-node hands to onLog
+// (already redacted on its side of the pipes), rotated like the daemon log. The name is the ref encoded
 // into one flat file name; a ref that encodes past 120 bytes (nine bytes per CJK character, a deep path) keeps a readable
 // prefix and a short hash of the ref instead, well under a file system's 255-byte name. Lines it cannot write are
 // dropped and counted (drops.ts), never thrown. A deleted notebook's log goes with it and a renamed one's follows it,
@@ -48,7 +48,7 @@ export type LogTail = {
 
 const tailWindowBytes = 64 * 1024;
 
-/** The last `count` lines of the log at `path` (kernel.log, 03-api §4.4): read without following a link, from the
+/** The last `count` lines of the log at `path` (kernel.log): read without following a link, from the
  * last 64 KiB; a file that is missing, unreadable or a link answers no lines. */
 export function readLogTail(path: string, count: number): LogTail {
   let fd: number;
@@ -104,7 +104,7 @@ export type KernelLogLeft = (file: string, error: unknown) => void;
 
 /**
  * Removes the kernel log of the deleted notebook `ref` and its rotated files (notebook.delete). A log is safe to
- * delete (07-file-format §7): one that cannot be removed stays, `left` is told, and the delete goes on, so this never
+ * delete: one that cannot be removed stays, `left` is told, and the delete goes on, so this never
  * rejects.
  */
 export async function removeKernelLog(

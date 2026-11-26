@@ -1,5 +1,5 @@
-// The kernel reports a run's exports in a message of their own right after the run's status (04-kernel §2.1,
-// 02-architecture §5 step 7), so the daemon ends a server run only once that message is in: the next run (a client
+// The kernel reports a run's exports in a message of their own right after the run's status,
+// so the daemon ends a server run only once that message is in: the next run (a client
 // cell in the same notebook.run) and a bridge.call made on the run's `ok` see the bridge surface it left. A clock counts
 // the exports messages (and the kernel's end, after which none comes); a run waits for one past the count it saw when
 // it sent its execute.

@@ -1,4 +1,4 @@
-// cache.clear while the daemon runs (07 §7): the bundles go and are built again at their next import, a bundle served
+// cache.clear while the daemon runs: the bundles go and are built again at their next import, a bundle served
 // while the clear runs is whole, a second clear finds nothing, and a link planted in the cache's place is removed
 // as itself, never read or emptied through.
 import { existsSync } from "node:fs";

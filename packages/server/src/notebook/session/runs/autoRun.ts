@@ -1,4 +1,4 @@
-// execution.autoRunDependents (04-kernel §4.1): a cell.run that ends well plans its stale dependents, and each time the
+// execution.autoRunDependents: a cell.run that ends well plans its stale dependents, and each time the
 // queue has nothing else to run the next of them runs, dependencies first, so whatever anyone asks for meanwhile runs
 // before the rest of the cascade. A failure, or a dependent left alone, holds back what depends on it; an edit takes
 // the cell out; interrupt, restart and close stop it all. Each cell.run's ticket answers which dependents it started.

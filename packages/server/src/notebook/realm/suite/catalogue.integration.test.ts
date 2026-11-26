@@ -1,4 +1,4 @@
-// The bridge suite, 05-bridge §11 items 3 and 4 with the error catalogue of §7, word for word (real kernel, daemon and
+// The bridge suite, the error catalogue word for word (real kernel, daemon and
 // page): a class instance, a class and a nested instance are NotTransferable when read, a name defined unexported is
 // NotExported before anything runs, a DOM node argument is ArgumentNotSerializable before anything is sent, a class
 // instance result is ResultNotSerializable, bytes over bridge.maxBytesPerValue say so by their own class with the page

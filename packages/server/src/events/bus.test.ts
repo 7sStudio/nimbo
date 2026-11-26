@@ -1,4 +1,4 @@
-// The event stream of 03-api §6 and the subscriptions of §4.8: seq per notebook, the workspace stream, once per socket.
+// The event stream and the subscriptions: seq per notebook, the workspace stream, once per socket.
 import type { EventEnvelope } from "@jsnb/core";
 import { describe, expect, it } from "vitest";
 

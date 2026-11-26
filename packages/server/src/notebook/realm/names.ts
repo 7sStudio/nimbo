@@ -1,4 +1,4 @@
-// The server side of a client cell's names (05-bridge §3, §5, §7): which server cell defines or exports a name and its
+// The server side of a client cell's names: which server cell defines or exports a name and its
 // 1-based place in the notebook (as the catalogue's messages count cells), the names to snapshot for a client run, and
 // those it cannot bind: NotExported for a name a server cell defines without exporting, or that only the kernel still
 // holds (its cell deleted or its export removed), KernelRestarted for an export the kernel lost in a restart that its
@@ -81,7 +81,7 @@ type NameOutcome =
   | { readonly kind: "error"; readonly error: NotExported | KernelRestarted | ExportNotRun };
 
 /**
- * 05-bridge §3 step 2 with §5: a name binds when the kernel holds it as an export and a server cell's current source
+ * A name binds when the kernel holds it as an export and a server cell's current source
  * still exports it. Without that source a definer that does not export it, or the kernel's lingering export, is
  * NotExported; an export the kernel lost in a restart is KernelRestarted until its cell runs again, and one its cell has
  * not made since the kernel started is ExportNotRun. A name a server cell only imports (`import crypto from
@@ -116,7 +116,7 @@ export type Resolution = {
   readonly unbound: Readonly<Record<string, ErrorInfo>>;
 };
 
-/** 05-bridge §3 step 2: the client cell `cell`'s free names, as `analysis` lists them, sorted into the two. */
+/** The client cell `cell`'s free names, as `analysis` lists them, sorted into the two. */
 export function resolveNames(
   context: SessionContext,
   state: RealmState,
@@ -135,13 +135,13 @@ export function resolveNames(
   return { names, unbound: Object.fromEntries(unbound) };
 }
 
-/** The name in the kernel's "x is not defined" (04-kernel §3.3: a free name no layer of the scope has). */
+/** The name in the kernel's "x is not defined" (a free name no layer of the scope has). */
 const unboundName = (error: ErrorInfo): string | undefined =>
   error.name === "ReferenceError" ? /^(\S+) is not defined$/u.exec(error.message)?.[1] : undefined;
 
 /**
  * A server run of `cell` that ended on a name the kernel does not have, read by `cell` itself, which no server cell's
- * source defines and a client cell does, ends DefinedInClient naming that client cell (05-bridge §7),
+ * source defines and a client cell does, ends DefinedInClient naming that client cell,
  * the mirror of NotExported, at the place of the read (its frames are kept, so Jump goes there). The kernel's own
  * ReferenceError decides, so a `typeof` guard, a name the kernel still holds, a global a package made or a name inside
  * a function never called never fails; the cell's statements before the read have run. A read in a package or in

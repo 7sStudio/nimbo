@@ -1,4 +1,4 @@
-// Agent edits waiting for review (03-api §4.3, §5) through a real daemon: the code before the first edit no
+// Agent edits waiting for review through a real daemon: the code before the first edit no
 // one reviewed and the lines changed since, over several agent edits; a user's edit in between; cell.revert by the
 // user and by an agent, the editor's undo of a revert; cell.markReviewed; the events; and the file across a reload.
 import { readFile } from "node:fs/promises";

@@ -1,4 +1,4 @@
-// The folder listing behind Home's Open folder (03-api §4.1 workspace.listFolders): a path from the page
+// The folder listing behind Home's Open folder (workspace.listFolders): a path from the page
 // read as a folder of this computer and the folders in it, read only. The path is normalised before use (`~` is the
 // home folder, a relative path is taken from the workspace folder, `..` resolved) and its links resolved; anything that
 // is not a readable folder is refused in words. A listing names folders only: of the files it counts the `.jsnb` ones

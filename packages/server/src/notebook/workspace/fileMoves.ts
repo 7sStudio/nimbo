@@ -1,7 +1,7 @@
-// notebook.delete and notebook.rename (03-api §4.2): under the table's gate so an open of the same file waits for
+// notebook.delete and notebook.rename: under the table's gate so an open of the same file waits for
 // them (and they for a close under way). A delete acts on a notebook no session holds: an open one is NotebookOpen,
 // under its own ref or under another ref that names its file (a case variant). A rename of an open notebook moves its
-// file and its session follows (07 §5). The rename never replaces a file: it links the new name first, which fails when
+// file and its session follows. The rename never replaces a file: it links the new name first, which fails when
 // something is there, then removes the old name; on a file system without hard links it checks and renames. The
 // notebook's kernel log goes with a delete and follows a rename.
 import { NotebookExists, NotebookOpen } from "@jsnb/core";
@@ -106,7 +106,7 @@ async function moveTo(
 }
 
 /**
- * notebook.rename of an open notebook (07 §5): in the queue of its file's writes, so no save lands between, the file
+ * notebook.rename of an open notebook: in the queue of its file's writes, so no save lands between, the file
  * moves (its inode kept) and the session takes the new ref and path, its kernel running on; notebook.moved tells its
  * followers.
  */
@@ -127,7 +127,7 @@ async function renameOpen(
 
 /**
  * notebook.rename: moves the file of the notebook `ref` to `to`, creating `to`'s folders in the workspace. A closed
- * notebook's kernel log follows it; an open one keeps its session, which follows the file (07 §5). An open notebook
+ * notebook's kernel log follows it; an open one keeps its session, which follows the file. An open notebook
  * that holds the file under another ref (a case variant) is NotebookOpen, and so is an open `to`.
  */
 export function renameNotebook(

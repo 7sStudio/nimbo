@@ -1,4 +1,4 @@
-// `nimbo sql install` and `sql status` with no daemon to ask (03-api §4.16): the same install sql.install runs, in a
+// `nimbo sql install` and `sql status` with no daemon to ask: the same install sql.install runs, in a
 // process of its own, so installing DuckDB needs no workspace. It writes one JSON line per progress step, then
 // `{ "status": … }` or `{ "error": { name, message, data } }`.
 import { isJsnbError } from "@jsnb/core";

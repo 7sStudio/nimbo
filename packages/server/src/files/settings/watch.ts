@@ -1,4 +1,4 @@
-// Watching the two settings files for hand edits (07-file-format §6), also while they do not exist yet: a stat poll,
+// Watching the two settings files for hand edits, also while they do not exist yet: a stat poll,
 // which sees a file appear, change or go, whatever folder it is in and however the editor saves it (rename or rewrite).
 import type { Stats } from "node:fs";
 import { unwatchFile, watchFile } from "node:fs";

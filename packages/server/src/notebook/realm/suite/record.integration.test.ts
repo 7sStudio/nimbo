@@ -1,4 +1,4 @@
-// The daemon's record of the page's names (05-bridge §3 step 1, 03-api §4.4 `kernel.scope`; real kernel, daemon and
+// The daemon's record of the page's names (`kernel.scope`; real kernel, daemon and
 // page), which the Variables panel, cell.bindings and agents read: an interrupted client run's names stay in it however
 // its reports cross the interrupt, even with console text pending; a run refused before it started (NotExported,
 // KernelRestarted) leaves the names its cell defined before.

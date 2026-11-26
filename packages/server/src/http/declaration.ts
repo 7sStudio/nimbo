@@ -1,4 +1,4 @@
-// The connection's declaration of 03-api §7.1: `?client=ui|cli|mcp|file&agent=<name>` on the WebSocket upgrade,
+// The connection's declaration: `?client=ui|cli|mcp|file&agent=<name>` on the WebSocket upgrade,
 // `X-Jsnb-Client` and `X-Jsnb-Agent` over HTTP. An undeclared or unknown client counts as `cli`, so an unknown script
 // is marked as an agent rather than as the user; the agent's name is kept to 200 characters.
 import type { ClientKind, Declaration } from "../commands/context.js";

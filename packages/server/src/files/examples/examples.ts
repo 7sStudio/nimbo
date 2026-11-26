@@ -1,4 +1,4 @@
-// The example notebooks shipped with the app (03-api §4.11, Home's Examples): the `.jsnb` files of the server
+// The example notebooks shipped with the app (Home's Examples): the `.jsnb` files of the server
 // package's `examples/` folder, which its `files` carries into an installed copy, read where they ship and never
 // written. A copy goes into the workspace folder under the example's name, or the next free numbered name, created
 // exclusively so nothing already there (a notebook, a link) is ever written over.

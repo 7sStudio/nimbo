@@ -1,4 +1,4 @@
-// JSON-RPC 2.0 frames of 03-api §7.2 and §7.3 on the daemon's side: a client's call, a notification (a call without an
+// JSON-RPC 2.0 frames on the daemon's side: a client's call, a notification (a call without an
 // id, carried out and never answered), a page's answer to the daemon's own request, or a frame that is no message
 // (-32700 not JSON, -32600 not a JSON-RPC message, a batch included: one call per message); and what the daemon writes.
 import { z } from "zod";

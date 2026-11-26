@@ -1,4 +1,4 @@
-// One queue of writes per file (07-file-format §5, §6, §8): the read-modify-write of `.env` and of a settings file runs
+// One queue of writes per file: the read-modify-write of `.env` and of a settings file runs
 // after the one before it, so writers asking at once each start from the text the previous one wrote and no update is
 // lost.
 const queues = new Map<string, Promise<unknown>>();

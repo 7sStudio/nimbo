@@ -1,4 +1,4 @@
-// The failures of packages.add and packages.remove (03-api §4.6): a package manager that is not installed, one killed
+// The failures of packages.add and packages.remove: a package manager that is not installed, one killed
 // past the install timeout, one a packages.cancel stopped, and one that ended without doing what it was asked.
 import { JsnbError } from "@jsnb/core";
 

@@ -1,4 +1,4 @@
-// /npm/ reads nothing outside the workspace (09-testing §5 "Files"; 04-kernel §8.1): a package subpath segment that
+// /npm/ reads nothing outside the workspace: a package subpath segment that
 // decodes to `..` with separators of its own is a bare 404 before esbuild sees it, and a package whose file links out
 // of the package folder is refused 500 with nothing cached; the outside file's content never reaches an answer.
 import { existsSync } from "node:fs";

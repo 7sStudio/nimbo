@@ -1,6 +1,6 @@
-// The daemon's surfaces that touch user code and files (09-testing §5): notebook refs never leave the workspace; no
+// The daemon's surfaces that touch user code and files: notebook refs never leave the workspace; no
 // install happens but packages.add (an uninstalled import ends with MissingPackage, nothing written); only current
-// exports are callable; a second page is refused REALM_ATTACHED. The routes row (/n/) is notebook/routes/suite/.
+// exports are callable; a second page is refused REALM_ATTACHED. The routes (/n/) are in notebook/routes/suite/.
 import { existsSync } from "node:fs";
 
 import { bridgeCall, packagesAdd, realmAttach } from "@jsnb/core";

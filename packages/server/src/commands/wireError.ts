@@ -1,5 +1,5 @@
-// Call failures on the wire (03-api §7.4): an ApiError keeps its code, message and data; any other JsnbError is -32603
-// with its message and `{ name, data }`, as the page answers the daemon (03-api §7.6); anything else is a daemon bug,
+// Call failures on the wire: an ApiError keeps its code, message and data; any other JsnbError is -32603
+// with its message and `{ name, data }`, as the page answers the daemon; anything else is a daemon bug,
 // -32603 with a fixed message, its stack in the log.
 import type { ApiIssue } from "@jsnb/core";
 import { ApiError, isJsnbError } from "@jsnb/core";

@@ -1,4 +1,4 @@
-// /npm/ resolves packages as Node does, in a real page (04-kernel §8.1): the real pnpm
+// /npm/ resolves packages as Node does, in a real page: the real pnpm
 // (its isolated layout) installs `a` and `c` from the stub registry, each importing its dependency `b`, which only
 // their own node_modules hold; a client cell imports both and calls into `b` through them, and both bundles import
 // `b` under one resolved URL, which the daemon recorded and serves.

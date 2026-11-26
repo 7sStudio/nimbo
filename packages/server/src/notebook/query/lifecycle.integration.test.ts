@@ -1,4 +1,4 @@
-// The query engines' lives through the daemon (11-query §3): a notebook that closes under a running SQL
+// The query engines' lives through the daemon: a notebook that closes under a running SQL
 // query ends it and closes DuckDB only after it, then queries again once reopened; a daemon that stops does the same;
 // a value no longer kept in full, or a run that is not the last, is INVALID_PARAMS.
 import { createNodeSqlEngine } from "@jsnb/query-sql/node";

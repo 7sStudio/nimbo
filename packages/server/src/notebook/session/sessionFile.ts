@@ -1,6 +1,6 @@
-// A session's file and kernel log (07-file-format §5, §7) where the notebook is now: the autosave reads the file and
+// A session's file and kernel log where the notebook is now: the autosave reads the file and
 // the ref at each write, and the kernel log moves with the notebook, so a followed move or a rename of the open
-// notebook (07 §5) changes both without a new session.
+// notebook changes both without a new session.
 import type { Settings } from "@jsnb/core";
 
 import type { Log } from "../../events/log.js";
@@ -10,7 +10,7 @@ import { createAutosaver } from "./autosave.js";
 import type { Emit } from "./context.js";
 import type { LoadedDocument } from "./fileForm.js";
 
-/** Where the session's notebook is now: read at every use, since a followed move changes it (07 §5). */
+/** Where the session's notebook is now: read at every use, since a followed move changes it. */
 export type Place = { readonly ref: string; readonly path: string };
 
 /** What the autosave of a session calls back: a write's file identity, and a file gone from its path. */
@@ -90,7 +90,7 @@ export function autosaverOf(
   );
 }
 
-/** The kernel log of a session (07 §7) that moves with its notebook: write, close, and move from one ref to another. */
+/** The kernel log of a session that moves with its notebook: write, close, and move from one ref to another. */
 export function followingKernelLog(logsDir: string, ref: string, log: Log) {
   let kernelLog = openKernelLog(logsDir, ref);
   return {

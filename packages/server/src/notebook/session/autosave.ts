@@ -1,10 +1,10 @@
-// Autosave of 07-file-format §5, as VS Code's files.autoSave: by default one write once the changes pause for
+// Autosave, as VS Code's files.autoSave: by default one write once the changes pause for
 // files.autoSaveDelay, never later than files.autoSaveMaxWait after the first change of a burst; or every
 // files.autoSaveInterval; or only on notebook.save (onFocusChange, where the page saves as it loses focus, and off); deterministic text, the hash of
 // the file on disk compared with the last write before every write (a mismatch suspends autosave: notebook.conflict
 // until reload or a forced save), a failed write reported (notebook.saveFailed) and retried at the next mutation and
 // every 10 s. Writes never overlap; nothing is written when the file already holds the state, and nothing at close unless
-// the state was changed since it was loaded or saved (merely opening never changes the file, 07 §4); a close that
+// the state was changed since it was loaded or saved (merely opening never changes the file); a close that
 // leaves changes off the disk (a conflict, a failing save) logs a warning naming the notebook. A change that lands
 // while a write is under way stays dirty: a write clears `dirty` only when no mutation came after the text it took,
 // and a close writes until the file holds the last state.
@@ -33,7 +33,7 @@ export type AutosavePolicy = {
 };
 
 export type AutosaveOptions = {
-  /** The notebook's file, read at each write: a followed move changes it (07 §5). */
+  /** The notebook's file, read at each write: a followed move changes it. */
   readonly path: string;
   /** The workspace folder, which a save never recreates. */
   readonly root: string;
@@ -47,11 +47,11 @@ export type AutosaveOptions = {
   /** When writes happen (the files.autoSave settings, read at each change); without it, 100 ms after a change. */
   readonly policy?: () => AutosavePolicy;
   readonly retryMs?: number;
-  /** Hears the identity of each file a save wrote (the move follower knows the file by it, 07 §5). */
+  /** Hears the identity of each file a save wrote (the move follower knows the file by it). */
   readonly written?: (identity: FileIdentity) => void;
   /** Called inside a write when nothing is at `path`: it may follow the file to where it moved, changing `path`. */
   readonly missing?: () => Promise<void>;
-  /** Called inside a write when the file changed since the base: merges it into the state (07 §5), `off` when merging
+  /** Called inside a write when the file changed since the base: merges it into the state, `off` when merging
    * is off, `unreadable` when the file does not parse (the write is a conflict then). */
   readonly external?: () => Promise<"merged" | "conflict" | "unreadable" | "off">;
   /** Whether the state needs its recovery copy (a conflict, a failing save, a close that could not write): kept up to
@@ -76,14 +76,14 @@ export type Autosaver = {
    * way, before any later one, so a reload never reads a file a write is about to replace.
    */
   readonly exclusive: <T>(work: () => Promise<T>) => Promise<T>;
-  /** The text the file held at the last read or write: the base of an external edit's merge (07 §5). */
+  /** The text the file held at the last read or write: the base of an external edit's merge. */
   readonly base: () => { readonly text: string | undefined; readonly hash: string | undefined };
   /** An external edit changed `cells` on both sides: autosave stops until a reload or a forced save. */
   readonly conflicted: (cells: readonly string[]) => void;
   readonly state: () => {
     readonly savedAt: string | null;
     readonly dirty: boolean;
-    /** Changed by an edit since the load or the last save, not only by the load's normalization (07 §4). */
+    /** Changed by an edit since the load or the last save, not only by the load's normalization. */
     readonly mutated: boolean;
     readonly conflict: boolean;
     /** The cells of the open conflict (none for one a save found). */
@@ -171,7 +171,7 @@ function saved(
   return "saved";
 }
 
-/** The hash of the file on disk; when nothing is at its path, after the file was looked for where it moved (07 §5). */
+/** The hash of the file on disk; when nothing is at its path, after the file was looked for where it moved. */
 async function diskHash(options: AutosaveOptions): Promise<string | undefined> {
   const disk = await hashOnDisk(options.path);
   if (disk !== undefined || options.missing === undefined) return disk;
@@ -199,7 +199,7 @@ async function writeFile(saver: Saver, text: string, force: boolean): Promise<bo
 }
 
 /** The file holds the state: the same text, or, for a write no one asked for, nothing changed since it was read or
- * written (the text then differs only by the stamps of external edits, 07 §5). */
+ * written (the text then differs only by the stamps of external edits). */
 const holds = (
   saver: Saver,
   now: { readonly text: string; readonly disk: string | undefined },
@@ -211,7 +211,7 @@ const holds = (
 /** How many times a write merges another program's edit and tries again before it leaves the conflict to the user. */
 const writeRounds = 3;
 
-/** The file changed since the base: merged first (07 §5), or a conflict when merging is off, the merge found one, or
+/** The file changed since the base: merged first, or a conflict when merging is off, the merge found one, or
  * the file does not parse (the write waits, with its recovery copy, until the file reads again: external.ts resumes). */
 async function changedOnDisk(saver: Saver): Promise<Outcome | undefined> {
   const merged = (await saver.options.external?.()) ?? "off";
@@ -275,7 +275,7 @@ const fallbackPolicy: AutosavePolicy = {
 function fire(saver: Saver): void {
   saver.timer = undefined;
   saver.burst = undefined;
-  // a load's normalization or migration is not a change: it waits for the next write the user causes (07 §4)
+  // a load's normalization or migration is not a change: it waits for the next write the user causes
   if (!saver.mutated) return;
   void enqueue(saver, false); // its failure is reported as notebook.saveFailed and retried
 }

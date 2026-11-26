@@ -1,4 +1,4 @@
-// The split builds of a daemon's /npm/ (04-kernel §8.1, packageGroup.ts): an entry of a package's split bundle and
+// The split builds of a daemon's /npm/ (packageGroup.ts): an entry of a package's split bundle and
 // a chunk of it, from the cache (groupCache.ts) or a build through the queue; each package's entries read once per
 // state of its package.json (a page's import of date-fns asks for its 260 modules at once). A split build whose
 // failure no entry explains alone is remembered, so the package's entries are built one by one, each a single bundle

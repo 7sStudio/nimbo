@@ -1,4 +1,4 @@
-// The package manager packages.add runs (03-api §4.6, the packages.manager setting, "auto" by default): the setting's
+// The package manager packages.add runs (the packages.manager setting, "auto" by default): the setting's
 // own; with "auto" the one whose lockfile the workspace has; else the first of pnpm, npm, yarn and bun on PATH (a
 // file, not a folder, of that name); npm when none is.
 import { mkdir, writeFile } from "node:fs/promises";

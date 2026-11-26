@@ -1,4 +1,4 @@
-// The bridge suite, 05-bridge §11 item 1 with §4.1 and 02-architecture §4.3, §5 (a bridge call and a client cell's run
+// The bridge suite (a bridge call and a client cell's run
 // end to end, real kernel, daemon and page): a function export is an async stub for sync and async server functions,
 // plain data round-trips as real Dates, Maps, Sets, BigInts, RegExps, bytes and cycles both ways, the container's DOM
 // becomes a dom output, and a call is answered while a server cell is still awaiting (calls are not queued behind runs).

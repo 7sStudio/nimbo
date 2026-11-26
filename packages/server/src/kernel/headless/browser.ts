@@ -1,4 +1,4 @@
-// The daemon's headless browser (02-architecture §7, §8): at most one per daemon, the system's Chrome, Chromium or Edge
+// The daemon's headless browser: at most one per daemon, the system's Chrome, Chromium or Edge
 // (launch.ts), launched on the first page asked for and closed with the last one, in a fresh profile removed when it
 // closes. Its pipe is its leash: a daemon that dies, even by SIGKILL, closes it and Chrome exits. A launch that fails or
 // hangs, or a browser that exits before it served a page, waits a growing delay before the next launch (2 s doubling up

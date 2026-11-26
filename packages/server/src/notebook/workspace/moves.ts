@@ -1,4 +1,4 @@
-// Following an open notebook's file when it moves (07-file-format §5): a rename outside nimbo (`mv`, git,
+// Following an open notebook's file when it moves: a rename outside nimbo (`mv`, git,
 // Finder, an agent's file tools) keeps the file's device and inode, which the session knows from its open and from
 // each save (an atomic save makes a new inode, so the identity is taken again after every write). When nothing is at
 // the session's path any more, the workspace's notebooks are searched for that identity; exactly one match inside the
@@ -58,7 +58,7 @@ async function follow(options: NotebooksOptions, table: Table, session: Session)
   const from = session.ref;
   const entry = table.entries.get(from);
   const { path, identity } = session.context;
-  // a linked notebook writes through to its target (07 §5), which is not followed; nor is a file never identified
+  // a linked notebook writes through to its target, which is not followed; nor is a file never identified
   if (entry === undefined || identity === undefined || path !== join(root, ...from.split("/")))
     return;
   if (await present(path)) return;

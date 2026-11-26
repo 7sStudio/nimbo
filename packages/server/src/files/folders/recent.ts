@@ -1,4 +1,4 @@
-// The workspace folders opened lately (03-api §4.1 workspace.recentFolders, 07-file-format §9): `recent.json` in the
+// The workspace folders opened lately (workspace.recentFolders): `recent.json` in the
 // user's config folder, beside the user settings, never in a workspace. Each daemon notes its own folder when it starts
 // and workspace.open the folder it opens; the latest first, each once, at most ten. A file that cannot be read or does
 // not hold the shape is read as none; a write that fails is the caller's to log, never a reason to stop.

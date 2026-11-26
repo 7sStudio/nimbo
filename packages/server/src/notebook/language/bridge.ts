@@ -1,4 +1,4 @@
-// notebook.bridge (03-api §4): the names server cells export for client cells to call, each with TypeScript's hover of
+// notebook.bridge: the names server cells export for client cells to call, each with TypeScript's hover of
 // it and the client cells whose code uses it, from the session's graph.
 import type { BridgeExport } from "@jsnb/core";
 import type { Hover } from "@jsnb/language";

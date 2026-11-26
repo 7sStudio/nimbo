@@ -1,4 +1,4 @@
-// A feedback entry (07-file-format §7, `.jsnb/feedback/`): what the page sends and the store checks, the entry the store
+// A feedback entry (`.jsnb/feedback/`): what the page sends and the store checks, the entry the store
 // keeps, its line in `feedback.jsonl` and its block in `FEEDBACK.md`.
 import { randomBytes } from "node:crypto";
 

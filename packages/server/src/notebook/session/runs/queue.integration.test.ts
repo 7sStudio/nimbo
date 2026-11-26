@@ -1,4 +1,4 @@
-// The run queue of 03-api §4.3.1 through the daemon: one run at a time per notebook in call order (a cell run twice
+// The run queue through the daemon: one run at a time per notebook in call order (a cell run twice
 // runs twice), and notebook.run over a selection: notebook order, markdown left out, client cells with no page
 // skipped, stopOnError ending the rest `interrupted` unstarted, and its own wait and timeout; a cell edited while it
 // runs keeps the running code, and its queued run reads the source when it starts.

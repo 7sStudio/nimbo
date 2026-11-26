@@ -1,4 +1,4 @@
-// The settings of 03-api §4.10 and 07-file-format §6 as the daemon holds them: defaults < user file < workspace file,
+// The settings as the daemon holds them: defaults < user file < workspace file,
 // each value with its source; settings.set writes a file through the JSONC edit API; both files are watched, and every
 // change of an effective value (a set or a hand edit) emits settings.changed on the workspace stream.
 import type { Settings, SettingsKey } from "@jsnb/core";

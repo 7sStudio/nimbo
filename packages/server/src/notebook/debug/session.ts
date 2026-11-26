@@ -1,4 +1,4 @@
-// One notebook's debugger (03-api §4.9): its breakpoints, js-debug attached to the kernel on the first debug command
+// One notebook's debugger: its breakpoints, js-debug attached to the kernel on the first debug command
 // (and again after each restart, before the next run), and the commands over them, every string they answer through
 // the daemon's redaction. It follows the notebook's events: a cell's edit moves its breakpoints, a deletion removes
 // them, a move of the file sends them under the new paths, a run's end reads the errors its conditions kept.

@@ -1,4 +1,4 @@
-// The search for the entries a package's split build cannot take (04-kernel §8.1): when the build fails, the entries
+// The search for the entries a package's split build cannot take: when the build fails, the entries
 // whose own file esbuild's errors name are left out first; when the rest still fails, the entries that fail on their
 // own are found by halves. The search has a budget of its own (time and trial builds): past it, or past the build's
 // limit, the package gives up splitting, which the caller remembers for the package's version.

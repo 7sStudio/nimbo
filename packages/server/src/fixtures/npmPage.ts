@@ -1,4 +1,4 @@
-// A page for the tests of /npm/ (04-kernel §8.1): the modules createNpmModules serves, fetched as a browser would
+// A page for the tests of /npm/: the modules createNpmModules serves, fetched as a browser would
 // (each import of a /npm/ URL fetched in turn), written to a folder with their /npm/ specifiers pointed at those files,
 // and imported by Node, so a test runs the real bundles: one URL is one module instance, as on the page.
 import { createHash } from "node:crypto";

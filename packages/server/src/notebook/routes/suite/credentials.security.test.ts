@@ -1,5 +1,5 @@
-// The token and the secrets on the routes' surface (09-testing §5 rows Token, Routes and Secrets; 03-api §7.1; 04-kernel
-// §10): wherever a request below /n/ carries the daemon's token or page key (a cookie, Authorization, a Referer from a
+// The token and the secrets on the routes' surface:
+// wherever a request below /n/ carries the daemon's token or page key (a cookie, Authorization, a Referer from a
 // page that still had `?token=`, any header, a query parameter, as sent or escaped), no handler sees it, so it never
 // reaches an answer or an output; the request's other cookies, headers and parameters pass. What a handler logs,
 // throws or receives as an event's type is redacted in its outputs and in the daemon's 500.

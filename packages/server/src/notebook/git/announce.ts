@@ -1,4 +1,4 @@
-// git.changed (03-api §6): announced after each write of the service, after a notebook's save,
+// git.changed: announced after each write of the service, after a notebook's save,
 // and when the git dir's index, HEAD, ORIG_HEAD or MERGE_HEAD changes (a stage, a commit or a checkout made in a
 // terminal); debounced, one status read at a time, and one more after it when something changed during it. fs.watch
 // may miss an event on some file systems: the page's focus and Refresh read the status too.

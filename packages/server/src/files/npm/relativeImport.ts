@@ -1,4 +1,4 @@
-// How a relative import of a workspace module resolves (04-kernel §8.1): as Node and
+// How a relative import of a workspace module resolves: as Node and
 // TypeScript do, against the importing file's real folder. The path as written first; then `.js` and `.json`, the
 // order of a server cell's require (Node's own extensions), then `.mjs`, `.cjs`, `.ts`, `.mts`, `.cts`, `.tsx` and
 // `.jsx`, for a require and an import alike (one list, also a package bundle's in esbuild); a JavaScript extension

@@ -1,4 +1,4 @@
-// The realm commands of 03-api §4.5 and bridge.call: realm.status and realm.restart for any caller; realm.attach on
+// The realm commands and bridge.call: realm.status and realm.restart for any caller; realm.attach on
 // the page's WebSocket only (the daemon sends that socket its realm.execute and realm.reset); realm.detach and
 // realm.report by realm id, whichever open notebook the page is attached to; bridge.call to a notebook's kernel;
 // bridge.events and cell.snapshot, which read what the attached page holds (the headless page started for it when the

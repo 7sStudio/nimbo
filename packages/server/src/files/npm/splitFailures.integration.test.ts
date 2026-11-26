@@ -1,5 +1,5 @@
-// What a package's split bundle does with entries that do not build and with a cache it cannot trust (04-kernel
-// §8.1): an entry that fails alone is left out and built alone, the rest still one build; a package with many such
+// What a package's split bundle does with entries that do not build and with a cache it cannot trust:
+// an entry that fails alone is left out and built alone, the rest still one build; a package with many such
 // entries is built entry by entry, one bundle per import; cache.clear forgets that; the chunks of the build before stay
 // served; a cache that cannot be written still builds a package once; `.` beside `./index`, another spelling of a name,
 // conditions nested past reason.

@@ -1,4 +1,4 @@
-// The data folder's lock, shared with the installer script and the CLI's upgrade and uninstall (02-architecture §10),
+// The data folder's lock, shared with the installer script and the CLI's upgrade and uninstall,
 // the same protocol as the CLI's install/lock.ts: the folder `<data>/.lock` holding `pid`, `started` and `command`, made
 // with one atomic mkdir; a stale lock (its process gone, or its pid reused) is taken over under `.lock.takeover`.
 import { execFile } from "node:child_process";

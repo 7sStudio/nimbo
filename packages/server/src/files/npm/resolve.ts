@@ -1,4 +1,4 @@
-// Where /npm/ finds a package, as Node does (04-kernel §8.1): `<dir>/node_modules/<name>` for a folder
+// Where /npm/ finds a package, as Node does: `<dir>/node_modules/<name>` for a folder
 // and each of its parents in turn (a folder itself named node_modules is skipped, as Node skips it), links followed to
 // the package's real folder; no NODE_PATH and no global folder. The page's own import of a name looks from the
 // workspace; a bundle's bare import looks from the real folder of the file that imports it, so pnpm's

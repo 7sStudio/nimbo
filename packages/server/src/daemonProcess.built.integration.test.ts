@@ -1,5 +1,5 @@
-// The built process entry, dist/main.js, as `nimbo open` and `nimbo serve` fork it (02-architecture §7, 07-file-format
-// §7): one listening line on stdout, server.json (0600) while it runs and gone after, the clean stop on SIGTERM, SIGINT,
+// The built process entry, dist/main.js, as `nimbo open` and `nimbo serve` fork it:
+// one listening line on stdout, server.json (0600) while it runs and gone after, the clean stop on SIGTERM, SIGINT,
 // SIGHUP and workspace.stop with exit code 0; 2 for arguments it cannot use, 1 with a JSON line on stderr when the start
 // fails; a stale server.json replaced, a live daemon's refused with DaemonRunning.
 import { existsSync } from "node:fs";

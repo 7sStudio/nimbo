@@ -1,4 +1,4 @@
-// The stash (03-api §4.15): push, list, apply, pop and drop. An entry is stash@{index}, checked against its oid when
+// The stash: push, list, apply, pop and drop. An entry is stash@{index}, checked against its oid when
 // the caller passes one, so a list that changed in a terminal never makes a drop hit another stash.
 import type { GitStashEntry } from "@jsnb/core";
 import { InvalidParams } from "@jsnb/core";

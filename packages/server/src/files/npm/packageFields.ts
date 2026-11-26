@@ -1,5 +1,5 @@
 // What a package's own package.json decides for a bare import or `#name` of one of its files, before the bundle's
-// plugin resolves it as a package (04-kernel §8.1). package.json files are read as regular
+// plugin resolves it as a package. package.json files are read as regular
 // files only and checked with Zod. The `browser` map is the nearest one above the importing file, as esbuild finds it:
 // a nested package.json without a `browser` object (a `{"type": "commonjs"}` beside a package's CommonJS files, or a
 // dependency's own) does not end its scope, a nearer one with a map replaces it. In it, a

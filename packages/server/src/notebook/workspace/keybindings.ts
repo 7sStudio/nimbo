@@ -1,4 +1,4 @@
-// The keybindings of 03-api §4.11 and 07-file-format §6 as the daemon holds them: the user's and the workspace's
+// The keybindings as the daemon holds them: the user's and the workspace's
 // keybindings.json, read, watched and applied over core's defaults as VS Code applies its files; keybindings.list
 // answers the bindings in effect with their conflicts; keybindings.set and reset change a file rule by rule (comments
 // kept), what they and the page's JSON view are given checked first; and every change of either file's rules (a

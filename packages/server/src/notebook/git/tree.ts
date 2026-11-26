@@ -1,7 +1,7 @@
 // Operations that rewrite the working tree under open notebooks (a pull, a switch, a stash, an abort). While git works,
 // every open notebook's autosave is held, so no write lands under it; edits not on disk stay in the sessions (a stash
 // saves them first, saveEdited, so it takes what the page shows). After, each open notebook's file is merged into its
-// session by cell, the watch's own merge (07-file-format §5), whatever files.mergeExternalChanges says of other
+// session by cell, the watch's own merge, whatever files.mergeExternalChanges says of other
 // programs' edits: the cells git changed change in place, a cell also edited in the session is held in conflict with
 // the session's text (the banner, the recovery copy), and the watch's event for the same change finds nothing left to
 // merge. A notebook whose file is gone closes unless it holds edits of its own.

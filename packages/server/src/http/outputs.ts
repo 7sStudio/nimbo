@@ -1,4 +1,4 @@
-// GET /outputs/<execution>/<index>.json (03-api §7.5): one retained full value streamed as JSON, with the bearer header
+// GET /outputs/<execution>/<index>.json: one retained full value streamed as JSON, with the bearer header
 // only (the page downloads through the client, which sends it; the page cookie is no credential here); a
 // value that is not retained is 404 with the JSON-RPC error body the client raises as its ApiError (INVALID_PARAMS
 // naming the execution or the index).

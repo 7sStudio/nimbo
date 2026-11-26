@@ -1,4 +1,4 @@
-// One DuckDB engine per open notebook for cell.outputQuery { mode: "sql" } (11-query §3): created on the
+// One DuckDB engine per open notebook for cell.outputQuery { mode: "sql" }: created on the
 // first SQL query, its files under `.jsnb/cache/sql/`. Table `t` holds one value at a time, loaded once and kept while
 // the queries ask for that value; a notebook's SQL calls run one at a time, so a load never swaps `t` under a running
 // query. Disposed only once its own calls have settled (their signals abort DuckDB's work first), then after a

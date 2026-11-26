@@ -1,4 +1,4 @@
-// The builds behind /npm/ (04-kernel §8.1): at most `concurrency` run at once and the rest wait their turn in order;
+// The builds behind /npm/: at most `concurrency` run at once and the rest wait their turn in order;
 // the requests for one key (a package's split bundle, one standalone entry, a workspace module) share one build,
 // waiting or running; a build's time limit runs from its start, not from the request's; a build that no request waits
 // for any more leaves the queue, or is cancelled while it runs (esbuild's cancel, then its context disposed).

@@ -1,4 +1,4 @@
-// External edits of an open notebook's file (07-file-format §5): the file another program changed is merged into the
+// External edits of an open notebook's file: the file another program changed is merged into the
 // session by cell id against the text the daemon last wrote or read (core's mergeCells). The file's changes to cells
 // the session left alone change them in place (stamped `client: "file"` for review, outputs and status kept where the
 // code did not change, the kernel left alone); a cell both sides changed is held in conflict, with autosave
@@ -200,7 +200,7 @@ export async function reconcileExternal(
   removing: (cell: CellId) => void,
 ): Promise<ExternalOutcome> {
   const read = await readSettled(context);
-  if (read === undefined) return "missing"; // moved or deleted: the move follower's case (07 §5)
+  if (read === undefined) return "missing"; // moved or deleted: the move follower's case
   const base = context.autosave.base();
   if (read.hash === base.hash)
     return state.held.size === 0 && !state.order ? resume(context, base.text) : "same";

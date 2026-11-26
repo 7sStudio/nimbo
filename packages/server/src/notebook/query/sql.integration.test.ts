@@ -1,4 +1,4 @@
-// The SQL tables of one notebook on the real DuckDB (11-query §3): a value loaded into `t` once for any
+// The SQL tables of one notebook on the real DuckDB: a value loaded into `t` once for any
 // number of queries on it and again only for another value, a timeout as a result, a forgotten value let go, and a
 // dispose that waits for the calls in flight, which end, before DuckDB closes.
 import { createNodeSqlEngine } from "@jsnb/query-sql/node";

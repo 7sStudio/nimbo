@@ -1,4 +1,4 @@
-// The refusals of notebook.open and notebook.create that 03-api §7.4 has no code for (answered -32603 with their name):
+// The refusals of notebook.open and notebook.create that have no API error code of their own (answered -32603 with their name):
 // the same file already open under another ref, a daemon that is stopping (which also ends an install
 // under way), and a new notebook's file that cannot be written.
 import { JsnbError } from "@jsnb/core";
