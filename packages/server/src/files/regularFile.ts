@@ -1,4 +1,4 @@
-// Reading a workspace file the daemon does not own without ever blocking (04-kernel §2): opened non-blocking and read
+// Reading a workspace file the daemon does not own without ever blocking: opened non-blocking and read
 // only when its descriptor is a regular file of at most `maxBytes`, so a FIFO in place of `.env` or a settings file
 // never freezes the daemon's event loop; anything else is refused with the reason. With `follow: false` the file is
 // opened with O_NOFOLLOW, so a symbolic link in its place is refused at the open itself (the npm cache's files).
@@ -64,7 +64,7 @@ export async function readRegularFile(
   }
 }
 
-/** The synchronous twin, for the log's redactor, which must mask a secret from the very next line (04-kernel §10). */
+/** The synchronous twin, for the log's redactor, which must mask a secret from the very next line. */
 export function readRegularFileSync(path: string, maxBytes: number): FileRead {
   let fd: number;
   try {

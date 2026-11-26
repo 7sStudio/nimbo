@@ -1,7 +1,7 @@
-// kernel.interrupt and kernel.restart of 03-api §4.4 and 04-kernel §6: an interrupt clears the queue (the queued runs
+// kernel.interrupt and kernel.restart: an interrupt clears the queue (the queued runs
 // end `interrupted`), stops the running server cell through the kernel's inspector, raced with a timeout of the
 // daemon's own, since a kernel inside a synchronous native call answers late (a refusal, INTERRUPT_REFUSED, is the
-// call's failure, the run already ended), and ends a running client cell through the page (02-architecture §5). A
+// call's failure, the run already ended), and ends a running client cell through the page. A
 // restart kills and respawns: every server cell idle, the stale flags reset; it waits for a running server run to end,
 // never for a client run, which the page runs.
 import type { CellId, ExecutionId } from "@jsnb/core";
@@ -29,8 +29,8 @@ export function clearQueue(context: SessionContext, queue: RunQueue): void {
   for (const run of queue.take()) endUnstarted(context, run);
 }
 
-/** realm.restart (03-api §4.5): the client runs waiting in the queue end unstarted before the page's full reset, so none
- * runs in the fresh page with its cell already idle, and whoever waits for one is answered at once (03-api §4.3.1); the
+/** realm.restart: the client runs waiting in the queue end unstarted before the page's full reset, so none
+ * runs in the fresh page with its cell already idle, and whoever waits for one is answered at once; the
  * queued server runs stay. */
 export function clearClientRuns(context: SessionContext, queue: RunQueue): void {
   const client = (run: QueuedRun): boolean =>
@@ -113,7 +113,7 @@ const logFailed =
 /**
  * cell.delete of a cell that has runs: its queued runs end unstarted, whoever waits for them answered at once; its
  * run under way ends as an interrupt ends it: the page's run through `client`, whatever the cell's type became since
- * (the realm says whether the page runs it, 02-architecture §5), a server run executing now through the kernel, so the
+ * (the realm says whether the page runs it), a server run executing now through the kernel, so the
  * kernel never stays busy with a cell that is gone, and one not executing yet before it executes. The other cells' runs
  * are left alone. Settles once the interrupt it sent did, and never rejects: a failed interrupt is logged.
  */

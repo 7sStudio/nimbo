@@ -1,4 +1,4 @@
-// A value's wire form (04-kernel §5.4) as plain JSON, the rows SQL mode loads as `t` (11-query §3): the rules of
+// A value's wire form as plain JSON, the rows SQL mode loads as `t`: the rules of
 // output-view's model/plain.ts, which the page applies before its own DuckDB load, so `t` holds the same rows on the
 // daemon: dates as ISO text, bigints as digits, NaN as null, Maps with simple keys as objects, Sets as arrays, refs
 // inlined up to a budget and cycles as a note.

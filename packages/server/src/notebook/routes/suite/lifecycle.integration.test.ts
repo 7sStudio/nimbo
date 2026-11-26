@@ -1,4 +1,4 @@
-// The routes suite, a route's life (04-kernel §7, §8; 03-api §4.3, §4.4; 02-architecture §6): the same spec from another
+// The routes suite, a route's life: the same spec from another
 // cell replaces it; a re-run disposes it before registering again; a cell edited not to register one any more leaves
 // none; a cell switched to markdown or client loses it; an interrupt keeps it; a kernel restart and a daemon restart lose it (deleting the cell: deleted.integration).
 import { startDaemon } from "../../../fixtures/daemon.js";

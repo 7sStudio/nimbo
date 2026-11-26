@@ -1,4 +1,4 @@
-// 02-architecture §5's interrupt paragraph for a client cell (03-api §4.4; real kernel, daemon and page): kernel.interrupt
+// The interrupt of a client cell (real kernel, daemon and page): kernel.interrupt
 // ends a client cell that awaits as `interrupted` with its scope intact and answers that cell, and the queue goes on; it
 // also stops the server function such a cell awaits; and a page frozen in a loop of its own cannot stop the daemon from
 // ending the run and running the next cell; a run interrupted while it waits for the kernel's snapshot never starts.

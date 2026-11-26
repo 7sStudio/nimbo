@@ -1,5 +1,5 @@
-// The workspace secrets of 03-api §4.7 and 07-file-format §8: names from `.env` (never values, never process.env),
-// one key set at a time, and the client's public env that goes with every realm.execute (04-kernel §8).
+// The workspace secrets: names from `.env` (never values, never process.env),
+// one key set at a time, and the client's public env that goes with every realm.execute.
 import { isPublicEnvName, parseDotenv } from "@jsnb/kernel-node";
 
 import { envNames, readEnvText, setEnvValue } from "../../files/secrets/dotenv.js";
@@ -11,7 +11,7 @@ export type SecretsService = {
   readonly publicEnv: () => Promise<Readonly<Record<string, string>>>;
 };
 
-/** The token prefixes of 04-kernel §10: a value that holds one never reaches the page, whatever its name. */
+/** The token prefixes: a value that holds one never reaches the page, whatever its name. */
 const secretToken = /\b(?:sk_live_|sk_test_|rk_|whsec_)\w/;
 
 /** The secrets of the `.env` at `path`; `onWrite` hears every write (the daemon's redactor reads it again). */

@@ -1,4 +1,4 @@
-// Writes, autosave and conflicts of 07-file-format §5 through the daemon: one write per burst, the file's exact text,
+// Writes, autosave and conflicts through the daemon: one write per burst, the file's exact text,
 // a conflict when the file changed on disk, reload by cell id, a forced save, and a failed write retried.
 import { chmod, readFile, readdir, writeFile } from "node:fs/promises";
 

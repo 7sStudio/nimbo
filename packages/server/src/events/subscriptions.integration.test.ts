@@ -1,4 +1,4 @@
-// Events through the daemon (03-api §4.8, §6, §7.6; 02-architecture §4.2): the client's notebook subscription hydrates,
+// Events through the daemon: the client's notebook subscription hydrates,
 // receives each event once in seq order and resyncs after a drop; a workspace subscription gets every notebook and the
 // workspace stream, whose seq events.subscribe {} returns; subscribing twice on one socket changes nothing.
 import type { EventEnvelope, NotebookState } from "@jsnb/core";

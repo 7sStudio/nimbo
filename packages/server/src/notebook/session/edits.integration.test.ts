@@ -1,5 +1,5 @@
-// The cell edits of 03-api §4.3 through the daemon: edit provenance per connection (09-testing §4.7), the events and
-// their order, explicit ids, moves and deletes, and the stale flags of dependents (02-architecture §5 step 2).
+// The cell edits through the daemon: edit provenance per connection, the events and
+// their order, explicit ids, moves and deletes, and the stale flags of dependents.
 import { withDaemon } from "../../fixtures/daemon.js";
 import { describe, expect, it } from "vitest";
 

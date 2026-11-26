@@ -1,4 +1,4 @@
-// The daemon as a process (02-architecture §7: `nimbo open` and `nimbo serve` fork it): its arguments, the start, one
+// The daemon as a process (`nimbo open` and `nimbo serve` fork it): its arguments, the start, one
 // JSON line on stdout once it listens, the clean stop of workspace.stop on SIGINT, SIGTERM or SIGHUP, and the exit
 // code: 0 after a clean stop, 1 when the start failed (one JSON line `{ name, message, data }` on stderr), 2 for
 // arguments it cannot use. src/main.ts runs it against the real process.

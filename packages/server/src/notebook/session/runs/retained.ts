@@ -1,4 +1,4 @@
-// The full values the daemon retains (03-api §4.10, §7.5): each cell's last run's `value` outputs in full (the
+// The full values the daemon retains: each cell's last run's `value` outputs in full (the
 // kernel's `full` form of a cut value, else the output's own json), up to `outputs.retainMaxBytes` per notebook, the
 // oldest dropped first; in daemon memory, so they survive a kernel restart. A value is sized by its JSON text in slices
 // of at most 8 ms (jsonSize.ts): a small one at once, a large one over later turns of the event

@@ -1,5 +1,5 @@
-// A client run's late outputs, and what a page reports on a run that ended (04-kernel §5.3, 03-api §4.5; rounds 4 to
-// 6). What a client cell's timer prints or throws after its run ended is reported by the page on the run's execution,
+// A client run's late outputs, and what a page reports on a run that ended.
+// What a client cell's timer prints or throws after its run ended is reported by the page on the run's execution,
 // and joins that run as a server run's late output does (cell.output, cell.outputs), its status left as it ended; the
 // page sees no failure of its reports. A page that drops a run at a reset (realm.restart, kernel.restart { all })
 // answers realm.execute before its `interrupted` report goes out whenever another report is ahead of it on its one

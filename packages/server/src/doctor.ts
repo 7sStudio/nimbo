@@ -1,4 +1,4 @@
-// The daemon side of `doctor` (03-api §8): a process entry the CLI runs with the same Node and finds the way it finds
+// The daemon side of `doctor`: a process entry the CLI runs with the same Node and finds the way it finds
 // the daemon's, which loads what the daemon loads and prints one JSON line: esbuild (bundles and the transform's
 // output), TypeScript (the language service), the DuckDB binding (by running one query), the vendored js-debug and the
 // package manager notebook installs would use.

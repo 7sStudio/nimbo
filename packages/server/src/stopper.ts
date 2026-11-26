@@ -1,4 +1,4 @@
-// The stop latch of a running daemon (02-architecture §7): one stop, whoever asks first, and a promise of its end.
+// The stop latch of a running daemon: one stop, whoever asks first, and a promise of its end.
 /** The stop of a running daemon: armed once its parts exist, run once whoever asks (workspace.stop, a signal). */
 export type Stopper = {
   readonly stop: () => Promise<void>;

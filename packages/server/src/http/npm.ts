@@ -1,4 +1,4 @@
-// GET /npm/<spec> (04-kernel §8.1): the page's imports, with the bearer header or the page cookie; a
+// GET /npm/<spec>: the page's imports, with the bearer header or the page cookie; a
 // module as JavaScript, the JSON-RPC error body (with its 4xx/5xx) that names the spec, which the page shows as the
 // import's failure, or the bare 404 of a path the path rule refuses.
 import type { IncomingMessage, ServerResponse } from "node:http";

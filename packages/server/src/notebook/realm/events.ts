@@ -1,4 +1,4 @@
-// Push events (05-bridge §6): the kernel's `emit` flushes go to the attached page as realm.event, one request at a time
+// Push events: the kernel's `emit` flushes go to the attached page as realm.event, one request at a time
 // in the order they were emitted, so a page that falls behind holds the queue back. The queue keeps at most
 // `maxPending` events and `maxPendingBytes` of data (a burst past either drops the oldest), and a request carries at
 // most `maxPerRequest` events and `maxRequestBytes`. With no page attached an event is dropped (the kernel drops

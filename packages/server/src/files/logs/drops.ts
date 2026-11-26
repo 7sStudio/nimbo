@@ -1,4 +1,4 @@
-// The lines a log could not write (07-file-format §5, §7; rounds 2 and 3): the daemon log and each kernel log count the
+// The lines a log could not write: the daemon log and each kernel log count the
 // lines their file dropped (a full disk, a folder that refuses writes) and write one warning line that says how many
 // and why before the next line they can write, in the shape pino writes, so a reader of the log sees the gap.
 import type { RotatingFile } from "./rotatingFile.js";

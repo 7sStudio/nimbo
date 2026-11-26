@@ -1,4 +1,4 @@
-// kernel.interrupt while the page runs a client cell (02-architecture §5, 03-api §4.4): the page is asked to end that run
+// kernel.interrupt while the page runs a client cell: the page is asked to end that run
 // (realm.interrupt: it answers with the names the run defined, which join the record whatever report of the page's
 // lands first, and its container's DOM, the run's `dom` output so the container stays in its cell, and answers its
 // realm.execute at once), and whatever the page does, the daemon ends the run `interrupted` itself within `pageWaitMs`
@@ -14,7 +14,7 @@ import { addOutput, finish } from "../session/runs/executions.js";
 import type { RealmDeps, RealmState } from "./state.js";
 import { remember } from "./state.js";
 
-/** How long the page has to take realm.interrupt, as kernel.interrupt answers within a second (03-api §4.4). */
+/** How long the page has to take realm.interrupt, as kernel.interrupt answers within a second. */
 const pageWaitMs = 1000;
 
 /** What the page's answer keeps of the run it ended: its names in the record, its container's DOM as its output. */

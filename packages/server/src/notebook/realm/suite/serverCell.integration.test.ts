@@ -1,4 +1,4 @@
-// The bridge suite, 05-bridge §11 item 5 with §4.1 and §4.2 (real kernel, daemon and page): a server function's
+// The bridge suite, server functions (real kernel, daemon and page): a server function's
 // console.log lands on the server cell that defined it, never on the calling client cell; a throw rejects the stub with
 // the server's name, message and stack, which the client can catch, and is also an error output on the server cell; an
 // uncaught one shows the server's frames on the client cell before its own.

@@ -1,4 +1,4 @@
-// events.subscribe of 03-api §4.8: WebSocket only; a notebook's events or (without one) the whole workspace's, each
+// events.subscribe: WebSocket only; a notebook's events or (without one) the whole workspace's, each
 // event once per socket however often it subscribes; the answer is the current seq of what it subscribed to.
 import { eventsSubscribe } from "@jsnb/core";
 import { validateNotebookRef } from "@jsnb/kernel-node";

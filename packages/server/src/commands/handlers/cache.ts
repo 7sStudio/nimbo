@@ -1,4 +1,4 @@
-// cache.clear of 03-api §4.14: the workspace's npm cache emptied while the daemon runs.
+// cache.clear: the workspace's npm cache emptied while the daemon runs.
 import { cacheClear } from "@jsnb/core";
 
 import type { Bound } from "../bind.js";

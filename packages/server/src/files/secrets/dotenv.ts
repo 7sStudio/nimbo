@@ -1,4 +1,4 @@
-// `.env` as secrets.set writes it (07-file-format §8): only the key's own line is rewritten (or one is appended), every
+// `.env` as secrets.set writes it: only the key's own line is rewritten (or one is appended), every
 // other line, comment and the order kept; the value always double-quoted with `"`, `\` and newlines escaped. The file
 // is read the way kernel-node reads it (non-blocking, regular files only, 1 MiB) and never written through a link.
 
@@ -50,7 +50,7 @@ export async function readEnvText(path: string): Promise<string> {
   return read.kind === "read" ? read.text : "";
 }
 
-/** The names `.env` assigns, in file order (07-file-format §8: never values, never process.env). */
+/** The names `.env` assigns, in file order (never values, never process.env). */
 export async function envNames(path: string): Promise<readonly string[]> {
   return Object.keys(parseDotenv(await readEnvText(path)));
 }

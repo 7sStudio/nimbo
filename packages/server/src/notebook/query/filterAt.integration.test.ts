@@ -1,4 +1,4 @@
-// cell.outputQuery's `at` (03-api §4.3): Filter chips on the children of a nested node, as on a Stripe-shaped list
+// cell.outputQuery's `at`: Filter chips on the children of a nested node, as on a Stripe-shaped list
 // `{ object: "list", data: [...] }`, where the rows are under `data`; `at` is one node's JSONPath, Filter mode's only.
 import type { Chip, QueryMode } from "@jsnb/core";
 import { withDaemon } from "../../fixtures/daemon.js";

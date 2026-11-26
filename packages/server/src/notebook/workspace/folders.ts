@@ -1,4 +1,4 @@
-// Home's Open folder on the daemon's side (03-api §4.1): list a folder's folders, the recent workspace
+// Home's Open folder on the daemon's side: list a folder's folders, the recent workspace
 // folders, and workspace.open. A daemon serves one folder for its whole life, so opening another folder finds or starts
 // that folder's own daemon (files/folders/daemon.ts) and this one stops after its answer (the handler's afterAnswer),
 // closing its notebooks as workspace.stop does. Before anything changes every open notebook with changes not on disk

@@ -20,7 +20,7 @@ import type { CellStore } from "./cells.js";
 import type { ExportsClock } from "./runs/exportsClock.js";
 import type { Retained } from "./runs/retained.js";
 
-/** The notebook file's own fields, written back as they were read (07-file-format §2, §4). */
+/** The notebook file's own fields, written back as they were read. */
 export type DocumentHeader = {
   readonly version: number;
   readonly extra: Readonly<Record<string, unknown>>;
@@ -34,9 +34,9 @@ export type Emit = <T extends EventType>(type: T, data: EventInput<T>) => void;
 export type SessionHooks = {
   lateOutput: (late: LateOutput) => void;
   exports: (names: readonly ExportEntry[]) => void;
-  /** A flush of the kernel's `emit` calls (05-bridge §6). */
+  /** A flush of the kernel's `emit` calls. */
   events: (batch: EventBatch) => void;
-  /** Whether a page holds the client realm, told to a kernel when it is ready (05-bridge §6). */
+  /** Whether a page holds the client realm, told to a kernel when it is ready. */
   pageAttached: () => boolean;
   /** A deleted client cell: the attached page runs its cleanups (its timers, listeners and `on` end). */
   disposeClient: (cell: CellId) => void;
@@ -50,7 +50,7 @@ export type SessionHooks = {
   debugPause: () => Promise<DebugPause>;
   /** Settles once the debugger saw the kernel resume (a second at most): an interrupt resumes a paused kernel itself. */
   debugResumed: () => Promise<void>;
-  /** A cell's code or type changed (an edit, a revert, a reload): it leaves an auto-run cascade (04-kernel §4.1). */
+  /** A cell's code or type changed (an edit, a revert, a reload): it leaves an auto-run cascade. */
   edited: (cell: CellId, before: Graph) => void;
   /** Settles once the run of `cell` under way, if any, ended (at once otherwise, after a microtask). */
   runEnded: (cell: CellId) => Promise<void>;
@@ -69,7 +69,7 @@ type RunState = {
   readonly exports: ExportsClock;
   /** Set while a restart or a close ends the kernel: the running run's KernelDead is then an interruption. */
   ending: boolean;
-  /** Kernel restarts so far: a bridge call that saw one begin was cut by it (KernelRestarted, 05-bridge §7, §8). */
+  /** Kernel restarts so far: a bridge call that saw one begin was cut by it (KernelRestarted). */
   restarts: number;
   /** Runs started since the kernel started: the last execution count given (Execution.count). */
   executions: number;
@@ -78,14 +78,14 @@ type RunState = {
 };
 
 export type SessionContext = {
-  /** The notebook's ref and file, both changed when its file moves (moves.ts, 07 §5). */
+  /** The notebook's ref and file, both changed when its file moves (moves.ts). */
   ref: string;
   path: string;
-  /** The kernel's log file (07-file-format §7), what kernel.log reads; it follows a move. */
+  /** The kernel's log file, what kernel.log reads; it follows a move. */
   logPath: string;
-  /** Which file `path` names (device and inode) as last opened or written; how a moved file is found (07 §5). */
+  /** Which file `path` names (device and inode) as last opened or written; how a moved file is found. */
   identity: FileIdentity | undefined;
-  /** The session took unsaved text from a recovery copy written at this time (recovery.ts, 07 §7). */
+  /** The session took unsaved text from a recovery copy written at this time (recovery.ts). */
   recovered?: string | undefined;
   /** The ref the session opened under: the stable prefix of the query engines' held keys, whatever moves follow. */
   readonly holdKey: string;

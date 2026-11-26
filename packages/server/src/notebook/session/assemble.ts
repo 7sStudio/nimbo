@@ -1,4 +1,4 @@
-// The context of a notebook session (02-architecture §2, §4): its cells from the loaded file, its kernel supervisor with
+// The context of a notebook session: its cells from the loaded file, its kernel supervisor with
 // the kernel's log, status and routes as events, its autosave, its retained values, all sharing one emit and log.
 import type { IdGenerator, KernelStatus, Route, Settings } from "@jsnb/core";
 import type { EventBatch, ExportEntry, KernelEntry, LateOutput } from "@jsnb/kernel-node";
@@ -43,11 +43,11 @@ export type SessionOptions = {
   readonly requestTimeoutMs: number;
   /** The daemon's js-debug, which the notebook's debugger attaches to its kernel. */
   readonly debugAdapter: Adapter;
-  /** A save found nothing at the notebook's path: the workspace looks for where the file moved (moves.ts, 07 §5). */
+  /** A save found nothing at the notebook's path: the workspace looks for where the file moved (moves.ts). */
   readonly missing?: () => Promise<void>;
   /** How often the file is stat'ed for an external edit the folder's events missed (watch.ts); 2 s by default. */
   readonly fileCheckMs?: number;
-  /** Where the notebooks' recovery copies live (`.jsnb/recovery/`, 07 §7); none kept without it. */
+  /** Where the notebooks' recovery copies live (`.jsnb/recovery/`); none kept without it. */
   readonly recoveryDir?: string;
   /** The quiet time after a file event before the check; 100 ms by default. */
   readonly watchDebounceMs?: number;
@@ -129,7 +129,7 @@ function runsOf(options: SessionOptions): SessionContext["runs"] {
   };
 }
 
-/** What contextOf adds to the context: the kernel log's close, and the log's move to a new ref (07 §5). */
+/** What contextOf adds to the context: the kernel log's close, and the log's move to a new ref. */
 export type OwnedContext = SessionContext & {
   readonly closeLog: () => void;
   /** Closes the kernel log, moves its files to `to`'s name and opens it there. */
@@ -159,7 +159,7 @@ const defaultHooks = (): SessionHooks => ({
 export function contextOf(options: SessionOptions, hooks: FileHooks = {}): OwnedContext {
   const { bus, now } = options;
   const log = options.log.child({ notebook: options.ref });
-  // the ref and the file are the context's, read at each use: a followed move changes them (07 §5)
+  // the ref and the file are the context's, read at each use: a followed move changes them
   const emit: Emit = (type, data) => {
     bus.emit(context.ref, type, data);
   };

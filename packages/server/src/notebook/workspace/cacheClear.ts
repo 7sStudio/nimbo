@@ -1,4 +1,4 @@
-// cache.clear for the workspace (03-api §4.14): one clear at a time, each logged.
+// cache.clear for the workspace: one clear at a time, each logged.
 import type { Log } from "../../events/log.js";
 import { clearNpmCache } from "../../files/npm/cacheClear.js";
 

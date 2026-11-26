@@ -1,4 +1,4 @@
-// A kernel's life through the daemon (03-api §4.4, 04-kernel §2, §9): kernel.restart (a running run interrupted, server
+// A kernel's life through the daemon: kernel.restart (a running run interrupted, server
 // cells idle and not stale, the scope gone), a kernel killed from outside (dead with its signal, the run in flight
 // failed, the next run on a fresh kernel), and the paused state while DevTools holds the kernel at `debugger;`.
 import { withDaemon } from "../../../fixtures/daemon.js";

@@ -1,4 +1,4 @@
-// Where a bare import points (04-kernel §8.1): Node's resolution of the
+// Where a bare import points: Node's resolution of the
 // package from the importing file's real folder gives its folder, and the page's own import of the name, from the
 // workspace, gives `/npm/<name>` when it finds that same folder, else the folder's recorded resolved form
 // `/npm/_/<key>/<name>`. One folder has one URL, whichever package or workspace module imports it. `name/` is the

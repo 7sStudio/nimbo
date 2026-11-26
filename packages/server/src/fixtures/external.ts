@@ -1,4 +1,4 @@
-// External edits in tests (07-file-format §5): the notebook's file edited as another program would, and the session's
+// External edits in tests: the notebook's file edited as another program would, and the session's
 // cells to compare with it.
 import { readFile, writeFile } from "node:fs/promises";
 

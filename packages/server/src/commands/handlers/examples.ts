@@ -1,4 +1,4 @@
-// The examples commands of 03-api §4.11: the shipped example notebooks listed, and one copied into the workspace
+// The examples commands: the shipped example notebooks listed, and one copied into the workspace
 // folder, the list announced (notebooks.changed) once the copy is there.
 import { examplesCopy, examplesList } from "@jsnb/core";
 

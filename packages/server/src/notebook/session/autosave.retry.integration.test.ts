@@ -1,4 +1,4 @@
-// Autosave's retry every 10 s (07-file-format §5) with fake timers over a real file: a write the folder refuses is
+// Autosave's retry every 10 s with fake timers over a real file: a write the folder refuses is
 // reported, tried again 10 s later without any mutation, and saved once the folder takes writes again.
 import { chmod, readFile, writeFile } from "node:fs/promises";
 

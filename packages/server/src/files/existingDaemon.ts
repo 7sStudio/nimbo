@@ -1,4 +1,4 @@
-// Discovery at start (03-api §7.1, 07-file-format §7): a server.json whose root is not this workspace (a copied workspace
+// Discovery at start: a server.json whose root is not this workspace (a copied workspace
 // carries the original's file), whose pid is gone, or whose port does not answer workspace.info with the
 // same startedAt and root, is stale and removed; a live one means a daemon already serves this workspace.
 import { rm, stat } from "node:fs/promises";

@@ -1,4 +1,4 @@
-// The recovery copy of a notebook's unsaved text (07-file-format §7): `.jsnb/recovery/<sha-256 of the ref>.json`, the
+// The recovery copy of a notebook's unsaved text: `.jsnb/recovery/<sha-256 of the ref>.json`, the
 // latest only, written atomically while a conflict is open or a save fails with text the file does not hold, and at a
 // close or stop that could not write it; removed once the file holds the session's state. Never through a symbolic
 // link: `.jsnb` and `recovery/` are checked with lstat before each read and write, a copy is opened with O_NOFOLLOW and

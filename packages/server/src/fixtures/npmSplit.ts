@@ -1,4 +1,4 @@
-// Fixture packages and probes for the tests of a package's split bundle at /npm/ (04-kernel §8.1): /npm/ over a test
+// Fixture packages and probes for the tests of a package's split bundle at /npm/: /npm/ over a test
 // workspace with its builds counted from the log, packages of each shape the bundler meets, and the CPU the builds
 // spend, to tell a cancelled build from one left running.
 import { execFileSync } from "node:child_process";

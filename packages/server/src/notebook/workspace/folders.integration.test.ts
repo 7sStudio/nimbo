@@ -1,4 +1,4 @@
-// Home's Open folder on a real daemon over real folders (03-api §4.1): workspace.listFolders lists folders only (a count
+// Home's Open folder on a real daemon over real folders: workspace.listFolders lists folders only (a count
 // of .jsnb files, never a file's name), resolves links and `..`, leaves hidden folders out unless the path names one,
 // says which workspace opening a folder opens, and refuses in words what is not a readable folder; only behind the
 // token, never through the unauthenticated /n/ routes. The daemon notes its folder in the user's recent folders.
@@ -169,7 +169,7 @@ describe("workspace.open refuses before anything changes", () => {
     await withWorkspace(async (ws) => {
       const { home, projects, daemon } = await world(ws);
       const { client } = daemon;
-      // the conflict a save finds, as an external edit makes it with merging off (07 §5)
+      // the conflict a save finds, as an external edit makes it with merging off
       await client.settings.set({ key: "files.mergeExternalChanges", value: false });
       await client.notebook.open({ path: "first.jsnb" });
       await writeFile(home.path("first.jsnb"), '{ "version": 1, "cells": [] }\n\n');

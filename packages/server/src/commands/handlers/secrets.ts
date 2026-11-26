@@ -1,4 +1,4 @@
-// The secrets commands of 03-api §4.7: names only, and one secret written to .env.
+// The secrets commands: names only, and one secret written to .env.
 import { secretsList, secretsSet } from "@jsnb/core";
 
 import type { Bound } from "../bind.js";

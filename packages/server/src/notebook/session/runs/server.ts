@@ -1,6 +1,6 @@
-// The run of a server cell, steps 4 to 8 of 02-architecture §5: transform with the cell's URL (04-kernel §9), the
-// pre-flight that ends a run importing an uninstalled package with MissingPackage before anything executes (04-kernel
-// §4), then `execute` on the started kernel, its outputs and statuses streamed as events, and the stale flags after a
+// The run of a server cell: transform with the cell's URL, the
+// pre-flight that ends a run importing an uninstalled package with MissingPackage before anything executes,
+// then `execute` on the started kernel, its outputs and statuses streamed as events, and the stale flags after a
 // successful run. A kernel the daemon itself ends (restart, close) interrupts the run; any other death fails it.
 import type { CellAnalysis } from "@jsnb/core";
 import { afterRun, cellUrl, isJsnbError, MissingPackage } from "@jsnb/core";
@@ -44,7 +44,7 @@ function clientSource(context: SessionContext, record: CellRecord): string {
   }
 }
 
-/** The transform with the cell's URL (04-kernel §9), or the ending of a run whose cell does not parse (a result). */
+/** The transform with the cell's URL, or the ending of a run whose cell does not parse (a result). */
 export function compileCell(context: SessionContext, record: CellRecord): Prepared {
   try {
     return {

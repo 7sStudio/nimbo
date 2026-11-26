@@ -1,4 +1,4 @@
-// The example notebooks shipped with the app (03-api §4.11) on a real daemon and a real kernel: each is in the file
+// The example notebooks shipped with the app on a real daemon and a real kernel: each is in the file
 // format's exact form, listed with its title and purpose, copied under a free name without touching the shipped file,
 // and runs clean with Run all in a workspace of its own, with no package installed, no network and no .env (the
 // payment example answers its own samples); the queries the data example pins answer on the daemon. Client cells

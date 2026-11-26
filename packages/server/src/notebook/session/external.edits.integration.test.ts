@@ -1,4 +1,4 @@
-// External edits and stale bases against the real daemon (07-file-format §5): a write that found the file unreadable
+// External edits and stale bases against the real daemon: a write that found the file unreadable
 // is a conflict with its recovery copy while the file does not parse, and is made once the file is the base again; a
 // second stale edit during an open conflict keeps every held cell in the conflict; two agents with the same client name
 // are two editors.

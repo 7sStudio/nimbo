@@ -1,4 +1,4 @@
-// The session's cells to and from the .jsnb document (07-file-format §2): parsed with core's `parse` (ids assigned,
+// The session's cells to and from the .jsnb document: parsed with core's `parse` (ids assigned,
 // unknown keys kept, migrations run), and written back with the app's version as `jsnb`, through core's serialize.
 import type { IdGenerator, NotebookDocument, Settings } from "@jsnb/core";
 import { currentVersion, parse, SavedRun, serialize } from "@jsnb/core";
@@ -66,7 +66,7 @@ export const emptyHeader = (): DocumentHeader => ({
   outputs: false,
 });
 
-/** outputs.save (07-file-format §2): `always`, `never`, or `auto`, which keeps outputs in a file that had them. */
+/** outputs.save: `always`, `never`, or `auto`, which keeps outputs in a file that had them. */
 export function savesOutputs(settings: Settings, header: DocumentHeader): boolean {
   const policy = settings["outputs.save"];
   return policy === "always" || (policy === "auto" && header.outputs);

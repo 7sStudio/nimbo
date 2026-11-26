@@ -1,4 +1,4 @@
-// External edits against the session's own changes (07-file-format §5): a page edit made on a text the file replaced
+// External edits against the session's own changes: a page edit made on a text the file replaced
 // since, an edit on a text another editor replaced (an editor's own drafts in flight excepted), an open conflict that
 // outlives later edits of other cells, a write of another program landing during the daemon's, an explicit save, the
 // saved state after a merge, a move after an atomic rewrite, the review trail of an agent's edit the file undid, a

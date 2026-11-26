@@ -1,4 +1,4 @@
-// A retained value in the JSON engines (11-query §2): cell.outputQuery holds it in their worker under its
+// A retained value in the JSON engines: cell.outputQuery holds it in their worker under its
 // key, so a second query does not send it again; the key goes from the engines when the value is dropped (the cell ran
 // again) and when its notebook closes; past outputs.retainMaxBytes the engines let the oldest go, and a later query of
 // it holds it again. Over the daemon's own workspace services, the built kernel and the real engines.

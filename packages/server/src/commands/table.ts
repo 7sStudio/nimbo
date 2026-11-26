@@ -1,4 +1,4 @@
-// The daemon's side of the registry (03-api §3): one bound handler per command name, the planned ones answering
+// The daemon's side of the registry: one bound handler per command name, the planned ones answering
 // NOT_AVAILABLE; the contract test holds it against core's `commands`.
 import { commands } from "@jsnb/core";
 

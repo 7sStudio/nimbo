@@ -1,4 +1,4 @@
-// The keybindings files of 07-file-format §6, VS Code's keybindings.json: a JSONC list of rules read with the tolerant
+// The keybindings files, VS Code's keybindings.json: a JSONC list of rules read with the tolerant
 // parser (comments, trailing commas), and changed rule by rule through its edit API so the comments the user wrote
 // survive keybindings.set; a rule the schema refuses is left out and reported.
 import type { KeybindingRule } from "@jsnb/core";

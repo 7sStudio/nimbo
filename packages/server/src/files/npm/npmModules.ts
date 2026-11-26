@@ -1,4 +1,4 @@
-// What /npm/<spec> answers (04-kernel §8.1): a package, found as Node finds it from the workspace, bundled once per
+// What /npm/<spec> answers: a package, found as Node finds it from the workspace, bundled once per
 // version of it and of esbuild, cached under `.jsnb/cache/npm/<name>@<version>/`. Every entry its package.json exports
 // (its main and each subpath without a pattern) comes from one split build of the package (packageGroup.ts), cached
 // together (groupCache.ts), its chunks at `<base>/.chunks/<hash>.js`; any other subpath (a pattern export, a file of a

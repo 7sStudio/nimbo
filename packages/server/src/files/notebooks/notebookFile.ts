@@ -1,4 +1,4 @@
-// A notebook file on disk (07-file-format §5, 09-testing §5): its ref resolved inside the workspace (no `..`, no
+// A notebook file on disk: its ref resolved inside the workspace (no `..`, no
 // absolute path, no folder or file that a symbolic link takes outside it, a link to nothing named with its target),
 // its bytes read with their hash, and the atomic write beside it.
 import { createHash } from "node:crypto";
@@ -20,7 +20,7 @@ export type NotebookRead =
   | { readonly kind: "missing" }
   | { readonly kind: "read"; readonly text: string; readonly hash: string };
 
-/** The sha256 of a file's text, compared before every write (07-file-format §5). */
+/** The sha256 of a file's text, compared before every write. */
 export const hashOf = (text: string): string => createHash("sha256").update(text).digest("hex");
 
 const outside = (ref: string, field: string): InvalidParams =>
@@ -125,7 +125,7 @@ async function existingFolder(dir: string): Promise<string> {
  * The absolute path of `ref` in the workspace `root` (already resolved through links); InvalidParams for a ref that
  * names no notebook (kernel-node's rule) or one whose folder or file a symbolic link takes outside the workspace. A
  * notebook that is a link answers its target: reads and atomic writes go to the file the link names,
- * so a save keeps the link a link, and a link re-pointed later is not followed, as renames are not (07 §5).
+ * so a save keeps the link a link, and a link re-pointed later is not followed, as renames are not.
  */
 export async function notebookPath(root: string, ref: string, field = "notebook"): Promise<string> {
   validateNotebookRef(ref, field);
@@ -210,7 +210,7 @@ const isFolder = (path: string): Promise<boolean> =>
  * inside the workspace when needed but never the workspace `root` itself (a save after the folder was moved would
  * resurrect it at the old path and the daemon would never notice the move); a symbolic link that has
  * appeared at `path` since is NotebookBecameLink, checked with lstat before the write, and the rename never follows
- * one either (07 §5).
+ * one either.
  */
 export async function writeNotebook(
   path: string,

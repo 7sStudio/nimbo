@@ -1,4 +1,4 @@
-// What a notebook session holds per cell and per run, and their API forms of 03-api §5: a cell record (the file's
+// What a notebook session holds per cell and per run, and their API forms: a cell record (the file's
 // fields, unknown keys kept, its analysis, its status and last run) and an execution record (status, outputs, error).
 import type {
   Cell,
@@ -34,7 +34,7 @@ export type ExecutionRecord = {
   stoppedBy?: CellId;
   /** The connection that asked for the run (cell.run, notebook.run, cell.add with run). */
   readonly requestedBy?: Execution["requestedBy"];
-  /** execution.autoRunDependents started it after that run (04-kernel §4.1). */
+  /** execution.autoRunDependents started it after that run. */
   readonly autoRun?: Execution["autoRun"];
   defines: readonly string[];
   /** Read from the file's saved outputs: a run of an earlier session. */
@@ -45,7 +45,7 @@ export type CellRecord = {
   readonly id: CellId;
   type: CellType;
   source: string;
-  /** Every meta key the file had, unknown ones included (07-file-format §4). */
+  /** Every meta key the file had, unknown ones included. */
   meta: FileCellMeta;
   /** Unknown keys of the cell itself, written back in place. */
   readonly extra: Readonly<Record<string, unknown>>;
@@ -56,13 +56,13 @@ export type CellRecord = {
   /** The finished run before `last` (cell.compare's "previous run"); a saved run counts. */
   previous?: ExecutionRecord | undefined;
   /** The code and type of the cell's last run that started in its realm, forgotten when the realm ends: what
-   * execution.autoRunDependents may run again (04-kernel §4.1). */
+   * execution.autoRunDependents may run again. */
   ran?: { readonly source: string; readonly type: CellType } | undefined;
 };
 
 export const terminalStatuses: ReadonlySet<ExecStatus> = new Set(["ok", "error", "interrupted"]);
 
-/** The meta keys of 03-api §5 only: what the API returns (unknown keys stay in the file); a review in lastEdit gains
+/** The meta keys only: what the API returns (unknown keys stay in the file); a review in lastEdit gains
  * the lines `source` changed. */
 function apiMeta(meta: FileCellMeta, source: string): CellMeta {
   const { lastEdit } = meta;

@@ -1,4 +1,4 @@
-// Installed packages for the tests of /npm/ and the pre-flight (04-kernel §4, §8.1): files written into a test
+// Installed packages for the tests of /npm/ and the pre-flight: files written into a test
 // workspace's node_modules as a package manager would leave them, ESM and CommonJS, scoped and not.
 import { mkdir, writeFile } from "node:fs/promises";
 import { dirname } from "node:path";

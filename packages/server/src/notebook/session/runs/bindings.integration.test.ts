@@ -1,4 +1,4 @@
-// What the kernel answers through the daemon (03-api §4.3, §4.4): cell.bindings with each name's current value and
+// What the kernel answers through the daemon: cell.bindings with each name's current value and
 // the cell that defined it last, kernel.scope of the server realm, and a late output (a timer's) joining its run.
 import { decode } from "@jsnb/core";
 import { withDaemon } from "../../../fixtures/daemon.js";

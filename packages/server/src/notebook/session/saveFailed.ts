@@ -1,4 +1,4 @@
-// SaveFailed, the error of a failed notebook write (07-file-format §5), and the code it names. Its message says why. A
+// SaveFailed, the error of a failed notebook write, and the code it names. Its message says why. A
 // failure of the system (permissions, a full disk, a folder that vanished) adds that the save is tried again at the
 // next change, which succeeds once the system lets it; a cause of the daemon's own (a JsnbError such as
 // NotebookBecameLink or NotebookUnreadable) says itself what the user must do, and no retry succeeds before that, so

@@ -1,4 +1,4 @@
-// Credentials of 03-api §7.1 and the page cookie: `/rpc` takes the bearer header (HTTP) or `?token=` (the
+// Credentials and the page cookie: `/rpc` takes the bearer header (HTTP) or `?token=` (the
 // WebSocket upgrade) and never a cookie; `/outputs/…` and `/schema/settings.json` take the bearer header only (the page
 // downloads through the client, which sends it); `/ui/…` and `/npm/…`, the two places a browser asks without a header
 // (navigation, assets, `import()`), take the bearer header or the page cookie. That cookie is named after the daemon's

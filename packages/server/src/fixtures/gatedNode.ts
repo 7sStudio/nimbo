@@ -1,4 +1,4 @@
-// A Node that waits at a gate before it runs (04-kernel §2), for the tests of a kernel's start: kernel.nodePath set to
+// A Node that waits at a gate before it runs, for the tests of a kernel's start: kernel.nodePath set to
 // it holds the start in its Node check, before any fork, until the test opens the gate (a FIFO, fifo.ts).
 import { writeFile } from "node:fs/promises";
 import { join } from "node:path";

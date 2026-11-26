@@ -1,4 +1,4 @@
-// The daemon's own requests to a page on its socket (03-api §4.5, §7.2): realm.execute, realm.reset, realm.snapshot and
+// The daemon's own requests to a page on its socket: realm.execute, realm.reset, realm.snapshot and
 // realm.interrupt with ids of the daemon's (`s1`, `s2`…), the page's answers matched to them, an error answer as
 // PageRequestFailed, and every pending request failed with PageGone once the socket closes.
 import { randomUUID } from "node:crypto";

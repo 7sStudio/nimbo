@@ -1,4 +1,4 @@
-// What a command handler knows of the call it answers (03-api §7.1, §7.2): how the connection declared itself, the
+// What a command handler knows of the call it answers: how the connection declared itself, the
 // socket it came on (a page's or a follower's, for events and the daemon's own requests) and a hook for after the answer.
 import type { EditInfo, EventEnvelope } from "@jsnb/core";
 

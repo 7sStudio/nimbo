@@ -1,9 +1,9 @@
-// The kernel side of cell.delete (03-api §4.3, 04-kernel §7): once the deleted cell's run under way ended, its
+// The kernel side of cell.delete: once the deleted cell's run under way ended, its
 // kernel runs the cell's disposers and retires it, so a route it registered stops answering (404, and `routes.changed`
 // without it), its timers and listeners end, and what its code registers later is disposed at once; nothing keeps
 // reporting to a cell that is gone. Its scope bindings stay, as Jupyter keeps them. The request carries no timeout:
 // one the kernel has not read yet (another cell's synchronous work, a pause in the debugger) would be cancelled, and
-// a cancelled `dispose` never runs (04-kernel §2.1), so it waits for the kernel, and only a failure is logged. A cell
+// a cancelled `dispose` never runs, so it waits for the kernel, and only a failure is logged. A cell
 // restored meanwhile (Undo brings its id back) keeps its routes: it is no longer deleted. A server cell that stops being
 // one (switched to client or markdown, or removed or switched by notebook.reload) is disposed the same way once the
 // run it has under way ended with its old code (disposing first would drop the timer it awaits), unless it is a server
@@ -30,7 +30,7 @@ export async function disposeDeleted(
   else await disposeInKernel(context, cell);
 }
 
-/** A server cell that is not one any more (03-api §4.2, §4.3): its kernel disposes it unless it is a server cell
+/** A server cell that is not one any more: its kernel disposes it unless it is a server cell
  * again by the time this runs; never rejects. */
 export async function disposeUnserved(context: SessionContext, cell: CellId): Promise<void> {
   await context.hooks.runEnded(cell);

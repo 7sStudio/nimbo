@@ -1,4 +1,4 @@
-// The Source Control commands of 03-api §4.15 over the daemon's git service (git/service.ts).
+// The Source Control commands over the daemon's git service (git/service.ts).
 import {
   gitAbort,
   gitBranchCreate,

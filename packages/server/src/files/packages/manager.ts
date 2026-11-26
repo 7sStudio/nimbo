@@ -1,4 +1,4 @@
-// The package manager packages.add and packages.remove run (03-api §4.6, the packages.manager setting): auto picks the
+// The package manager packages.add and packages.remove run (the packages.manager setting): auto picks the
 // one whose lockfile the workspace has, else the first of pnpm, npm, yarn and bun found on PATH; each adds and removes
 // with its own verb. A name that would read as an option (a leading `-`) never reaches it, and no shell does: the names
 // are arguments.

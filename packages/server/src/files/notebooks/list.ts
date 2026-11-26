@@ -1,4 +1,4 @@
-// The notebook list of workspace.info and notebooks.changed (03-api §4.1, §6): every notebook the walk finds and
+// The notebook list of workspace.info and notebooks.changed: every notebook the walk finds and
 // every open one, sorted, each with whether it is open and its file's mtime and size. A file is read as it is through
 // a link (a notebook opened through one is shown as the file it names); a ref with no file to read now
 // (removed under an open notebook) carries null for both.

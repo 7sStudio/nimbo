@@ -1,4 +1,4 @@
-// What a bundle of a linked package read (04-kernel §8.1, 07-file-format §7):
+// What a bundle of a linked package read:
 // the real path, size and modification time of each input, taken before esbuild reads it (the build's onLoad), kept
 // beside the cached bundle, which is built again once one of them changed (an edit; a new import changes the file that
 // imports it). A save that lands during the build therefore differs from the record, and the next request builds

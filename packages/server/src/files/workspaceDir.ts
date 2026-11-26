@@ -1,4 +1,4 @@
-// The workspace directory `.jsnb/` of 07-file-format §7: created with its .gitignore when missing, with logs/,
+// The workspace directory `.jsnb/`: created with its .gitignore when missing, with logs/,
 // recovery/, cache/npm/ and cache/sql/, each a real folder (a symbolic link among them, as `.jsnb` itself, is
 // WorkspaceUnusable: a workspace from someone else could point it elsewhere); the paths of everything the daemon keeps
 // there.
@@ -7,7 +7,7 @@ import { join } from "node:path";
 
 import { JsnbError, keybindingsFileName, settingsFileName } from "@jsnb/core";
 
-/** Everything but the shared settings and keybindings stays out of git (07-file-format §7). */
+/** Everything but the shared settings and keybindings stays out of git. */
 const jsnbGitignore = `*\n!.gitignore\n!${settingsFileName}\n!${keybindingsFileName}\n`;
 /** The .gitignore nimbo wrote before keybindings.json: replaced by the current one, never a user's own. */
 const formerGitignore = `*\n!.gitignore\n!${settingsFileName}\n`;

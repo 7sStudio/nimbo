@@ -1,5 +1,5 @@
 // The UI feedback the page's feedback mode saves, kept in the workspace's `.jsnb/feedback/` (out of git, as everything
-// under `.jsnb/` but the shared settings, 07-file-format §7) for a later reader, a person or an agent: one JSON object
+// under `.jsnb/` but the shared settings) for a later reader, a person or an agent: one JSON object
 // per line in `feedback.jsonl`, oldest first, the same list as Markdown in `FEEDBACK.md`, and each entry's screenshots
 // beside it as `<id>-element.png` and `<id>-viewport.png`. Every change of the file is a read-modify-write in the file's
 // write queue, written atomically.

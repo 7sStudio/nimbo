@@ -1,4 +1,4 @@
-// The daemon's JSON-RPC frames (03-api §7.2): calls, notifications, a page's answers and failures, and what is no
+// The daemon's JSON-RPC frames: calls, notifications, a page's answers and failures, and what is no
 // message.
 import { describe, expect, it } from "vitest";
 

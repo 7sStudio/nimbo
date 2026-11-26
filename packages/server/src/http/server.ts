@@ -1,6 +1,6 @@
-// The daemon's HTTP server (02-architecture §7): bound to 127.0.0.1 only, every request through the Host and Origin
+// The daemon's HTTP server: bound to 127.0.0.1 only, every request through the Host and Origin
 // rules first, `/rpc` as POST and as the WebSocket upgrade, the page endpoints, and 404 for everything else; no CORS
-// header on any answer (02-architecture §8). It stops by refusing new work, answering the calls under way (those the
+// header on any answer. It stops by refusing new work, answering the calls under way (those the
 // stop ended, as an install it stopped, within half a second), then closing every socket and the listener.
 import type { IncomingMessage, Server, ServerResponse } from "node:http";
 import { createServer } from "node:http";

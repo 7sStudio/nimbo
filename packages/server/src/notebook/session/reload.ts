@@ -1,4 +1,4 @@
-// notebook.reload of 03-api §4.2 and 07-file-format §5: the file is read again and reconciled by cell id: a cell with
+// notebook.reload: the file is read again and reconciled by cell id: a cell with
 // the same id keeps its status and outputs, a new cell starts idle, a removed one disappears, the kernel is untouched.
 // Subscribers see it as the events of those changes (deleted, updated, added, moved), then notebook.saved.
 import type { CellId, StaleMap } from "@jsnb/core";

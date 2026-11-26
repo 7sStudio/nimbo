@@ -1,4 +1,4 @@
-// The bridge suite, 05-bridge §11 item 8 with §5 (real kernel, daemon and page): a client cell depends on the server
+// The bridge suite (real kernel, daemon and page): a client cell depends on the server
 // cell whose export it uses; re-running the server cell marks it stale and its own run clears it; withDependents runs it
 // after the server cell when a page is attached and lists it skipped otherwise; a server cell that stops exporting the
 // name (edited, or deleted) marks it stale and its next run fails NotExported, while a stub the page already holds

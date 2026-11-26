@@ -1,4 +1,4 @@
-// The debug commands of 03-api §4.9 over the notebook's debugger (debug/session.ts).
+// The debug commands over the notebook's debugger (debug/session.ts).
 import {
   debugEvaluate,
   debugPause,

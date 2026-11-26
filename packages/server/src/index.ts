@@ -1,4 +1,4 @@
-// Public API of @jsnb/server: the daemon (02-architecture §2, §7), started in-process for a workspace folder.
+// Public API of @jsnb/server: the daemon, started in-process for a workspace folder.
 export { startServer } from "./server.js";
 export type { RunningServer } from "./server.js";
 export type { ServerOptions } from "./options.js";

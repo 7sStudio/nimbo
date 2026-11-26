@@ -1,5 +1,5 @@
-// cell.compare and notebook.export (03-api §4.2, §4.3): a cell's last run against the one before it, read with core's
-// compareRuns, and the notebook as one HTML page built with output-view's model (07-file-format §9), its outputs the
+// cell.compare and notebook.export: a cell's last run against the one before it, read with core's
+// compareRuns, and the notebook as one HTML page built with output-view's model, its outputs the
 // runs the session holds (saved ones included) through the daemon's redaction, written into the workspace on request.
 import { lstat, mkdir, realpath } from "node:fs/promises";
 import { basename, dirname, isAbsolute, relative, resolve } from "node:path";

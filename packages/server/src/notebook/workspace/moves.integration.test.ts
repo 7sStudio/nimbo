@@ -1,4 +1,4 @@
-// An open notebook follows its file (07-file-format §5, 07 §5): a rename outside nimbo is found by the file's identity and
+// An open notebook follows its file: a rename outside nimbo is found by the file's identity and
 // the session takes the new ref with its kernel running on, whether the periodic check, a save or an open notices it
 // first; a notebook moved out of the workspace is not followed (the next save writes the old path again); notebook.rename
 // of an open notebook keeps it open under the new ref.

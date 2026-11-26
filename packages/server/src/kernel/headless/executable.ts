@@ -1,4 +1,4 @@
-// The browser the headless realm runs (02-architecture §7): the setting realm.headlessBrowser, else CHROME_PATH (the
+// The browser the headless realm runs: the setting realm.headlessBrowser, else CHROME_PATH (the
 // variable chrome-launcher and Lighthouse read), else the usual installs of Chrome, Chromium and Edge on macOS and
 // Linux. Nothing is downloaded; with none found, the answer lists every place looked at.
 import { accessSync, constants, statSync } from "node:fs";

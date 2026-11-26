@@ -1,4 +1,4 @@
-// execution.autoRunDependents through the daemon and the real kernel (04-kernel §4.1): a cell.run that ends well runs
+// execution.autoRunDependents through the daemon and the real kernel: a cell.run that ends well runs
 // its stale dependents in dependency order, each once; a failure or a manual cell holds back only what depends on it;
 // cycles and never-run cells are left alone; an interrupt stops the rest; a run anyone asks for goes first; an edit
 // takes a cell out; with the setting off nothing changes.

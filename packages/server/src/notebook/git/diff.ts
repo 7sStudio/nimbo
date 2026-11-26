@@ -1,4 +1,4 @@
-// git.diff (03-api §4.13): the two sides of one file, which `staged` and `base` pick, then a
+// git.diff: the two sides of one file, which `staged` and `base` pick, then a
 // notebook diff through core's diffNotebooks when both sides parse, else a text diff; binary and oversized sides are
 // named, not diffed. An agent's answer leaves the cells' full sources out: the hunks say what changed.
 import { join } from "node:path";

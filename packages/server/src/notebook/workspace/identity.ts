@@ -1,4 +1,4 @@
-// One file, one ref (03-api §4.2): the file a ref names is compared with the files the open refs name
+// One file, one ref: the file a ref names is compared with the files the open refs name
 // as they are now, by device and inode, so a case variant or a path through a linked folder is caught after any
 // number of saves (each save renames a new file into place, a new inode, which is why an identity taken at open goes
 // stale). The candidate is read again after the comparison and the comparison redone when a save moved it meanwhile.

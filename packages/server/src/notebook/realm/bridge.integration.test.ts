@@ -1,4 +1,4 @@
-// bridge.call through the daemon (05-bridge §4, §7; 03-api §4.5): only a current export runs, its result relayed with
+// bridge.call through the daemon: only a current export runs, its result relayed with
 // the kernel's redaction flag; a throw, a name that is no current export (NotExported, NoSuchExport, KernelRestarted
 // after a restart) and a call past bridge.rpcTimeoutMs are BRIDGE_CALL_FAILED with the ErrorInfo. And the realm
 // protocol's refusals: realm.attach over HTTP, a report from no attached page, the detach of a page already gone.

@@ -1,4 +1,4 @@
-// kernel.interrupt through the daemon (03-api §4.4, 04-kernel §6): a synchronous loop stopped with the queue cleared and
+// kernel.interrupt through the daemon: a synchronous loop stopped with the queue cleared and
 // the scope kept, a pending await abandoned, InterruptRefused for a loop a raw timer runs, the kernel answering again
 // once that code returns, and an answer after the daemon's own second from a kernel that does not answer.
 import { writeFileSync } from "node:fs";

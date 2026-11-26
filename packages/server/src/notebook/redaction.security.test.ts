@@ -1,4 +1,4 @@
-// Secrets at the daemon's boundary (09-testing §4 item 3, §5): a secret set with secrets.set comes out as *** in
+// Secrets at the daemon's boundary: a secret set with secrets.set comes out as *** in
 // outputs, cell.bindings, the full-value download and bridge.call results; secrets.list returns names only; .env and
 // server.json are 0600; neither the secret nor the token reaches a log line or an output.
 import { readdir, readFile, stat } from "node:fs/promises";

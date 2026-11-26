@@ -1,4 +1,4 @@
-// A package's split bundle (04-kernel §8.1): one esbuild build of every entry the package exports (its main and each
+// A package's split bundle: one esbuild build of every entry the package exports (its main and each
 // `exports` subpath without a pattern), with code splitting, as a bundler pre-bundles a dependency: the package's own
 // files are inlined, and the code two entries share sits in a chunk both import, so each module of the package runs
 // once on the page whichever entries a cell imports (rxjs and rxjs/operators share one Observable). An entry is served

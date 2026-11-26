@@ -1,9 +1,9 @@
-// realm.report of 03-api §4.5: what the attached page reports about a client run it was sent (the handler refuses a
-// realmId that names no attached page with INVALID_PARAMS), redacted at the daemon's boundary (08-code-standards §5:
-// a page that printed a value a bridge call returned holds nothing the kernel did not redact, but the daemon redacts
+// realm.report: what the attached page reports about a client run it was sent (the handler refuses a
+// realmId that names no attached page with INVALID_PARAMS), redacted at the daemon's boundary (a
+// page that printed a value a bridge call returned holds nothing the kernel did not redact, but the daemon redacts
 // what it relays anyway); then the run's events. A status carries the run's duration, the names it defines (the page's
 // record) and, for an error, its ErrorInfo. Once the run ended, the page reports only late outputs (a timer's, a
-// listener's, 04-kernel §5.3), which join the run as a kernel's do. A report on a run that was interrupted
+// listener's), which join the run as a kernel's do. A report on a run that was interrupted
 // or is no longer its cell's last is dropped whatever it carries: at a reset runtime-web flushes the dropped
 // run's pending console text as a report, queues its `interrupted` status behind it on its one report chain and
 // answers realm.execute at once, so whenever text was pending (or another report was still unanswered) the daemon has
@@ -56,7 +56,7 @@ function applyStatus(
 
 /**
  * A report on a client run that ended: dropped whatever it carries when the run is no longer its cell's last or was
- * interrupted (as an interrupted kernel run's late outputs are, 04-kernel §6; the page's own `interrupted` report comes
+ * interrupted (as an interrupted kernel run's late outputs are; the page's own `interrupted` report comes
  * after the answer that ended the run whenever another report was ahead of it); else a late output joins the run, and
  * a status, a duration, an error or the names it defines are refused: they come only while it runs.
  */

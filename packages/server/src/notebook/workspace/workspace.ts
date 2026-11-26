@@ -1,4 +1,4 @@
-// The workspace as the daemon serves it (02-architecture §7): its facts for workspace.info, its settings, secrets and
+// The workspace as the daemon serves it: its facts for workspace.info, its settings, secrets and
 // packages, the open notebooks and the JSON query engines they share; closed once, at the daemon's stop.
 import { defaultRequestTimeoutMs } from "../../kernel/requests.js";
 import { join } from "node:path";
@@ -52,7 +52,7 @@ type WorkspaceInfo = DaemonFacts & {
 export type Workspace = {
   readonly facts: DaemonFacts;
   readonly settings: SettingsService;
-  /** The user's and the workspace's keybindings.json over the default keys (03-api §4.11). */
+  /** The user's and the workspace's keybindings.json over the default keys. */
   readonly keybindings: KeybindingsService;
   readonly secrets: SecretsService;
   readonly packages: PackagesService;
@@ -64,7 +64,7 @@ export type Workspace = {
   /** The Source Control commands over the repository the folder is in. */
   readonly git: GitService;
   readonly info: () => Promise<WorkspaceInfo>;
-  /** cache.clear: empties `.jsnb/cache/npm/` while the daemon runs (07 §7); one clear at a time. */
+  /** cache.clear: empties `.jsnb/cache/npm/` while the daemon runs; one clear at a time. */
   readonly clearCache: () => Promise<{ readonly entries: number; readonly bytes: number }>;
   readonly close: () => Promise<void>;
 };
@@ -164,7 +164,7 @@ function watchHeadlessOff(
 /** Opens the workspace's services (the settings files are read and watched from here on). */
 export async function openWorkspace(options: WorkspaceOptions): Promise<Workspace> {
   const { facts, jsnb, bus, log, onEnvWrite } = options;
-  // the settings and the keybindings, each from the user's file and the workspace's (07-file-format §6)
+  // the settings and the keybindings, each from the user's file and the workspace's
   const settings = await openSettings(
     { user: join(options.userConfigDir, settingsFileName), workspace: jsnb.settingsFile },
     bus,

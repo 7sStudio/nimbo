@@ -1,4 +1,4 @@
-// The run commands of 03-api §4.3 and §4.2: cell.run (its `source` applied first, stamped like an update), the last
+// The run commands: cell.run (its `source` applied first, stamped like an update), the last
 // run's outputs, a value's slices and queries, the bindings of a cell, and notebook.run over a selection.
 import type { CellId, Execution } from "@jsnb/core";
 import {

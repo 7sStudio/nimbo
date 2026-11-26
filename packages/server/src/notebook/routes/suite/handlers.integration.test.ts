@@ -1,4 +1,4 @@
-// The routes suite, 04-kernel §8 end to end (a real kernel child and an in-process daemon): a handler's request (the
+// The routes suite, end to end (a real kernel child and an in-process daemon): a handler's request (the
 // raw body byte for byte, so a Stripe-style signature verifies; the parsed body; the query as sent, a repeated name
 // kept) and its answer (an object as JSON 200, a string as text 200, undefined as 204, a real Response with its status,
 // headers and every Set-Cookie, bytes unchanged), a spec's method in any case, and a HEAD that the GET route answers.

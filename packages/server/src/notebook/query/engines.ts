@@ -1,4 +1,4 @@
-// The JSON query engines of cell.outputQuery (11-query §2): JSONPath (Filter mode's too) and jq, one of each for the
+// The JSON query engines of cell.outputQuery: JSONPath (Filter mode's too) and jq, one of each for the
 // whole daemon, created and loaded on first use (jq's WebAssembly worker only when a jq query comes), their workers
 // stopped when the daemon stops. The timeout is passed per query, so a change of query.timeoutMs applies at once. A
 // retained value is held in an engine's worker under its key (heldKey): sent there with its first query only, within

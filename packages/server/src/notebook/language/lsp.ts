@@ -83,7 +83,7 @@ function documentsOf() {
   };
 }
 
-/** didOpen, didChange (the whole text, §5.3) and didClose. */
+/** didOpen, didChange (the whole text) and didClose. */
 function notify(documents: Map<string, string>, method: string, params: unknown): void {
   const document = record(record(params).textDocument);
   const uri = typeof document.uri === "string" ? document.uri : undefined;

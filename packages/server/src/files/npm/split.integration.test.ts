@@ -1,4 +1,4 @@
-// A package's entries bundled together for the page (04-kernel §8.1), against esbuild and fixture packages laid out
+// A package's entries bundled together for the page, against esbuild and fixture packages laid out
 // in a temp node_modules, the served modules run by Node: one build for an entry that re-exports hundreds of modules
 // and for all of its subpaths, the code entries share run once, CommonJS interop and literal requires across a split
 // bundle, one copy of a dependency two packages import, the page's conditions, a linked package and a version change

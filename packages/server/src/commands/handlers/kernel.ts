@@ -1,4 +1,4 @@
-// The kernel commands of 03-api §4.4: status, interrupt (INTERRUPT_REFUSED when the kernel refuses), restart (with
+// The kernel commands: status, interrupt (INTERRUPT_REFUSED when the kernel refuses), restart (with
 // `all`, the client realm too), the scope of either realm, the routes and the tail of the kernel's log.
 import {
   kernelInterrupt,

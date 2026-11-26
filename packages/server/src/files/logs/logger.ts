@@ -1,4 +1,4 @@
-// The daemon log of 08-code-standards §5 and 07-file-format §7: structured JSON lines (pino) to .jsnb/logs/daemon.log,
+// The daemon log: structured JSON lines (pino) to .jsnb/logs/daemon.log,
 // rotated at 5 × 1 MB, and to stderr when the daemon runs in the foreground; every line passes the redaction once, at
 // this boundary (the token and the workspace secrets), before it reaches any file or stream. Logging never throws:
 // a line the file cannot take (a full disk, a folder that refuses writes) is dropped and counted,
@@ -32,7 +32,7 @@ export type DaemonLog = {
   readonly close: () => void;
 };
 
-/** `NIMBO_LOG=debug` raises the level (08 §5); anything else that names a level sets it; the default is info. */
+/** `NIMBO_LOG=debug` raises the level; anything else that names a level sets it; the default is info. */
 export function levelOf(value: string | undefined): LogLevel {
   const levels: readonly LogLevel[] = ["error", "warn", "info", "debug"];
   return levels.find((level) => level === value) ?? "info";

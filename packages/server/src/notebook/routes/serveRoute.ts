@@ -1,4 +1,4 @@
-// Routes at /n/<name>/… (04-kernel §8, 03-api §4.4): the open notebook whose route name (kernel-node's routeName, the
+// Routes at /n/<name>/…: the open notebook whose route name (kernel-node's routeName, the
 // ref without `.jsnb`) prefixes the path gets the request, the path below its name forwarded to its kernel with a
 // timeout of the daemon's own and the caller's signal (the HTTP client went away). The path is compared in core's
 // route form (routePath), so `/n/caf%c3%a9/…` and `/n/a,b/…` reach `café.jsnb` and `a,b.jsnb` as their route URLs do.

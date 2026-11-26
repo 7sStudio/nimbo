@@ -1,4 +1,4 @@
-// The transform's refusals as diagnostics (last paragraph): what TypeScript accepts but a
+// The transform's refusals as diagnostics: what TypeScript accepts but a
 // cell may not hold (`export default`, a top-level enum, namespace or `using`, a reserved name), from the same
 // analysis the session runs on every edit, at the error's place when it has one, else on the cell's first line.
 import type { CellType, Diagnostic } from "@jsnb/core";

@@ -1,4 +1,4 @@
-// The sql commands of 03-api §4.16: the daemon's DuckDB binding, its status and its install on demand.
+// The sql commands: the daemon's DuckDB binding, its status and its install on demand.
 import { sqlInstall, sqlStatus } from "@jsnb/core";
 
 import type { Bound } from "../bind.js";

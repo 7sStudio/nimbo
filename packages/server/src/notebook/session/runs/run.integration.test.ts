@@ -1,4 +1,4 @@
-// The life of a run through the daemon (02-architecture §5 steps 3 to 8, 03-api §4.3.1), observed through events: the
+// The life of a run through the daemon, observed through events: the
 // queue, the transform and pre-flight, the kernel's outputs, the terminal status with its duration, the stale flags;
 // `wait` and `timeoutMs`, markdown cells, `source` applied first, cell.add with `run`.
 import type { EventEnvelope } from "@jsnb/core";

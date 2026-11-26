@@ -1,4 +1,4 @@
-// The daemon's notebook session (02-architecture §2, §4): one per open notebook, holding the notebook file's state, the
+// The daemon's notebook session: one per open notebook, holding the notebook file's state, the
 // cells' status, the graph and stale flags, the autosave, the kernel and the queries; its parts share its context.
 import type { Cell, CellId, NotebookState } from "@jsnb/core";
 import { textHash } from "@jsnb/core";
@@ -45,18 +45,18 @@ import { watchFile } from "./watch.js";
 export type { SessionOptions } from "./assemble.js";
 
 export type Session = SessionRuns & {
-  /** The notebook's ref now: a followed move or a rename of the open notebook changes it (07 §5). */
+  /** The notebook's ref now: a followed move or a rename of the open notebook changes it. */
   readonly ref: string;
   /** The notebook's file moved to `path`, the ref `to`: its events, kernel log and saves follow, its kernel runs on. */
   readonly moveTo: (to: string, path: string) => Promise<void>;
-  /** Settles once a recovery copy left by an earlier session was taken back (07 §7). */
+  /** Settles once a recovery copy left by an earlier session was taken back. */
   readonly opened: Promise<void>;
   readonly context: SessionContext;
   readonly state: () => NotebookState;
   readonly cell: (cell: CellId) => Cell;
   readonly add: (input: AddCell, editor: Editor) => Cell;
   readonly update: (input: UpdateCell, editor: Editor) => Cell;
-  /** For an edit sent without `base` over a source the file on disk set: what to tell its caller (07 §5). */
+  /** For an edit sent without `base` over a source the file on disk set: what to tell its caller. */
   readonly diskNotice: (input: UpdateCell) => string | undefined;
   /** cell.revert: the code from before the agent edits no one reviewed, put back as an edit by `editor`. */
   readonly revert: (cell: CellId, editor: Editor) => Cell;
@@ -67,7 +67,7 @@ export type Session = SessionRuns & {
   /** notebook.compareDisk: the file on disk against the text a save would write now. */
   readonly compareDisk: (content: boolean) => Promise<ReturnType<typeof diffDisk>>;
   readonly reload: () => Promise<NotebookState>;
-  /** A git operation of the app rewrote the file: merged now, as the watch would (07 §5), with merging on or off. */
+  /** A git operation of the app rewrote the file: merged now, as the watch would, with merging on or off. */
   readonly mergeDisk: () => Promise<ExternalOutcome>;
   readonly graph: () => GraphView;
   readonly errors: () => ErrorsView;
@@ -77,9 +77,9 @@ export type Session = SessionRuns & {
   /** notebook.export: the notebook as one HTML page, written into the workspace when a path is given. */
   readonly exportPage: (request: ExportRequest) => Promise<{ html: string; path?: string }>;
   /** The page that runs its client cells, the bridge calls into its kernel; its `restart` is realm.restart: the queued client runs end, then the page's full reset, every
-   * client cell idle with no outputs (03-api §4.5). */
+   * client cell idle with no outputs. */
   readonly realm: SessionRealm & { readonly restart: () => Promise<void> };
-  /** The notebook's debugger (03-api §4.9). */
+  /** The notebook's debugger. */
   readonly debug: DebugSession;
   readonly close: () => Promise<void>;
 };
@@ -145,7 +145,7 @@ type FileHookSlots = {
   recovery: (needed: boolean, now?: boolean) => Promise<boolean>;
 };
 
-/** The context of a session that knows its file (07 §5): by its identity at open, then by each save's and each
+/** The context of a session that knows its file: by its identity at open, then by each save's and each
  * read's; a write that finds the file changed asks `external` for the merge. */
 function identifiedContext(
   options: SessionOptions,
@@ -244,7 +244,7 @@ function sessionText(options: SessionOptions, context: SessionContext): string {
   return textOf(context.header, context.cells.list(), { save, redact: options.realm.redact });
 }
 
-/** The recovery copy (07 §7): kept by the autosave's hook, taken back at open; `opened` once that is done. */
+/** The recovery copy: kept by the autosave's hook, taken back at open; `opened` once that is done. */
 function recoveryParts(
   options: SessionOptions,
   context: SessionContext,
@@ -275,7 +275,7 @@ export function createSession(options: SessionOptions): Session {
   const runs = createRuns(context, realm);
   const query = queryParts(options, context);
   const debug = debuggerOf(options, context);
-  // the merge of another program's edits into the session (07 §5), unless files.mergeExternalChanges is off: run by
+  // the merge of another program's edits into the session, unless files.mergeExternalChanges is off: run by
   // the watch on the file, and by a write that finds the file changed
   const state = externalState();
   const merge = () => reconcileExternal(context, state, (cell) => void runs.dropRuns(cell));

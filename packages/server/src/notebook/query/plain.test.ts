@@ -1,4 +1,4 @@
-// The rows SQL mode loads (11-query §3) follow output-view's plain rules (model/plain.test.ts holds the same cases), so
+// The rows SQL mode loads follow output-view's plain rules (model/plain.test.ts holds the same cases), so
 // `t` is the same table on the page and on the daemon.
 import { describe, expect, it } from "vitest";
 

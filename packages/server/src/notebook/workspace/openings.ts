@@ -1,4 +1,4 @@
-// The files behind notebook.open and notebook.create (03-api §4.2, 07-file-format §2, §4): a session over a file's text
+// The files behind notebook.open and notebook.create: a session over a file's text
 // (announced with notebook.opened), an empty notebook written only where none exists and removed again when its session
 // cannot start, and NOTEBOOK_NOT_FOUND for a ref no session holds ("is not open" when its file exists).
 import { mkdir, rm, stat, writeFile } from "node:fs/promises";
@@ -37,9 +37,9 @@ export type NotebooksOptions = {
   readonly debugAdapter: Adapter;
   /** Announces the workspace's notebook list after a command changed it (notebooks.changed); never rejects. */
   readonly listChanged: () => Promise<void>;
-  /** Where the notebooks' recovery copies live (07 §7). */
+  /** Where the notebooks' recovery copies live. */
   readonly recoveryDir?: string;
-  /** How often each open notebook's file is checked for a move (moves.ts, 07 §5) and stat'ed for an external edit
+  /** How often each open notebook's file is checked for a move (moves.ts) and stat'ed for an external edit
    * (watch.ts); 2 s by default, 0 for never. */
   readonly moveCheckMs?: number;
   /** Follows a session's file that left its path (set by createNotebooks for the sessions it opens). */

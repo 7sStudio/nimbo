@@ -1,4 +1,4 @@
-// A kernel that cannot start (03-api §4.2, §4.4; 04-kernel §2): kernel.nodePath naming no Node makes the start fail, so
+// A kernel that cannot start: kernel.nodePath naming no Node makes the start fail, so
 // kernel.status is dead and the run ends error with the start's error; once the setting names a Node again, the next
 // run starts a fresh kernel; a close while the kernel still starts is logged at info, an expected end of that start,
 // and answers once that start ended, even when it came before the fork (the Node check held at a gate); a restart

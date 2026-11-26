@@ -1,4 +1,4 @@
-// cell.outputValue's slice (03-api §4.3): children from offset up to limit, each within the byte budget and cut with
+// cell.outputValue's slice: children from offset up to limit, each within the byte budget and cut with
 // core's truncated marker where it does not fit; a `__proto__` key stays a key.
 import { truncatedMarker } from "@jsnb/core";
 import { describe, expect, it } from "vitest";

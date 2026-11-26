@@ -1,4 +1,4 @@
-// The notebook commands of 03-api §4.2 through the daemon: create and open (once), the errors of a closed, missing or
+// The notebook commands through the daemon: create and open (once), the errors of a closed, missing or
 // escaping notebook, close and the seq that keeps counting after a re-open, a reload of a file that is gone.
 import { readFile, rm, stat } from "node:fs/promises";
 

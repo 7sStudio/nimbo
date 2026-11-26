@@ -1,4 +1,4 @@
-// `POST /rpc` of 03-api §7.3: one JSON-RPC call per request, `Authorization: Bearer <token>` (401 without it), the
+// `POST /rpc`: one JSON-RPC call per request, `Authorization: Bearer <token>` (401 without it), the
 // connection declared by `X-Jsnb-Client` / `X-Jsnb-Agent`; the answer is a JSON-RPC body with status 200. A
 // notification (no id) is carried out and answered 204 with no body, its failure logged (JSON-RPC 2.0 §4.1).
 import type { IncomingMessage, ServerResponse } from "node:http";

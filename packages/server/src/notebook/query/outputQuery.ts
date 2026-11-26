@@ -1,4 +1,4 @@
-// cell.outputQuery (03-api §4.3, 11-query): a query against the full value of one `value` output (retained, or the
+// cell.outputQuery: a query against the full value of one `value` output (retained, or the
 // output's json when it was never cut) in one of four modes: Filter chips compiled to JSONPath and JSONPath select
 // paths (answered with the selected nodes too, each capped like cell.outputValue's children), jq transforms (its
 // outputs capped the same way), SQL runs on the value's plain rows as table `t`. JSONPath and jq run on the wire
