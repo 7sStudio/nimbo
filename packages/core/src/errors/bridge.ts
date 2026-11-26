@@ -1,4 +1,4 @@
-// The bridge error catalogue of 05-bridge §7: what a client cell sees when a name or a value cannot cross.
+// The bridge error catalogue: what a client cell sees when a name or a value cannot cross.
 import type { CellId } from "../model/ids.js";
 import { JsnbError } from "./jsnbError.js";
 
@@ -12,7 +12,7 @@ const seconds = (ms: number): string => `${String(ms / 1000)}s`;
 
 /** `cell` is the defining cell's id; `index` its 1-based position, the way the catalogue names it. */
 type Named = { readonly name: string; readonly cell: CellId; readonly index: number };
-/** A name only the kernel still holds as an export: the server cell that exported it was deleted or edited (05 §5). */
+/** A name only the kernel still holds as an export: the server cell that exported it was deleted or edited. */
 type Gone = { readonly name: string };
 const notExportedMessage = (data: Named | Gone): string =>
   "index" in data
@@ -43,7 +43,7 @@ export class DefinedInClient extends JsnbError {
 }
 
 type Typed = { readonly name: string; readonly type: string };
-/** Bytes are plain data: one over `bridge.maxBytesPerValue` (`limit`) is refused for its size alone (05 §2). */
+/** Bytes are plain data: one over `bridge.maxBytesPerValue` (`limit`) is refused for its size alone. */
 type Sized = { readonly bytes: number; readonly limit: number };
 type Refused = Typed | (Typed & Sized);
 
@@ -53,7 +53,7 @@ const isSized = (data: Refused): data is Typed & Sized => "bytes" in data;
 const oversized = ({ type, bytes, limit }: Typed & Sized): string =>
   `${article(type)} ${type} of ${String(bytes)} bytes, more than bridge.maxBytesPerValue (${String(limit)} bytes) lets cross`;
 
-/** `type` is the value's class name, or `class` for an exported class itself (05 §2: refused, not shipped). */
+/** `type` is the value's class name, or `class` for an exported class itself (refused, not shipped). */
 const notTransferableMessage = (data: Refused): string => {
   if (isSized(data))
     return `${data.name} is ${oversized(data)}. Raise the setting, or export a function that returns part of it.`;
@@ -114,7 +114,7 @@ const eventNotSerializableMessage = (data: Emitted | (Emitted & Sized)): string 
   return `${which} is ${article(data.type)} ${data.type} and cannot be sent to the browser. Emit plain data.`;
 };
 
-/** A server `emit(name, data)` whose data is not plain data, or is too large (05-bridge §6). */
+/** A server `emit(name, data)` whose data is not plain data, or is too large. */
 export class EventNotSerializable extends JsnbError {
   declare readonly data: Emitted | (Emitted & Sized);
   constructor(data: Emitted | (Emitted & Sized), options: Cause = {}) {
@@ -146,7 +146,7 @@ const exportNotRunMessage = ({ name, index }: Named): string =>
   `${name} is exported by server cell ${String(index)}, but the kernel does not have that export yet. Run server cell ${String(index)} to make it.`;
 
 /** A client cell uses a name a server cell's source exports and the kernel does not hold: the cell has not run since the
- * kernel started, it ran before the export was written, or its run ended before reaching it (05-bridge §3, §7). */
+ * kernel started, it ran before the export was written, or its run ended before reaching it. */
 export class ExportNotRun extends JsnbError {
   declare readonly data: Named;
   constructor(data: Named, options: Cause = {}) {

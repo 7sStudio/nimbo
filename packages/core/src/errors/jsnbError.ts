@@ -1,4 +1,4 @@
-// JsnbError, the one base class of 08-code-standards §5, and its conversion to the ErrorInfo of 04-kernel §5.3.
+// JsnbError, the one base class, and its conversion to the ErrorInfo.
 import type { ErrorInfo, Frame } from "../model/output.js";
 
 export type JsnbErrorOptions = {

@@ -1,4 +1,4 @@
-// The keybindings commands of 03-api §4.11: the bindings in effect, set a command's keys in the user's or the
+// The keybindings commands: the bindings in effect, set a command's keys in the user's or the
 // workspace's keybindings.json, reset them, and the files as text for the page's Keyboard Shortcuts (JSON).
 import { z } from "zod";
 

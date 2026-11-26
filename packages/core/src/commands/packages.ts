@@ -1,4 +1,4 @@
-// The packages commands of 03-api §4.6: list, add, remove and cancel.
+// The packages commands: list, add, remove and cancel.
 import { z } from "zod";
 
 import { defineCommand } from "./define.js";

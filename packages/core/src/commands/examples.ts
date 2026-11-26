@@ -1,4 +1,4 @@
-// The examples commands of 03-api §4.11: the example notebooks shipped with the app, listed and copied into the
+// The examples commands: the example notebooks shipped with the app, listed and copied into the
 // workspace (Home's Examples). The shipped files are only ever read.
 import { z } from "zod";
 

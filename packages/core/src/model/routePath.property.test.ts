@@ -1,4 +1,4 @@
-// The route form's properties (04-kernel §8): routePath is idempotent, and on a ref's segments it is the encoding
+// The route form's properties: routePath is idempotent, and on a ref's segments it is the encoding
 // notebookName gives them, so the daemon finds a notebook by the same form its route URLs print.
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";

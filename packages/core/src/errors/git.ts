@@ -1,4 +1,4 @@
-// The Source Control commands' own failure of 03-api §7.4: git refused or failed, or there is no
+// The Source Control commands' own failure: git refused or failed, or there is no
 // repository to act on. Its message is git's own decisive line, which says what to do (a hook's output, "nothing to
 // commit", an identity to set), with credentials in URLs redacted; `reason` names the cases a caller acts on.
 import { ApiError } from "./api.js";

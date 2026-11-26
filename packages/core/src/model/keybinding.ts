@@ -1,4 +1,4 @@
-// The wire shape of keybindings (03-api §4.11, 07-file-format §6): a rule as keybindings.json holds it, VS Code's
+// The wire shape of keybindings: a rule as keybindings.json holds it, VS Code's
 // format (`{ "key": "cmd+k cmd+s", "command": "ui.shortcuts.open", "when": "notebook" }`, a command starting with `-`
 // removing an earlier binding), and one binding in effect with the file it comes from.
 import { z } from "zod";

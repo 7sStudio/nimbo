@@ -1,4 +1,4 @@
-// Selection of 03-api §4.2: which cells `notebook.run` runs.
+// Selection: which cells `notebook.run` runs.
 import { z } from "zod";
 
 import { CellId } from "./ids.js";

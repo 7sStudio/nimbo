@@ -1,4 +1,4 @@
-// The kernel commands of 03-api §4.4 (the server realm).
+// The kernel commands (the server realm).
 import { z } from "zod";
 
 import { Binding, Route } from "../model/binding.js";

@@ -1,4 +1,4 @@
-// Tests NotebookState, KernelStatus and RealmStatus of 03-api §4.4, §4.5 and §5.
+// Tests NotebookState, KernelStatus and RealmStatus.
 import { describe, expect, it } from "vitest";
 
 import { KernelStatus, NotebookState, RealmStatus } from "./notebook.js";
@@ -24,7 +24,7 @@ describe("NotebookState", () => {
 });
 
 describe("KernelStatus", () => {
-  it("includes the paused state of 04-kernel §9 and rejects others", () => {
+  it("includes the paused state and rejects others", () => {
     expect(
       KernelStatus.safeParse({
         state: "paused",

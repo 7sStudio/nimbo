@@ -1,4 +1,4 @@
-// The wire form of core's RunComparison (analysis/compareRuns.ts), cell.compare's output (03-api §4.3).
+// The wire form of core's RunComparison (analysis/compareRuns.ts), cell.compare's output.
 import { z } from "zod";
 
 import { ExecStatus } from "./execution.js";

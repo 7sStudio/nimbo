@@ -1,4 +1,4 @@
-// Tests the registry against 03-api §4: every command present, names, uniqueness, tags and defaults.
+// Tests the registry: every command present, names, uniqueness, tags and defaults.
 import { describe, expect, it } from "vitest";
 
 import { cellRun } from "./cell.js";
@@ -12,7 +12,7 @@ const tagged = (
 ) => commands.filter((c) => c.tags[tag]).map((c) => c.name);
 
 describe("commands", () => {
-  it("has every command of 03-api §4 in document order", () => {
+  it("has every command in registry order", () => {
     expect(commandNames).toEqual(expected);
     expect(new Set(commandNames).size).toBe(expected.length);
   });
@@ -39,7 +39,7 @@ describe("commands", () => {
 const debugReads = new Set(["debug.state", "debug.stack", "debug.scope", "debug.variables"]);
 const debugMutations = expected.filter((n) => n.startsWith("debug.") && !debugReads.has(n));
 
-/** The Source Control writes, in registry order (03-api §4.15). */
+/** The Source Control writes, in registry order. */
 const gitMutations = [
   "git.stage",
   "git.unstage",
@@ -68,7 +68,7 @@ const gitDestructive = ["git.discard", "git.abort", "git.stashDrop"];
 
 const gitStreaming = ["git.fetch", "git.pull", "git.push", "git.publish", "git.sync"];
 
-it("the tags mark the mutating commands as 03-api says, the debug.* that change state included", () => {
+it("the tags mark the mutating commands, the debug.* that change state included", () => {
   const base = [
     "notebook.create",
     "notebook.open",
@@ -101,7 +101,7 @@ it("the tags mark the mutating commands as 03-api says, the debug.* that change 
   expect(tagged("mutating")).toEqual([...base, ...cells, ...rest]);
 });
 
-it("the tags mark destructive, internal, streaming, idempotent and planned commands as 03-api says", () => {
+it("the tags mark destructive, internal, streaming, idempotent and planned commands", () => {
   const workspace = ["workspace.stop", "workspace.open"];
   const destructive = [...workspace, "notebook.close", "notebook.delete", "cell.delete"];
   const restarts = ["kernel.restart", "realm.restart"];
@@ -189,7 +189,7 @@ describe("the defaults", () => {
 });
 
 describe("the input schemas", () => {
-  it("reject what 03-api rejects", () => {
+  it("reject what the API rejects", () => {
     expect(
       commandByName("cell.update")?.input.safeParse({
         notebook: "d",

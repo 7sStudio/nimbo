@@ -1,4 +1,4 @@
-// Chip of 11-query §2 and §4: one filter-mode clause of the query bar, compiled to JSONPath by query-json.
+// Chip: one filter-mode clause of the query bar, compiled to JSONPath by query-json.
 import { z } from "zod";
 
 /** The ten operators (added `startsWith`, which the bar and query-json already had). */

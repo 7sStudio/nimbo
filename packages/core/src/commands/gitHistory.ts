@@ -1,4 +1,4 @@
-// The history of Source Control (03-api §4.15): the log of a branch or of one file, paged, and one commit's changed
+// The history of Source Control: the log of a branch or of one file, paged, and one commit's changed
 // files. A commit's notebook diff is git.diff with commit (against its parent) or base (against the working copy).
 import { z } from "zod";
 

@@ -1,5 +1,5 @@
 // A short hash of a cell's text (cyrb53, 53 bits as 14 hex digits): what an edit names as the text it was made on
-// (cell.update's `base`, 07-file-format §5), the same in the daemon and in the page, synchronous and without crypto.
+// (cell.update's `base`), the same in the daemon and in the page, synchronous and without crypto.
 export function textHash(text: string): string {
   let h1 = 0xdeadbeef;
   let h2 = 0x41c6ce57;

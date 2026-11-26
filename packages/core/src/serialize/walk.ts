@@ -101,7 +101,7 @@ function fit(value: string, budget: number): string {
 }
 
 /** A string (value, key or error message) charged to the byte budget in JSON-escaped UTF-8 bytes; one that
- * does not fit is cut to what is left and ends the walk, so the form never exceeds `maxBytes` (04-kernel §5.4). */
+ * does not fit is cut to what is left and ends the walk, so the form never exceeds `maxBytes`. */
 const text = (value: string, state: State): string => {
   const redacted = state.options.redact(value);
   const size = jsonBytes(redacted);

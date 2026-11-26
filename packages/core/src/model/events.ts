@@ -1,4 +1,4 @@
-// The events of 03-api §6 as one envelope union, so `type` and `data` stay paired per event.
+// The events as one envelope union, so `type` and `data` stay paired per event.
 import { z } from "zod";
 
 import { Route } from "./binding.js";
@@ -16,7 +16,7 @@ import { NotebookList } from "./workspace.js";
 const path = z.object({ path: z.string() }).readonly();
 const names = z.array(z.string()).readonly();
 
-/** Every event type of 03-api §6, in the order of its table. */
+/** Every event type. */
 export const eventTypes = [
   "notebook.opened",
   "notebook.closed",
@@ -61,7 +61,7 @@ const packageAction = z.enum(["add", "remove"]);
 export const eventData = {
   "notebook.opened": path,
   "notebook.closed": path,
-  /** The open notebook's file moved (a rename outside nimbo, or notebook.rename): `path` was its ref, `to` is (07 §5). */
+  /** The open notebook's file moved (a rename outside nimbo, or notebook.rename): `path` was its ref, `to` is. */
   "notebook.moved": z.object({ path: z.string(), to: z.string() }).readonly(),
   "notebook.saved": z.object({ savedAt: z.string() }).readonly(),
   "notebook.saveFailed": z
@@ -71,14 +71,14 @@ export const eventData = {
     })
     .readonly(),
   /** The file changed on disk since the session's last write: `cells` are those both sides changed (none when the
-   * conflict was found at a save, 07 §5). */
+   * conflict was found at a save). */
   "notebook.conflict": z
     .object({ path: z.string(), cells: z.array(CellId).readonly().optional() })
     .readonly(),
-  /** An external edit of the file was merged into the session (07 §5): `merged` with the cells it changed, added or
+  /** An external edit of the file was merged into the session: `merged` with the cells it changed, added or
    * removed and whether the session's unsaved edits stay on top (`kept`, a save follows); `conflict` when the same
    * cells changed on both sides (notebook.conflict follows); `unreadable` when the file did not parse (`error`). */
-  /** The conflict is over: resolved by the user, or ended by itself when the file stopped differing (07 §5). */
+  /** The conflict is over: resolved by the user, or ended by itself when the file stopped differing. */
   "notebook.conflictEnded": path,
   "notebook.reconciled": z
     .object({

@@ -1,4 +1,4 @@
-// The daemon's discovery file of 03-api §7.1, `<workspace>/.jsnb/server.json`: `{ pid, port, token, startedAt,
+// The daemon's discovery file, `<workspace>/.jsnb/server.json`: `{ pid, port, token, startedAt,
 // version, root }`, written by the server and read by every client that finds a daemon (the CLI, the MCP server).
 import { z } from "zod";
 

@@ -1,4 +1,4 @@
-// The branches of Source Control (03-api §4.15): list, create, switch, rename and delete, as VS Code's branch picker
+// The branches of Source Control: list, create, switch, rename and delete, as VS Code's branch picker
 // and JetBrains' Branches popup do them. A name is checked as git check-ref-format --branch does, and never starts
 // with `-`. A switch merges each file it rewrites into its open notebook by cell, so no unsaved edit is lost.
 import { z } from "zod";

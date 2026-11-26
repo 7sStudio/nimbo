@@ -1,4 +1,4 @@
-// The errors a cell's built-ins raise in either realm (04-kernel §7): a mistake the cell can make with them.
+// The errors a cell's built-ins raise in either realm: a mistake the cell can make with them.
 import { JsnbError } from "./jsnbError.js";
 
 type Typed = { readonly type: string };
@@ -16,7 +16,7 @@ const spoken = (type: string): string =>
 const invalidDisposerMessage = ({ type }: Typed): string =>
   `dispose() takes a function, not ${spoken(type)}. Register a cleanup such as dispose(() => server.close()).`;
 
-/** `dispose(x)` with `x` not a function (04-kernel §7), in the server and the client realm alike. */
+/** `dispose(x)` with `x` not a function, in the server and the client realm alike. */
 export class InvalidDisposer extends JsnbError {
   declare readonly data: Typed;
   constructor(data: Typed, options: { readonly cause?: unknown } = {}) {

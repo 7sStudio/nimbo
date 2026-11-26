@@ -1,4 +1,4 @@
-// The settings commands of 03-api §4.10; the keys come from the settings schema.
+// The settings commands; the keys come from the settings schema.
 import { z } from "zod";
 
 import { resolvedValueSchema } from "../model/settings.js";

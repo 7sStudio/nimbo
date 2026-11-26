@@ -1,4 +1,4 @@
-// Tests the API error catalogue of 03-api §7.4: codes, names and message snapshots.
+// Tests the API error catalogue: codes, names and message snapshots.
 import { describe, expect, it } from "vitest";
 
 import {
@@ -66,7 +66,7 @@ describe("the API errors", () => {
     );
   });
 
-  it("uses the exact REALM_NOT_ATTACHED message of 05-bridge §6", () => {
+  it("uses the exact REALM_NOT_ATTACHED message", () => {
     expect(new RealmNotAttached({ notebook: "demo.jsnb" }).message).toBe(
       "No notebook page is open for demo.jsnb; open it in the browser to run client cells, or turn on the setting realm.headless to run them in a headless browser.",
     );

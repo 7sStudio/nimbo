@@ -1,4 +1,4 @@
-// The feedback commands of 03-api §4.12: the notes the page's feedback mode left on the running app, kept
+// The feedback commands: the notes the page's feedback mode left on the running app, kept
 // in the workspace's `.jsnb/feedback/`, read and resolved by an agent or a script the way the page's Show Feedback list
 // does (feedback.jsonl holds every detail; FEEDBACK.md is the same list as Markdown).
 import { z } from "zod";

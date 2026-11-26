@@ -1,4 +1,4 @@
-// Cell, CellMeta and EditInfo of 03-api §5: a cell as the API returns it, with its per-cell preferences.
+// Cell, CellMeta and EditInfo: a cell as the API returns it, with its per-cell preferences.
 import { z } from "zod";
 
 import { ExecStatus, ExecutionSummary } from "./execution.js";
@@ -13,10 +13,10 @@ export const LineRange = z
   .readonly();
 export type LineRange = z.infer<typeof LineRange>;
 
-/** What the file keeps of agent edits no one reviewed yet (07-file-format §2): the code before the first of them. */
+/** What the file keeps of agent edits no one reviewed yet: the code before the first of them. */
 const storedReviewShape = { previousSource: z.string(), previousType: CellType };
 
-/** Agent edits no one reviewed yet (03-api §5): the code before the first of them, and the lines of the source now that
+/** Agent edits no one reviewed yet: the code before the first of them, and the lines of the source now that
  * differ from it (derived, never stored). */
 export const EditReview = z
   .object({ ...storedReviewShape, lines: z.array(LineRange).readonly() })
@@ -45,7 +45,7 @@ export type OutputView = z.infer<typeof OutputView>;
 export const QueryMode = z.enum(["filter", "jsonpath", "jq", "sql"]);
 export type QueryMode = z.infer<typeof QueryMode>;
 
-/** The meta keys in the order 07-file-format §2 writes them. */
+/** The meta keys in the order the file writes them. */
 export const cellMetaKeys = [
   "title",
   "showBindings",
@@ -60,7 +60,7 @@ export const cellMetaKeys = [
   "lastEdit",
 ] as const;
 
-/** The keys a client may set through cell.update (03-api §4.3), each required here; `lastEdit` is the server's. */
+/** The keys a client may set through cell.update, each required here; `lastEdit` is the server's. */
 export const editableMetaShape = {
   /** The name the user gave the cell (double click on its name, cell.update); the header shows it before any it derives. */
   title: z.string().max(200),
@@ -84,7 +84,7 @@ export const editableMetaShape = {
       order: z.array(z.string()).readonly().optional(),
     })
     .readonly(),
-  /** Never run by execution.autoRunDependents: it runs only when asked, and its dependents wait for it (04 §4.1). */
+  /** Never run by execution.autoRunDependents: it runs only when asked, and its dependents wait for it. */
   manual: z.boolean(),
 };
 

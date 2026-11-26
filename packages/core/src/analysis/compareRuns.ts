@@ -1,4 +1,4 @@
-// Compare with previous run (03-api §4.3 cell.compare): what changed between two runs of a cell, read
+// Compare with previous run (cell.compare): what changed between two runs of a cell, read
 // from their outputs. The last value (a value output, or the JSON of a display.json or display.table) is compared as its
 // wire form, node by node: added, removed and changed paths in JSONPath (`$.items[2].price`), arrays by index, a marker
 // object (`{ "$type": … }`, a class instance's fields aside) as one leaf. What the run printed is compared as lines.

@@ -1,4 +1,4 @@
-// Source text as the file stores it: one array element per line (07-file-format §2), split and joined on "\n".
+// Source text as the file stores it: one array element per line, split and joined on "\n".
 
 /** `""` is the empty cell `[]`; otherwise one element per line. A `\r` stays inside its line.
  * `[""]` (one empty line) and `[]` both load as `""`, so both write back as `[]`. */

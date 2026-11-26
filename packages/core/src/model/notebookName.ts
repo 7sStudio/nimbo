@@ -1,4 +1,4 @@
-// A notebook's name in the daemon's URLs (04-kernel §2, 02-architecture §7): its ref without `.jsnb`, each `/`-separated
+// A notebook's name in the daemon's URLs: its ref without `.jsnb`, each `/`-separated
 // segment URI-encoded, under `/n/<name>/` for its routes and `/ui/<name>` for its page (`sub dir/demo.jsnb` → `sub%20dir/demo`).
 // The page's path writes a segment named `out` as `%6Fut`, so a notebook inside a folder named out never reads as
 // the output tab `/ui/<name>/out/<execution>/<index>` of another; browsers keep the escape as written.

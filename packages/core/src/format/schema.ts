@@ -1,18 +1,18 @@
-// The NotebookFile schema of 07-file-format §2 (what is on disk) and NotebookDocument (what is in memory).
+// The NotebookFile schema (what is on disk) and NotebookDocument (what is in memory).
 import { z } from "zod";
 
 import { CellType, fileCellMetaShape } from "../model/cell.js";
 import { CellId } from "../model/ids.js";
 import { ErrorInfo, Output } from "../model/output.js";
 
-/** The format version this build writes and the newest it reads (07-file-format §4). */
+/** The format version this build writes and the newest it reads. */
 export const currentVersion = 1;
 
 const sourceLine = z.string().refine((line) => !line.includes("\n"), {
   message: "a source line must not contain a newline",
 });
 
-/** Cell meta as stored: the keys of 03-api §5 (lastEdit's review without its derived lines), unknown keys kept. */
+/** Cell meta as stored: the keys (lastEdit's review without its derived lines), unknown keys kept. */
 export const FileCellMeta = z.looseObject(fileCellMetaShape);
 export type FileCellMeta = z.infer<typeof FileCellMeta>;
 
@@ -24,7 +24,7 @@ export const FileCell = z.looseObject({
 });
 export type FileCell = z.infer<typeof FileCell>;
 
-/** A cell's last finished run as the file saves it (07-file-format §2, `outputs`): no execution id, no requester,
+/** A cell's last finished run as the file saves it (`outputs`): no execution id, no requester,
  * nothing of the kernel that ran it; its outputs redacted as everything the daemon hands out. */
 export const SavedRun = z
   .object({
@@ -47,7 +47,7 @@ export const NotebookFile = z.looseObject({
 });
 export type NotebookFile = z.infer<typeof NotebookFile>;
 
-/** The keys the format knows at each level; anything else is reported and kept (07-file-format §4). */
+/** The keys the format knows at each level; anything else is reported and kept. */
 export const knownKeys = {
   file: ["version", "jsnb", "cells", "outputs"],
   cell: ["id", "type", "source", "meta"],

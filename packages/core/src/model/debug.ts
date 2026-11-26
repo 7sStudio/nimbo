@@ -1,4 +1,4 @@
-// The debugger's state of 03-api §4.9: breakpoints on server cells' lines, where a paused kernel stopped, a frame's
+// The debugger's state: breakpoints on server cells' lines, where a paused kernel stopped, a frame's
 // scopes and their variables, as the `debug.*` commands and events carry them.
 import { z } from "zod";
 

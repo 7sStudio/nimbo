@@ -1,4 +1,4 @@
-// Tests the bridge protocol shapes of 05-bridge §9.
+// Tests the bridge protocol shapes.
 import { describe, expect, it } from "vitest";
 
 import {

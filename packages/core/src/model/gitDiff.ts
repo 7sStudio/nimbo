@@ -60,7 +60,7 @@ export type DiffRowStatus = z.infer<typeof DiffRowStatus>;
 
 /** One cell of a notebook diff: matched on both sides, added or removed. A cell whose source and type are kept but
  * whose meta (or unknown keys) changed is `modified` with `changes.meta` alone; one whose saved run (the file's
- * `outputs`, 07-file-format §2) changed has `changes.outputs`. */
+ * `outputs`) changed has `changes.outputs`. */
 export const DiffRow = z
   .object({
     status: DiffRowStatus,
