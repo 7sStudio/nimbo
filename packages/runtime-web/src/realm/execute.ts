@@ -5,6 +5,7 @@ import { InvalidParams, RealmNotAttached } from "@jsnb/core";
 import { domSnapshot } from "../display/snapshot.js";
 import type { Run } from "./run.js";
 import { createRun } from "./run.js";
+import { exposeView } from "./debugScope.js";
 import type { RealmState } from "./state.js";
 import { refusalOf } from "./unbound.js";
 import { valueOutput } from "./value.js";
@@ -123,6 +124,7 @@ export async function execute(
     return {};
   }
   const run = prepare(state, params);
+  exposeView(run.view);
   await settle(state, run, await evaluate(run, fn));
   return {};
 }
