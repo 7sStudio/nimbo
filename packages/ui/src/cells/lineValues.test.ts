@@ -1,17 +1,16 @@
-// The values a server cell can show at its lines' ends: the scope's variables by name in a short form, none for
-// functions, classes or imports, none once its text changed or its run failed.
+// The values a server cell can show at its lines' ends: the scope's variables by name in a short form, under the cell
+// that last set each, none for functions, classes or imports, none once its text changed or its run failed.
 import type { Binding } from "@jsnb/core";
 import { describe, expect, it } from "vitest";
 
 import { shortOf, showsValues, valuesOf } from "./lineValues.js";
 
-const binding = (name: string, preview: string, kind: Binding["kind"] = "const"): Binding => ({
-  name,
-  kind,
-  preview,
-  definedBy: "c_aaaaaa",
-  exported: false,
-});
+const binding = (
+  name: string,
+  preview: string,
+  kind: Binding["kind"] = "const",
+  definedBy = "c_aaaaaa",
+): Binding => ({ name, kind, preview, definedBy, exported: false });
 
 describe("shortOf", () => {
   it("keeps a short preview, and gives a long one its shape", () => {
@@ -52,10 +51,17 @@ describe("valuesOf", () => {
       binding("g", "[AsyncFunction: g]"),
       binding("K", "[class K extends A]"),
     ]);
-    expect([...values.values()]).toEqual([
+    expect([...(values.get("c_aaaaaa")?.values() ?? [])]).toEqual([
       { name: "total", text: "42", full: "42" },
       { name: "n", text: "1", full: "1" },
     ]);
+  });
+
+  it("puts each value under the cell that last set it, never another cell that declared or used it", () => {
+    const values = valuesOf([binding("count", "6", "let", "c_bbbbbb"), binding("x", "1")]);
+    expect([...values.keys()]).toEqual(["c_bbbbbb", "c_aaaaaa"]);
+    expect(values.get("c_bbbbbb")?.get("count")).toEqual({ name: "count", text: "6", full: "6" });
+    expect(values.get("c_aaaaaa")?.has("count")).toBe(false);
   });
 });
 

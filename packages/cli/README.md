@@ -131,7 +131,7 @@ SIGTERM and SIGHUP (a closed terminal) on.
 
 The shortcuts' `--json` documents: `open` `{ path, created, started, browser, url? }` (the URL only when it was printed),
 `stop` `{ stopped, workspace }`, `status` `{ workspace, notebooks: [{ path, open, kernel?, realm? }] }`, `ls`
-`{ notebook, cells: [{ id, type, status, stale, editedBy, agent, firstLine }] }`, `run` of cells `{ executions }` (of a
+`{ notebook, cells: [{ id, type, status, stale, staleWhy, editedBy, agent, title, firstLine }] }`, `run` of cells `{ executions }` (of a
 selection, `notebook.run`'s output); the others print their command's output verbatim.
 
 `nimbo outputs`: with no flag it prints every output of the last run. A query flag, `--format`, `--index` or `--full`

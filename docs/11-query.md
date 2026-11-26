@@ -65,6 +65,7 @@ Every method rejects with `QueryError { message, position, data.reason }`, `reas
 
 Rules:
 - **Loading**: only when SQL is picked; a "Load the SQL engine" line names the download once. Never in the page bundle.
+- **JSON reader**: DuckDB-WASM fetches DuckDB's json extension from extensions.duckdb.org the first time a table is read from rows or a Blob, or an NDJSON export is written; the browser caches it. The engine loads it on its own before that statement, so a fetch that fails (offline, blocked) rejects `load` saying the engine needs the network and could not reach it, the engine keeps running, and the next call fetches it again.
 - **Table `t`**: one table per output, always `t`, plus the binding name as an alias view when the output is a named binding (`SELECT … FROM events`). `schema(t)` feeds the bar's autocomplete (columns, struct fields). A list with no record in it (numbers, strings, arrays) is one column named `value`.
 - **Full value**: the page registers the whole value from `GET /outputs/<execution>/<index>.json` (03-api §7.5), read as an uncut value, never the 256 KB slice.
 - **Row cap**: `query.sqlMaxRows` (default 10,000) with `truncated: true`; the grid shows the cap and offers "download all" (CSV or NDJSON via `COPY`).
@@ -93,7 +94,7 @@ Rules:
 Output-view owns the bar; engines are injected.
 
 - Under the toolbar: segmented **Filter · JSONPath · jq · SQL** (jq and SQL say "loads 1.5 MB / 6 MB on first use" until loaded); a one-line CodeMirror input with per-mode highlighting, ↑/↓ history, `?` for a cheat sheet.
-- Right side: count (`12 nodes`, `12 items`, `6 rows · 41 ms`), Only matches / All (select), **Back to source** (transform; Back to rows for SQL).
+- Right side: count (`12 nodes`, `12 items`, `6 rows · 41 ms`), Only matches / All (select), **Show all** (transform and SQL: the whole value back).
 - Errors inline, position underlined. ↩ runs; Esc closes and restores; ⌘↩ pins to `meta.outputQuery`.
 - A grid's column filter adds a chip, so the bar always shows the whole filter.
 - Agents: `cell.outputQuery { mode, query }` (03-api §4.3), all four modes on the daemon; CLI `nimbo outputs --where|--query|--jq|--sql`.

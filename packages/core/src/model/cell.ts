@@ -118,6 +118,9 @@ export const Cell = z
     meta: CellMeta,
     status: ExecStatus,
     stale: z.boolean(),
+    /** Why a stale cell's result may be out of date: "edited since its last run", or the first name it uses that a cell
+     * it depends on defines ("count changed in cell 2"); absent when the cell is not stale or nothing says why. */
+    staleWhy: z.string().optional(),
     lastExecution: ExecutionSummary.nullable(),
   })
   .readonly();

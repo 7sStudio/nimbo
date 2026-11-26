@@ -57,7 +57,7 @@
       "source": [
         "## 2. Hover and complete",
         "",
-        "- Hover `plants` or `nextWatering` in the cell above: a box shows its type, though both were declared in other cells. Right after the notebook opens, the first hover can take a few seconds while the language service starts.",
+        "- Hover `plants` or `nextWatering` in the cell above: a box shows its type, though both were declared in other cells. Right after the notebook opens, the first hover can take a moment while the language service starts.",
         "- In the cell below, delete `name` after `plants[0].` and press **Ctrl+Space**: the list offers `lastWatered`, `name` and `waterEveryDays`, with the type of the one selected beside it. Pick `waterEveryDays` with **Enter** and run the cell."
       ]
     },

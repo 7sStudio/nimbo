@@ -32,6 +32,9 @@ describe("messages", () => {
     expect(messages.load("Failed to fetch")).toMatchInlineSnapshot(
       `"The SQL engine could not be loaded (Failed to fetch). Check the connection and try again; the next call retries the load."`,
     );
+    expect(messages.network()).toMatchInlineSnapshot(
+      `"The SQL engine needs the network the first time, to fetch DuckDB's JSON reader, and could not reach it. Run the query again once the network is back."`,
+    );
     expect(messages.crashed()).toMatchInlineSnapshot(
       `"The SQL engine stopped unexpectedly. It restarts on the next query and restores the registered tables."`,
     );

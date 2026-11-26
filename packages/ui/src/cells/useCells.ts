@@ -2,6 +2,7 @@
 // each card's own state, derived with computed and never stored, so the components render plain values and their tests
 // build them by hand. The elapsed time of a running cell is redrawn every 100 ms while one runs.
 import type { Cell, CellId } from "@jsnb/core";
+import { staleReason } from "@jsnb/core";
 import { computed } from "vue";
 
 import { elapsedText } from "../app/models.js";
@@ -16,7 +17,7 @@ import type { useUiStore } from "../store/ui.js";
 import type { CardPage } from "./card.js";
 import { useStates } from "./cardStates.js";
 import type { CellModel } from "./models.js";
-import { autoRunOf, editedSince, routesOf, runFact, staleWhy } from "./models.js";
+import { autoRunOf, editedSince, routesOf, runFact } from "./models.js";
 import { aboutOf, nameOf, nameOptionsOf } from "./names.js";
 import type { OutputHost } from "./outputHost.js";
 import { capRem } from "./resultLines.js";
@@ -101,7 +102,10 @@ function useModels(stores: Stores, { numberOf, off }: Numbers) {
         runOff: off() || (cell.type === "client" && !pageAttached.value),
         name: nameOf(cell, entry, store.mirror.routes, nameOptionsOf(stores.settings)),
         about,
-        staleWhy: cell.stale ? staleWhy(entry, store.mirror.graph, numberOf) : null,
+        staleWhy: cell.stale
+          ? (cell.staleWhy ??
+            staleReason(entry, (id) => store.mirror.graph.get(id), false, numberOf))
+          : null,
         editedSince: editedSince(cell),
         routes: routesOf(cell.id, store.mirror.routes),
         run: runFact(cell, last, { ...clock(cell), numberOf }),

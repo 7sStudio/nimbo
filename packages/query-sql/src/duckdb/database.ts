@@ -8,6 +8,7 @@ import { copyPrefix, exportExtension, exportType, statements } from "../sql.ts";
 import { internalName, releaseFile } from "./files.ts";
 import type { Instance } from "./instance.ts";
 import { startInstance } from "./instance.ts";
+import { loadJson } from "./json.ts";
 import { drain, send, withConnection } from "./run.ts";
 import { createTable, dropTable, readSchema } from "./tables.ts";
 
@@ -33,9 +34,10 @@ async function exportRows(
   const file = `${internalName("export")}.${exportExtension(format)}`;
   const copy = { sql: statements.copy(sql, file, format), stop, offset: copyPrefix.length };
   try {
-    await withConnection(instance, (connection) =>
-      send(instance, connection, copy, (batches) => drain(batches, stop)),
-    );
+    await withConnection(instance, async (connection) => {
+      if (format === "ndjson") await loadJson(instance, connection);
+      await send(instance, connection, copy, (batches) => drain(batches, stop));
+    });
     const bytes = await instance.track(() => instance.db.copyFileToBuffer(file));
     // A view on the worker's transferred buffer, copied only when it is not a plain ArrayBuffer.
     const owned =

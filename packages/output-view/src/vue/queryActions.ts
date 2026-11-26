@@ -109,7 +109,7 @@ export async function run(bar: Bar, pin: boolean): Promise<void> {
   bar.source.onPin(pinOf(bar.state.value));
 }
 
-/** Esc and "Back to source": the result goes (and its pin), the query stays; Esc also closes the bar. */
+/** Esc and "Show all": the result goes (and its pin), the query stays; Esc also closes the bar. */
 export function reset(bar: Bar, close: boolean): void {
   bar.controller?.abort();
   const pinned = bar.state.value.pinned;

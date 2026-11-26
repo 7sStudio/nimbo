@@ -1,10 +1,11 @@
-<!-- CellOutputs: a cell's result under its code, one tone down and starting on the code's text edge: one OutputView per output in order, space between them; a route cell's requests under its listening routes (RouteRequests) in place of the disposer route() returns, and the other event outputs grouped into one ActivityList after them; the cap (seven lines, or outputs.maxHeightPx when it is set) unless the cell is fit, its control the page's own under a cell (a footer slot, ResultFooter) and the viewer's Expand in the inspector; the first value output carries the cell's view and pinned query; a client cell's real container slotted into its DOM output's [data-live] slot on the page that holds it, and while its run is in progress into a slot of its own after the outputs. The page's ⌘F, ⌘⇧F and ⌘⇧O reach the first value output as its own keys. -->
+<!-- CellOutputs: a cell's result under its code, one tone down and starting on the code's text edge: one OutputView per output in order (adjacent chunks of one stream as one), space between them; a route cell's requests under its listening routes (RouteRequests) in place of the disposer route() returns, and the other event outputs grouped into one ActivityList after them; the cap (seven lines, or outputs.maxHeightPx when it is set) unless the cell is fit, its control the page's own under a cell (a footer slot, ResultFooter) and the viewer's Expand in the inspector; the first value output carries the cell's view and pinned query; a client cell's real container slotted into its DOM output's [data-live] slot on the page that holds it, and while its run is in progress into a slot of its own after the outputs. The page's ⌘F, ⌘⇧F and ⌘⇧O reach the first value output as its own keys. -->
 <script setup lang="ts">
 import type { MetaPatch } from "./card";
 import type { CellMeta, Output, Route } from "@jsnb/core";
 import type { CopyEvent, JumpTarget, LoadMoreRequest, OutputHeight } from "@jsnb/output-view";
 import { OutputView } from "@jsnb/output-view";
 import type { QueryPin, ValueSlice, ViewOption } from "@jsnb/output-view/model";
+import { mergeStreams } from "@jsnb/output-view/model";
 import { computed, defineAsyncComponent, ref } from "vue";
 
 import type { OutputKeys } from "./card";
@@ -53,11 +54,14 @@ const emit = defineEmits<{
   copyText: [text: string, what: string];
 }>();
 
+/** The outputs shown in order, adjacent chunks of one stream as one block. */
 const shown = computed(() =>
-  props.outputs.flatMap((output, index) =>
-    output.kind === "event" || isRouteDisposer(output, props.source ?? "")
-      ? []
-      : [{ output, index }],
+  mergeStreams(
+    props.outputs.flatMap((output, index) =>
+      output.kind === "event" || isRouteDisposer(output, props.source ?? "")
+        ? []
+        : [{ output, index }],
+    ),
   ),
 );
 const requests = computed(() =>

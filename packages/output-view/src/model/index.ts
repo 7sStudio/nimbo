@@ -146,3 +146,5 @@ export type { Example } from "./examples.js";
 export { examples } from "./examples.js";
 export type { ValueSlice } from "./slices.js";
 export { loadLimit, moreAt, spliceSlice } from "./slices.js";
+export type { ShownOutput } from "./streams.js";
+export { mergeStreams } from "./streams.js";

@@ -52,7 +52,7 @@ export function stateOf(
 }
 
 export function graphOf(context: SessionContext): GraphView {
-  const stale = context.cells.stale();
+  const stale = context.cells.staleNow();
   return {
     cells: context.cells.graph().cells.map((cell) => ({
       id: cell.id,

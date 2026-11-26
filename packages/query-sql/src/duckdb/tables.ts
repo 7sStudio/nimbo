@@ -12,6 +12,7 @@ import { classify } from "../sources.ts";
 import { statements } from "../sql.ts";
 import { internalName, registerSource, releaseFile } from "./files.ts";
 import type { Instance } from "./instance.ts";
+import { loadJson } from "./json.ts";
 import { drain, execute, inTransaction, send, unbounded, withConnection } from "./run.ts";
 
 type Session = { readonly instance: Instance; readonly connection: AsyncDuckDBConnection };
@@ -50,8 +51,10 @@ async function fromSource(
 export function createTable(instance: Instance, spec: TableSpec, stop: Deadline): Promise<void> {
   const source = classify(spec.table, spec.source);
   if (!source.ok) return Promise.reject(source.error);
-  return withConnection(instance, (connection) =>
-    inTransaction(instance, connection, async () => {
+  const json = !(source.value.kind === "arrow" && source.value.native);
+  return withConnection(instance, async (connection) => {
+    if (json) await loadJson(instance, connection);
+    await inTransaction(instance, connection, async () => {
       await fromSource({ instance, connection }, spec.table, source.value, stop);
       for (const view of spec.stale) {
         await execute(instance, connection, statements.dropView(view));
@@ -59,8 +62,8 @@ export function createTable(instance: Instance, spec: TableSpec, stop: Deadline)
       if (spec.alias !== undefined) {
         await execute(instance, connection, statements.alias(spec.alias, spec.table));
       }
-    }),
-  );
+    });
+  });
 }
 
 /** Drops the alias view and the table, when they exist. */

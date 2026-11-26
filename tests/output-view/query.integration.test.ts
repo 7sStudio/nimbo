@@ -88,7 +88,7 @@ describe("the mode each view opens in", () => {
     typeQuery(".[0]");
     pressInQuery("Enter");
     await until(() => {
-      expect(document.body.textContent).toContain("Back to source");
+      expect(document.body.textContent).toContain("Show all");
     });
     // with nothing typed, the bar opens in the view's last mode (with a query typed, in that query's)
     typeQuery("");

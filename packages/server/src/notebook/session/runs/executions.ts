@@ -98,10 +98,15 @@ export function finish(context: SessionContext, execution: ExecutionRecord, endi
 export function addOutput(
   context: SessionContext,
   execution: ExecutionRecord,
-  output: Output,
+  arrived: Output,
   full?: FullValue,
 ): void {
   const index = execution.outputs.length;
+  // an error output comes from a callback: raised while its run went on, or once it had ended
+  const output: Output =
+    arrived.kind === "error"
+      ? { ...arrived, when: terminalStatuses.has(execution.status) ? "after" : "during" }
+      : arrived;
   execution.outputs.push(output);
   if (!isLatest(context, execution)) return;
   context.emit("cell.output", { cell: execution.cell, execution: execution.id, output });

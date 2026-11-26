@@ -1,6 +1,6 @@
-<!-- CellHead: the row every cell block starts with, as Jupyter's and VS Code's notebooks have it: the run control (play; stop while running; a clock while queued), the cell number (in a blue square on a selected cell), where it runs (server, client or markdown with its icon; a click changes the type), its name with a few words about it (CellName: a double click on it edits the title), a spinner with the running time while it runs and nothing otherwise ("auto" before it while execution.autoRunDependents runs it or is to, or started its last run), and its actions (move up, move down, more, and the arrow that folds the cell to this row; a markdown cell has Edit or Render there too). After the name, "Enter switches it to client" on a server cell that failed for a name a client cell defines. A selected cell's name is bold. A right click opens the cell menu. While the page scrolls through an expanded result the row sticks to the top, saying which lines of the result are in view, with Fold result (O) and Next cell (J). -->
+<!-- CellHead: the row every cell block starts with, as Jupyter's and VS Code's notebooks have it: the run control (play; stop while running; a clock while queued), the cell number (in a blue square on a selected cell), where it runs (server, client or markdown with its icon; a click changes the type), its name with a few words about it (CellName: a double click on it edits the title), a spinner with the running time while it runs and nothing otherwise, a clock while it is stale (its tooltip says why) ("auto" before it while execution.autoRunDependents runs it or is to, or started its last run), and its actions (move up, move down, more, and the arrow that folds the cell to this row; a markdown cell has Edit or Render there too). After the name, "Enter switches it to client" on a server cell that failed for a name a client cell defines. A selected cell's name is bold. A right click opens the cell menu. While the page scrolls through an expanded result the row sticks to the top, saying which lines of the result are in view, with Fold result (O) and Next cell (J). -->
 <script setup lang="ts">
-import { Ban, Check, Clock, LoaderCircle, Play, Square, X } from "@lucide/vue";
+import { Ban, Check, Clock, History, LoaderCircle, Play, Square, X } from "@lucide/vue";
 import { computed } from "vue";
 
 import { keysShown } from "../keyboard/keymap";
@@ -87,6 +87,12 @@ const outcome = computed(() => {
     } as const;
   if (run.kind === "notRun") return { tone: "muted", time: "", words: "Not run", at: "" } as const;
   return null;
+});
+/** A stale cell's mark, the clock Run Stale shows: its words say why, while nothing runs it. */
+const stale = computed(() => {
+  const why = props.cell.staleWhy;
+  if (why === null || running.value || props.cell.status === "queued") return null;
+  return why === "" ? "Stale" : `Stale: ${why}`;
 });
 /** The quiet mark of execution.autoRunDependents: what it says, and its tooltip. */
 const auto = computed(() => {
@@ -216,6 +222,15 @@ function fold(event: MouseEvent): void {
       :data-kind="props.cell.run.kind"
       class="ui:flex ui:items-center ui:justify-end ui:gap-1.5 ui:overflow-clip ui:pe-1.5 ui:font-mono ui:text-[0.71875rem] ui:whitespace-nowrap ui:text-hot"
     >
+      <span
+        v-if="stale !== null"
+        data-testid="stale-mark"
+        role="img"
+        :title="stale"
+        :aria-label="stale"
+        class="ui:flex ui:shrink-0 ui:text-warn"
+        ><History class="ui:block-3.25 ui:inline-3.25" aria-hidden="true"
+      /></span>
       <span
         v-if="auto !== null"
         data-testid="auto-run-mark"
