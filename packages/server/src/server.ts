@@ -16,6 +16,7 @@ import { pageEndpoints } from "./endpoints.js";
 import { createServerFile, readServerFile, removeServerFile } from "./files/serverFile.js";
 import { prepareJsnbDir, resolveWorkspace } from "./files/workspaceDir.js";
 import { startHttp } from "./http/server.js";
+import { listExamples, trackTutorial } from "./notebook/workspace/examples.js";
 import { createFeedbackNotes } from "./notebook/workspace/feedbackNotes.js";
 import { createFolders } from "./notebook/workspace/folders.js";
 import { openWorkspace } from "./notebook/workspace/workspace.js";
@@ -111,10 +112,16 @@ export async function startServer(options: ServerOptions): Promise<RunningServer
     });
     const store = createFeedbackStore(jsnb.dir, serverVersion);
     const feedback = createFeedbackNotes(store);
-    const dispatch = createDispatch(
-      createCommandTable({ workspace, bus, folders, feedback, requestStop, sql: duckdbService }),
-      log,
-    );
+    const tutorial = trackTutorial({
+      dir: jsnb.dir,
+      listen: bus.listen,
+      lessons: async () => (await listExamples()).filter((each) => each.kind === "tutorial"),
+      warn: (message, error) => {
+        log.warn({ err: error }, message);
+      },
+    });
+    const services = { workspace, bus, folders, feedback, tutorial, requestStop };
+    const dispatch = createDispatch(createCommandTable({ ...services, sql: duckdbService }), log);
     const { uiDir, routeTimeoutMs, bundleTimeoutMs } = resolved;
     const endpointOptions = { uiDir, routeTimeoutMs, bundleTimeoutMs, log, feedback: store };
     const pages = pageEndpoints(workspace, jsnb, endpointOptions);
@@ -126,7 +133,7 @@ export async function startServer(options: ServerOptions): Promise<RunningServer
       pages,
       log,
     }).catch(async (error: unknown) => {
-      await workspace.close();
+      await Promise.all([workspace.close(), tutorial.close()]);
       throw error;
     });
     listening.port = http.port;
@@ -139,7 +146,7 @@ export async function startServer(options: ServerOptions): Promise<RunningServer
     await folders.rememberOwn();
     const content = { ...own, port, token, version: serverVersion, root };
     if (!(await createServerFile(jsnb.serverFile, content))) {
-      await Promise.all([http.close(), workspace.close()]);
+      await Promise.all([http.close(), workspace.close(), tutorial.close()]);
       const other = await readServerFile(jsnb.serverFile); // the winner's: read, never judged or removed here
       throw new DaemonRunning({ workspace: root, pid: other?.pid ?? 0, port: other?.port ?? 0 });
     }
@@ -153,6 +160,7 @@ export async function startServer(options: ServerOptions): Promise<RunningServer
     const shutdown = async (): Promise<void> => {
       const steps: readonly (readonly [string, () => Promise<void>])[] = [
         ["close the notebooks", () => workspace.close()],
+        ["write the tutorial's progress", () => tutorial.close()],
         ["close the sockets and the listener", () => http.close()],
         ["remove server.json", () => removeServerFile(jsnb.serverFile, own)],
       ];
