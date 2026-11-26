@@ -45,10 +45,11 @@ const breakpointsOf = (debug: Debug, cell: CellId): GutterBreakpoint[] =>
 function pausedLineOf(debug: Debug, cell: CellId): PausedLine {
   const paused = debug.paused;
   if (paused === null) return null;
+  // a frame in code from before its cell's last edit: no line of the text shown is the one it is on
   const frame = debug.frame;
   if (frame !== undefined && frame !== debug.frames[0])
-    return frame.cell === cell ? { line: frame.line, top: false } : null;
-  return paused.cell === cell && paused.line !== undefined
+    return frame.cell === cell && frame.stale !== true ? { line: frame.line, top: false } : null;
+  return paused.cell === cell && paused.line !== undefined && paused.stale !== true
     ? { line: paused.line, top: true }
     : null;
 }
