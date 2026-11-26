@@ -1,20 +1,11 @@
-// The cells' view models: the list item's label, why a cell is stale, whether its text changed since its last run, the
-// routes a cell serves with their requests,
+// The cells' view models: the list item's label, whether its text changed since its last run, the routes a cell
+// serves with their requests,
 // a duration's text and a source's line count. The last run's fact for each status is runFact.test.ts's.
 import type { Route } from "@jsnb/core";
 import { describe, expect, it } from "vitest";
 
-import type { GraphEntry } from "../store/mirror.js";
-import { cellLabel, editedSince, lineCount, routesOf, staleWhy } from "./models.js";
+import { cellLabel, editedSince, lineCount, routesOf } from "./models.js";
 import { durationText } from "./runWords.js";
-
-const entry = (patch: Partial<GraphEntry> = {}): GraphEntry => ({
-  defines: [],
-  uses: [],
-  exports: [],
-  dependsOn: [],
-  ...patch,
-});
 
 describe("cellLabel", () => {
   it("says the number, the type and the state, stale only while nothing runs or failed", () => {
@@ -30,29 +21,6 @@ describe("cellLabel", () => {
     expect(cellLabel({ number: 1, type: "server", status: "queued", stale: true })).toBe(
       "Cell 1, server, queued",
     );
-  });
-});
-
-describe("staleWhy", () => {
-  it("names the first used name an upstream cell defines, with that cell's number", () => {
-    const graph = new Map([
-      ["a", entry({ defines: ["other"] })],
-      ["b", entry({ defines: ["key", "stripe"] })],
-    ]);
-    const mine = entry({ uses: ["stripe"], dependsOn: ["a", "b"] });
-    const numberOf = (id: string) => (id === "b" ? 2 : 1);
-    expect(staleWhy(mine, graph, numberOf)).toBe("stripe changed in cell 2");
-    // an upstream cell the graph does not hold is passed over
-    expect(staleWhy(entry({ uses: ["other"], dependsOn: ["gone", "a"] }), graph, numberOf)).toBe(
-      "other changed in cell 1",
-    );
-  });
-
-  it("gives no reason when the graph names none", () => {
-    const graph = new Map([["a", entry({ defines: ["other"] })]]);
-    expect(staleWhy(undefined, graph, () => 1)).toBe("");
-    expect(staleWhy(entry({ uses: ["x"] }), graph, () => 1)).toBe("");
-    expect(staleWhy(entry({ uses: ["x"], dependsOn: ["a"] }), graph, () => 1)).toBe("");
   });
 });
 

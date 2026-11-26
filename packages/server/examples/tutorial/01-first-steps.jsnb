@@ -104,7 +104,7 @@
       "source": [
         "## 3. Stale cells",
         "",
-        "Change the `0` in `let count = 0;` to `100` and press **Cmd+Enter** to run that cell. The counter cell below it still shows its old number: it read `count` before the change, so its result is now **stale**. The toolbar says so: **Run Stale** appears, with the number of stale cells. Click it: the counter cell runs again and shows `101`.",
+        "Change the `0` in `let count = 0;` to `100`, without running it. A clock appears in that cell's header, and in the counter cell's: their results are now **stale**. The first cell's result came from its old code, and the counter read `count` before the change. Hover a clock to read why. The toolbar says so too: **Run Stale** appears, with the number of stale cells. Click it: both cells run, in order, and the counter shows `101`.",
         "",
         "Faster: **Alt+Shift+Enter** runs a cell, then every cell that depends on it. Change `100` to `5` and press **Alt+Shift+Enter**: both cells run, and the counter shows `6`.",
         "",

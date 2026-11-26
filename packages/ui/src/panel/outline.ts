@@ -5,7 +5,7 @@ import type { Cell, CellId } from "@jsnb/core";
 import { pendingEdit } from "../cells/agentEdit.js";
 import { headingsOf } from "../store/sections.js";
 
-type Outlined = Pick<Cell, "id" | "type" | "source" | "meta" | "status">;
+type Outlined = Pick<Cell, "id" | "type" | "source" | "meta" | "status" | "stale">;
 
 export type OutlineRow = {
   readonly key: string;
@@ -16,12 +16,13 @@ export type OutlineRow = {
   readonly text: string;
 };
 
-/** A cell other than a heading is listed only when it has a title, runs, failed its last run or has an agent edit
- * no one reviewed. */
+/** A cell other than a heading is listed only when it has a title, runs, failed its last run, is stale or has an
+ * agent edit no one reviewed. */
 const notable = (cell: Outlined): boolean =>
   (cell.meta.title?.trim() ?? "") !== "" ||
   cell.status === "running" ||
   cell.status === "error" ||
+  cell.stale ||
   pendingEdit(cell.meta) !== null;
 
 /** The rows of the outline. A markdown cell lists each of its headings, as VS Code does; a notable cell sits under
