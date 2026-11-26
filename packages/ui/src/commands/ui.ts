@@ -202,8 +202,10 @@ export function uiCommands(): readonly Command[] {
     // drafts flush on pagehide (cells/useDrafts.ts); changes not on disk ask first (LeaveDialog, SettingsLeaveDialog)
     ui("ui.home.open", "Go to Home", (args) => {
       if (leaveAsks(args, store)) return;
-      // File > New Notebook: Home opens with its name field asking for the new notebook's name
-      location.assign(`${homePageUrl(location)}${args?.new === true ? "#new" : ""}`);
+      // File > New Notebook: Home opens with its name field asking for the new notebook's name; Help > Tutorial: Home
+      // opens on the Tutorial
+      const hash = args?.new === true ? "#new" : args?.learn === true ? "#learn" : "";
+      location.assign(`${homePageUrl(location)}${hash}`);
     }),
     ui(
       "ui.unpin",

@@ -107,6 +107,7 @@ export const variants: readonly { command: string; args: Args; title: string }[]
   { command: "ui.cells.paste", args: { where: "above" }, title: "Paste Cells Above" },
   { command: "ui.home.view.open", args: { view: "sourceControl" }, title: "View: Source Control" },
   { command: "ui.home.view.open", args: { view: "explorer" }, title: "View: Explorer" },
+  { command: "ui.home.open", args: { learn: true }, title: "Tutorial" },
   ...places.map(([which, title]) => ({ command: "ui.panel.open", args: { which }, title })),
 ];
 
@@ -258,6 +259,8 @@ export const keymapTitles: Readonly<Record<string, string>> = {
   "ui.home.copyPath": "Copy Path",
   "ui.home.example": "New from Example",
   "ui.home.tutorial": "Start Tutorial",
+  "ui.home.tutorial.show": "Tutorial",
+  "ui.home.tutorial.hide": "Hide Tutorial from Home",
   "ui.home.folder": "Show Folder",
   "ui.home.openFolder": "Open Folder…",
   "ui.home.refresh": "Refresh",

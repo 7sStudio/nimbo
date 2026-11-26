@@ -12,7 +12,7 @@ import type { Args, Command } from "./command.js";
 import { stringArg, uiCommand as ui } from "./command.js";
 import { consented } from "./consent.js";
 import type { HomeHost } from "./homeHost.js";
-import { openExample, startTutorial } from "./homeExamples.js";
+import { openExample, startTutorial, tutorialPlace } from "./homeExamples.js";
 import { openFolder } from "./homeFolders.js";
 import { listCommands } from "./homeList.js";
 
@@ -182,6 +182,7 @@ export function homeCommands(host: HomeHost): readonly Command[] {
     openFolder(home, store, host),
     openExample(home, host),
     startTutorial(home, host),
+    ...tutorialPlace(home),
     ...listCommands(home, store),
   ];
 }

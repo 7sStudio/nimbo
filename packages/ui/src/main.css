@@ -146,6 +146,7 @@
   --ease-out: var(--ease-out);
   --animate-enter: jsnb-ui-enter var(--dur) var(--ease-out);
   --animate-spin: jsnb-ui-spin 1s linear infinite;
+  --animate-blink: jsnb-ui-blink 1.1s steps(1) infinite;
 }
 
 /* A button's or a field's font from its context, which the browser's defaults do not give (output-view's twin). */

@@ -38,6 +38,7 @@ const KeybindingsPage = defineAsyncComponent(() => import("./panel/KeybindingsPa
 const InspectorRail = defineAsyncComponent(() => import("./panel/InspectorRail.vue"));
 const DiffPage = defineAsyncComponent(() => import("./diff/DiffPage.vue"));
 const DebugToolbar = defineAsyncComponent(() => import("./app/DebugToolbar.vue"));
+const LessonFooter = defineAsyncComponent(() => import("./app/LessonFooter.vue"));
 /** VS Code's debug toolbar shows while a session runs: here while the kernel is paused, or runs a cell under the
  * debugger. */
 const debugging = computed(() => {
@@ -162,6 +163,10 @@ const pinnedFrom = computed(() => {
               <DebugToolbar />
             </div>
             <CellList />
+            <LessonFooter
+              v-if="notebook.mirror.notebook.path.startsWith('tutorial/')"
+              :path="notebook.mirror.notebook.path"
+            />
           </template>
         </template>
         <template #bottom><BottomPanel /></template>

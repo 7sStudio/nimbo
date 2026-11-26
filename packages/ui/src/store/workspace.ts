@@ -1,6 +1,7 @@
 // The workspace store: workspace.info, the installed packages with the progress of an add or a remove
 // (packages.progress and packages.done, workspace events; remove and cancel since), and the secret names (never values); the info
-// is read again when kernel.nodePath changes, since it says which Node the kernels run on.
+// is read again when kernel.nodePath changes, since it says which Node the kernels run on. A tutorial lesson's page reads
+// the lessons too, and opens the copy of the next one.
 import type { EventEnvelope } from "@jsnb/core";
 import type { SocketClient } from "@jsnb/client";
 import { defineStore } from "pinia";
@@ -8,6 +9,7 @@ import { ref, shallowRef, toRaw } from "vue";
 
 import type { Report } from "./attempt.js";
 import { attempter, usePageReport } from "./attempt.js";
+import type { ShippedExample } from "./homeExamples.js";
 import { errorName } from "./report.js";
 import { useSessionStore } from "./socket.js";
 import { useUiStore } from "./ui.js";
@@ -88,6 +90,8 @@ export const useWorkspaceStore = defineStore("workspace", () => {
   const own: Install[] = [];
   const failure = ref<Failure | null>(null);
   const secrets = ref<readonly string[]>([]);
+  /** The tutorial's lessons, read by a lesson's page (readLessons). */
+  const lessons = shallowRef<readonly ShippedExample[]>([]);
   const client = () => session.session().client;
 
   const readInfo = () => attempt(() => client().workspace.info({}));
@@ -159,6 +163,21 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     refreshPackages,
     refreshSecrets,
     refreshInfo,
+    lessons,
+    /** The tutorial's lessons from examples.list; none when it cannot be read (the page then shows no lesson aids). */
+    readLessons: async () => {
+      const answer = await client()
+        .examples.list({})
+        .catch(() => undefined);
+      lessons.value = answer?.examples.filter((each) => each.kind === "tutorial") ?? [];
+    },
+    /** The workspace's copy of the lesson `name` (tutorial/<lesson>.jsnb), copied first when it is not there; undefined
+     * when the copy failed (a toast). */
+    lessonCopy: async (name: string): Promise<string | undefined> => {
+      const copy = `${name}.jsnb`;
+      if (info.value?.notebooks.some((each) => each.path === copy) === true) return copy;
+      return (await attempt(() => client().examples.copy({ name })))?.path;
+    },
     /** Loads everything and follows the install events; loads the packages and the secrets again after a gap in the
      * workspace stream (an install that ended while the socket was away). */
     start: async () => {

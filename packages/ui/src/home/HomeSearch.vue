@@ -1,4 +1,4 @@
-<!-- HomeSearch: Home's search field, where the cursor starts: what is typed finds notebooks by file name, title, route or export; Up and Down move the selection, Enter opens the selected notebook (creates the typed name after N or when nothing matches), Cmd Enter creates one named as typed (in the folder picked), F2 renames the selected one, Esc clears (Home's ui.escape). It is the list's combobox: the selected row is its active option. After N or New Notebook its placeholder asks for the new name. -->
+<!-- HomeSearch: Home's search field, where the cursor starts: what is typed finds notebooks by file name, title, route or export; Up and Down move the selection, Enter opens the selected notebook (creates the typed name after N or when nothing matches; in an empty workspace with nothing typed, runs the welcome's first action, and Down goes to its lessons), Cmd Enter creates one named as typed (in the folder picked), F2 renames the selected one, Esc clears (Home's ui.escape). It is the list's combobox: the selected row is its active option. After N or New Notebook its placeholder asks for the new name. -->
 <script setup lang="ts">
 import { Search } from "@lucide/vue";
 import { nextTick, onMounted, ref, watch } from "vue";
@@ -11,14 +11,22 @@ const props = defineProps<{
   active: string | undefined;
   /** No list to control: the empty workspace. */
   empty: boolean;
+  /** What Enter runs with nothing typed in an empty workspace: its welcome's first action. */
+  primary?: string | undefined;
 }>();
-const emit = defineEmits<{ command: [id: string, args?: Record<string, unknown>] }>();
+const emit = defineEmits<{
+  command: [id: string, args?: Record<string, unknown>];
+  /** Down in an empty workspace: the welcome's lessons take the focus. */
+  leave: [];
+}>();
 
 const home = useHomeStore();
 const field = ref<HTMLInputElement | null>(null);
 /** Enter's command from the field: the create row's when a name is typed after N or nothing matches (the one option
  * then), else opening the selected notebook. */
 function enterCommand(typed: string): [string, Record<string, unknown>?] | undefined {
+  if (typed === "" && props.empty && !home.naming && props.primary !== undefined)
+    return [props.primary];
   if (typed !== "" && (home.naming || home.selected === null))
     return ["ui.notebook.new", { name: typed }];
   return home.selected === null ? undefined : ["ui.notebook.open"];
@@ -34,6 +42,11 @@ function commandOf(event: KeyboardEvent): [string, Record<string, unknown>?] | u
   return event.key === "F2" && home.selected !== null ? ["ui.notebook.rename"] : undefined;
 }
 function keyed(event: KeyboardEvent): void {
+  if (event.key === "ArrowDown" && props.empty && home.query.trim() === "") {
+    event.preventDefault();
+    emit("leave");
+    return;
+  }
   const command = commandOf(event);
   if (command === undefined) return;
   event.preventDefault();
