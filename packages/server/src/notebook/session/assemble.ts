@@ -17,6 +17,7 @@ import { savesOutputs, textOf } from "./fileForm.js";
 import type { FileHooks } from "./sessionFile.js";
 import { autosaverOf, followingKernelLog, livePlace } from "./sessionFile.js";
 import { createExportsClock } from "./runs/exportsClock.js";
+import { createPauseClock } from "../../kernel/pauses.js";
 import { createRetained } from "./runs/retained.js";
 
 export type SessionOptions = {
@@ -142,8 +143,16 @@ const defaultHooks = (): SessionHooks => ({
   exports: () => undefined,
   kernelEnded: () => undefined,
   beforeServerRun: () => Promise.resolve(),
+  beforeClientRun: () => Promise.resolve(),
   debuggerLines: () => [],
-  debugPause: () => Promise.resolve({ reason: "pause" }),
+  debugPause: () => Promise.resolve({ realm: "server", reason: "pause" }),
+  pageDebug: {
+    clock: createPauseClock(),
+    paused: () => false,
+    held: () => false,
+    release: () => Promise.resolve(),
+    closing: () => undefined,
+  },
   debugResumed: () => Promise.resolve(),
   events: () => undefined,
   disposeClient: () => undefined,

@@ -6,18 +6,22 @@ import type { CellId } from "@jsnb/core";
 import type { DapConnection } from "../../kernel/debug/dap.js";
 import { dap } from "../../kernel/debug/protocol.js";
 import type { BreakpointRecord, Breakpoints } from "./breakpoints.js";
+import type { Dialect } from "./conditions.js";
 import { translated } from "./conditions.js";
 
 export type CellBreakpoints = {
   readonly path: string;
   readonly cell: CellId;
-  /** What js-debug should hold for the cell: none for a client cell (its are `debugger;` statements). */
+  /** The cell runs in this js-debug's realm: its breakpoints are this session's to bind. */
+  readonly owns: boolean;
+  /** What js-debug should hold for the cell: none for a cell of the other realm. */
   readonly breakpoints: readonly BreakpointRecord[];
+  readonly dialect: Dialect;
 };
 
 /** What setBreakpoints sends for `each`; a condition that does not parse leaves its message on the breakpoint. */
-function optionsOf(each: BreakpointRecord) {
-  const { condition, message } = translated(each);
+function optionsOf(each: BreakpointRecord, dialect: Dialect) {
+  const { condition, message } = translated(each, dialect);
   if (message !== undefined) each.message = message;
   return {
     line: each.line,
@@ -69,11 +73,12 @@ export async function sendBreakpoints(
   sent: CellBreakpoints,
   held: Map<string, string>,
 ): Promise<void> {
-  const breakpoints = sent.breakpoints.map(optionsOf);
+  const breakpoints = sent.breakpoints.map((each) => optionsOf(each, sent.dialect));
   const signature = JSON.stringify(breakpoints);
   if (held.get(sent.path) === signature) return;
   const answer = await dap.setBreakpoints(child, { source: { path: sent.path }, breakpoints });
   held.set(sent.path, signature);
+  if (!sent.owns) return;
   for (const each of store.ofCell(sent.cell)) {
     if (sent.breakpoints.includes(each)) continue;
     each.verified = false;

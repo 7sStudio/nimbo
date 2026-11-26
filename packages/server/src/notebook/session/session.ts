@@ -187,17 +187,37 @@ async function moveSession(
   context.log.info({ from, to }, "the notebook's file moved; the session follows it");
 }
 
-/** The notebook's debugger, which a server run waits for and a client cell's compile asks for its lines. */
-function debuggerOf(options: SessionOptions, context: SessionContext): DebugSession {
+/** The notebook's debugger, which a run waits for, a client cell's compile asks for its lines and the headless realm
+ * asks before it closes its page or sends it a request it must answer. */
+function debuggerOf(
+  options: SessionOptions,
+  context: SessionContext,
+  realm: SessionRealm,
+): DebugSession {
   const debug = new DebugSession(context, {
     adapter: options.debugAdapter,
     listen: options.bus.listen,
     redact: options.realm.redact,
+    realm: {
+      page: realm.headlessPage,
+      kind: () => realm.status().kind ?? undefined,
+      headlessOn: () => context.settings()["realm.headless"],
+    },
   });
   context.hooks.beforeServerRun = () => debug.beforeRun();
+  context.hooks.beforeClientRun = (cell) => debug.beforeClientRun(cell);
   context.hooks.debuggerLines = (cell) => debug.clientLines(cell);
   context.hooks.debugPause = () => debug.pauseDetails();
   context.hooks.debugResumed = () => debug.resumed();
+  context.hooks.pageDebug = {
+    clock: debug.pagePauses,
+    paused: () => debug.pagePaused(),
+    held: () => debug.pageDebugged(),
+    release: () => debug.releasePage(),
+    closing: () => {
+      debug.pageClosing();
+    },
+  };
   return debug;
 }
 
@@ -274,7 +294,7 @@ export function createSession(options: SessionOptions): Session {
   const realm = createRealm(context, options.realm);
   const runs = createRuns(context, realm);
   const query = queryParts(options, context);
-  const debug = debuggerOf(options, context);
+  const debug = debuggerOf(options, context, realm);
   // the merge of another program's edits into the session (07 §5), unless files.mergeExternalChanges is off: run by
   // the watch on the file, and by a write that finds the file changed
   const state = externalState();

@@ -193,16 +193,22 @@ async function open(state: State, target: PageTarget): Promise<GuardedPage> {
     const made = await newPage(state);
     own = made.own;
     const holder = own;
-    const guarded = await guardPage(made.page, target, state.options.log, {
-      closed: () => {
-        holder.pages.delete(guarded);
-        release(state, holder);
+    const { log, dir } = state.options;
+    const guarded = await guardPage(
+      made.page,
+      target,
+      { log, dir },
+      {
+        closed: () => {
+          holder.pages.delete(guarded);
+          release(state, holder);
+        },
+        stuck: () => {
+          state.options.log.warn({}, "a headless page did not close; its browser is killed");
+          void finish(state, holder, "a page did not close");
+        },
       },
-      stuck: () => {
-        state.options.log.warn({}, "a headless page did not close; its browser is killed");
-        void finish(state, holder, "a page did not close");
-      },
-    });
+    );
     own.pages.add(guarded);
     own.served = true;
     return guarded;

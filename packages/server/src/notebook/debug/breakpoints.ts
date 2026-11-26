@@ -1,6 +1,6 @@
 // A notebook's breakpoints: by cell and line, each with js-debug's id once sent; lines follow the cell's edits; one
 // breakpoint per line, as in VS Code; a blank or comment line's goes on the next line with code.
-import type { Breakpoint, CellId } from "@jsnb/core";
+import type { Breakpoint, CellId, DebugRealm } from "@jsnb/core";
 
 import { mapLines } from "./lines.js";
 
@@ -24,11 +24,16 @@ export type BreakpointOptions = {
   readonly logMessage?: string | undefined;
 };
 
-const toApi = (record: BreakpointRecord): Breakpoint => ({
+/** A breakpoint's realm, and why nimbo cannot bind it now when it cannot. */
+export type Where = { readonly realm: DebugRealm; readonly reason?: string | undefined };
+
+const toApi = (record: BreakpointRecord, where: Where): Breakpoint => ({
   breakpointId: record.breakpointId,
   cell: record.cell,
   line: record.line,
+  realm: where.realm,
   verified: record.verified,
+  ...(where.reason === undefined ? {} : { reason: where.reason }),
   ...(record.condition === undefined ? {} : { condition: record.condition }),
   ...(record.hitCondition === undefined ? {} : { hitCondition: record.hitCondition }),
   ...(record.logMessage === undefined ? {} : { logMessage: record.logMessage }),
@@ -59,10 +64,10 @@ export class Breakpoints {
   readonly #records: BreakpointRecord[] = [];
   #last = 0;
 
-  list(): Breakpoint[] {
+  list(where: (record: BreakpointRecord) => Where): Breakpoint[] {
     return [...this.#records]
       .sort((a, b) => a.cell.localeCompare(b.cell) || a.line - b.line)
-      .map(toApi);
+      .map((record) => toApi(record, where(record)));
   }
 
   ofCell(cell: CellId): BreakpointRecord[] {
@@ -151,8 +156,9 @@ export class Breakpoints {
     return true;
   }
 
-  unverifyAll(): void {
-    for (const record of this.#records) {
+  /** None of the breakpoints `which` picks is bound any more. */
+  unverify(which: (record: BreakpointRecord) => boolean): void {
+    for (const record of this.#records.filter(which)) {
       record.verified = false;
       delete record.dapId;
     }

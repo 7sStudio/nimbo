@@ -27,12 +27,14 @@ import { runClientCell } from "./clientRun.js";
 import { interruptClientRun } from "./interrupt.js";
 import { applyReport } from "./reports.js";
 import { resetRealm } from "./reset.js";
-import type { Shot } from "../../kernel/headless/page.js";
+import type { GuardedPage, Shot } from "../../kernel/headless/page.js";
 import type { PageSocket, RealmDeps, RealmState } from "./state.js";
 import { createRealmState, realmStatusOf } from "./state.js";
 
 export type SessionRealm = RealmPart & {
   readonly status: () => RealmStatus;
+  /** The headless page, while one holds the realm. */
+  readonly headlessPage: () => GuardedPage | undefined;
   /** The notebook moved: a headless page attached under its old name closes. */
   readonly moved: () => void;
   /** realm.headless was turned off: the headless page closes. */
@@ -175,6 +177,7 @@ export function createRealm(context: SessionContext, deps: RealmDeps): SessionRe
     runs: (execution) => state.running.has(execution),
     interrupt: (execution) => interruptClientRun(context, state, deps, execution),
     status: () => realmStatusOf(state),
+    headlessPage: headless.page,
     events: events.stats,
     // what the page and the realm commands call: attach and detach, reports, bridge calls, snapshots, the close
     attach: (page, kind, options = {}) =>

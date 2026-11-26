@@ -14,7 +14,7 @@ import type { AutoRun } from "./autoRun.js";
 import { createExecution } from "./executions.js";
 import type { Batch, RunQueue } from "./queue.js";
 import { queuedRun } from "./queue.js";
-import { pausableTimer } from "../../../kernel/pauses.js";
+import { eitherPaused, pausableTimer } from "../../../kernel/pauses.js";
 
 export type Waiting = {
   readonly wait: boolean;
@@ -32,17 +32,17 @@ export type Runs = {
   readonly realmReady: () => Promise<void>;
 };
 
-/** How a caller's wait for a run ended: the run settled, the time ran out, or the kernel is paused in the debugger. */
+/** How a caller's wait for a run ended: the run settled, the time ran out, or a realm is paused in the debugger. */
 type Waited = { readonly late: boolean; readonly paused?: DebugPause };
 
-/** Waits for `done` at most `timeoutMs`, and no longer than until the kernel is paused in the debugger: a paused
- * kernel runs nothing until someone resumes it, which the caller may be the one to do. */
+/** Waits for `done` at most `timeoutMs`, and no longer than until a realm (the kernel, the headless page) is paused in
+ * the debugger: a paused realm runs nothing until someone resumes it, which the caller may be the one to do. */
 async function waited(
   context: SessionContext,
   done: Promise<void>,
   timeoutMs: number,
 ): Promise<Waited> {
-  const { pauses } = context.kernel;
+  const pauses = eitherPaused(context.kernel.pauses, context.hooks.pageDebug.clock);
   let timer: { readonly stop: () => void } | undefined;
   let stopListening: (() => void) | undefined;
   const late = new Promise<Waited>((resolve) => {
@@ -64,6 +64,7 @@ async function waited(
   } finally {
     timer?.stop();
     stopListening?.();
+    pauses.stop();
   }
 }
 

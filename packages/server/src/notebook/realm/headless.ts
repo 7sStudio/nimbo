@@ -3,7 +3,8 @@
 // it to attach. A tab always wins: its attach takes the realm from the headless page (attach.ts), which is then closed,
 // and no headless page starts while a tab holds the notebook. The page closes when it detaches (taken over, its socket
 // gone, its browser gone), when the notebook closes or moves, and after realm.headlessIdleMs with no request to it, no
-// report and no bridge call from it, while no client run is in flight.
+// report and no bridge call from it, while no client run is in flight and the debugger does not hold it (paused, or
+// attached for client cells' breakpoints). js-debug leaves it before it closes, so a page paused there can close.
 import { randomBytes, timingSafeEqual } from "node:crypto";
 
 import { RealmNotAttached } from "@jsnb/core";
@@ -80,6 +81,7 @@ function shut(state: State, reason: string): void {
   if (realmId !== undefined) state.detach(realmId, `headless:${reason}`);
   if (page === undefined) return;
   state.context.log.info({ reason }, "the headless page closed");
+  state.context.hooks.pageDebug.closing();
   void page.close();
 }
 
@@ -87,7 +89,7 @@ function touch(state: State): void {
   if (state.page === undefined) return;
   clearTimeout(state.idle);
   state.idle = setTimeout(() => {
-    if (state.realm.running.size > 0) touch(state);
+    if (state.realm.running.size > 0 || state.context.hooks.pageDebug.held()) touch(state);
     else shut(state, "idle");
   }, state.context.settings()["realm.headlessIdleMs"]);
   state.idle.unref();

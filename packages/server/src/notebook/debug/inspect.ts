@@ -1,9 +1,16 @@
-// What a paused kernel shows through js-debug, in the API's terms: frames mapped to cells and lines with the kernel's
-// own frames left out, scopes with the cells' `__scope` record shown as a Notebook scope of plain names, and
-// evaluations that read cell names from that record.
+// What a paused realm shows through js-debug, in the API's terms: frames mapped to cells and lines with the kernel's and
+// the page's own frames left out, scopes with the cells' record shown as a Notebook scope of plain names, and
+// evaluations that read cell names from the realm's scope.
 import { isAbsolute } from "node:path";
 
-import type { CellId, DebugFrame, DebugPause, DebugScope, DebugVariable } from "@jsnb/core";
+import type {
+  CellId,
+  DebugFrame,
+  DebugPause,
+  DebugRealm,
+  DebugScope,
+  DebugVariable,
+} from "@jsnb/core";
 import { InvalidSyntax, isJsnbError } from "@jsnb/core";
 import { ownCodeDirectories } from "@jsnb/kernel-node";
 import { evaluationOf } from "@jsnb/transform";
@@ -11,7 +18,7 @@ import { evaluationOf } from "@jsnb/transform";
 import { dap } from "../../kernel/debug/protocol.js";
 import type { DapConnection } from "../../kernel/debug/dap.js";
 import type { StackFrame, StoppedEvent, Variable } from "../../kernel/debug/protocol.js";
-import { scopeRecord } from "./conditions.js";
+import type { Dialect } from "./conditions.js";
 
 /** The names the transform and the kernel put on the record or a frame that no user wrote. */
 const plumbing = new Set(["__scope", "__import", "__export", "$peek"]);
@@ -56,9 +63,14 @@ function isUserFrame(frame: StackFrame, cellOf: CellOfPath): boolean {
   return isAbsolute(path) && !isKernelFile(path);
 }
 
-/** Where and why the kernel stopped: the innermost user frame, when it is a cell's. */
-export function pauseOf(body: StoppedEvent, top: DebugFrame | undefined): DebugPause {
+/** Where and why the realm stopped: the innermost user frame, when it is a cell's. */
+export function pauseOf(
+  realm: DebugRealm,
+  body: StoppedEvent,
+  top: DebugFrame | undefined,
+): DebugPause {
   return {
+    realm,
     reason: body.reason,
     ...(body.description === undefined ? {} : { description: body.description }),
     ...(top?.cell === undefined ? {} : { cell: top.cell, line: top.line }),
@@ -89,11 +101,12 @@ const variablesOf = async (child: DapConnection, ref: number): Promise<Variable[
 async function notebookScope(
   child: DapConnection,
   frameId: number,
-  notebookRefs: Set<number>,
+  context: { readonly notebookRefs: Set<number>; readonly dialect: Dialect },
 ): Promise<DebugScope | undefined> {
+  const { notebookRefs, dialect } = context;
   try {
     const result = await dap.evaluate(child, {
-      expression: scopeRecord,
+      expression: dialect.record,
       frameId,
       context: "watch",
     });
@@ -132,13 +145,13 @@ async function scopeOf(
 export async function scopesOf(
   child: DapConnection,
   frameId: number,
-  notebookRefs: Set<number>,
+  context: { readonly notebookRefs: Set<number>; readonly dialect: Dialect },
 ): Promise<DebugScope[]> {
   const { scopes } = await dap.scopes(child, { frameId });
   const out: DebugScope[] = [];
   for (const scope of scopes) {
     if (scope.name === "Global") {
-      const notebook = await notebookScope(child, frameId, notebookRefs);
+      const notebook = await notebookScope(child, frameId, context);
       if (notebook) out.push(notebook);
     }
     const read = await scopeOf(child, scope);
@@ -187,14 +200,15 @@ const failure = (message: string): Evaluated => ({
 async function codeFor(
   child: DapConnection,
   expression: string,
-  frameId: number | undefined,
+  where: { readonly frameId: number | undefined; readonly dialect: Dialect },
 ): Promise<string | Evaluated> {
+  const { frameId } = where;
   try {
     const locals = frameId === undefined ? [] : await localNames(child, frameId);
-    const code = evaluationOf(expression, locals, scopeRecord);
-    // an awaited promise cannot settle while the kernel is paused
+    const code = evaluationOf(expression, locals, where.dialect.scope);
+    // an awaited promise cannot settle while the realm is paused
     if (frameId !== undefined && code.startsWith("await "))
-      return failure("await needs a running kernel: resume, then evaluate it");
+      return failure("await needs a running realm: resume, then evaluate it");
     return code;
   } catch (error) {
     if (error instanceof InvalidSyntax) return failure(`SyntaxError: ${error.data.detail}`);
@@ -203,14 +217,15 @@ async function codeFor(
   }
 }
 
-/** `expression` evaluated in `frameId` (or the kernel's global scope), its cell names read from the record; an
+/** `expression` evaluated in `frameId` (or the realm's global scope), its cell names read from the realm's scope; an
  * expression that does not parse or throws answers its error as `repr`, typed `error`. */
 export async function evaluateIn(
   child: DapConnection,
   expression: string,
-  frameId: number | undefined,
+  where: { readonly frameId: number | undefined; readonly dialect: Dialect },
 ): Promise<Evaluated> {
-  const code = await codeFor(child, expression, frameId);
+  const { frameId } = where;
+  const code = await codeFor(child, expression, where);
   if (typeof code !== "string") return code;
   try {
     const result = await dap.evaluate(child, {

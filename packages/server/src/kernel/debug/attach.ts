@@ -1,9 +1,10 @@
-// js-debug attached to a kernel's inspector as a second client beside the daemon's own session: the parent DAP session
-// attaches by websocketAddress, js-debug answers with a startDebugging reverse request for the target, and the child
-// session on a second connection is the one that pauses, steps and reads. Worker threads (the kernel's watchdog) are
-// never attached.
+// js-debug attached to a realm's inspector as a second client beside the daemon's own session (the kernel's inspector,
+// or the headless page's CDP relay): the parent DAP session attaches by websocketAddress, js-debug answers with a
+// startDebugging reverse request for the target, and the child session on a second connection is the one that pauses,
+// steps and reads. Both attach as `pwa-node`, which takes a WebSocket address as it is (a `ws+unix:` one included) and
+// asks the target for nothing but the Runtime and Debugger domains; worker threads (the kernel's watchdog) are never
+// attached.
 import type { DebugProtocol } from "@vscode/debugprotocol";
-import { ownCodeDirectories } from "@jsnb/kernel-node";
 
 import type { Adapter } from "./adapter.js";
 import { dap } from "./protocol.js";
@@ -28,21 +29,29 @@ const initialize: DebugProtocol.InitializeRequestArguments = {
   supportsStartDebuggingRequest: true,
 };
 
+/** Where js-debug attaches: the WebSocket address, the workspace, the code stepping skips (the kernel's own and Node's,
+ * or the page's own). */
+export type AttachTarget = {
+  readonly url: string;
+  readonly cwd: string;
+  readonly name: string;
+  readonly skipFiles: readonly string[];
+};
+
 /** The attach configuration: each setting is needed (a breakpoint in a cell that runs at once binds only with
- * pauseForSourceMap; autoAttachChildProcesses would rewrite the kernel's NODE_OPTIONS; the kernel's own code and Node's
- * are skipped when stepping). */
-function attachConfig(url: string, cwd: string): Readonly<Record<string, unknown>> {
+ * pauseForSourceMap; autoAttachChildProcesses would rewrite the kernel's NODE_OPTIONS). */
+function attachConfig(target: AttachTarget): Readonly<Record<string, unknown>> {
   return {
     type: "pwa-node",
     request: "attach",
-    name: "nimbo kernel",
-    websocketAddress: url,
-    cwd,
+    name: target.name,
+    websocketAddress: target.url,
+    cwd: target.cwd,
     sourceMaps: true,
     pauseForSourceMap: true,
     autoAttachChildProcesses: false,
     showAsyncStacks: true,
-    skipFiles: [...ownCodeDirectories.map((dir) => `${dir}**`), "<node_internals>/**"],
+    skipFiles: [...target.skipFiles],
   };
 }
 
@@ -55,14 +64,13 @@ const childConfigOf = (args: unknown): Readonly<Record<string, unknown>> | undef
 /** The parent session's attach, resolved with the child's configuration. */
 async function attachParent(
   parent: DapConnection,
-  url: string,
-  cwd: string,
+  target: AttachTarget,
 ): Promise<Readonly<Record<string, unknown>>> {
   let found: (config: Readonly<Record<string, unknown>>) => void = () => undefined;
   const child = new Promise<Readonly<Record<string, unknown>>>((resolve, reject) => {
     found = resolve;
     setTimeout(() => {
-      reject(new DapFailed("attach", "js-debug found no target at the kernel's inspector"));
+      reject(new DapFailed("attach", `js-debug found no target at ${target.name}`));
     }, childTimeoutMs).unref();
   });
   parent.onReverse((command, args) => {
@@ -75,7 +83,7 @@ async function attachParent(
       void dap.configurationDone(parent, {}).catch(() => undefined);
   });
   await dap.initialize(parent, initialize);
-  const attached = dap.attach(parent, attachConfig(url, cwd));
+  const attached = dap.attach(parent, attachConfig(target));
   const config = await child;
   await attached;
   return config;
@@ -87,9 +95,7 @@ async function attachParent(
  */
 export async function attachJsDebug(
   adapter: Adapter,
-  options: {
-    readonly url: string;
-    readonly cwd: string;
+  options: AttachTarget & {
     readonly onEvent: (child: DapConnection, event: { event: string; body: unknown }) => void;
     readonly configure: (child: DapConnection) => Promise<void>;
   },
@@ -97,7 +103,7 @@ export async function attachJsDebug(
   const parent = await adapter.connect();
   let child: DapConnection | undefined;
   try {
-    const config = await attachParent(parent, options.url, options.cwd);
+    const config = await attachParent(parent, options);
     const own = await adapter.connect();
     child = own;
     own.onReverse(() => Promise.resolve({}));

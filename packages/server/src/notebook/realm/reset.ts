@@ -80,6 +80,7 @@ export async function resetRealm(
   }
   state.owed = undefined;
   const params = all ? {} : { bridge: bridgeMap(context, state) };
+  if (attachment.kind === "headless") await context.hooks.pageDebug.release();
   const signal = AbortSignal.any([
     AbortSignal.timeout(context.requestTimeoutMs),
     attachment.detached.signal,

@@ -97,6 +97,11 @@ export async function snapshotCell(
   if (!attachment) throw new RealmNotAttached({ notebook: context.ref });
   const own = attachment.kind === "headless" ? given.headless : undefined;
   if (request.image !== undefined && own === undefined) throw noImageInTab(context);
+  if (own !== undefined && context.hooks.pageDebug.paused())
+    throw new NotAvailable({
+      feature: "cell.snapshot",
+      reason: "the headless page is paused in the debugger; resume it (debug.resume) first.",
+    });
   const asked = await askPage(context, deps, attachment, request);
   const read = asked.rendered ? asked : { ...asked, text: notRendered };
   if (request.image === undefined || own === undefined || !read.rendered) return read;
