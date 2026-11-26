@@ -10,7 +10,7 @@ export type WorkerKind = "jq" | "jsonpath";
 /**
  * One unit of work for the worker. The value travels as its JSON text: JSON.stringify and JSON.parse work at any
  * depth (structured clone overflows its stack beyond a few thousand levels) and together cost less than a clone. A held
- * value (11-query §2) travels once: its task carries `json` only when the worker does not hold `key` yet, and the
+ * value travels once: its task carries `json` only when the worker does not hold `key` yet, and the
  * worker keeps it under `key` for the queries after, having first forgotten the keys in `drop` (the oldest, past the
  * bound); `release` forgets keys.
  */

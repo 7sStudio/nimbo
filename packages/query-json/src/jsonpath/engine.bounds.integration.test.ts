@@ -1,4 +1,4 @@
-// Worker-backed (integration tier): the bounds that keep a select from holding the calling thread (11-query §2).
+// Worker-backed (integration tier): the bounds that keep a select from holding the calling thread.
 // Each test measures how long select() held the thread before it returned its promise.
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
@@ -82,7 +82,7 @@ describe("createJsonPathEngine time slice", () => {
   });
 });
 
-describe("createJsonPathEngine on long member names (11-query §2)", () => {
+describe("createJsonPathEngine on long member names", () => {
   it("holds the thread one slice at most on a 10 000-character name, then ends in the worker", async () => {
     const { result, heldMs } = timed(() =>
       compiled(shortSlice, "$.*[*]").select(longKey(10_000, 10_000), { timeoutMs: 200 }),

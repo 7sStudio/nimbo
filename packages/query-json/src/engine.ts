@@ -1,11 +1,11 @@
-// The QueryEngine interface hosts program against (11-query §2) and the registry they look engines up in.
+// The QueryEngine interface hosts program against and the registry they look engines up in.
 import type { Result } from "./errors.ts";
 
 /** An RFC 9535 §2.7 normalized path such as `$['data'][3]`. */
 export type NormalizedPath = string;
 
 /**
- * The defaults of `query.timeoutMs` (03-api §4.10), the main-thread node limit and time budget of 11-query §2, and the
+ * The defaults of `query.timeoutMs`, the main-thread node limit and time budget, and the
  * worker heap cap.
  */
 export const queryDefaults = {
@@ -68,7 +68,7 @@ export type TransformEngine = EngineBase & {
 
 /**
  * Values held in an engine's worker: an extension of QueryEngine that this package's engines implement
- * (a third-party engine need not; 02-architecture §9). `hold` keeps `json` under `key` for the `…Held` queries: it
+ * (a third-party engine need not). `hold` keeps `json` under `key` for the `…Held` queries: it
  * is sent to the engine's worker with the first query of `key` there (and again after a timeout or a crash replaced
  * that worker), never with each query; what the worker holds stays within the engine's `heldMaxBytes` of JSON text,
  * the oldest released first. `release` forgets `key`, in the worker too; a later query of it fails until it is held
@@ -102,7 +102,7 @@ export type HeldBound = number | (() => number);
 
 export type QueryEngine = SelectEngine | TransformEngine;
 
-/** Engines are registered, not imported: the viewer asks `engines.for(id)` (11-query §2). */
+/** Engines are registered, not imported: the viewer asks `engines.for(id)`. */
 export type EngineRegistry = {
   register(engine: QueryEngine): void;
   for(id: string): QueryEngine | undefined;

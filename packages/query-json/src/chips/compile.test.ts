@@ -21,7 +21,7 @@ describe("chipsToJsonPath operators", () => {
     expect(chipsToJsonPath([chip])).toBe(query);
   });
 
-  it("joins several chips with && in one filter (gallery card 9)", () => {
+  it("joins several chips with && in one filter", () => {
     const chips: Chip[] = [
       { key: "status", op: "=", value: "succeeded" },
       { key: "amount", op: ">", value: 1000 },

@@ -1,4 +1,4 @@
-// The only file that imports @swaggerexpert/jsonpath or sees its AST (11-query §2): compile a query and classify its
+// The only file that imports @swaggerexpert/jsonpath or sees its AST: compile a query and classify its
 // cost, select normalized paths in the worker or, with a time slice, in the calling thread.
 import type { EvaluationRealmInterface } from "@swaggerexpert/jsonpath";
 import { evaluate, JSONEvaluationRealm, parse } from "@swaggerexpert/jsonpath";
@@ -40,7 +40,7 @@ const expectationsOf = (query: string): readonly string[] => {
 
 type Operator = Parameters<EvaluationRealmInterface["compare"]>[1];
 
-/** What compiling a query tells the engine: whether its cost is linear in the value (11-query §2). */
+/** What compiling a query tells the engine: whether its cost is linear in the value. */
 export type CompiledJsonPath = { readonly linear: boolean };
 
 // The cost classifier reads the parser's AST as plain data: the library's published AST types do not match what it

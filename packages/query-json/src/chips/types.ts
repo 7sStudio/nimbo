@@ -1,4 +1,4 @@
-// The chip types of Filter mode (11-query §2), shared by compile.ts and parse.ts.
+// The chip types of Filter mode, shared by compile.ts and parse.ts.
 
 /** A chip's literal: a JSON scalar. */
 export type ChipValue = string | number | boolean | null;

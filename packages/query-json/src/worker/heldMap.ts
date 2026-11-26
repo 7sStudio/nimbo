@@ -1,4 +1,4 @@
-// The worker's side of held values (11-query §2): a map from key to the value the worker keeps (jq keeps the JSON text,
+// The worker's side of held values: a map from key to the value the worker keeps (jq keeps the JSON text,
 // JSONPath the parsed value), filled by the held task that carries a value and emptied by `drop` and `release`.
 import type { Result } from "../errors.ts";
 import { ok } from "../errors.ts";

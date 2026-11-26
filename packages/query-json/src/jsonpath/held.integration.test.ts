@@ -1,4 +1,4 @@
-// Worker-backed (integration tier): JSONPath selects over held values (11-query §2) in the real worker thread, its
+// Worker-backed (integration tier): JSONPath selects over held values in the real worker thread, its
 // posts recorded. A held value reaches the worker with its first query only, again after a timeout replaced the worker,
 // and goes from the worker on release or past the bound, the oldest first.
 import { afterEach, describe, expect, it } from "vitest";

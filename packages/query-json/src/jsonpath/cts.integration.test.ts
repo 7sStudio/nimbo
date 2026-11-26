@@ -1,4 +1,4 @@
-// The JSONPath Compliance Test Suite (vendored, fixtures/cts) through createJsonPathEngine(), every case (11-query §5).
+// The JSONPath Compliance Test Suite (vendored, fixtures/cts) through createJsonPathEngine(), every case.
 // Integration tier: selectors whose cost is not linear (functions, absolute queries) run in the JSONPath worker.
 import { readFileSync } from "node:fs";
 
