@@ -143,6 +143,10 @@ export const settingsMeta: Readonly<Record<SettingsKey, SettingMeta>> = {
     "Code colours, in light and dark: vscode (VS Code's Light+ and Dark+), github, cursor, jetbrains, one, catppuccin, tokyo-night or nimbo.",
   ),
   "ui.theme": stable("Theme", "system, light or dark."),
+  "tutorial.showOnHome": stable(
+    "Show on Home",
+    "The tutorial on Home: its lessons in an empty workspace, the Tutorial view in the activity bar and the row that continues it above the notebooks. Help > Tutorial shows it again.",
+  ),
   "git.enabled": stable(
     "Source Control",
     "Shows the Source Control view and the branch when the workspace folder is in a git repository.",

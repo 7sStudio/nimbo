@@ -42,6 +42,7 @@ export const settingsKeys = [
   "editor.lineValues",
   "editor.syntaxTheme",
   "ui.theme",
+  "tutorial.showOnHome",
   "git.enabled",
   "diffEditor.renderSideBySide",
   "notebookDiff.showEntireNotebook",
