@@ -23,7 +23,6 @@ These settings exist in the registry with their schemas as the contract and answ
 
 ## 4. Product and distribution
 
-- **Add-ons** (L): packages loadable from npm that register commands, starter notebooks and hints, the Stripe add-on first; an npm search in the Packages panel to find and add packages.
 - **Remote mode** (L): hosting the daemon on one's own server behind a TLS proxy, with an allowed-host setting and real authentication; multi-user use stays out of scope.
 - **Desktop app** (L): the daemon and the page in one installable app.
 - **Windows** (L): the kernel, the daemon's files and the installer on Windows.

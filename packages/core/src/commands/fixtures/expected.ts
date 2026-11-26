@@ -52,6 +52,7 @@ export const expected: readonly string[] = [
   "packages.add",
   "packages.remove",
   "packages.cancel",
+  "packages.search",
   "secrets.list",
   "secrets.set",
   "events.subscribe",

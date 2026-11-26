@@ -15,6 +15,7 @@ import { useSessionStore } from "./socket.js";
 import { useUiStore } from "./ui.js";
 
 export type WorkspaceInfo = Awaited<ReturnType<SocketClient["workspace"]["info"]>>;
+export type SearchAnswer = Awaited<ReturnType<SocketClient["packages"]["search"]>>;
 export type Installed = { readonly name: string; readonly version: string };
 /** What a run of the package manager does. */
 type PackageAction = "add" | "remove";
@@ -24,6 +25,10 @@ export type Install = {
   readonly lines: readonly string[];
   readonly action: PackageAction;
 };
+
+/** A package as a person reads it: a local one's path by its file or folder name. */
+export const shownName = (name: string): string =>
+  /^(?:\.{1,2}\/|\/|file:)/u.test(name) ? (name.split("/").pop() ?? name) : name;
 
 /** The toast a packages.done leaves, by action and outcome. */
 const doneTitles = {
@@ -121,7 +126,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
       if (installing.value === null || isShown(installing.value, names, action))
         installing.value = own.find((run) => !isShown(run, names, action)) ?? null;
       failure.value = failureOf(event.data);
-      const title = `${doneTitles[action][ok ? "ok" : "failed"]} ${names.join(", ")}`;
+      const title = `${doneTitles[action][ok ? "ok" : "failed"]} ${names.map(shownName).join(", ")}`;
       ui.toast({
         kind: ok ? "success" : "error",
         title,
@@ -149,9 +154,17 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     const done = await run([...names]).finally(() => {
       own.splice(own.indexOf(mine), 1);
     });
-    if (done === undefined && toRaw(installing.value) === mine) installing.value = null;
+    // answered, the run is over: a local path the daemon renamed (relative to the workspace) never matched its events
+    if (toRaw(installing.value) === mine) installing.value = null;
     return done;
   }
+
+  /** A notice an answer carries (a path out of the workspace now in package.json), as a toast. */
+  const noticeOf = <T extends { readonly notice?: string | undefined }>(answer: T | undefined) => {
+    if (answer?.notice !== undefined)
+      ui.toast({ kind: "info", title: "Installed", text: answer.notice });
+    return answer;
+  };
 
   return {
     info,
@@ -192,10 +205,26 @@ export const useWorkspaceStore = defineStore("workspace", () => {
       await Promise.all([refreshPackages(), refreshSecrets()]);
       info.value = (await loaded) ?? null;
     },
-    addPackages: (names: readonly string[]) =>
-      runPackages("add", names, (asked) =>
-        runAttempt(() => client().packages.add({ names: asked })),
+    addPackages: async (names: readonly string[]) =>
+      noticeOf(
+        await runPackages("add", names, (asked) =>
+          runAttempt(() => client().packages.add({ names: asked })),
+        ),
       ),
+    /** packages.search: the answer, or the failure's message to show in place of results (no toast); undefined when
+     * `signal` aborted it (a later search took its place). */
+    search: async (
+      query: string,
+      limit: number,
+      signal: AbortSignal,
+    ): Promise<SearchAnswer | string | undefined> => {
+      try {
+        return await client().packages.search({ query, limit }, { signal });
+      } catch (error) {
+        if (signal.aborted) return undefined;
+        return error instanceof Error ? error.message : String(error);
+      }
+    },
     /** packages.remove, its progress and its end as an add's. */
     removePackages: (names: readonly string[]) =>
       runPackages("remove", names, (asked) =>

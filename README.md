@@ -266,8 +266,10 @@ Where next: run `nimbo` with no arguments to open Home, then start the [tutorial
 - **Markdown cells** for the prose, with a heading outline and sections that fold.
 - **TypeScript everywhere**, with a language service: completion, hover, signature help, go to definition,
   diagnostics and rename across cells and across the bridge (`nimbo check`, `nimbo language rename`).
-- **npm packages** in both kinds of cells: a missing import offers Install, or `nimbo add <pkg>`; the page gets client
-  packages bundled from your workspace's `node_modules`.
+- **npm packages** in both kinds of cells: a missing import offers Install, or `nimbo add <pkg>` (a local folder or
+  `.tgz` too); the page gets client packages bundled from your workspace's `node_modules`.
+- **Search npm** from the Packages panel (results as you type, each with Add), `nimbo search <query>` or MCP; only the
+  query is sent.
 - **Secrets** in the workspace's `.env`: `env.STRIPE_SECRET_KEY` in a server cell, redacted from every output, log and
   bridge result. Client cells see only `PUBLIC_*` and `*_PUBLISHABLE_KEY` names.
 
@@ -427,6 +429,7 @@ nimbo examples copy --name 01-data && nimbo open 01-data.jsnb
 | `nimbo outputs <cell> --sql '…'`                    | Query an output (`--jq`, `--query` for JSONPath, `--format csv`) |
 | `nimbo check`                                       | Type errors, without running anything                            |
 | `nimbo add <package>`                               | Install npm packages into the workspace                          |
+| `nimbo search <query>`                              | Search the npm registry                                          |
 | `nimbo debug set-breakpoint --cell <id> --line <n>` | Debug a cell (`stack`, `scope`, `evaluate`, `resume`, …)         |
 | `nimbo diff`                                        | What git sees, notebooks cell by cell                            |
 | `nimbo git pull`                                    | Git from the CLI (`push`, `switch`, `stash`, `log`; `--yes`)     |
@@ -497,7 +500,6 @@ Known limits today:
 
 Planned, not yet available:
 
-- Add-ons, starting with a Stripe add-on (webhook forwarding, signature checks, a request log)
 - A desktop app
 - Windows support
 

@@ -14,6 +14,7 @@ import { mcpShortcut } from "./mcp.js";
 import { openShortcut } from "./open.js";
 import { outputsShortcut } from "./outputs.js";
 import { runShortcut } from "./run.js";
+import { searchShortcut } from "./search.js";
 import { serveShortcut } from "./serve.js";
 import type { Shortcut } from "./shortcut.js";
 import { sqlShortcut } from "./sql.js";
@@ -32,6 +33,7 @@ export const shortcuts: readonly Shortcut[] = [
   outputsShortcut,
   runShortcut,
   addShortcut,
+  searchShortcut,
   errorsShortcut,
   exportShortcut,
   checkShortcut,

@@ -1,13 +1,18 @@
-// The workspace packages: what package.json declares (packages.list), packages.add and packages.remove,
-// which run the package manager (install.ts) one at a time, stopped with the daemon, past the install timeout, or by
+// The workspace packages: what package.json declares (packages.list), packages.add (a local package named from the
+// workspace root, and said when it lies outside it) and packages.remove, which run the package manager (install.ts) one
+// at a time, stopped with the daemon, past the install timeout, or by
 // packages.cancel. Decision: a caller that goes away does not cancel its run, which goes to its
 // end and reports it as packages.done: a manager cut half-way leaves node_modules worse than one that finishes; only an
-// explicit packages.cancel stops it, and says what that leaves.
+// explicit packages.cancel stops it, and says what that leaves. packages.search asks the registry.
 import type { Settings } from "@jsnb/core";
 
 import type { EventBus } from "../../events/bus.js";
 import type { Log } from "../../events/log.js";
 import type { DeclaredPackage } from "../../files/packages/manifest.js";
+import { relativeSpecs } from "../../files/packages/local.js";
+import { searchRegistry } from "../../files/packages/registry.js";
+import type { SearchAnswer } from "../../files/packages/search.js";
+import { searchPackages } from "../../files/packages/search.js";
 import { declaredPackages } from "../../files/packages/manifest.js";
 import type { InstallOptions, RunControl } from "./install.js";
 import { addPackages, cancelledBeforeRun, checkRemovable, removePackages } from "./install.js";
@@ -15,11 +20,20 @@ import type { PackageAction } from "./packageErrors.js";
 
 export type PackagesService = {
   readonly list: () => Promise<readonly DeclaredPackage[]>;
-  readonly add: (names: readonly string[]) => Promise<DeclaredPackage[]>;
+  /** Adds `names`, a local one as a path from the workspace root; `notice` says when package.json now names a path out
+   * of the workspace. */
+  readonly add: (
+    names: readonly string[],
+  ) => Promise<{ readonly added: DeclaredPackage[]; readonly notice?: string }>;
   readonly remove: (names: readonly string[]) => Promise<string[]>;
   /** Stops the run of `names`, queued or under way, else the run under way; answers its names, none when there
    * is no such run or its manager already ended. The other runs go on. */
   readonly cancel: (names?: readonly string[]) => readonly string[];
+  /** packages.search on the registry the workspace's configuration names; `signal` aborts it. */
+  readonly search: (
+    query: { readonly query: string; readonly limit: number; readonly from: number },
+    signal?: AbortSignal,
+  ) => Promise<SearchAnswer>;
   /** Stops a run under way (the daemon stops); settles once it ended, its manager's group killed. */
   readonly close: () => Promise<void>;
 };
@@ -147,14 +161,32 @@ export function createPackages(root: string, options: PackagesOptions): Packages
   const runs = runQueue(install);
   return {
     list: () => declaredPackages(root),
-    add: (names) =>
-      runs.queued({ names, action: "add", run: (control) => addPackages(install, names, control) }),
+    add: async (asked) => {
+      const { names, outside } = await relativeSpecs(root, asked);
+      const added = await runs.queued({
+        names,
+        action: "add",
+        run: (control) => addPackages(install, names, control),
+      });
+      if (outside.length === 0) return { added };
+      const paths = outside.join(", ");
+      return {
+        added,
+        notice: `package.json now names ${paths}, outside the workspace: a clone of the workspace needs it at the same place.`,
+      };
+    },
     remove: async (names) => {
       await checkRemovable(root, names); // at once, not after the runs queued before it
       const run = (control: RunControl) => removePackages(install, names, control);
       return runs.queued({ names, action: "remove", run });
     },
     cancel: runs.cancel,
+    search: async (query, signal) =>
+      searchPackages({
+        registry: await searchRegistry({ root }),
+        ...query,
+        ...(signal === undefined ? {} : { signal }),
+      }),
     close: async () => {
       stop.abort();
       await runs.settled(); // the run under way ends (DaemonStopping) before the daemon closes its sockets

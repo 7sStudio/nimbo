@@ -82,7 +82,13 @@ import {
   notebookSummary,
 } from "./notebook.js";
 import { languageLsp, languageRename, notebookBridge, notebookDiagnostics } from "./language.js";
-import { packagesAdd, packagesCancel, packagesList, packagesRemove } from "./packages.js";
+import {
+  packagesAdd,
+  packagesCancel,
+  packagesList,
+  packagesRemove,
+  packagesSearch,
+} from "./packages.js";
 import { realmAttach, realmDetach, realmReport, realmRestart, realmStatus } from "./realm.js";
 import { secretsList, secretsSet } from "./secrets.js";
 import {
@@ -162,6 +168,7 @@ export const commands: readonly AnyCommand[] = [
   packagesAdd,
   packagesRemove,
   packagesCancel,
+  packagesSearch,
   secretsList,
   secretsSet,
   eventsSubscribe,

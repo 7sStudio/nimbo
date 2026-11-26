@@ -7,6 +7,8 @@ import { delimiter, dirname, join } from "node:path";
 
 import { InvalidParams } from "@jsnb/core";
 
+import { isLocalSpec } from "./local.js";
+
 export type Manager = "pnpm" | "npm" | "yarn" | "bun";
 
 const lockfiles: readonly (readonly [string, Manager])[] = [
@@ -73,15 +75,16 @@ export const nameOf = (value: string): string => {
   return at < 0 ? value : value.slice(0, at);
 };
 
-/** Checks the specs packages.add got: a package name with an optional version or tag each. */
+/** Checks the specs packages.add got: a package name with an optional version or tag each, or a local package's path
+ * (checked against the disk before the manager runs). */
 export function checkSpecs(names: readonly string[]): void {
   const issues = names.flatMap((name, index) =>
-    spec.test(name)
+    spec.test(name) || isLocalSpec(name)
       ? []
       : [
           {
             path: ["names", index],
-            message: `${name} is not a package name with an optional @version`,
+            message: `${name} is not a package name with an optional @version, or a path starting with ./, ../ or /`,
           },
         ],
   );

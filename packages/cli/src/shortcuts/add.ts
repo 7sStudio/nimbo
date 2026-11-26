@@ -1,5 +1,8 @@
 // `nimbo add <pkg...>`: packages.add over the command's WebSocket, the package manager's progress
 // (packages.progress) on stderr as it comes, until packages.done; then each package added, `+ name@version`.
+import { realpath } from "node:fs/promises";
+import { relative, resolve, sep } from "node:path";
+
 import type { EventEnvelope } from "@jsnb/core";
 import { InvalidParams, packagesAdd } from "@jsnb/core";
 
@@ -13,12 +16,28 @@ import { readShortcut, withSession } from "./shortcut.js";
 const help = `nimbo add <pkg...>: add packages to the workspace (packages.add)
 
 Runs the workspace's package manager (the packages.manager setting, else the lockfile's) with name[@version] specs,
-its output on stderr as it comes. There is no silent install: a cell that imports a missing package says so and
-names this command.
+or paths of local package folders or .tgz tarballs (./, ../ or /, from the folder you are in; package.json names them
+from the workspace root, and a path outside the workspace is said), its output on stderr as it comes. There is no
+silent install: a cell that imports a missing package says so and names this command.
+nimbo search <query> finds packages.
 
 Flags:
-  --json   print packages.add's output ({ added }) as JSON
+  --json   print packages.add's output ({ added, notice? }) as JSON
 `;
+
+/**
+ * `name` as the daemon takes it: a relative path the user typed (`./x`, `../x`, `file:./x`) is theirs, from the folder
+ * they are in, and goes as a path from the workspace root `root` (`./x`, or `../x` out of it), so package.json names
+ * no machine's own path; anything else as it is.
+ */
+async function fromRoot(name: string, cwd: string, root: string): Promise<string> {
+  const path = name.startsWith("file:") ? name.slice("file:".length) : name;
+  if (!path.startsWith("./") && !path.startsWith("../")) return name;
+  const absolute = resolve(cwd, path);
+  const real = await realpath(absolute).catch(() => absolute);
+  const from = relative(root, real).split(sep).join("/");
+  return from.startsWith("..") ? from : `./${from}`;
+}
 
 /** The progress line of one of our names, or undefined for any other event. */
 function progressOf(event: EventEnvelope, names: readonly string[]): string | undefined {
@@ -44,8 +63,10 @@ async function run(argv: readonly string[], io: Io): Promise<ExitCode> {
     await write(io.stdout, help);
     return exitCodes.ok;
   }
-  const names = [...args.positionals];
   const output = await withSession(io, { start: true, command: "add" }, async (session) => {
+    const names = await Promise.all(
+      args.positionals.map((name) => fromRoot(name, io.cwd, session.root)),
+    );
     const socket = session.socket();
     const progress = (event: EventEnvelope): void => {
       const line = progressOf(event, names);
@@ -66,7 +87,10 @@ async function run(argv: readonly string[], io: Io): Promise<ExitCode> {
       subscription.close();
     }
   });
-  const added = output.added.map((pkg) => `+ ${pkg.name}@${pkg.version}\n`).join("");
+  const added = [
+    ...output.added.map((pkg) => `+ ${pkg.name}@${pkg.version}\n`),
+    ...(output.notice === undefined ? [] : [`${output.notice}\n`]),
+  ].join("");
   await write(io.stdout, args.json ? `${JSON.stringify(output)}\n` : added);
   return exitCodes.ok;
 }

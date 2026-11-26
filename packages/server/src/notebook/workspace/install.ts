@@ -25,6 +25,7 @@ import {
   removeArgs,
 } from "../../files/packages/manager.js";
 import { ManagerOutput, remedyFor } from "../../files/packages/managerOutput.js";
+import { isLocalSpec, localPackageName, localProblem } from "../../files/packages/local.js";
 import { runManager } from "./managerProcess.js";
 import { DaemonStopping } from "./openErrors.js";
 import type { PackageAction } from "./packageErrors.js";
@@ -228,19 +229,35 @@ async function runToEnd(options: InstallOptions, run: Run): Promise<void> {
   options.bus.emit("", "packages.done", { names: [...run.names], ok: true, action: run.action });
 }
 
-/** packages.add: the added packages with their installed versions. */
+/** Refuses a local spec that names no package folder or tarball: no manager runs for it. */
+async function checkLocal(root: string, names: readonly string[]): Promise<void> {
+  const problems = await Promise.all(
+    names.map((name) =>
+      isLocalSpec(name) ? localProblem(root, name) : Promise.resolve(undefined),
+    ),
+  );
+  const issues = problems.flatMap((message, index) =>
+    message === undefined ? [] : [{ path: ["names", index], message }],
+  );
+  if (issues.length > 0) throw new InvalidParams({ issues });
+}
+
+/** packages.add: the added packages with their installed versions; a local one by the name its package.json gives. */
 export async function addPackages(
   options: InstallOptions,
   names: readonly string[],
   control: RunControl,
 ): Promise<DeclaredPackage[]> {
   checkSpecs(names);
+  await checkLocal(options.root, names);
   await runToEnd(options, { action: "add", names, ...control });
   return Promise.all(
-    names.map(async (spec) => ({
-      name: nameOf(spec),
-      version: (await installedVersion(options.root, nameOf(spec))) ?? "",
-    })),
+    names.map(async (spec) => {
+      const name = isLocalSpec(spec)
+        ? ((await localPackageName(options.root, spec)) ?? spec)
+        : nameOf(spec);
+      return { name, version: (await installedVersion(options.root, name)) ?? "" };
+    }),
   );
 }
 

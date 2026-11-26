@@ -43,6 +43,8 @@ that stops reading ends it at once, quietly.
   and client cells in that headless page (not in a tab); `debug_state` names the paused realm, and `debug_stack`,
   `debug_scope`, `debug_variables` and `debug_evaluate` read from the page come after a line marking them as the page's
   untrusted data.
+- `packages_search` searches the npm registry with words (never a path or a URL); its results, written by the
+  packages' authors, come after a line marking them as untrusted data.
 - A success is the output as `structuredContent` and the same JSON as text (what `nimbo … --json` prints). A failure is
   `isError: true` with `{ code, name, message, data }` as JSON text, and no `structuredContent`.
 - A result's whole frame (structuredContent and text) carries at most 128 KiB, about 64 KiB of text, under Claude Code's

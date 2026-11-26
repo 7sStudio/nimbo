@@ -49,6 +49,7 @@ export const registryTitles: Readonly<Record<string, string>> = {
   "packages.add": "Install Packages",
   "packages.remove": "Remove Packages",
   "packages.cancel": "Cancel Install",
+  "packages.search": "Search npm",
   "secrets.list": "List Secrets",
   "secrets.set": "Set Secret",
   "debug.setBreakpoint": "Set Breakpoint",

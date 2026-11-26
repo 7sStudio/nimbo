@@ -87,10 +87,11 @@ Two runtimes, no shared memory: shared scope within a kind, a **bridge** across 
 23. TypeScript language service in the editor: completions, hover, signature help, definition, diagnostics and rename, with cross-cell and bridge types.
 24. Headless client realm (`realm.headless`): with no tab open, client cells, `cell.snapshot` (with a PNG of the container) and push events run in the system's Chrome, Chromium or Edge, for an agent working alone; a tab that opens takes the realm over.
 25. A tutorial shipped with the app: nine runnable lessons, offered first on an empty workspace's Home, then from its own place on Home with the progress the daemon keeps, and by `examples.list` and `examples.copy` (kind `tutorial`), kept true by a test that runs every cell.
+26. npm search: `packages.search` finds packages on the registry from the Packages panel (as the user types), `nimbo search` and MCP, sending only the query; `packages.add` takes local package folders and tarballs too, named in `package.json` from the workspace root.
 
 ### 3.2 Not built yet
 
-Debugging client cells in the page, add-ons. Open work is in [12-roadmap.md](12-roadmap.md).
+Debugging client cells in the page. Open work is in [12-roadmap.md](12-roadmap.md).
 
 ### 3.3 Out of scope
 

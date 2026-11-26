@@ -32,6 +32,7 @@ export * from "./model/gitDiff.js";
 export * from "./model/gitHistory.js";
 export * from "./model/keybinding.js";
 export * from "./model/debug.js";
+export * from "./model/packageQuery.js";
 
 // errors
 export * from "./errors/jsnbError.js";
